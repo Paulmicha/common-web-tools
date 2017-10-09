@@ -1,0 +1,23 @@
+# Public web dir - the application (might be a separate Git repo).
+/web
+
+# Local environment variables.
+.env
+*.env
+
+# Private files, outside of public (web) dir.
+private/*
+!private/.keepme
+!private/.htaccess
+
+# Custom scripts.
+scripts/custom
+
+# DB dumps.
+dumps/*
+!dumps/.keepme
+
+# Misc.
+docker-runtime
+.idea
+*.sql
