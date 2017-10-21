@@ -10,11 +10,13 @@
 #
 # Run as root or sudo.
 #
+# Usage :
+# $ . cwt/provision/scripts/debian/8/lamp_setup.sh
+#
 
 . provision/cwt/debian/8/system/utils.sh
 . provision/cwt/debian/8/system/unattended_upgrades.sh
 . provision/cwt/debian/8/apache_setup.sh
-
 
 # MariaDB.
 # Generates MariaDB root password & write it in ~/lamp/.mariadb.env

@@ -4,7 +4,7 @@
 # Write local settings.
 #
 # Usage from project root dir :
-# $ . cwt/app/write_settings.sh
+# $ . cwt/app/drupal/7/write_settings.sh
 #
 
 . cwt/env/load.sh

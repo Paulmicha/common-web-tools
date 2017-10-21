@@ -6,9 +6,9 @@
 # Run as root or sudo.
 #
 # Usage (replace example domain + optional alias passed as arguments) :
-# $ . cwt/stack/lamp_deb/vhost_create.sh
-# $ . cwt/stack/lamp_deb/vhost_create.sh the-domain.com
-# $ . cwt/stack/lamp_deb/vhost_create.sh the-domain.com www.the-domain.com
+# $ . cwt/provision/scripts/debian/8/vhost_create.sh
+# $ . cwt/provision/scripts/debian/8/vhost_create.sh the-domain.com
+# $ . cwt/provision/scripts/debian/8/vhost_create.sh the-domain.com www.the-domain.com
 #
 
 . cwt/env/load.sh
@@ -16,7 +16,7 @@
 # Fall back to env $INSTANCE_DOMAIN when no 1st argument.
 if [[ -z "${1}" ]]; then
   # echo "ERROR : domain (1st argument) is required."
-  # echo "Example : \$ . cwt/stack/lamp_deb/vhost_create.sh the-domain.com"
+  # echo "Example : \$ . cwt/provision/scripts/debian/8/vhost_create.sh the-domain.com"
   # return
   DOMAIN=$INSTANCE_DOMAIN
 else

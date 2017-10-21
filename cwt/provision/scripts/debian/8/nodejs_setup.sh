@@ -10,7 +10,7 @@
 # Run as root or sudo from dev stack docroot.
 #
 # Usage :
-# $ . cwt/stack/dev_deps_deb/nodejs_setup.sh
+# $ . cwt/provision/scripts/debian/8/nodejs_setup.sh
 #
 
 # Run once per host.
