@@ -3,24 +3,16 @@
 ##
 # LAMP server quick setup script for local dev (Drupal / Symfony friendly).
 #
+# [wip] Re-organization in progress.
+#
 # Tested on Debian 8.7 "Jessie"
 # @timestamp 2017/07/02 17:49:15
 #
 # Run as root or sudo.
 #
 
-mkdir ~/lamp
-cd ~/lamp
-
-# System utils.
-apt install git -y
-apt install curl -y
-apt install htop -y
-apt install unzip -y
-
-# System : setup unattended security upgrades.
-apt install unattended-upgrades apt-listchanges -y
-sed -e 's,\/\/Unattended-Upgrade::Mail "root";,Unattended-Upgrade::Mail "root";,g' -i /etc/apt/apt.conf.d/50unattended-upgrades
+./provision/scripts/debian/8/system/utils.sh
+./provision/scripts/debian/8/system/unattended_upgrades.sh
 
 # Apache.
 apt install apache2 -y
