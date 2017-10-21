@@ -11,13 +11,10 @@
 # Run as root or sudo.
 #
 
-./provision/cwt/debian/8/system/utils.sh
-./provision/cwt/debian/8/system/unattended_upgrades.sh
+. provision/cwt/debian/8/system/utils.sh
+. provision/cwt/debian/8/system/unattended_upgrades.sh
+. provision/cwt/debian/8/apache_setup.sh
 
-# Apache.
-apt install apache2 -y
-a2enmod rewrite
-service apache2 restart
 
 # MariaDB.
 # Generates MariaDB root password & write it in ~/lamp/.mariadb.env

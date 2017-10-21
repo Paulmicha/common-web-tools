@@ -4,7 +4,7 @@
 # Make local DB dump.
 #
 # Usage from project root dir :
-# $ . cwt/db/create_dump.sh
+# $ . cwt/db/drush/create_dump.sh
 #
 
 newrev=$(cd web && git log --pretty=format:'%H' -n 1)

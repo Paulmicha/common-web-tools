@@ -12,7 +12,7 @@ Scripts bash for usual devops tasks aimed at relatively small web projects.
 
 ## HOW
 
-There already are free existing tools to do these tasks, such as :
+Abstracting differences to streamline recurrent devops needs. There already are free existing tools addressing some tasks, such as :
 
 1. Ansible roles (e.g. GeerlingGuy/DrupalVM)
 1. docker-compose (e.g. wodby/docker4drupal)
@@ -69,38 +69,21 @@ See section *Frequent tasks (howtos / FAQ)* for details.
 ```txt
 /path/to/project/
   ├── cwt/
-  │   ├── app/                  <- App-related setup scripts + [wip] samples.
-  │   │   ├── bolt/
-  │   │   ├── drupal/
-  │   │   │   ├── 6/
-  │   │   │   ├── 7/
-  │   │   │   │   └── tests/
-  │   │   │   │       └── behat/
-  │   │   │   └── 8/
-  │   │   │       └── tests/
-  │   │   │           └── behat/
-  │   │   ├── laravel/
-  │   │   ├── phoenix/
-  │   │   ├── node/
-  │   │   │   ├── next.js/
-  │   │   │   └── phenomic/
-  │   │   └── symfony/
+  │   ├── app/                  <- App-related scripts + [wip] samples - local setup + tests.
   │   ├── db/                   <- Database-related scripts.
   │   ├── env/
   │   │   ├── current/          <- Generated values specific to current, local instance.
   │   │   └── dist/             <- Files used as "models" for env. vars during init.
   │   ├── git/
   │   │   └── hooks/
-  │   ├── provision/            <- App dependencies setup scripts.
+  │   ├── provision/            <- Host-level app dependencies setup scripts + [wip] samples.
   │   │   ├── ansible/
   │   │   ├── docker-compose/
   │   │   └── scripts/
   │   ├── remote/
   │   │   └── deploy/           <- Deployment-related scripts + [wip] samples.
-  │   │       ├── ansistrano/
-  │   │       └── git/
-  │   ├── specific/             <- Custom CWT scripts overrides.
-  │   └── stack/
+  │   ├── specific/             <- [optional] Custom CWT scripts overrides.
+  │   └── stack/                <- Scripts to (re)launch containers, watch / (re)build / CI tasks, workers, etc.
   ├── dumps/
   └── private/
 ```

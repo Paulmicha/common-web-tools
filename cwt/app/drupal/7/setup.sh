@@ -15,17 +15,17 @@
 # Run as root or sudo.
 #
 # Usage :
-# $ . cwt/app/drupal_setup.sh
+# $ . cwt/app/drupal/7/setup.sh
 #
 
 . cwt/env/load.sh
 
-. cwt/app/write_settings.sh
+. cwt/app/drupal/7/write_settings.sh
 
 mkdir -p $APP_DOCROOT/$DRUPAL_FILES_FOLDER
 mkdir -p $APP_DOCROOT/$DRUPAL_TMP_FOLDER
 
 . cwt/fixperms.sh
 
-. cwt/db/setup.sh
-. cwt/db/import_initial.sh
+. cwt/db/mysql/setup.sh
+. cwt/db/drush/import_initial.sh

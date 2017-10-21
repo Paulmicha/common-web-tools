@@ -4,7 +4,7 @@
 # Restore DB dump.
 #
 # Usage example from project root dir :
-# $ . cwt/db/import_initial.sh
+# $ . cwt/db/drush/import_initial.sh
 #
 
 . cwt/env/load.sh
