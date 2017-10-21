@@ -10,6 +10,8 @@ Scripts bash for usual devops tasks aimed at relatively small web projects.
 - instanciate different environments locally and/or remotely
 - implement deployment / remote 2-way sync
 
+CWT targets individual developers or relatively small teams attempting to streamline or implement a common workflow across older *and* newer projects.
+
 ## HOW
 
 Abstracting differences to streamline recurrent devops needs. There already are free existing tools addressing some tasks, such as :
@@ -22,11 +24,9 @@ The approach here is to provide a minimal base for abstracting out usual tasks (
 
 ## WHY
 
-Over the years, the maintenance of older projects became tedious (typically LAMP stack based projects). For instance, when old VMs are deleted, it can be difficult to recreate a compatible local dev environment supporting all dependencies from that project "technological era".
+Over the years, the maintenance of older projects can become tedious. For instance, when old VMs are deleted, it can be difficult to recreate a compatible local dev environment supporting all dependencies from that project "technological era".
 
 While tools like Ansible, `docker-compose` or `nvm` already address these concerns, adapting or integrating such projects to use these tools for common tasks requires some amount of work (or "glue").
-
-That's where this collection might help, e.g. by copy/pasting it in existing monolithic - or separate "local dev stack" - repos.
 
 ## Preprequisites
 
@@ -50,11 +50,11 @@ There are 2 ways to use CWT in existing or new projects :
 - Clone the application into a subfolder named e.g. `web`, `public`, `build`, etc.
 - Gitignore that subfolder by updating the `.gitignore` file accordingly
 - [optional] Make any alterations necessary
-- [optional] Maintain as a separate "dev stack" repo
+- [optional] Maintain as a separate repo
 
 ### Next steps
 
-When CWT files are in place :
+When CWT files are in place alongside the rest of the project :
 
 - Initialize "stack" (environment settings & remote instance)
 - Provision local and/or remote host
@@ -69,25 +69,85 @@ See section *Frequent tasks (howtos / FAQ)* for details.
 ```txt
 /path/to/project/
   ├── cwt/
-  │   ├── app/                  <- App-related scripts + [wip] samples - local setup + tests.
+  │   ├── app/                  <- App setup + [wip] samples.
   │   ├── db/                   <- Database-related scripts.
   │   ├── env/
   │   │   ├── current/          <- Generated values specific to current, local instance.
   │   │   └── dist/             <- Files used as "models" for env. vars during init.
   │   ├── git/
   │   │   └── hooks/
-  │   ├── provision/            <- Host-level app dependencies setup scripts + [wip] samples.
+  │   ├── provision/            <- Host-level dependencies setup scripts + [wip] samples.
   │   │   ├── ansible/
   │   │   ├── docker-compose/
   │   │   └── scripts/
   │   ├── remote/
   │   │   └── deploy/           <- Deployment-related scripts + [wip] samples.
   │   ├── specific/             <- [optional] Custom CWT scripts overrides.
-  │   └── stack/                <- Scripts to (re)launch containers, watch / (re)build / CI tasks, workers, etc.
+  │   ├── stack/                <- Scripts to (re)launch containers, watch / (re)build / CI tasks, workers, etc.
+  │   └── test/                 <- Automated tests related scripts + [wip] samples.
+  │       ├── behat/
+  │       └── gemini/
   ├── dumps/
   └── private/
 ```
 
 ## Frequent tasks (howtos / FAQ)
 
-TODO
+Unless otherwise stated, all the examples below are run from `/path/to/project/` as sudo or root.
+
+### Initialize local instance parameters
+
+*Purpose* : Specifies what kind of project we're working with - i.e its "stack" specifications, what kind of deployment / automated tests / CI workflow it uses, etc.
+
+*When to run* : initially + on-demand to **add, remove, change** project specifications (overwrites local env settings).
+
+```sh
+./cwt/stack/init.sh
+```
+
+### Install host-level dependencies
+
+*Purpose* : Makes sure everything needed to run the app, the tests, the compilation tasks, etc. is installed.
+
+*When to run* : initially + on-demand to **add** host-level dependencies (local and/or remote).
+
+*Prerequisites* : `cwt/stack/init.sh`
+
+```sh
+# To provision local host :
+./cwt/stack/setup.sh
+
+# To provision remote host :
+./cwt/remote/setup.sh
+```
+
+### Specify remote host
+
+*Purpose* : Sets remote host address + installs SSH connexion using current user's keys. **Note** : for now, onky one remote host is supported. **TODO** : support Hashicorp Vault.
+
+*When to run* : on-demand to **add or change** the remote host.
+
+*Prerequisites* : SSH keys must already be set up & loaded in current user's bash session.
+
+```sh
+./cwt/remote/add_host.sh
+```
+
+### Initialize application instance
+
+*Purpose* : Includes all steps necessary to produce a working instance of the project, ready to be started. For example, this would include tasks like local database creation, writing specific settings files, etc.
+
+*When to run* : initially + on-demand to **add, remove, change** specific instance settings or features.
+
+*Prerequisites* :
+
+- `cwt/stack/init.sh`
+- `cwt/stack/setup.sh`
+
+```sh
+# To initialize local project instance :
+./cwt/app/init.sh
+
+# To initialize remote project instance :
+./cwt/remote/init.sh
+```
