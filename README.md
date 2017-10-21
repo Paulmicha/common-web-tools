@@ -90,7 +90,8 @@ See section *Frequent tasks (howtos / FAQ)* for details.
   │       ├── behat/
   │       └── gemini/
   ├── dumps/
-  └── private/
+  ├── private/
+  └── web/                      <- Public web application dir. May use other names like docroot, www, public...
 ```
 
 ## Frequent tasks (howtos / FAQ)
@@ -144,7 +145,7 @@ Unless otherwise stated, all the examples below are to be run on *local* host fr
 *Prerequisites* :
 
 - Local : `cwt/stack/setup.sh
-- Remote : `cwt/remote/setup.sh`
+- Remote : `cwt/remote/add_host.sh` + `cwt/remote/setup.sh`
 
 ```sh
 ./cwt/stack/start.sh
@@ -184,7 +185,10 @@ Unless otherwise stated, all the examples below are to be run on *local* host fr
 
 *When to run* : on-demand.
 
-*Prerequisites* : `cwt/app/init.sh`
+*Prerequisites* :
+
+- Local : `cwt/app/init.sh`
+- Remote : `cwt/remote/init.sh`
 
 ```sh
 # To reset local project instance :
@@ -239,7 +243,7 @@ Unless otherwise stated, all the examples below are to be run on *local* host fr
 *Prerequisites* :
 
 - Local : `cwt/stack/init.sh`
-- Remote : `cwt/remote/init.sh`
+- Remote : `cwt/remote/add_host.sh` + `cwt/remote/init.sh`
 
 ```sh
 # TODO
