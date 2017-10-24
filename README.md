@@ -105,7 +105,7 @@ Unless otherwise stated, all the examples below are to be run on *local* host fr
 *When to run* : initially + on-demand to **add, remove, change** project specifications (overwrites local env settings).
 
 ```sh
-./cwt/stack/init.sh
+. cwt/stack/init.sh
 ```
 
 ### Install host-level dependencies
@@ -118,10 +118,10 @@ Unless otherwise stated, all the examples below are to be run on *local* host fr
 
 ```sh
 # To provision local host :
-./cwt/stack/setup.sh
+. cwt/stack/setup.sh
 
 # To provision a remote host :
-./cwt/remote/setup.sh
+. cwt/remote/setup.sh
 ```
 
 ### Specify remote host
@@ -133,7 +133,7 @@ Unless otherwise stated, all the examples below are to be run on *local* host fr
 *Prerequisites* : SSH keys must already be set up & loaded in current user's bash session.
 
 ```sh
-./cwt/remote/add_host.sh
+. cwt/remote/add_host.sh
 ```
 
 ### Manage host services
@@ -148,16 +148,16 @@ Unless otherwise stated, all the examples below are to be run on *local* host fr
 - Remote : `cwt/remote/add_host.sh` + `cwt/remote/setup.sh`
 
 ```sh
-./cwt/stack/start.sh
-./cwt/stack/restart.sh
-./cwt/stack/stop.sh
-./cwt/stack/rebuild.sh # For docker-compose, e.g. when modifying images.
+. cwt/stack/start.sh
+. cwt/stack/restart.sh
+. cwt/stack/stop.sh
+. cwt/stack/rebuild.sh # For docker-compose, e.g. when modifying images.
 
 # On remote (1st arg = instance domain) :
-./cwt/remote/start.sh test.example.com
-./cwt/remote/restart.sh test.example.com
-./cwt/remote/stop.sh test.example.com
-./cwt/remote/rebuild.sh test.example.com # For docker-compose, e.g. when modifying images.
+. cwt/remote/start.sh test.example.com
+. cwt/remote/restart.sh test.example.com
+. cwt/remote/stop.sh test.example.com
+. cwt/remote/rebuild.sh test.example.com # For docker-compose, e.g. when modifying images.
 ```
 
 ### Initialize application instance
@@ -173,10 +173,10 @@ Unless otherwise stated, all the examples below are to be run on *local* host fr
 
 ```sh
 # To initialize local project instance :
-./cwt/app/init.sh
+. cwt/app/init.sh
 
 # To initialize a remote project instance (1st arg = instance domain) :
-./cwt/remote/init.sh test.example.com
+. cwt/remote/init.sh test.example.com
 ```
 
 ### Reset application instance
@@ -192,10 +192,10 @@ Unless otherwise stated, all the examples below are to be run on *local* host fr
 
 ```sh
 # To reset local project instance :
-./cwt/app/reset.sh
+. cwt/app/reset.sh
 
 # To reset a remote project instance (1st arg = instance domain) :
-./cwt/remote/reset.sh test.example.com
+. cwt/remote/reset.sh test.example.com
 ```
 
 ### Manage specific application tasks
@@ -210,15 +210,15 @@ Unless otherwise stated, all the examples below are to be run on *local* host fr
 - Remote : `cwt/remote/init.sh`
 
 ```sh
-./cwt/app/watch.sh
-./cwt/app/build.sh
-./cwt/app/rebuild.sh
-./cwt/app/test.sh
+. cwt/app/watch.sh
+. cwt/app/build.sh
+. cwt/app/rebuild.sh
+. cwt/app/test.sh
 
 # On remote (1st arg = instance domain) :
-./cwt/remote/build.sh test.example.com
-./cwt/remote/rebuild.sh test.example.com
-./cwt/remote/test.sh test.example.com
+. cwt/remote/build.sh test.example.com
+. cwt/remote/rebuild.sh test.example.com
+. cwt/remote/test.sh test.example.com
 ```
 
 ### Deploy to remote
@@ -231,7 +231,7 @@ Unless otherwise stated, all the examples below are to be run on *local* host fr
 
 ```sh
 # Target remote using 1st arg (instance domain) :
-./cwt/remote/deploy.sh test.example.com
+. cwt/remote/deploy.sh test.example.com
 ```
 
 ### 2-way Sync
