@@ -43,13 +43,13 @@ There are 2 ways to use CWT in existing or new projects :
 
 ### Option 1 first steps
 
-- Download & copy/paste CWT files into project
+- Download and/or copy&paste CWT files into project root dir (existing or new Git repo)
 - Undo default ignored subfolders in `.gitignore` file if/as needed
 
 ### Option 2 first steps
 
-- Clone or download CWT in desired location (aka the project root dir)
-- Clone the application into a subfolder named e.g. `web`, `public`, `build`, etc.
+- Download CWT in desired location (aka the project root dir)
+- Clone the application into a subfolder named e.g. `web`, `public`, etc.
 - Gitignore that subfolder by updating the `.gitignore` file accordingly
 - [optional] Make any alterations necessary
 - [optional] Maintain as a separate repo
@@ -58,9 +58,9 @@ There are 2 ways to use CWT in existing or new projects :
 
 When CWT files are in place alongside the rest of the project :
 
-- Initialize "stack" (environment settings & remote instance)
+- Initialize "stack" (environment settings)
 - Provision local and/or remote host
-- Setup application (local and/or remote) instance
+- Install new application instance(s) (local and/or remote)
 - [optional] Implement automated tests
 - [optional] Implement deployment to desired remote instance(s)
 
@@ -98,7 +98,7 @@ See section *Frequent tasks (howtos / FAQ)* for details.
 
 Unless otherwise stated, all the examples below are to be run on *local* host from `/path/to/project/` as sudo or root.
 
-### Initialize local instance parameters
+### Initialize local instance env settings
 
 *Purpose* : Specifies what kind of project we're working with - i.e its "stack" specifications, what kind of deployment / automated tests / CI workflow it uses, etc.
 
