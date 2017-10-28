@@ -2,32 +2,45 @@
 
 . cwt/bash_utils.sh
 
-YES=0
-REG_BACKEND="file"
-PROVISION="scripts"
-PROJECT_STACK=""
-INSTANCE_TYPE="dev"
+new='master'
 
-# See https://stackoverflow.com/a/31443098
-while [ "$#" -gt 0 ]; do
-  case "$1" in
-    -r) REG_BACKEND="$2"; shift 2;;
-    -p) PROVISION="$2"; shift 2;;
-    -s) PROJECT_STACK="$2"; shift 2;;
-    -t) INSTANCE_TYPE="$2"; shift 2;;
-    -y) YES=1; shift 1;;
+# Do not proceed if branch is not the one we're tracking.
+if [[ "${new}" != "master" ]]; then
+  echo
+  echo "Error in $BASH_SOURCE line $LINENO:"
+  echo "Branch ${branch} is not master. Skipped!"
+  echo "Deployment aborted."
+  echo
+fi
 
-    --reg=*) REG_BACKEND="${1#*=}"; shift 1;;
-    --provision=*) PROVISION="${1#*=}"; shift 1;;
-    --stack=*) PROJECT_STACK="${1#*=}"; shift 1;;
-    --type=*) INSTANCE_TYPE="${1#*=}"; shift 1;;
-    --yes) shift 1;;
-    --reg|--provision|--stack|--type) echo "Error in $BASH_SOURCE line $LINENO: $1 requires an argument" >&2; return;;
+echo "Over."
 
-    -*) echo "Error in $BASH_SOURCE line $LINENO: unknown option: $1" >&2; return;;
-    *) echo "Error in $BASH_SOURCE line $LINENO: unsupported unnamed argument: $1"; shift 1;;
-  esac
-done
+# YES=0
+# REG_BACKEND="file"
+# PROVISION="scripts"
+# PROJECT_STACK=""
+# INSTANCE_TYPE="dev"
+
+# # See https://stackoverflow.com/a/31443098
+# while [ "$#" -gt 0 ]; do
+#   case "$1" in
+#     -r) REG_BACKEND="$2"; shift 2;;
+#     -p) PROVISION="$2"; shift 2;;
+#     -s) PROJECT_STACK="$2"; shift 2;;
+#     -t) INSTANCE_TYPE="$2"; shift 2;;
+#     -y) YES=1; shift 1;;
+
+#     --reg=*) REG_BACKEND="${1#*=}"; shift 1;;
+#     --provision=*) PROVISION="${1#*=}"; shift 1;;
+#     --stack=*) PROJECT_STACK="${1#*=}"; shift 1;;
+#     --type=*) INSTANCE_TYPE="${1#*=}"; shift 1;;
+#     --yes) shift 1;;
+#     --reg|--provision|--stack|--type) echo "Error in $BASH_SOURCE line $LINENO: $1 requires an argument" >&2; return;;
+
+#     -*) echo "Error in $BASH_SOURCE line $LINENO: unknown option: $1" >&2; return;;
+#     *) echo "Error in $BASH_SOURCE line $LINENO: unsupported unnamed argument: $1"; shift 1;;
+#   esac
+# done
 
 
 # See https://stackoverflow.com/a/33826763
@@ -86,8 +99,8 @@ done
 #   esac
 # done
 
-echo "YES: $YES"
-echo "REG_BACKEND: $REG_BACKEND"
-echo "PROVISION: $PROVISION"
-echo "PROJECT_STACK: $PROJECT_STACK"
-echo "INSTANCE_TYPE: $INSTANCE_TYPE"
+# echo "YES: $YES"
+# echo "REG_BACKEND: $REG_BACKEND"
+# echo "PROVISION: $PROVISION"
+# echo "PROJECT_STACK: $PROJECT_STACK"
+# echo "INSTANCE_TYPE: $INSTANCE_TYPE"

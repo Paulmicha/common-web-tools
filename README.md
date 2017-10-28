@@ -69,7 +69,7 @@ See section *Frequent tasks (howtos / FAQ)* for details.
 ## Architecture
 
 ```txt
-/path/to/project/
+/path/to/project/               <- Project root dir.
   ├── cwt/
   │   ├── app/                  <- App setup / watch / (re)build scripts + [wip] samples.
   │   ├── db/                   <- Database-related scripts.
@@ -93,6 +93,30 @@ See section *Frequent tasks (howtos / FAQ)* for details.
   ├── private/
   └── web/                      <- Public web application dir. May use other names like docroot, www, public...
 ```
+
+## Patterns
+
+Bash is not a programming language, but given the purpose of this collection of scripts - i.e. generic "gluing", some patterns were used:
+
+### Systematic sourcing from project root dir
+
+- **Purpose**: including (direct exec or source) any file from anywhere always uses the same relative reference path.
+- **Caveat**: global scope mayhem - risks of variables collision, etc.
+- **How to mitigate**: follow naming conventions, see section *Conventions* below.
+
+### "Autoload" (dynamic sourcing)
+
+- **Purpose**: make development easier (less manual inclusions to think about), and allows "hooks" - see below.
+- **Example**: `cwt/bash_utils.sh`
+
+This pattern might be used to integrate some [existing (and more elaborate) Bash projects](https://github.com/awesome-lists/awesome-bash).
+
+## Conventions
+
+- Sourcing : prefer the shorter notation - single dot, ex: `. cwt/aliases.sh`
+- Parameters : variables storing values coming from arguments are prefixed with `P_`, ex: `$P_PROJECT_STACK`. See `cwt/stack/init.sh`
+- Separator for a single name having multiple words : use underscores `_` in variables, functions, and script names. Use dashes `-` in folder names.
+- Dashes `-` in stack names are used to dynamically match env settings "dist" files (models) - 1 dash = 1 dir level, ex: stack name `my_stack_name-3` would trigger lookups in `cwt/env/dist/my-stack-name/app.vars.sh.dist`, `cwt/env/dist/my-stack-name/3/app.vars.sh.dist`, etc. See `cwt/env/README.md`.
 
 ## Frequent tasks (howtos / FAQ)
 

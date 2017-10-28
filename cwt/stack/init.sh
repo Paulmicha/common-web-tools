@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##
-# Init environment settings for this project intance.
+# [wip] Init environment settings for this project intance.
 #
 # Prerequisites:
 # Local Git repo initialized. See main README.md - section "Usage".
@@ -56,13 +56,24 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-# TODO generate conditional values.
-echo "P_YES: $P_YES"
-echo "P_REG_BACKEND: $P_REG_BACKEND"
-echo "P_PROVISION: $P_PROVISION"
-echo "P_PROJECT_STACK: $P_PROJECT_STACK"
-echo "P_INSTANCE_TYPE: $P_INSTANCE_TYPE"
-echo "P_INSTANCE_DOMAIN: $P_INSTANCE_DOMAIN"
+# echo "P_YES: $P_YES"
+# echo "P_REG_BACKEND: $P_REG_BACKEND"
+# echo "P_PROVISION: $P_PROVISION"
+# echo "P_PROJECT_STACK: $P_PROJECT_STACK"
+# echo "P_INSTANCE_TYPE: $P_INSTANCE_TYPE"
+# echo "P_INSTANCE_DOMAIN: $P_INSTANCE_DOMAIN"
+
+# Confirm overwriting (unless bypass requested).
+if [[ -f cwt/env/current/env.vars.sh ]]
+  while true; do
+    read -p "Override existing settings ? (y/n) : " yn
+    case $yn in
+      [Yy]* ) echo "Ok, proceeding to override existing environment settings for this project intance."; break;;
+      [Nn]* ) echo "Cancelled."; return;;
+      * ) echo "Please answer yes or no.";;
+    esac
+  done
+fi
 
 # Write in current instance env settings file.
 . cwt/env/write.sh

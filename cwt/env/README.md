@@ -12,12 +12,12 @@ The (over)writing happens during **stack init** phase. It copies files from the 
 
 Some settings may be applicable only for some type of project stack, provision method, or any combination of stack init script arguments. Conditional generation of corresponding env settings uses naming convention and folder structure, as described in the example below.
 
-Given the following value for the '-s' or '--stack' arg: "drupal-7", and for the '-p' or '--provision' arg: "scripts", this script will attempt to copy the contents of all the following files (if they exist), append it to the file storing settings of the current local instance, `cwt/env/current/.app.env.sh` :
+Given the following value for the '-s' or '--stack' arg: "drupal-7", and for the '-p' or '--provision' arg: "scripts", this script will attempt to copy the contents of all the following files (if they exist), append it to the file storing settings of the current local instance, `cwt/env/current/.app.vars.sh` :
 
-- `cwt/env/dist/drupal/.app.env.sh.dist`
-- `cwt/env/dist/drupal/.scripts_provision.env.sh.dist`
-- `cwt/env/dist/drupal/7/.app.env.sh.dist`
-- `cwt/env/dist/drupal/7/.scripts_provision.env.sh.dist`
+- `cwt/env/dist/drupal/app.vars.sh.dist`
+- `cwt/env/dist/drupal/scripts.provision.vars.sh.dist`
+- `cwt/env/dist/drupal/7/app.vars.sh.dist`
+- `cwt/env/dist/drupal/7/scripts.provision.vars.sh.dist`
 
 Then it proceeds to replace all placeholders from the dist files with values from variables populated in stack init, using the following convention :
 

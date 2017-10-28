@@ -15,11 +15,11 @@
 # Given the following value for the '-s' or '--stack' arg: "drupal-7",
 # and for the '-p' or '--provision' arg: "scripts", this script will attempt to
 # copy the contents of all the following files (if they exist), append it to the
-# file storing settings of the current local instance, cwt/env/current/.app.env.sh :
-# - cwt/env/dist/drupal/.app.env.sh.dist
-# - cwt/env/dist/drupal/.scripts_provision.env.sh.dist
-# - cwt/env/dist/drupal/7/.app.env.sh.dist
-# - cwt/env/dist/drupal/7/.scripts_provision.env.sh.dist
+# file storing settings of the current local instance, cwt/env/current/.app.vars.sh :
+# - cwt/env/dist/drupal/app.vars.sh.dist
+# - cwt/env/dist/drupal/scripts_provision.vars.sh.dist
+# - cwt/env/dist/drupal/7/app.vars.sh.dist
+# - cwt/env/dist/drupal/7/scripts_provision.vars.sh.dist
 #
 # Then it proceeds to replace all placeholders from the dist files with values
 # from variables populated in stack init, using the following convention :
@@ -38,7 +38,7 @@
 # Check params.
 if [[ -z "${1}" ]]; then
   echo ""
-  echo "ERROR : first argument 'instance type' is required."
+  echo "ERROR : argument 'instance type' is required."
   echo "Example : \$ . cwt/env/write.sh live myproject.com"
   echo "(allowed instance types are 'dev', 'test', or 'live')"
   echo ""
@@ -50,7 +50,7 @@ fi
 
 if [[ -z "${2}" ]]; then
   echo ""
-  echo "ERROR : 2nd argument 'domain' is required."
+  echo "ERROR : argument 'domain' is required."
   echo "Example : \$ . cwt/env/write.sh live myproject.com"
   echo "(replace the 2nd argument with domain, e.g. myproject.com)"
   echo ""
