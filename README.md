@@ -71,7 +71,7 @@ When CWT files are in place alongside the rest of the project :
 
 See section *Frequent tasks (howtos / FAQ)* for details.
 
-## Architecture
+## File structure
 
 ```txt
 /path/to/project/               <- Project root dir.
@@ -101,7 +101,7 @@ See section *Frequent tasks (howtos / FAQ)* for details.
 
 ## Patterns
 
-Bash is not a programming language, but given the purpose of this collection of scripts - i.e. generic "gluing", some patterns were used:
+Briefly explains basic architectural aspects of CWT.
 
 ### Systematic sourcing from project root dir
 
@@ -138,6 +138,13 @@ This pattern might be used to integrate some [existing (and more elaborate) Bash
 ## Frequent tasks (howtos / FAQ)
 
 Unless otherwise stated, all the examples below are to be run on *local* host from `/path/to/project/` as sudo or root.
+
+**NB** : CWT is not a program; it's a generic, overridable "glue" between programs. Currently, no exit codes are used in any top-level entry points listed below. These scripts (and all those sourced in the "main shell") use `return` instead of `exit`.
+
+This is important to note in case you're adding your own custom scripts to override and/or complement parts of CWT, because unless you really mean to close the *current shell* (i.e. close the terminal window), you have 2 options :
+
+- Either also use `return`
+- Or just launch every example below as subshells (e.g. replace `. cwt/stack/init.sh` with `./cwt/stack/init.sh`).
 
 ### Initialize local instance env settings
 
