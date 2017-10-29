@@ -8,9 +8,10 @@ Scripts bash for usual devops tasks aimed at relatively small web projects.
 
 ## PURPOSE
 
-- setup app dependencies (with variants per env. type: dev, test, live)
-- instanciate different environments locally and/or remotely
-- implement deployment / remote 2-way sync
+- install host-level dependencies (provision required packets/apps/services) - locally and/or remotely
+- instanciate project locally and/or remotely, with variants per env. type - dev, test, live... (e.g. get or generate services credentials, write local app settings, create database, build...)
+- implement deployment and/or automated tests
+- remote 2-way sync
 
 CWT targets individual developers or relatively small teams attempting to streamline or implement a common workflow across older *and* newer projects.
 
@@ -18,9 +19,9 @@ CWT targets individual developers or relatively small teams attempting to stream
 
 Abstracting differences to streamline recurrent devops needs. There already are free existing tools addressing some tasks, such as :
 
-1. Ansible roles (e.g. GeerlingGuy/DrupalVM)
-1. docker-compose (e.g. wodby/docker4drupal)
-1. Ansistrano, Portainer, Swarm, Helm, draft.sh, Dokku, Jenkins, Drone, Rancher, Mesos...
+- Ansible roles (e.g. GeerlingGuy/DrupalVM)
+- docker-compose (e.g. wodby/docker4drupal)
+- Ansistrano, Portainer, Swarm, Helm, draft.sh, Dokku, Jenkins, Drone, Rancher, Mesos...
 
 The approach here is to provide a minimal base for abstracting usual tasks (maintain a common set of commands with varying implementations), while allowing to complement, combine, replace or add specific operations **with or without** existing tools.
 
@@ -32,7 +33,11 @@ While tools like Ansible, `docker-compose` or `nvm` already address these concer
 
 ## Preprequisites
 
-Local & remote hosts or VMs with bash support. CWT is tested on Debian and/or Ubuntu Linux hosts.
+- Local & remote hosts or VMs with bash support
+- Git
+- Existing project (new or old)
+
+CWT is currently only tested on Debian and/or Ubuntu Linux hosts.
 
 ## Usage
 
@@ -100,14 +105,26 @@ Bash is not a programming language, but given the purpose of this collection of 
 
 ### Systematic sourcing from project root dir
 
-- **Purpose**: including (direct exec or source) any file from anywhere always uses the same relative reference path.
-- **Caveat**: global scope mayhem - risks of variables collision, etc.
-- **How to mitigate**: follow naming conventions, see section *Conventions* below.
+- **Purpose**:
+    - Simplicity for including (subshell exec or source) any file from anywhere - always use the same relative reference path everywhere
+    - Sharing the same top-level [*current shell*](http://wiki.bash-hackers.org/scripting/processtree)
+- **Caveat**: global scope abuse is an anti-pattern: potential variables collision, etc.
+- **How to mitigate**:
+    - KISS radically (or use a more sophisticated tool)
+    - [Try to keep globals immutable (`readonly`) and use them sparingly](http://www.kfirlavi.com/blog/2012/11/14/defensive-bash-programming/)
+    - Use subshells and/or functions with `local` vars for isolable parts
+    - Follow variable and function naming conventions, see section *Conventions* below
 
 ### "Autoload" (dynamic sourcing)
 
-- **Purpose**: make development easier (less manual inclusions to think about), and allows "hooks" - see below.
-- **Example**: `cwt/bash_utils.sh`
+Example: `cwt/bash_utils.sh`
+
+**Purpose**:
+
+- Leaziness (no manual inclusions to think about)
+- When used in combination with naming conventions, allows :
+    - Automatic overrides and/or complements - i.e. when adding your custom scripts in the `cwt/specific` subdir following the same dir/file structure
+    - Drupal-like "hooks" (unclear if needed at this stage).
 
 This pattern might be used to integrate some [existing (and more elaborate) Bash projects](https://github.com/awesome-lists/awesome-bash).
 
