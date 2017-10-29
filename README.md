@@ -6,7 +6,11 @@ WIP / not ready for use yet (re-organization + evaluation stage, documentation-d
 
 Scripts bash for usual devops tasks aimed at relatively small web projects.
 
+CWT is not a program; it's a generic, customizable "glue" between programs. Simple, loosely articulated wrapper scripts.
+
 ## PURPOSE
+
+Provide a common set of commands to execute variable implementations of the following tasks :
 
 - install host-level dependencies (provision required packets/apps/services) - locally and/or remotely
 - instanciate project locally and/or remotely, with variants per env. type - dev, test, live... (e.g. get or generate services credentials, write local app settings, create database, build...)
@@ -23,7 +27,7 @@ Abstracting differences to streamline recurrent devops needs. There already are 
 - docker-compose (e.g. wodby/docker4drupal)
 - Ansistrano, Portainer, Swarm, Helm, draft.sh, Dokku, Jenkins, Drone, Rancher, Mesos...
 
-The approach here is to provide a minimal base for abstracting usual tasks (maintain a common set of commands with varying implementations), while allowing to complement, combine, replace or add specific operations **with or without** existing tools.
+The approach here is to provide a minimal base for abstracting usual tasks while allowing to complement, combine, replace or add specific operations **with or without** existing tools.
 
 ## WHY
 
@@ -107,12 +111,12 @@ Briefly explains basic architectural aspects of CWT.
 
 - **Purpose**:
     - Simplicity for including (subshell exec or source) any file from anywhere - always use the same relative reference path everywhere
-    - Sharing the same top-level [*current shell*](http://wiki.bash-hackers.org/scripting/processtree)
+    - Sharing the same top-level [*current shell*](http://wiki.bash-hackers.org/scripting/processtree), or "main shell"
 - **Caveat**: global scope abuse is an anti-pattern: potential variables collision, etc.
 - **How to mitigate**:
     - KISS radically (or use a more sophisticated tool)
-    - [Try to keep globals immutable (`readonly`) and use them sparingly](http://www.kfirlavi.com/blog/2012/11/14/defensive-bash-programming/)
-    - Use subshells and/or functions with `local` vars for isolable parts
+    - [Make globals immutable (`readonly`) and use them sparingly](http://www.kfirlavi.com/blog/2012/11/14/defensive-bash-programming/)
+    - Use functions with `local` vars for isolable parts
     - Follow variable and function naming conventions, see section *Conventions* below
 
 ### "Autoload" (dynamic sourcing)
@@ -131,6 +135,7 @@ This pattern might be used to integrate some [existing (and more elaborate) Bash
 ## Conventions
 
 - Sourcing : prefer the shorter notation - single dot, ex: `. cwt/aliases.sh`
+- UPPERCASE / lowercase differenciates global variables from `local` variables (only used in function scopes)
 - Parameters : variables storing values coming from arguments are prefixed with `P_`, ex: `$P_PROJECT_STACK`. See `cwt/stack/init.sh`
 - Separator for a single name having multiple words : use underscores `_` in variables, functions, and script names. Use dashes `-` in folder names.
 - Dashes `-` in stack names are used to dynamically match env settings "dist" files (models) - 1 dash = 1 dir level, ex: stack name `my_stack_name-3` would trigger lookups in `cwt/env/dist/my-stack-name/app.vars.sh.dist`, `cwt/env/dist/my-stack-name/3/app.vars.sh.dist`, etc. See `cwt/env/README.md`.
@@ -139,7 +144,7 @@ This pattern might be used to integrate some [existing (and more elaborate) Bash
 
 Unless otherwise stated, all the examples below are to be run on *local* host from `/path/to/project/` as sudo or root.
 
-**NB** : CWT is not a program; it's a generic, overridable "glue" between programs. Currently, no exit codes are used in any top-level entry points listed below. These scripts (and all those sourced in the "main shell") use `return` instead of `exit`.
+**NB** : Currently, no exit codes are used in any top-level entry points listed below. These scripts (and all those sourced in the "main shell") use `return` instead of `exit`.
 
 This is important to note in case you're adding your own custom scripts to override and/or complement parts of CWT, because unless you really mean to close the *current shell* (i.e. close the terminal window), you have 2 options :
 
