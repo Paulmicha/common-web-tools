@@ -12,7 +12,7 @@
 ##
 # Returns bash code to eval for using potential override of given script.
 #
-# Checks if its counterpart exists in cwt/specific/overrides, and if it does,
+# Checks if its counterpart exists in cwt/custom/overrides, and if it does,
 # return the code that will source it and return early in main shell.
 #
 # Using eval allows this function to act in main shell scope, which we need
@@ -36,7 +36,7 @@ u_autoload_override() {
 ##
 # Sources complement of given script.
 #
-# Checks if its counterpart exists in cwt/specific/complements, and if it does,
+# Checks if its counterpart exists in cwt/custom/complements, and if it does,
 # source it in the scope of the calling script.
 #
 # This function is normally called after existing CWT generic script operations.

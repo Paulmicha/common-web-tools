@@ -4,7 +4,7 @@
 # Local project registry.
 #
 # Loads the file containing registry Bash utility functions corresponding to
-# this env's reg backend. Allows override from 'cwt/specific' dir.
+# this env's reg backend. Allows override from 'cwt/custom' dir.
 #
 # Note : each registry implementation must provide at least these 3 functions :
 # - u_registry_set_val()

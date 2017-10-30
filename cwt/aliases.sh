@@ -18,7 +18,7 @@ if [ -f ".remote_hosts.env" ]; then
   fi
 fi
 
-# Potential override from 'cwt/specific' dir.
-if [ -f cwt/specific/aliases.sh ]; then
-  . cwt/specific/aliases.sh
+# Potential override from 'cwt/custom' dir.
+if [ -f cwt/custom/aliases.sh ]; then
+  . cwt/custom/aliases.sh
 fi
