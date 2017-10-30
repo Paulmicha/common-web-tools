@@ -38,16 +38,13 @@
 # . cwt/env/registry.sh
 #
 
-# If no env var, use default (file) backend.
-if [ -z "$REG_BACKEND" ]; then
-  . cwt/env/registry_file.sh
-fi
+# Allows custom override.
+eval `u_autoload_override "$BASH_SOURCE"`
 
-# Potential override from 'cwt/specific' dir takes priority.
-if [ -f "cwt/specific/env/registry_${REG_BACKEND}.sh" ]; then
-  . "cwt/specific/env/registry_${REG_BACKEND}.sh"
-
-# Finally, load default backend type implementation.
-elif [ -f "cwt/env/registry_${REG_BACKEND}.sh" ]; then
+# Load default backend type implementation.
+if [[ -f "cwt/env/registry_${REG_BACKEND}.sh" ]]; then
   . "cwt/env/registry_${REG_BACKEND}.sh"
 fi
+
+# Allows custom complement.
+u_autoload_get_complement "$BASH_SOURCE"

@@ -24,9 +24,15 @@
 !/private/README.md
 !/private/.htaccess
 
-# Custom scripts.
-/cwt/custom
+# Customizations.
+/cwt/custom/*
 !/cwt/custom/README.md
+!/cwt/custom/overrides
+/cwt/custom/overrides/*
+!/cwt/custom/overrides/README.md
+!/cwt/custom/complements
+/cwt/custom/complements/*
+!/cwt/custom/complements/README.md
 
 # DB dumps.
 /dumps/*

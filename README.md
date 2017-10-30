@@ -114,7 +114,7 @@ Briefly explains basic architectural aspects of CWT.
     - Sharing the same top-level [*current shell*](http://wiki.bash-hackers.org/scripting/processtree), or "main shell"
 - **Caveat**: global scope abuse is an anti-pattern: potential variables collision, etc.
 - **How to mitigate**:
-    - KISS radically (or use a more sophisticated tool)
+    - KISS radically
     - [Make globals immutable (`readonly`) and use them sparingly](http://www.kfirlavi.com/blog/2012/11/14/defensive-bash-programming/)
     - Use functions with `local` vars for isolable parts
     - Follow variable and function naming conventions, see section *Conventions* below
@@ -127,16 +127,18 @@ Example: `cwt/bash_utils.sh`
 
 - Leaziness (no manual inclusions to think about)
 - When used in combination with naming conventions, allows :
-    - Automatic overrides and/or complements - i.e. when adding your custom scripts in the `cwt/specific` subdir following the same dir/file structure
-    - Drupal-like "hooks" (unclear if needed at this stage).
+    - Automatic overrides and/or complements - i.e. when adding your custom scripts in the `cwt/specific` subdir following the same dir/file structure. See `cwt/utilities/autoload.sh`
+    - Drupal-like "hooks" (unclear if needed at this stage)
 
 This pattern might be used to integrate some [existing (and more elaborate) Bash projects](https://github.com/awesome-lists/awesome-bash).
+
 
 ## Conventions
 
 - Sourcing : prefer the shorter notation - single dot, ex: `. cwt/aliases.sh`
 - UPPERCASE / lowercase differenciates global variables from `local` variables (only used in function scopes)
-- Parameters : variables storing values coming from arguments are prefixed with `P_`, ex: `$P_PROJECT_STACK`. See `cwt/stack/init.sh`
+- Parameters : variables storing values coming from arguments are prefixed with `P_` or `p_` (for *parameter*), ex: `$P_PROJECT_STACK`. See `cwt/stack/init.sh`
+- Function names for utilities in `cwt/utilities` are all prefixed by `u_` (for *utility*), ex: `u_autoload_override`
 - Separator for a single name having multiple words : use underscores `_` in variables, functions, and script names. Use dashes `-` in folder names.
 - Dashes `-` in stack names are used to dynamically match env settings "dist" files (models) - 1 dash = 1 dir level, ex: stack name `my_stack_name-3` would trigger lookups in `cwt/env/dist/my-stack-name/app.vars.sh.dist`, `cwt/env/dist/my-stack-name/3/app.vars.sh.dist`, etc. See `cwt/env/README.md`.
 
