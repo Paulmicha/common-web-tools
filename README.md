@@ -101,8 +101,8 @@ See section *Frequent tasks (howtos / FAQ)* for details.
   │       ├── behat/
   │       └── gemini/
   ├── dumps/
-  ├── private/
-  └── web/                      <- Public web application dir. May use other names like docroot, www, public...
+  ├── web/                      <- Public web application dir. May use other names like docroot, www, public...
+  └── .gitignore                <- Replace with your own and/or edit.
 ```
 
 ## Patterns
@@ -119,7 +119,7 @@ Briefly explains basic architectural aspects of CWT.
     - KISS radically
     - [Make globals immutable (`readonly`) and use them sparingly](http://www.kfirlavi.com/blog/2012/11/14/defensive-bash-programming/)
     - Use functions with `local` vars for isolable parts
-    - Follow variable and function naming conventions, see section *Conventions* below
+    - Follow variable and function naming conventions, see section *conventions used in code* below
 
 ### "Autoload" (dynamic sourcing)
 
@@ -128,13 +128,22 @@ Basic example: `cwt/bash_utils.sh`
 **Purpose**:
 
 - Leaziness (no manual inclusions to think about)
-- When used in combination with naming conventions, allows :
-    - Automatic overrides and/or complements - i.e. when adding your custom scripts in the `cwt/custom` subdir following the same dir/file structure. See `cwt/utilities/autoload.sh`
-    - Drupal-like "hooks" (unclear if needed at this stage)
+- When used in combination with naming conventions, allows automatic overrides and/or complements - i.e. when adding your custom scripts in the `cwt/custom` subdir following the same dir/file structure. See `cwt/utilities/autoload.sh`
 
 This pattern might be used to integrate some [existing (and more elaborate) Bash projects](https://github.com/awesome-lists/awesome-bash).
 
-## Conventions
+### Methodic naming (differenciation)
+
+The principle is : *file structure* should indicate intent. CWT's organization is task-oriented by subject.
+
+This is not really a pattern and more a basic guideline to name folders, scripts or functions. It may also help deciding how to split or group operations and inform folder structure choices.
+
+- **Purpose**:
+    - Less hesitation
+    - Self-explanation
+- **Caveat**: Potential identic file names in different folders (cf. modularity article JS)
+
+## Conventions used in code
 
 - Sourcing : prefer the shorter notation - single dot, ex: `. cwt/aliases.sh`
 - UPPERCASE / lowercase differenciates global variables from `local` variables (only used in function scopes)
@@ -149,10 +158,10 @@ Unless otherwise stated, all the examples below are to be run on *local* host fr
 
 **NB** : Currently, no exit codes are used in any top-level entry points listed below. These scripts (and all those sourced in the "main shell") use `return` instead of `exit`.
 
-This is important to note in case you're adding your own custom scripts to override and/or complement parts of CWT, because unless you really mean to close the *current shell* (i.e. close the terminal window), you have 2 options :
+Regarding ways to alter the execution of existing scripts and/or its order, the pattern "Autoload" usually means :
 
-- Also use `return` when working in the main shell scope - i.e. in your custom scripts autoloaded from `cwt/custom/overrides` and `cwt/custom/complements`
-- Wrap customizations in functions (or subshells)
+- Use `return` when working in the main shell scope - i.e. in your custom scripts autoloaded from `cwt/custom/overrides` and `cwt/custom/complements`
+- Wrap customizations in functions or subshells
 
 ### Initialize local instance env settings
 
