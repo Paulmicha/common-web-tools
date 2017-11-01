@@ -19,10 +19,8 @@
 # $ . cwt/provision/scripts/debian/8/lamp_setup.sh
 #
 
-. cwt/env/load.sh
-
-# Make sure this script only runs once per host.
-eval `u_run_once_per_host "$BASH_SOURCE"`
+# Allow custom override for this script.
+eval `u_autoload_override "$BASH_SOURCE"`
 
 # Host-level dependencies.
 . cwt/provision/scripts/debian/8/system/utils.sh
@@ -52,3 +50,6 @@ eval `u_run_once_per_host "$BASH_SOURCE"`
 # Adminer (DB manager UI).
 # mkdir /var/www/html/adminer
 # wget https://github.com/vrana/adminer/releases/download/v4.3.1/adminer-4.3.1-mysql-en.php -O /var/www/html/adminer/index.php
+
+# Allow custom complements for this script.
+u_autoload_get_complement "$BASH_SOURCE"

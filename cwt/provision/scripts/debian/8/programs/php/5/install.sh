@@ -13,6 +13,9 @@
 # Run as root or sudo.
 #
 
+# Make sure this script only runs once per host.
+eval `u_run_once_per_host "$BASH_SOURCE"`
+
 apt install php5 php5-dev php5-cli php5-common php5-mysql php5-curl php-pear php5-gd php5-mcrypt -y
 apt install php5-intl -y
 

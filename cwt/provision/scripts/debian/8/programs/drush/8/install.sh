@@ -9,6 +9,9 @@
 # Run as root or sudo.
 #
 
+# Make sure this script only runs once per host.
+eval `u_run_once_per_host "$BASH_SOURCE"`
+
 # PHP Drush 8.x (for D6, D7, D8 <= D8.3).
 mkdir /usr/local/share/drush
 cd /usr/local/share/drush

@@ -9,5 +9,8 @@
 # Run as root or sudo.
 #
 
+# Make sure this script only runs once per host.
+eval `u_run_once_per_host "$BASH_SOURCE"`
+
 apt install imagemagick -y
 apt install php5-imagick -y
