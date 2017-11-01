@@ -38,13 +38,10 @@
 # . cwt/env/registry.sh
 #
 
-# Allows custom override.
+# Allow custom override for this script.
 eval `u_autoload_override "$BASH_SOURCE"`
 
-# Load default backend type implementation.
-if [[ -f "cwt/env/registry_${REG_BACKEND}.sh" ]]; then
-  . "cwt/env/registry_${REG_BACKEND}.sh"
+# Load implementation corresponding to the backend type env setting.
+if [[ -f "cwt/env/registry/${REG_BACKEND}.sh" ]]; then
+  . "cwt/env/registry/${REG_BACKEND}.sh"
 fi
-
-# Allows custom complement.
-u_autoload_get_complement "$BASH_SOURCE"
