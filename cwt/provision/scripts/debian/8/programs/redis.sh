@@ -8,6 +8,9 @@
 # Run as root or sudo.
 #
 
+# Make sure this script only runs once per host.
+eval `u_run_once_per_host "$BASH_SOURCE"`
+
 cat > /etc/apt/sources.list.d/dotdeb.list <<'EOF'
 deb http://ftp.utexas.edu/dotdeb/ jessie all
 deb-src http://ftp.utexas.edu/dotdeb/ jessie all
