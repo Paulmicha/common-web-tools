@@ -1,18 +1,18 @@
 #!/bin/bash
 
 ##
-# LAMP server Drupal cron setup.
+# Letsencrypt renew HTTPS certificate (certbot) cron setup.
 #
 # Run as root or sudo.
 #
 # Usage :
-# $ . cwt/stack/lamp_deb/cron_drupal_setup.sh
+# $ . cwt/provision/scripts/debian/8/cron/add_https_renew.sh
 #
 
 . cwt/env/load.sh
 
 CRON_FILE='/etc/crontab'
-COMMENT="Run Drupal's cron for $INSTANCE_DOMAIN ($INSTANCE_TYPE) every 30 min using drush"
+COMMENT="Run Letsencrypt's certbot renew every day at 00h52 and 12h52"
 
 # Prevent risking adding the same line several times.
 if grep -R "$COMMENT" $CRON_FILE
@@ -24,6 +24,6 @@ fi
 
 echo "
 # $COMMENT.
-*/30 * * * *  root  drush --root=$APP_DOCROOT cron" >> $CRON_FILE
+52 0,12 * * *  root  certbot renew" >> $CRON_FILE
 
 echo "Cron entry '$COMMENT' has been added to $CRON_FILE."

@@ -19,6 +19,11 @@
 # $ . cwt/provision/scripts/debian/8/lamp_setup.sh
 #
 
+. cwt/env/load.sh
+
+# Make sure this script only runs once per host.
+eval `u_run_once_per_host "$BASH_SOURCE"`
+
 # Host-level dependencies.
 . cwt/provision/scripts/debian/8/system/utils.sh
 . cwt/provision/scripts/debian/8/system/unattended_upgrades.sh
