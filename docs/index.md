@@ -11,13 +11,14 @@
     1. Existing tools considerations
     1. Serverless / decentralized projects
 1. Using CWT
-    1. Setup CWT
-        1. [Getting started](usage/getting-started.md)
-        1. [Prerequisites](usage/prerequisites.md)
-    1. Host provisioning
+    1. [Getting started](usage/getting-started.md)
+    1. [Provisioning (install host-level dependencies)](usage/tasks.md#install-host-level-dependencies)
         1. Locally
         1. Remotely
-    1. Project instanciating
+    1. Manage host services
+        1. Locally
+        1. Remotely
+    1. Initialize project instance
         1. Locally
         1. Remotely
     1. Testing

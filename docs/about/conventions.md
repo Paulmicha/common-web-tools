@@ -1,6 +1,4 @@
-# Common Web Tools (CWT) documentation - Conventions
-
-## Conventions used in code
+# Conventions used in code
 
 - Sourcing : prefer the shorter notation - single dot, ex: `. cwt/aliases.sh`
 - UPPERCASE / lowercase differenciates global variables from `local` variables (only used in function scopes)

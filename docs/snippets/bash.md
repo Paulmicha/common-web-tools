@@ -1,4 +1,4 @@
-# Common Web Tools (CWT) documentation - Bash snippets
+# Bash snippets
 
 ## Multi-line variable
 

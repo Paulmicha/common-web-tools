@@ -1,4 +1,4 @@
-# Common Web Tools (CWT) documentation - Patterns
+# Patterns
 
 Briefly explains basic architectural aspects of CWT.
 
