@@ -10,6 +10,24 @@
 #
 
 ##
+# Generates a random string.
+#
+# @param 1 [optional] Integer : string length - default : 16.
+#
+# @example
+#   RANDOM_STR=$(u_random_str)
+#
+u_random_str() {
+  local l="16"
+
+  if [[ -n "${1}" ]]; then
+    l="${1}"
+  fi
+
+  < /dev/urandom tr -dc A-Za-z0-9 | head -c$l; echo
+}
+
+##
 # Generates a slug from string.
 #
 # See https://gist.github.com/oneohthree/f528c7ae1e701ad990e6

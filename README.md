@@ -31,6 +31,8 @@ The approach here is to provide a minimal base for abstracting usual tasks while
 
 ## WHY
 
+To be more productive. To [standardize](https://imgs.xkcd.com/comics/standards.png) the use of common solutions for targeted use cases - see *purpose*.
+
 Over the years, the maintenance of older projects can become tedious. For instance, when old VMs are deleted, it can be difficult to recreate a compatible local dev environment supporting all dependencies from that project "technological era".
 
 While tools like Ansible, `docker-compose` or `nvm` already address these concerns, adapting or integrating such projects to use these tools for common tasks requires some amount of work (or "glue").
@@ -132,7 +134,7 @@ Basic example: `cwt/bash_utils.sh`
 
 This pattern might be used to integrate some [existing (and more elaborate) Bash projects](https://github.com/awesome-lists/awesome-bash).
 
-### Methodic naming (differenciation)
+### Folders & files naming
 
 The principle is : *file structure* should indicate intent. CWT's organization is task-oriented by subject.
 
@@ -141,7 +143,7 @@ This is not really a pattern and more a basic guideline to name folders, scripts
 - **Purpose**:
     - Less hesitation
     - Self-explanation
-- **Caveat**: Potential identic file names in different folders (cf. modularity article JS)
+- **Caveat**: Potential identic file names in different folders, see [this article about JS component-oriented file structure](https://hackernoon.com/the-100-correct-way-to-structure-a-react-app-or-why-theres-no-such-thing-3ede534ef1ed)
 
 ## Conventions used in code
 
@@ -151,6 +153,10 @@ This is not really a pattern and more a basic guideline to name folders, scripts
 - Function names for utilities in `cwt/utilities` are all prefixed by `u_` (for *utility*), ex: `u_autoload_override`
 - Separator for a single name having multiple words : use underscores `_` in variables, functions, and script names. Use dashes `-` in folder names.
 - Dashes `-` in stack names are used to dynamically match env settings "dist" files (models) - 1 dash = 1 dir level, ex: stack name `my_stack_name-3` would trigger lookups in `cwt/env/dist/my-stack-name/app.vars.sh.dist`, `cwt/env/dist/my-stack-name/3/app.vars.sh.dist`, etc. See `cwt/env/README.md`.
+
+## Usage examples (concrete use cases)
+
+TODO
 
 ## Frequent tasks (howtos / FAQ)
 
