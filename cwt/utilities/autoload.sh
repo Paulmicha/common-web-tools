@@ -46,9 +46,9 @@ u_autoload_override() {
 #
 u_autoload_get_complement() {
   local p_script_path="$1"
-  local override=${p_script_path/cwt/"cwt/custom/complements"}
+  local complement=${p_script_path/cwt/"cwt/custom/complements"}
 
-  if [[ -f "$override" ]]; then
-    . "$override"
+  if [[ -f "$complement" ]]; then
+    . "$complement"
   fi
 }

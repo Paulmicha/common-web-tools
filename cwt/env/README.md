@@ -1,8 +1,31 @@
 # Environment settings
 
-The variables written and loaded using the scripts in this directory are shared across the rest of CWT scripts, which depend on them.
+(work in progress)
 
-Some are common to any type of stack, while others are specific to certain variants.
+The variables written and loaded using the scripts in this directory are used in all CWT tasks. Some are common to any type of stack, while others are specific to certain variants.
+
+The very first step required to use CWT is writing env settings (**stack init**) :
+
+```sh
+# This is the starting point.
+# It provides options and/or terminal prompts to obtain all mandatory values.
+. cwt/stack/init.sh
+
+# cwt/stack/init.sh then calls :
+# . cwt/env/write.sh
+```
+
+In order to conditionally generate the correct variables for the current project stack (host-level dependencies, build/test tools, service-specific configuration...), the following rules are used :
+
+## Start with common CWT variables (target : host-level deps)
+
+Loaded from `cwt/env/dist/env.vars.sh`, contains the fundamental value `$PROJECT_STACK` used to derive the rest of conditional settings. Examples :
+
+- `contenta` (nothing else specified = use latest version on a corresponding "barebone", minimal stack)
+- `drupal-7--php-5.4,redis,solr-3` (request additional services after the *variant* or *modifier* separator : `--` and then separate multiple services by `,` if needed)
+- `phenomic--preset-1` (predefined "combos" may be provided as *presets*)
+
+TODO explain agregation + customization (rewrite below)
 
 ## Conventions
 

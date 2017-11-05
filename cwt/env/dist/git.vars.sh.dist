@@ -1,5 +1,0 @@
-#!/bin/bash
-
-readonly GIT_APP_REPO=__replace_this_git_app_repo_value__
-readonly GIT_USER_MAIL=__replace_this_git_mail_value__
-readonly GIT_USER_NAME=__replace_this_git_user_name_value__
