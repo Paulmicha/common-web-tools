@@ -12,6 +12,8 @@
     1. Serverless / decentralized projects
 1. Using CWT
     1. [Getting started](usage/getting-started.md)
+        1. [Environment settings](usage/environment-settings.md)
+        1. Remote operations
     1. [Provisioning (install host-level dependencies)](usage/tasks.md#install-host-level-dependencies)
         1. Locally
         1. Remotely
