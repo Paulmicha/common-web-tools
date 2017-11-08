@@ -1,4 +1,0 @@
-#!/bin/bash
-
-readonly DB_ADMIN_USERNAME=root
-readonly DB_ADMIN_PASSWORD=`. $HOME/lamp/.mariadb.env && echo $DB_ROOT_PASSWORD`

@@ -5,6 +5,8 @@ readonly PROJECT_STACK
 readonly PROJECT_DOCROOT
 readonly PROVISION_USING
 readonly REG_BACKEND
+# TODO consider using a separate store for secrets, see cwt/env/README.md.
+# readonly SECRETS_BACKEND
 
 # App instance settings.
 readonly APP_DOCROOT
@@ -15,4 +17,4 @@ readonly INSTANCE_ALIAS
 # Deployment settings.
 readonly DEPLOY_USING
 
-# TODO Test settings.
+# TODO test settings, see cwt/env/README.md.
