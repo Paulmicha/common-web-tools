@@ -6,7 +6,7 @@
 # This script is dynamically loaded.
 # @see cwt/bash_utils.sh
 #
-# Convention : fonctions names are all prefixed by "u" (for "utility").
+# Convention : functions names are all prefixed by "u" (for "utility").
 #
 
 ##
@@ -18,6 +18,9 @@
 #
 # @example
 #   u_str_split1 MY_VAR_NAME 'the,string' ','
+#   for substr in "${MY_VAR_NAME[@]}"; do
+#     echo "$substr"
+#   done
 #
 u_str_split1() {
   local p_var_name="$1"

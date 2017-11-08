@@ -6,7 +6,7 @@
 # This file is dynamically loaded.
 # @see cwt/bash_utils.sh
 #
-# Convention : fonctions names are all prefixed by "u" (for "utility").
+# Convention : functions names are all prefixed by "u" (for "utility").
 #
 
 ##
