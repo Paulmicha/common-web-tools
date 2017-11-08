@@ -10,6 +10,30 @@
 #
 
 ##
+# Splits a string given a 1-character long separator.
+#
+# @param 1 The variable name that will contain the array of substrings (in calling scope).
+# @param 2 String to split.
+# @param 3 String : separator that must be 1 character long.
+#
+# @example
+#   u_str_split1 MY_VAR_NAME 'the,string' ','
+#
+u_str_split1() {
+  local p_var_name="$1"
+  local p_str="$2"
+  local p_sep="$3"
+
+  # See https://stackoverflow.com/a/41059855
+  eval "${p_var_name}=()"
+
+  # See https://stackoverflow.com/a/45201229 (#7)
+  while read -rd"$p_sep"; do
+    eval "${p_var_name}+=(\"$REPLY\")"
+  done <<<"${p_str}${p_sep}"
+}
+
+##
 # Generates a random string.
 #
 # @param 1 [optional] Integer : string length - default : 16.

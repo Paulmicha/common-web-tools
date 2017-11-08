@@ -97,7 +97,8 @@ See section *Frequent tasks (howtos / FAQ)* for details.
   │   ├── remote/           ← Remote operations scripts (add, provision, etc.)
   │   │   └── deploy/       ← Deployment-related scripts.
   │   ├── stack/            ← Services and/or workers management scripts.
-  │   └── test/             ← Automated tests related scripts.
+  │   ├── test/             ← Automated tests related scripts.
+  │   └── utilities/        ← Bash functions includes (see "Autoload").
   ├── dumps/                ← Database dump files (git-ignored).
   ├── web/                  ← [optional] The app dir - can be outside project dir ($APP_DOCROOT).
   └── .gitignore            ← Replace with your own and/or edit.
