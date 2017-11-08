@@ -10,6 +10,7 @@
 #   2 • [default] Keep application code in a separate Git repo
 # → When using option 1, you may want to comment out the following lines.
 # Note: these are common suggestions to adapt to project needs (option 2).
+# The app docroot may also be located outside the project root dir.
 /docroot
 /public
 /web

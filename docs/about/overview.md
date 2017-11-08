@@ -40,29 +40,23 @@ While tools like Ansible, `docker-compose` or `nvm` already address these concer
 ## File structure
 
 ```txt
-/path/to/project/               <- Project root dir.
+/path/to/project/           ← Project root dir ($PROJECT_DOCROOT).
   ├── cwt/
-  │   ├── app/                  <- App setup / watch / (re)build scripts + [wip] samples.
+  │   ├── app/              ← App setup / watch / (re)build scripts.
   │   ├── custom/
-  │   │   ├── complements/      <- [optional] Add your custom script complements here (see "Autoload").
-  │   │   └── overrides/        <- [optional] Add your custom script overrides here (see "Autoload").
-  │   ├── db/                   <- Database-related scripts.
-  │   ├── env/
-  │   │   ├── current/          <- Generated values specific to current, local instance.
-  │   │   └── dist/             <- Files used as "models" for env. vars during init.
+  │   │   ├── complements/  ← [optional] Add your custom script complements here (see "Autoload").
+  │   │   └── overrides/    ← [optional] Add your custom script overrides here (see "Autoload").
+  │   ├── db/               ← Database-related scripts.
+  │   ├── env/              ← Environment settings write / load scripts.
+  │   │   └── current/      ← Generated settings specific to local instance (git-ignored).
   │   ├── git/
-  │   │   └── hooks/
-  │   ├── provision/            <- Host-level dependencies setup scripts + [wip] samples.
-  │   │   ├── ansible/
-  │   │   ├── docker-compose/
-  │   │   └── scripts/
-  │   ├── remote/
-  │   │   └── deploy/           <- Deployment-related scripts + [wip] samples.
-  │   ├── stack/                <- Manage required services and/or containers, CI tasks, workers + [wip] samples.
-  │   └── test/                 <- Automated tests related scripts + [wip] samples.
-  │       ├── behat/
-  │       └── gemini/
-  ├── dumps/
-  ├── web/                      <- Public web application dir. May use other names like docroot, www, public...
-  └── .gitignore                <- Replace with your own and/or edit.
+  │   │   └── hooks/        ← Entry points for auto-exec tests, code linting, etc.
+  │   ├── provision/        ← Host-level dependencies setup scripts.
+  │   ├── remote/           ← Remote operations scripts (add, provision, etc.)
+  │   │   └── deploy/       ← Deployment-related scripts.
+  │   ├── stack/            ← Services and/or workers management scripts.
+  │   └── test/             ← Automated tests related scripts.
+  ├── dumps/                ← Database dump files (git-ignored).
+  ├── web/                  ← [optional] The app dir - can be outside project dir ($APP_DOCROOT).
+  └── .gitignore            ← Replace with your own and/or edit.
 ```
