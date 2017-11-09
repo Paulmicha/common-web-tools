@@ -12,6 +12,50 @@
 #
 
 ##
+# Adds new variable in $ENV_VARS.
+#
+# Increments a shared counter to maintain order, because some variables may depend
+# on each other.
+#
+# @param 1 String : global variable name (readonly).
+# @param 2 [optional] String :
+#   values with syntax like : "[group]='the group name' [default]=test"
+#
+# @requires the following globals in calling scope (main shell) :
+#   - $ENV_VARS
+#   - $ENV_VARS_COUNT
+#   - $ENV_VARS_NAMES
+#   - $ENV_VARS_KEYS
+#
+# @see cwt/stack/init.sh
+# @see cwt/stack/init/aggregate_env_vars.sh
+#
+# @example
+#   u_env_var_add 'MY_VAR_NAME' "[group]='the group name' [default]=test"
+#
+u_env_var_add() {
+  local p_var_name="$1"
+  local p_values="$2"
+
+  # This count key 'i' will be used to sort the array when complete.
+  ENV_VARS["${p_var_name}|i"]=$ENV_VARS_COUNT
+
+  # These globals allow dynamic handling of args and default values.
+  ((++ENV_VARS_COUNT))
+  ENV_VARS_NAMES+="${p_var_name},"
+
+  if [[ -n "$p_values" ]]; then
+    local values_arr
+    eval "declare -A values_arr=( $p_values )"
+
+    for key in "${!values_arr[@]}"; do
+      ENV_VARS_KEYS+="${p_var_name},"
+      ENV_VARS["${p_var_name}|${key}"]="${values_arr[$key]}"
+    done
+  fi
+}
+
+##
 # Gets env settings models lookup paths.
 #
 # @param 1 [optional] String :

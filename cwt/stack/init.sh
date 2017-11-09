@@ -26,26 +26,43 @@
 . cwt/bash_utils.sh
 
 # Get named script arguments.
-. cwt/stack/init/arguments.sh
+. cwt/stack/init/get_args.sh
 
-# These values are needed throughout this task's related scripts.
+# These globals are needed throughout this task's related scripts.
 export ENV_VARS
+export ENV_VARS_COUNT
+export ENV_VARS_NAMES
+export ENV_VARS_KEYS
+
 export PROJECT_STACK="$P_PROJECT_STACK"
+export PROVISION_USING="$P_PROVISION_USING"
 export CURRENT_ENV_SETTINGS_FILE='cwt/env/current/vars.sh'
 
+# For now, we consider that it's possible to use return in main shell scope to
+# stop the whole script immediately.
+# We are evaluating the recommended pattern to wrap everything inside a main()
+# function instead, used as the single entry point for a given task.
 if [[ -z "$PROJECT_STACK" ]]; then
   echo "Warning in $BASH_SOURCE line $LINENO: cannot carry on without a value for \$P_PROJECT_STACK."
   return
+fi
+
+# This default value is required before env vars aggregation, so it's hardcoded.
+if [[ -z "$PROVISION_USING" ]]; then
+  PROVISION_USING='scripts'
 fi
 
 # Arguments matching + default value fallback.
 # WIP / TODO
 . cwt/stack/init/match_args_w_env_vars.sh
 
-# Aggregates env vars.
+# (Re)start env vars aggregation.
+unset ENV_VARS
 declare -A ENV_VARS
+ENV_VARS_COUNT=0
+ENV_VARS_NAMES=','
+ENV_VARS_KEYS=','
 . cwt/stack/init/aggregate_env_vars.sh
 
-# Write in current instance env settings file.
-# WIP / TODO
+# Write env vars in current instance's settings file.
 . cwt/env/write.sh

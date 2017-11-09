@@ -12,12 +12,19 @@
 # @see cwt/stack/init.sh
 #
 
+export P_YES
+export P_REG_BACKEND
+export P_PROVISION
+export P_PROJECT_STACK
+export P_INSTANCE_TYPE
+export P_INSTANCE_DOMAIN
+
 P_YES=0
-P_REG_BACKEND="file"
-P_PROVISION="docker-compose-3"
-P_PROJECT_STACK=""
-P_INSTANCE_TYPE="dev"
-P_INSTANCE_DOMAIN="dev"
+unset P_REG_BACKEND
+unset P_PROVISION
+unset P_PROJECT_STACK
+unset P_INSTANCE_TYPE
+unset P_INSTANCE_DOMAIN
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
