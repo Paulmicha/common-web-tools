@@ -148,6 +148,8 @@ u_stack_get_specs() {
   STACK_PRESETS=()
   STACK_SERVICES=()
 
+  local variants="${stack_variant_arr[1]}"
+
   local app_arr
   u_env_item_split_version app_arr $APP
 
@@ -156,9 +158,29 @@ u_stack_get_specs() {
     APP_VERSION="${app_arr[1]}"
   fi
 
-  if [[ -n "${stack_variant_arr[1]}" ]]; then
+  # Applications may indicate their minimum required services using the
+  # following files :
+  # - cwt/app/$APP/required_services.sh :
+  #     lists services required by any $APP version.
+  # - cwt/app/$APP/$APP_VERSION/required_services.sh :
+  #     lists, complements or overrides services required by that specific version.
+  if [[ -f "cwt/app/$APP/required_services.sh" ]]; then
+    . "cwt/app/$APP/required_services.sh"
+    if [[ -f "cwt/app/$APP/$APP_VERSION/required_services.sh" ]]; then
+      . "cwt/app/$APP/$APP_VERSION/required_services.sh"
+    fi
+    if [[ -n "$required_services" ]]; then
+      if [[ -n "$variants" ]]; then
+        variants="${variants}${required_services}"
+      else
+        variants="${required_services}"
+      fi
+    fi
+  fi
+
+  if [[ -n "$variants" ]]; then
     local variants_arr
-    u_str_split1 variants_arr "${stack_variant_arr[1]}" ','
+    u_str_split1 variants_arr "$variants" ','
 
     local substr
     for variant_item in "${variants_arr[@]}"; do
@@ -170,6 +192,9 @@ u_stack_get_specs() {
         STACK_SERVICES+=($variant_item)
       fi
     done
+
+    # TODO implement mutually exclusive alternatives. Ex :
+    # @see cwt/app/drupal/required_services.sh
   fi
 }
 
