@@ -14,8 +14,10 @@
 ##
 # Gets env settings models lookup paths.
 #
-# @param 1 [optional] String : $PROJECT_STACK override (should exist in calling scope).
-# @param 2 [optional] String : $PROVISION_USING override (should exist in calling scope).
+# @param 1 [optional] String :
+#   $PROJECT_STACK override (should exist in calling scope).
+# @param 2 [optional] String :
+#   $PROVISION_USING override (should exist in calling scope).
 #
 # @see u_stack_get_specs()
 # @see u_env_item_split_version()

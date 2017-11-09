@@ -42,37 +42,36 @@ The config models paths looked up for each example are listed below, in order. E
 
 ### Example 1 : `PROJECT_STACK=contenta`
 
-- `provision/${PROVISION_USING}.vars.sh`
+- `cwt/provision/${PROVISION_USING}.vars.sh`
 - corresponding `provision` customizations
-- `app/contenta/env.vars.sh`
-- `app/contenta/env.${PROVISION_USING}.vars.sh`
+- `cwt/app/contenta/env.vars.sh`
+- `cwt/app/contenta/env.${PROVISION_USING}.vars.sh`
 - corresponding `app` customizations (same order)
 
 ### Example 2 : `PROJECT_STACK=drupal-7--php-5.4,redis,solr-3`
 
-- `provision/${PROVISION_USING}.vars.sh`
-- `provision/php/${PROVISION_USING}.vars.sh`
-- `provision/php/5/${PROVISION_USING}.vars.sh`
-- `provision/php/5.4/${PROVISION_USING}.vars.sh`
-- `provision/redis/${PROVISION_USING}.vars.sh`
-- `provision/solr/${PROVISION_USING}.vars.sh`
-- `provision/solr/3/${PROVISION_USING}.vars.sh`
+- `cwt/provision/${PROVISION_USING}.vars.sh`
+- `cwt/provision/php/${PROVISION_USING}.vars.sh`
+- `cwt/provision/php/5.4/${PROVISION_USING}.vars.sh`
+- `cwt/provision/redis/${PROVISION_USING}.vars.sh`
+- `cwt/provision/solr/${PROVISION_USING}.vars.sh`
+- `cwt/provision/solr/3/${PROVISION_USING}.vars.sh`
 - corresponding `provision` customizations (same order)
-- `app/drupal/env.vars.sh`
-- `app/drupal/env.${PROVISION_USING}.vars.sh`
-- `app/drupal/7/env.vars.sh`
-- `app/drupal/7/env.${PROVISION_USING}.vars.sh`
+- `cwt/app/drupal/env.vars.sh`
+- `cwt/app/drupal/env.${PROVISION_USING}.vars.sh`
+- `cwt/app/drupal/7/env.vars.sh`
+- `cwt/app/drupal/7/env.${PROVISION_USING}.vars.sh`
 - corresponding `app` customizations (same order)
 
 ### Example 3 : `PROJECT_STACK=phenomic--libp2p,p-preact`
 
-- `provision/${PROVISION_USING}.vars.sh`
-- `provision/libp2p/${PROVISION_USING}.vars.sh`
-- `provision/presets/phenomic/preact.vars.sh`
-- `provision/presets/phenomic/preact.${PROVISION_USING}.vars.sh`
+- `cwt/provision/${PROVISION_USING}.vars.sh`
+- `cwt/provision/libp2p/${PROVISION_USING}.vars.sh`
+- `cwt/provision/presets/phenomic/preact.vars.sh`
+- `cwt/provision/presets/phenomic/preact.${PROVISION_USING}.vars.sh`
 - corresponding `provision` customizations (same order)
-- `app/phenomic/env.vars.sh`
-- `app/phenomic/env.${PROVISION_USING}.vars.sh`
+- `cwt/app/phenomic/env.vars.sh`
+- `cwt/app/phenomic/env.${PROVISION_USING}.vars.sh`
 - corresponding `app` customizations (same order)
 
 ## Roadmap
@@ -90,7 +89,3 @@ APP_TESTS_PRESET=gatling
 APP_VRT_PRESET=gemini
 APP_VRT_PRESET=puppeteer
 ```
-
-See if the following rule is desirable :
-
-Version numbers might be provided in `$PROVISION_USING` and would trigger additional lookups (ex: if `PROVISION_USING=docker-compose-3.4` then models looked up would be, in this order: `provision/docker-compose.vars.sh` + `provision/docker-compose-3.vars.sh` + `provision/docker-compose-3.4.vars.sh`, etc)

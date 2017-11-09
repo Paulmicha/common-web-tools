@@ -1,20 +1,28 @@
 #!/bin/bash
 
-# Stack (host-level) settings.
-readonly PROJECT_STACK
-readonly PROJECT_DOCROOT
-readonly PROVISION_USING
-readonly REG_BACKEND
+##
+# Env (settings) model file.
+#
+# This file is dynamically included during stack init.
+# @see u_env_vars_aggregate()
+#
+# Matching rules and syntax are explained in documentation :
+# @see cwt/env/README.md
+#
+
+group='Stack (host-level) settings'
+ENV_VARS['PROJECT_STACK.group']="$group"
+ENV_VARS['PROJECT_DOCROOT.group']="$group"
+ENV_VARS['PROVISION_USING.group']="$group"
+ENV_VARS['REG_BACKEND.group']="$group"
 # TODO consider using a separate store for secrets, see cwt/env/README.md.
-# readonly SECRETS_BACKEND
+# ENV_VARS['SECRETS_BACKEND.group']="$group"
 
-# App instance settings.
-readonly APP_DOCROOT
-readonly INSTANCE_TYPE
-readonly INSTANCE_DOMAIN
-readonly INSTANCE_ALIAS
+group='App instance settings'
+ENV_VARS['APP_DOCROOT.group']="$group"
+ENV_VARS['INSTANCE_TYPE.group']="$group"
+ENV_VARS['INSTANCE_DOMAIN.group']="$group"
+ENV_VARS['INSTANCE_ALIAS.group']="$group"
 
-# Deployment settings.
-readonly DEPLOY_USING
-
-# TODO test settings, see cwt/env/README.md.
+group='Deployment settings'
+ENV_VARS['DEPLOY_USING.group']="$group"

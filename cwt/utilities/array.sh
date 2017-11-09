@@ -36,3 +36,22 @@ u_in_array() {
 
   return 1
 }
+
+##
+# Simulates nested associative arrays in bash (1-level).
+#
+# See https://stackoverflow.com/a/25221316
+#
+# @example to write into associative array :
+#   arr=(a aa aaa)
+#   declare -A base_arr
+#   u_nest_array base_arr 'key' "${a[@]}"
+#
+# @example to read :
+#   echo "${base_arr[key|1]}"
+function u_nest_array {
+  local var=$1 base_key=$2 values=("${@:3}")
+  for i in "${!values[@]}"; do
+    eval "$1[\$base_key|$i]=\${values[i]}"
+  done
+}
