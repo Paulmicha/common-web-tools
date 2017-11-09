@@ -24,8 +24,8 @@
 # @requires the following globals in calling scope (main shell) :
 #   - $ENV_VARS
 #   - $ENV_VARS_COUNT
-#   - $ENV_VARS_NAMES
-#   - $ENV_VARS_KEYS
+#   - $ENV_VARS_UNIQUE_NAMES
+#   - $ENV_VARS_UNIQUE_KEYS
 #
 # @see cwt/stack/init.sh
 # @see cwt/stack/init/aggregate_env_vars.sh
@@ -37,23 +37,23 @@ u_env_var_add() {
   local p_var_name="$1"
   local p_values="$2"
 
-  # This will be used to sort the array when complete.
-  # See https://stackoverflow.com/a/39543809
-  ENV_VARS['.sorting']+=" ${ENV_VARS_COUNT}|${p_var_name} "
-
   # These globals allow dynamic handling of args and default values.
-  ((++ENV_VARS_COUNT))
-  # ENV_VARS_NAMES+=" ${p_var_name} "
+  if ! u_in_array $p_var_name ENV_VARS_UNIQUE_NAMES; then
+    ((++ENV_VARS_COUNT))
+    ENV_VARS_UNIQUE_NAMES+=($p_var_name)
+
+    # This will be used to sort the array when complete.
+    # See https://stackoverflow.com/a/39543809
+    ENV_VARS['.sorting']+=" ${ENV_VARS_COUNT}|${p_var_name} "
+  fi
 
   if [[ -n "$p_values" ]]; then
     local values_arr
     eval "declare -A values_arr=( $p_values )"
-
     for key in "${!values_arr[@]}"; do
-      if ! u_in_array $key ENV_VARS_KEYS; then
-        ENV_VARS_KEYS+=($key)
+      if ! u_in_array $key ENV_VARS_UNIQUE_KEYS; then
+        ENV_VARS_UNIQUE_KEYS+=($key)
       fi
-
       ENV_VARS["${p_var_name}|${key}"]="${values_arr[$key]}"
     done
   fi

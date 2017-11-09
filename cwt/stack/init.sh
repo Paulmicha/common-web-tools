@@ -31,8 +31,8 @@
 # These globals are needed throughout this task's related scripts.
 export ENV_VARS
 export ENV_VARS_COUNT
-# export ENV_VARS_NAMES
-export ENV_VARS_KEYS
+export ENV_VARS_UNIQUE_NAMES
+export ENV_VARS_UNIQUE_KEYS
 
 export PROJECT_STACK="$P_PROJECT_STACK"
 export PROVISION_USING="$P_PROVISION_USING"
@@ -61,8 +61,8 @@ fi
 unset ENV_VARS
 declare -A ENV_VARS
 ENV_VARS_COUNT=0
-# ENV_VARS_NAMES=''
-ENV_VARS_KEYS=()
+ENV_VARS_UNIQUE_NAMES=()
+ENV_VARS_UNIQUE_KEYS=()
 . cwt/stack/init/aggregate_env_vars.sh
 
 # Write env vars in current instance's settings file.
