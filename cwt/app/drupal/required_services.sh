@@ -1,8 +1,7 @@
 #!/bin/bash
 
-required_services='php,mysql,apache'
+required_services='php,..db,..webserver'
 
 declare -A alternatives
-
-alternatives['mysql']='mariadb,postgresql'
-alternatives['apache']='nginx'
+alternatives['..db']='mariadb,mysql,postgresql'
+alternatives['..webserver']='apache,nginx'

@@ -114,6 +114,7 @@ u_env_models_lookup_ca_provisioning() {
 #
 # @see u_str_split1()
 # @see u_env_item_split_version()
+# @see u_in_array()
 #
 # @example
 #   u_stack_get_specs "$PROJECT_STACK"
@@ -171,7 +172,7 @@ u_stack_get_specs() {
     fi
     if [[ -n "$required_services" ]]; then
       if [[ -n "$variants" ]]; then
-        variants="${variants}${required_services}"
+        variants="${variants},${required_services}"
       else
         variants="${required_services}"
       fi
@@ -188,13 +189,27 @@ u_stack_get_specs() {
 
       if [[ "$substr" == 'p-' ]]; then
         STACK_PRESETS+=(${variant_item:2})
-      else
+      elif [[ "$substr" != '..' ]]; then
         STACK_SERVICES+=($variant_item)
       fi
     done
 
-    # TODO implement mutually exclusive alternatives. Ex :
-    # @see cwt/app/drupal/required_services.sh
+    # Resolve alternatives. For each declared alternative, look if one of the
+    # mutually exclusive options already exists in STACK_SERVICES. If not, add
+    # the first one.
+    # Example : cwt/app/drupal/required_services.sh
+    local key
+    local option
+    local alt_options_arr
+    for key in "${!alternatives[@]}"; do
+      u_str_split1 alt_options_arr "${alternatives[$key]}" ','
+      for option in "${alt_options_arr[@]}"; do
+        if ! u_in_array $option STACK_SERVICES; then
+          STACK_SERVICES+=($option)
+          break
+        fi
+      done
+    done
   fi
 }
 
