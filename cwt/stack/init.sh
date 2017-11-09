@@ -31,7 +31,7 @@
 # These globals are needed throughout this task's related scripts.
 export ENV_VARS
 export ENV_VARS_COUNT
-export ENV_VARS_NAMES
+# export ENV_VARS_NAMES
 export ENV_VARS_KEYS
 
 export PROJECT_STACK="$P_PROJECT_STACK"
@@ -48,6 +48,7 @@ if [[ -z "$PROJECT_STACK" ]]; then
 fi
 
 # This default value is required before env vars aggregation, so it's hardcoded.
+# TODO : not necessary - see cwt/stack/init/aggregate_env_vars.sh
 if [[ -z "$PROVISION_USING" ]]; then
   PROVISION_USING='scripts'
 fi
@@ -60,8 +61,8 @@ fi
 unset ENV_VARS
 declare -A ENV_VARS
 ENV_VARS_COUNT=0
-ENV_VARS_NAMES=','
-ENV_VARS_KEYS=','
+# ENV_VARS_NAMES=''
+ENV_VARS_KEYS=()
 . cwt/stack/init/aggregate_env_vars.sh
 
 # Write env vars in current instance's settings file.
