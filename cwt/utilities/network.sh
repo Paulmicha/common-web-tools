@@ -15,5 +15,8 @@
 # See https://stackoverflow.com/a/25851186
 #
 u_get_localhost_ip() {
+  # Note : 'ip' command does not work on "Git bash" for Windows (but it works
+  # on Windows 10 using "Bash on Ubuntu on Windows").
+  # Yields bash: ip: command not found.
   ip route get 1 | awk '{print $NF;exit}'
 }

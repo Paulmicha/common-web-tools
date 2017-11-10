@@ -12,6 +12,60 @@
 #
 
 ##
+# Executes given callback function for all env vars discovered so far.
+#
+# @requires the following globals in calling scope (main shell) :
+# - $ENV_VARS
+# - $ENV_VARS_UNIQUE_NAMES
+#
+# @see cwt/stack/init/aggregate_env_vars.sh
+#
+# @example
+#   u_exec_foreach_env_vars u_assign_env_value
+#
+u_exec_foreach_env_vars() {
+  local p_callback="$1"
+  local evn_arr
+  local env_var_name
+
+  for env_var_name in ${ENV_VARS['.sorting']}; do
+    u_str_split1 evn_arr $env_var_name '|'
+    env_var_name="${evn_arr[1]}"
+    $p_callback $env_var_name
+  done
+}
+
+##
+# Assigns arg or default value to given global env var.
+#
+# @param 1 String : global variable name.
+#
+# @requires the following globals in calling scope :
+# - $ENV_VARS
+# - $P_MY_VAR_NAME (replacing 'MY_VAR_NAME' with the actual var name)
+#
+# @see cwt/stack/init/get_args.sh
+# @see cwt/stack/init/aggregate_env_vars.sh
+#
+# @example
+#   u_assign_env_value 'MY_VAR_NAME'
+#
+u_assign_env_value() {
+  local p_var="$1"
+
+  eval "local arg_val=\$P_${p_var}"
+  local default_val="${ENV_VARS[$p_var|default]}"
+
+  eval "export $p_var"
+
+  if [[ -n "$arg_val" ]]; then
+    eval "$p_var='$arg_val'"
+  elif [[ -n "$default_val" ]]; then
+    eval "$p_var='$default_val'"
+  fi
+}
+
+##
 # Adds new variable in $ENV_VARS.
 #
 # Increments a shared counter to maintain order, because some variables may depend
@@ -22,10 +76,10 @@
 #   values with syntax like : "[group]='the group name' [default]=test"
 #
 # @requires the following globals in calling scope (main shell) :
-#   - $ENV_VARS
-#   - $ENV_VARS_COUNT
-#   - $ENV_VARS_UNIQUE_NAMES
-#   - $ENV_VARS_UNIQUE_KEYS
+# - $ENV_VARS
+# - $ENV_VARS_COUNT
+# - $ENV_VARS_UNIQUE_NAMES
+# - $ENV_VARS_UNIQUE_KEYS
 #
 # @see cwt/stack/init.sh
 # @see cwt/stack/init/aggregate_env_vars.sh
@@ -301,4 +355,32 @@ u_env_item_split_version() {
   if [[ (-n "$version_part") && ("$version_part" != "$name_part") ]]; then
     eval "${p_var_name}+=(\"$version_part\")"
   fi
+}
+
+##
+# Gets default value for this project instance's domain.
+#
+# Some projects may have DNS-dependant features to test locally, so we
+# provide a default one based on project docroot dirname. In these cases, the
+# necessary domains must be added to the device's hosts file (usually located
+# in /etc/hosts or C:\Windows\System32\drivers\etc\hosts). Alternatives also
+# exist to achieve this.
+#
+# The generated domain uses 'io' TLD in order to avoid trigger searches from
+# some browsers address bars (like Chrome's).
+#
+u_get_instance_domain() {
+  local lh="$(u_get_localhost_ip)"
+
+  if [[ -z "$lh" ]]; then
+    lh='local'
+  fi
+
+  if [[ $lh == "192.168."* ]]; then
+    lh="${lh//192.168./lan-}"
+  else
+    lh="host-${lh}"
+  fi
+
+  echo "${PWD##*/}.${lh//./-}.io"
 }

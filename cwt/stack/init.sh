@@ -54,7 +54,6 @@ if [[ -z "$PROVISION_USING" ]]; then
 fi
 
 # Arguments matching + default value fallback.
-# WIP / TODO
 . cwt/stack/init/match_args_w_env_vars.sh
 
 # (Re)start env vars aggregation.
