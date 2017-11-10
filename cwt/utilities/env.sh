@@ -66,6 +66,7 @@ u_assign_env_value() {
     eval "$p_var='$arg_val'"
 
   elif [[ $P_YES == 0 ]]; then
+    echo
     if [[ -n "$default_val" ]]; then
       echo "Enter $p_var value,"
       eval "read -p \"or leave blank to use '$default_val' : \" $p_var"
@@ -99,10 +100,15 @@ u_assign_env_value() {
 # @see cwt/stack/init.sh
 # @see cwt/stack/init/aggregate_env_vars.sh
 #
-# @example
-#   u_env_var_add 'MY_VAR_NAME' "[group]='the group name' [default]=test"
+# For better readability in env models files, we exceptionally name that
+# function without following the usual convention.
 #
-u_env_var_add() {
+# @examples
+#   define MY_VAR_NAME
+#   define MY_VAR_NAME2 "[default]=test"
+#   define MY_VAR_NAME3 "[key]=value [key2]='value 2' [key3]=$(my_callback_function)"
+#
+define() {
   local p_var_name="$1"
   local p_values="$2"
 

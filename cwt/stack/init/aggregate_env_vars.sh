@@ -26,6 +26,9 @@ for env_model in "${ENV_MODELS_PATHS[@]}"; do
 done
 
 # Debug - print aggregated globals.
+echo
+echo "Aggregated globals :"
+echo
 for env_var_name in ${ENV_VARS['.sorting']}; do
   u_str_split1 evn_arr $env_var_name '|'
   env_var_name="${evn_arr[1]}"
@@ -39,3 +42,4 @@ for env_var_name in ${ENV_VARS['.sorting']}; do
     fi
   done
 done
+echo
