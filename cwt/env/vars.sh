@@ -4,10 +4,12 @@
 # Env (settings) model file.
 #
 # This file is dynamically included during stack init.
-# @see u_env_vars_aggregate()
+# @see cwt/stack/init.sh
+# @see cwt/stack/init/aggregate_env_vars.sh
+# @see cwt/utilities/env.sh
 #
 # Matching rules and syntax are explained in documentation :
-# @see cwt/stack/init/aggregate_env_vars.sh
+# @see cwt/env/README.md
 #
 
 define PROJECT_STACK

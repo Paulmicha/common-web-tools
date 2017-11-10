@@ -103,10 +103,13 @@ u_assign_env_value() {
 # For better readability in env models files, we exceptionally name that
 # function without following the usual convention.
 #
-# @examples
+# @examples (write)
 #   define MY_VAR_NAME
 #   define MY_VAR_NAME2 "[default]=test"
 #   define MY_VAR_NAME3 "[key]=value [key2]='value 2' [key3]=$(my_callback_function)"
+#
+# @example (read)
+#   u_print_env
 #
 define() {
   local p_var_name="$1"
@@ -132,6 +135,38 @@ define() {
       ENV_VARS["${p_var_name}|${key}"]="${values_arr[$key]}"
     done
   fi
+}
+
+##
+# [debug] Prints current environment globals and their associated data.
+#
+# @see define()
+#
+u_print_env() {
+  local env_var_name
+  local evn_arr
+  local key
+  local val
+
+  echo
+  echo "Defined globals :"
+  echo
+
+  for env_var_name in ${ENV_VARS['.sorting']}; do
+    u_str_split1 evn_arr $env_var_name '|'
+    env_var_name="${evn_arr[1]}"
+
+    eval "[[ -z \"\$$env_var_name\" ]] && echo \"$env_var_name\" \(empty\)";
+    eval "[[ -n \"\$$env_var_name\" ]] && echo \"$env_var_name = \$$env_var_name\"";
+
+    for key in ${ENV_VARS_UNIQUE_KEYS[@]}; do
+      val="${ENV_VARS[$env_var_name|$key]}"
+      if [[ -n "$val" ]]; then
+        echo "  - ${key} = ${ENV_VARS[${env_var_name}|${key}]}";
+      fi
+    done
+  done
+  echo
 }
 
 ##
@@ -176,46 +211,108 @@ u_env_models_get_lookup_paths() {
 
   u_stack_get_specs "$stack"
 
+  if [[ -n "$APP_VERSION" ]]; then
+    local app_v
+    local app_path=''
+    local app_version_arr=()
+    u_str_split1 app_version_arr "$APP_VERSION" '.'
+  fi
+
+  # Host-related models.
   local ss_arr=()
   for stack_service in "${STACK_SERVICES[@]}"; do
     u_env_item_split_version ss_arr "$stack_service"
     if [[ -n "${ss_arr[1]}" ]]; then
-      u_env_models_lookup_ca_provisioning "cwt/provision/${ss_arr[0]}/"
-      u_env_models_lookup_ca_provisioning "cwt/provision/${ss_arr[0]}/${ss_arr[1]}/"
+      u_env_models_lookup_version "cwt/provision/${ss_arr[0]}" "${ss_arr[1]}" true
     else
+      u_env_models_path_add_once "cwt/provision/${stack_service}/vars.sh"
       u_env_models_lookup_ca_provisioning "cwt/provision/${stack_service}/"
     fi
   done
 
+  # Presets-related models.
   local sp_arr=()
   for stack_preset in "${STACK_PRESETS[@]}"; do
     u_env_item_split_version sp_arr "$stack_preset"
     if [[ -n "${sp_arr[1]}" ]]; then
-      u_env_models_lookup_ca_provisioning "cwt/provision/presets/$APP/${sp_arr[0]}/"
-      u_env_models_lookup_ca_provisioning "cwt/provision/presets/$APP/${sp_arr[0]}/${sp_arr[1]}/"
+      # u_env_models_path_add_once "cwt/provision/presets/$APP/${sp_arr[0]}/vars.sh"
+      # u_env_models_lookup_ca_provisioning "cwt/provision/presets/$APP/${sp_arr[0]}/"
+      u_env_models_lookup_version "cwt/provision/presets/$APP/${sp_arr[0]}" "${sp_arr[1]}" true
+
       if [[ -n "$APP_VERSION" ]]; then
-        u_env_models_lookup_ca_provisioning "cwt/provision/presets/$APP/$APP_VERSION/${sp_arr[0]}/"
-        u_env_models_lookup_ca_provisioning "cwt/provision/presets/$APP/$APP_VERSION/${sp_arr[0]}/${sp_arr[1]}/"
+        app_path="cwt/provision/presets/$APP"
+        for app_v in "${app_version_arr[@]}"; do
+          app_path+="/$app_v"
+          # u_env_models_path_add_once "$app_path/${sp_arr[0]}/vars.sh"
+          # u_env_models_lookup_ca_provisioning "$app_path/${sp_arr[0]}/"
+          u_env_models_lookup_version "$app_path/${sp_arr[0]}" "${sp_arr[1]}" true
+        done
       fi
     else
+      u_env_models_path_add_once "cwt/provision/presets/$APP/${stack_preset}/vars.sh"
       u_env_models_lookup_ca_provisioning "cwt/provision/presets/$APP/${stack_preset}/"
+
       if [[ -n "$APP_VERSION" ]]; then
-        u_env_models_lookup_ca_provisioning "cwt/provision/presets/$APP/$APP_VERSION/${stack_preset}/"
+        app_path="cwt/provision/presets/$APP"
+        for app_v in "${app_version_arr[@]}"; do
+          app_path+="/$app_v"
+          u_env_models_path_add_once "$app_path/${stack_preset}/vars.sh"
+          u_env_models_lookup_ca_provisioning "$app_path/${stack_preset}/"
+        done
       fi
     fi
   done
 
-  ENV_MODELS_PATHS+=("cwt/app/${APP}/env.vars.sh")
+  # App-related models.
+  u_env_models_path_add_once "cwt/app/${APP}/env.vars.sh"
+  u_env_models_lookup_ca_provisioning "cwt/app/${APP}/env."
+
   if [[ -n "$APP_VERSION" ]]; then
-    ENV_MODELS_PATHS+=("cwt/app/${APP}/$APP_VERSION/env.vars.sh")
-    u_env_models_lookup_ca_provisioning "cwt/app/${APP}/$APP_VERSION/env."
+    app_path="cwt/app/$APP"
+    for app_v in "${app_version_arr[@]}"; do
+      app_path+="/$app_v"
+      u_env_models_path_add_once "$app_path/env.vars.sh"
+      u_env_models_lookup_ca_provisioning "$app_path/env."
+    done
   fi
+}
+
+##
+# Appends version number lookups.
+#
+# @see u_env_models_get_lookup_paths()
+#
+u_env_models_lookup_version() {
+  local p_prefix="$1"
+  local p_version="$2"
+  local p_prepend_raw="$3"
+
+  local v
+  local path="$p_prefix"
+  local version_arr=()
+
+  if [[ "$p_prepend_raw" == true ]]; then
+    u_env_models_path_add_once "$path/vars.sh"
+    u_env_models_lookup_ca_provisioning "$path/"
+  fi
+
+  u_str_split1 version_arr "$p_version" '.'
+  for v in "${version_arr[@]}"; do
+    path+="/$v"
+
+    if [[ "$p_prepend_raw" == true ]]; then
+      u_env_models_path_add_once "$path/vars.sh"
+    fi
+
+    u_env_models_lookup_ca_provisioning "$path/"
+  done
 }
 
 ##
 # Conditionnally appends provisioning lookups.
 #
 # @see u_env_models_get_lookup_paths()
+# @see u_env_models_lookup_version()
 # @see u_env_item_split_version()
 #
 u_env_models_lookup_ca_provisioning() {
@@ -225,11 +322,46 @@ u_env_models_lookup_ca_provisioning() {
   u_env_item_split_version provisioning_arr "$provisioning"
 
   if [[ -n "${provisioning_arr[1]}" ]]; then
-    ENV_MODELS_PATHS+=("${p_prefix}${provisioning_arr[0]}.vars.sh")
-    ENV_MODELS_PATHS+=("${p_prefix}${provisioning}.vars.sh")
+    u_env_models_path_add_once "${p_prefix}${provisioning_arr[0]}.vars.sh"
+    u_env_models_path_add_once "${p_prefix}${provisioning}.vars.sh"
   else
-    ENV_MODELS_PATHS+=("${p_prefix}${provisioning}.vars.sh")
+    u_env_models_path_add_once "${p_prefix}${provisioning}.vars.sh"
   fi
+}
+
+##
+# Adds matching models path only once to global $ENV_MODELS_PATHS.
+#
+# @see u_env_models_lookup_ca_provisioning()
+# @see u_env_models_get_lookup_paths()
+#
+u_env_models_path_add_once() {
+  local p_path="$1"
+  if ! u_in_array $p_path ENV_MODELS_PATHS; then
+    ENV_MODELS_PATHS+=("$p_path")
+  fi
+}
+
+##
+# [debug] Prints current env models lookup paths.
+#
+# @requires global $ENV_MODELS_PATHS in calling scope.
+# @see u_env_models_get_lookup_paths()
+#
+u_print_env_models_lookup_paths() {
+  local env_model
+
+  echo
+  echo "Env models lookup paths :"
+  echo
+
+  for env_model in "${ENV_MODELS_PATHS[@]}"; do
+    echo "$env_model"
+    if [[ -f "$env_model" ]]; then
+      echo "  exists"
+    fi
+  done
+  echo
 }
 
 ##

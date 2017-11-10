@@ -7,6 +7,10 @@
 # . cwt/env/write.sh
 #
 
+# TODO write aggregated globals.
+echo "Debug in $BASH_SOURCE line $LINENO: print aggregated globals."
+u_print_env
+
 # TODO remove previously hardcoded implementation below.
 
 # Check params.
