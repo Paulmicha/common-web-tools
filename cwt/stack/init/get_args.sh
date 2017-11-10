@@ -13,30 +13,30 @@
 #
 
 export P_YES
-export P_REG_BACKEND
-export P_PROVISION
 export P_PROJECT_STACK
+export P_PROVISION_USING
+export P_REG_BACKEND
 export P_INSTANCE_TYPE
 export P_INSTANCE_DOMAIN
 
 P_YES=0
-unset P_REG_BACKEND
-unset P_PROVISION
 unset P_PROJECT_STACK
+unset P_PROVISION_USING
+unset P_REG_BACKEND
 unset P_INSTANCE_TYPE
 unset P_INSTANCE_DOMAIN
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
     -r) P_REG_BACKEND="$2"; shift 2;;
-    -p) P_PROVISION="$2"; shift 2;;
+    -p) P_PROVISION_USING="$2"; shift 2;;
     -s) P_PROJECT_STACK="$2"; shift 2;;
     -t) P_INSTANCE_TYPE="$2"; shift 2;;
     -d) P_INSTANCE_DOMAIN="$2"; shift 2;;
     -y) P_YES=1; shift 1;;
 
     --reg=*) P_REG_BACKEND="${1#*=}"; shift 1;;
-    --provision=*) P_PROVISION="${1#*=}"; shift 1;;
+    --provision=*) P_PROVISION_USING="${1#*=}"; shift 1;;
     --stack=*) P_PROJECT_STACK="${1#*=}"; shift 1;;
     --type=*) P_INSTANCE_TYPE="${1#*=}"; shift 1;;
     --domain=*) P_INSTANCE_DOMAIN="${1#*=}"; shift 1;;
@@ -50,7 +50,7 @@ done
 
 # echo "P_YES: $P_YES"
 # echo "P_REG_BACKEND: $P_REG_BACKEND"
-# echo "P_PROVISION: $P_PROVISION"
+# echo "P_PROVISION_USING: $P_PROVISION_USING"
 # echo "P_PROJECT_STACK: $P_PROJECT_STACK"
 # echo "P_INSTANCE_TYPE: $P_INSTANCE_TYPE"
 # echo "P_INSTANCE_DOMAIN: $P_INSTANCE_DOMAIN"

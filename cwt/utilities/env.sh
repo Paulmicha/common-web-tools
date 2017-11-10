@@ -38,9 +38,13 @@ u_exec_foreach_env_vars() {
 ##
 # Assigns arg or default value to given global env var.
 #
+# Unless "-y" argument was used in cwt/stack/init.sh call, this will also prompt
+# before using default value fallback.
+#
 # @param 1 String : global variable name.
 #
 # @requires the following globals in calling scope :
+# - $P_YES
 # - $ENV_VARS
 # - $P_MY_VAR_NAME (replacing 'MY_VAR_NAME' with the actual var name)
 #
@@ -60,7 +64,18 @@ u_assign_env_value() {
 
   if [[ -n "$arg_val" ]]; then
     eval "$p_var='$arg_val'"
-  elif [[ -n "$default_val" ]]; then
+
+  elif [[ $P_YES == 0 ]]; then
+    if [[ -n "$default_val" ]]; then
+      echo "Enter $p_var value,"
+      eval "read -p \"or leave blank to use '$default_val' : \" $p_var"
+    else
+      eval "read -p \"Enter $p_var value : \" $p_var"
+    fi
+  fi
+
+  local empty_test=$(eval "echo \"\$$p_var\"")
+  if [[ (-z "$empty_test") && (-n "$default_val") ]]; then
     eval "$p_var='$default_val'"
   fi
 }
