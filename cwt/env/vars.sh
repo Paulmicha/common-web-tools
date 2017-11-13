@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##
-# Env (settings) model file.
+# Env settings model file.
 #
 # This file is dynamically included during stack init.
 # @see cwt/stack/init.sh

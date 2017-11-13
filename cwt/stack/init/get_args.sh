@@ -13,13 +13,16 @@
 #
 
 export P_YES
+export P_VERBOSE
 export P_PROJECT_STACK
 export P_PROVISION_USING
 export P_REG_BACKEND
 export P_INSTANCE_TYPE
 export P_INSTANCE_DOMAIN
 
+# Make sure any previously set globals cannot interfere by resetting them.
 P_YES=0
+P_VERBOSE=0
 unset P_PROJECT_STACK
 unset P_PROVISION_USING
 unset P_REG_BACKEND
@@ -34,6 +37,7 @@ while [ "$#" -gt 0 ]; do
     -t) P_INSTANCE_TYPE="$2"; shift 2;;
     -d) P_INSTANCE_DOMAIN="$2"; shift 2;;
     -y) P_YES=1; shift 1;;
+    -v) P_VERBOSE=1; shift 1;;
 
     --reg=*) P_REG_BACKEND="${1#*=}"; shift 1;;
     --provision=*) P_PROVISION_USING="${1#*=}"; shift 1;;
@@ -41,6 +45,7 @@ while [ "$#" -gt 0 ]; do
     --type=*) P_INSTANCE_TYPE="${1#*=}"; shift 1;;
     --domain=*) P_INSTANCE_DOMAIN="${1#*=}"; shift 1;;
     --yes) P_YES=1; shift 1;;
+    --verbose) P_VERBOSE=1; shift 1;;
     --reg|--provision|--stack|--type) echo "Error in $BASH_SOURCE line $LINENO: $1 requires an argument" >&2; return;;
 
     -*) echo "Error in $BASH_SOURCE line $LINENO: unknown option: $1" >&2; return;;
@@ -49,6 +54,7 @@ while [ "$#" -gt 0 ]; do
 done
 
 # echo "P_YES: $P_YES"
+# echo "P_VERBOSE: $P_VERBOSE"
 # echo "P_REG_BACKEND: $P_REG_BACKEND"
 # echo "P_PROVISION_USING: $P_PROVISION_USING"
 # echo "P_PROJECT_STACK: $P_PROJECT_STACK"

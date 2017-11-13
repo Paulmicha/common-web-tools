@@ -235,16 +235,12 @@ u_env_models_get_lookup_paths() {
   for stack_preset in "${STACK_PRESETS[@]}"; do
     u_env_item_split_version sp_arr "$stack_preset"
     if [[ -n "${sp_arr[1]}" ]]; then
-      # u_env_models_path_add_once "cwt/provision/presets/$APP/${sp_arr[0]}/vars.sh"
-      # u_env_models_lookup_ca_provisioning "cwt/provision/presets/$APP/${sp_arr[0]}/"
       u_env_models_lookup_version "cwt/provision/presets/$APP/${sp_arr[0]}" "${sp_arr[1]}" true
 
       if [[ -n "$APP_VERSION" ]]; then
         app_path="cwt/provision/presets/$APP"
         for app_v in "${app_version_arr[@]}"; do
           app_path+="/$app_v"
-          # u_env_models_path_add_once "$app_path/${sp_arr[0]}/vars.sh"
-          # u_env_models_lookup_ca_provisioning "$app_path/${sp_arr[0]}/"
           u_env_models_lookup_version "$app_path/${sp_arr[0]}" "${sp_arr[1]}" true
         done
       fi
