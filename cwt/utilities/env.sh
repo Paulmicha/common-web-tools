@@ -225,7 +225,7 @@ u_env_models_get_lookup_paths() {
     if [[ -n "${ss_arr[1]}" ]]; then
       u_env_models_lookup_version "cwt/provision/${ss_arr[0]}" "${ss_arr[1]}" true
     else
-      u_env_models_path_add_once "cwt/provision/${stack_service}/vars.sh"
+      u_array_add_once "cwt/provision/${stack_service}/vars.sh" ENV_MODELS_PATHS
       u_env_models_lookup_ca_provisioning "cwt/provision/${stack_service}/"
     fi
   done
@@ -245,14 +245,14 @@ u_env_models_get_lookup_paths() {
         done
       fi
     else
-      u_env_models_path_add_once "cwt/provision/presets/$APP/${stack_preset}/vars.sh"
+      u_array_add_once "cwt/provision/presets/$APP/${stack_preset}/vars.sh" ENV_MODELS_PATHS
       u_env_models_lookup_ca_provisioning "cwt/provision/presets/$APP/${stack_preset}/"
 
       if [[ -n "$APP_VERSION" ]]; then
         app_path="cwt/provision/presets/$APP"
         for app_v in "${app_version_arr[@]}"; do
           app_path+="/$app_v"
-          u_env_models_path_add_once "$app_path/${stack_preset}/vars.sh"
+          u_array_add_once "$app_path/${stack_preset}/vars.sh" ENV_MODELS_PATHS
           u_env_models_lookup_ca_provisioning "$app_path/${stack_preset}/"
         done
       fi
@@ -260,14 +260,14 @@ u_env_models_get_lookup_paths() {
   done
 
   # App-related models.
-  u_env_models_path_add_once "cwt/app/${APP}/env.vars.sh"
+  u_array_add_once "cwt/app/${APP}/env.vars.sh" ENV_MODELS_PATHS
   u_env_models_lookup_ca_provisioning "cwt/app/${APP}/env."
 
   if [[ -n "$APP_VERSION" ]]; then
     app_path="cwt/app/$APP"
     for app_v in "${app_version_arr[@]}"; do
       app_path+="/$app_v"
-      u_env_models_path_add_once "$app_path/env.vars.sh"
+      u_array_add_once "$app_path/env.vars.sh" ENV_MODELS_PATHS
       u_env_models_lookup_ca_provisioning "$app_path/env."
     done
   fi
@@ -288,7 +288,7 @@ u_env_models_lookup_version() {
   local version_arr=()
 
   if [[ "$p_prepend_raw" == true ]]; then
-    u_env_models_path_add_once "$path/vars.sh"
+    u_array_add_once "$path/vars.sh" ENV_MODELS_PATHS
     u_env_models_lookup_ca_provisioning "$path/"
   fi
 
@@ -297,7 +297,7 @@ u_env_models_lookup_version() {
     path+="/$v"
 
     if [[ "$p_prepend_raw" == true ]]; then
-      u_env_models_path_add_once "$path/vars.sh"
+      u_array_add_once "$path/vars.sh" ENV_MODELS_PATHS
     fi
 
     u_env_models_lookup_ca_provisioning "$path/"
@@ -318,23 +318,21 @@ u_env_models_lookup_ca_provisioning() {
   u_env_item_split_version provisioning_arr "$provisioning"
 
   if [[ -n "${provisioning_arr[1]}" ]]; then
-    u_env_models_path_add_once "${p_prefix}${provisioning_arr[0]}.vars.sh"
-    u_env_models_path_add_once "${p_prefix}${provisioning}.vars.sh"
-  else
-    u_env_models_path_add_once "${p_prefix}${provisioning}.vars.sh"
-  fi
-}
+    u_array_add_once "${p_prefix}${provisioning_arr[0]}.vars.sh" ENV_MODELS_PATHS
 
-##
-# Adds matching models path only once to global $ENV_MODELS_PATHS.
-#
-# @see u_env_models_lookup_ca_provisioning()
-# @see u_env_models_get_lookup_paths()
-#
-u_env_models_path_add_once() {
-  local p_path="$1"
-  if ! u_in_array $p_path ENV_MODELS_PATHS; then
-    ENV_MODELS_PATHS+=("$p_path")
+    local v
+    local path="${p_prefix}${provisioning_arr[0]}-"
+    local version_arr=()
+
+    u_str_split1 version_arr "${provisioning_arr[1]}" '.'
+
+    for v in "${version_arr[@]}"; do
+      path+="$v."
+      u_array_add_once "${path}vars.sh" ENV_MODELS_PATHS
+    done
+
+  else
+    u_array_add_once "${p_prefix}${provisioning}.vars.sh" ENV_MODELS_PATHS
   fi
 }
 
@@ -412,58 +410,8 @@ u_stack_get_specs() {
     APP_VERSION="${app_arr[1]}"
   fi
 
-  # Applications may indicate their minimum required services using the
-  # following files :
-  # - cwt/app/$APP/required_services.sh :
-  #     lists services required by any $APP version.
-  # - cwt/app/$APP/$APP_VERSION/required_services.sh :
-  #     lists, complements or overrides services required by that specific version.
-  if [[ -f "cwt/app/$APP/required_services.sh" ]]; then
-    . "cwt/app/$APP/required_services.sh"
-    if [[ -f "cwt/app/$APP/$APP_VERSION/required_services.sh" ]]; then
-      . "cwt/app/$APP/$APP_VERSION/required_services.sh"
-    fi
-    if [[ -n "$required_services" ]]; then
-      if [[ -n "$variants" ]]; then
-        variants="${variants},${required_services}"
-      else
-        variants="${required_services}"
-      fi
-    fi
-  fi
-
-  if [[ -n "$variants" ]]; then
-    local variants_arr
-    u_str_split1 variants_arr "$variants" ','
-
-    local substr
-    for variant_item in "${variants_arr[@]}"; do
-      substr=${variant_item:0:2}
-
-      if [[ "$substr" == 'p-' ]]; then
-        STACK_PRESETS+=(${variant_item:2})
-      elif [[ "$substr" != '..' ]]; then
-        STACK_SERVICES+=($variant_item)
-      fi
-    done
-
-    # Resolve alternatives. For each declared alternative, look if one of the
-    # mutually exclusive options already exists in STACK_SERVICES. If not, add
-    # the first one.
-    # Example : cwt/app/drupal/required_services.sh
-    local key
-    local option
-    local alt_options_arr
-    for key in "${!alternatives[@]}"; do
-      u_str_split1 alt_options_arr "${alternatives[$key]}" ','
-      for option in "${alt_options_arr[@]}"; do
-        if ! u_in_array $option STACK_SERVICES; then
-          STACK_SERVICES+=($option)
-          break
-        fi
-      done
-    done
-  fi
+  # Resolve app dependencies declared in 'dependencies.sh' files for current app.
+  u_app_resolve_deps
 }
 
 ##

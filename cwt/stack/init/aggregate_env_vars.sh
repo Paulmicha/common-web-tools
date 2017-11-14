@@ -15,8 +15,9 @@ u_exec_foreach_env_vars u_assign_env_value
 # Include any existing matching models.
 u_env_models_get_lookup_paths
 
-# Debug
-# u_print_env_models_lookup_paths
+if [[ $P_VERBOSE == 1 ]]; then
+  u_print_env_models_lookup_paths
+fi
 
 for env_model in "${ENV_MODELS_PATHS[@]}"; do
   if [[ -f "$env_model" ]]; then
@@ -28,6 +29,3 @@ for env_model in "${ENV_MODELS_PATHS[@]}"; do
     u_exec_foreach_env_vars u_assign_env_value
   fi
 done
-
-# Debug - print aggregated globals.
-# u_print_env

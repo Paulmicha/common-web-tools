@@ -61,7 +61,7 @@ cat > "$CURRENT_ENV_SETTINGS_FILE" <<'EOF'
 # @see cwt/stack/init/aggregate_env_vars.sh
 # @see cwt/utilities/env.sh
 #
-# See documentation :
+# Documentation :
 # @see cwt/env/README.md
 #
 

@@ -38,6 +38,29 @@ u_in_array() {
 }
 
 ##
+# Adds item in array only once (idempotent).
+#
+# @param 1 String needle.
+# @param 2 String the Array variable name (haystack).
+#
+# @example
+#   declare -a my_array=("test1" "test2" "test3");
+#   u_array_add_once "test1" my_array
+#   u_array_add_once "test4" my_array
+#   u_array_add_once "test2" my_array
+#   # To debug result :
+#   declare -p my_array
+#
+u_array_add_once() {
+  local needle="${1}"
+  local haystack_var_name="${2}"
+
+  if ! u_in_array $needle $haystack_var_name; then
+    eval "$haystack_var_name+=($needle)"
+  fi
+}
+
+##
 # Quicksorts positional arguments
 #
 # Return is in array qsort_ret.

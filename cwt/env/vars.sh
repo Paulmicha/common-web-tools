@@ -14,14 +14,18 @@
 
 define PROJECT_STACK
 define PROJECT_DOCROOT "[default]=$PWD"
-define PROVISION_USING "[default]=docker-compose-2"
 define REG_BACKEND "[default]=file"
 # TODO consider using a separate store for secrets, see cwt/env/README.md.
 # define SECRETS_BACKEND
+
+define PROVISION_USING "[default]=docker-compose"
 
 define APP_DOCROOT "[default]=$PWD/web"
 define INSTANCE_TYPE "[default]=dev"
 define INSTANCE_DOMAIN "[default]=$(u_get_instance_domain)"
 define INSTANCE_ALIAS
 
+# TODO provide different examples.
 define DEPLOY_USING "[default]=git"
+
+# TODO provide tests / CI examples.

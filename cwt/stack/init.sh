@@ -32,9 +32,10 @@ if [[ (-z "$PROJECT_STACK") && ($P_YES == 0) ]]; then
 fi
 
 if [[ -z "$PROJECT_STACK" ]]; then
-  echo "Warning in $BASH_SOURCE line $LINENO: cannot carry on without a value for \$PROJECT_STACK."
-  # TODO use exit instead or conditionally handle both.
-  return
+  echo
+  echo "Error in $BASH_SOURCE line $LINENO: cannot carry on without a value for \$PROJECT_STACK."
+  echo "Aborting (1)."
+  return 1
 fi
 
 # (Re)start env vars aggregation.
