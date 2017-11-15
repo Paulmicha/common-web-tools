@@ -1,13 +1,7 @@
 #!/bin/bash
 
 ##
-# App dependency related utility functions.
-#
-# Dependencies specify all services (or softwares) required to run the current
-# project instance(s). They are used to list what will be provisioned on hosts.
-#
-# They are declared in files dynamically loaded in a similar way than env models.
-# See cwt/env/README.md
+# Stack-related utility functions.
 #
 # This file is dynamically loaded.
 # @see cwt/bash_utils.sh
@@ -16,21 +10,16 @@
 #
 
 ##
-# Loads dependency declarations and aggregates results in $STACK_SERVICES.
+# Gets PROJECT_STACK specifications.
 #
-# Also populates STACK_PRESETS.
-# See cwt/env/README.md
+# @param 1 String : the PROJECT_STACK to "dissect".
 #
-# @requires the following globals in calling scope :
-# - $APP
-# - $APP_VERSION
-# - $STACK_SERVICES
-# - $STACK_PRESETS
-#
-# @see u_stack_get_specs()
+# @see u_str_split1()
+# @see u_env_item_split_version()
+# @see u_in_array()
 #
 # @example
-#   u_app_get_deps drupal 8.4
+#   u_stack_get_specs "$PROJECT_STACK"
 #   echo "$APP"
 #   echo "$APP_VERSION"
 #   for stack_preset in "${STACK_PRESETS[@]}"; do
@@ -40,7 +29,73 @@
 #     echo "$stack_service"
 #   done
 #
-u_app_resolve_deps() {
+u_stack_get_specs() {
+  local p_project_stack="$1"
+
+  export APP
+  export APP_VERSION
+  export STACK_PRESETS
+  export STACK_SERVICES
+
+  # For bash version compatibility reasons, we replace variant separator '--'
+  # with a single character unlikely to produce unexpected results given the
+  # simple syntax of $PROJECT_STACK value.
+  # See https://stackoverflow.com/a/45201229 (#7)
+  local variant_sep='='
+  local project_stack_r=${p_project_stack/--/"$variant_sep"}
+  local stack_variant_arr
+  u_str_split1 stack_variant_arr $project_stack_r $variant_sep
+
+  APP="${stack_variant_arr[0]}"
+  APP_VERSION=''
+  STACK_PRESETS=()
+  STACK_SERVICES=()
+
+  local variants="${stack_variant_arr[1]}"
+
+  local app_arr
+  u_env_item_split_version app_arr $APP
+
+  if [[ -n "${app_arr[1]}" ]]; then
+    APP="${app_arr[0]}"
+    APP_VERSION="${app_arr[1]}"
+  fi
+
+  # Resolve app dependencies declared in 'dependencies.sh' files for current app.
+  u_stack_resolve_deps
+}
+
+##
+# Loads dependency declarations and aggregates results in $STACK_SERVICES.
+#
+# Also populates STACK_PRESETS.
+#
+# Dependencies specify all services (or softwares) required to run the current
+# project instance(s). They are used to list what will be provisioned on hosts.
+#
+# They are declared in files dynamically loaded in a similar way than env models.
+# See cwt/env/README.md
+#
+# @requires the following globals in calling scope :
+# - $APP
+# - $APP_VERSION
+# - $STACK_SERVICES
+# - $STACK_PRESETS
+# - $PROVISION_USING
+#
+# @see u_stack_get_specs()
+# @see cwt/stack/init/aggregate_deps.sh
+#
+# @example
+#   u_stack_resolve_deps
+#   for stack_preset in "${STACK_PRESETS[@]}"; do
+#     echo "$stack_preset"
+#   done
+#   for stack_service in "${STACK_SERVICES[@]}"; do
+#     echo "$stack_service"
+#   done
+#
+u_stack_resolve_deps() {
   local softwares
   local alternatives
   local software_version
@@ -48,11 +103,11 @@ u_app_resolve_deps() {
   declare -A alternatives
   declare -A software_version
 
-  u_app_deps_get_lookup_paths
+  u_stack_deps_get_lookup_paths
 
   local dep_path
   for dep_path in "${DEPS_LOOKUP_PATHS[@]}"; do
-    if [[ -f "cwt/app/$APP/dependencies.sh" ]]; then
+    if [[ -f "$dep_path" ]]; then
       . "$dep_path"
 
       if [[ -n "$softwares" ]]; then
@@ -76,11 +131,15 @@ u_app_resolve_deps() {
       if [[ "$substr" == 'p-' ]]; then
         STACK_PRESETS+=(${variant_item:2})
       elif [[ "$substr" != '..' ]]; then
-        STACK_SERVICES+=($variant_item)
+        if [[ -n "${software_version[$variant_item]}" ]]; then
+          STACK_SERVICES+=("${variant_item}-${software_version[$variant_item]}")
+        else
+          STACK_SERVICES+=($variant_item)
+        fi
       fi
     done
 
-    u_app_deps_resolve_alternatives
+    u_stack_deps_resolve_alternatives
   fi
 }
 
@@ -90,14 +149,24 @@ u_app_resolve_deps() {
 # @requires the following globals in calling scope :
 # - $APP
 # - $APP_VERSION
+# - $PROVISION_USING
 #
 # @exports result in global $DEPS_LOOKUP_PATHS.
 #
-u_app_deps_get_lookup_paths() {
+# @see u_stack_resolve_deps()
+# @see u_stack_get_specs()
+# @see cwt/stack/init/aggregate_env_vars.sh
+#
+u_stack_deps_get_lookup_paths() {
   export DEPS_LOOKUP_PATHS
   DEPS_LOOKUP_PATHS=()
 
+  # Provisioning-related dependencies.
+  u_autoload_add_lookup_level "cwt/provision/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS
+
+  # App-related dependencies.
   DEPS_LOOKUP_PATHS+=("cwt/app/$APP/dependencies.sh")
+  u_autoload_add_lookup_level "cwt/app/$APP/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS
 
   if [[ -n "$APP_VERSION" ]]; then
     local v
@@ -109,6 +178,7 @@ u_app_deps_get_lookup_paths() {
       path+="/$v"
 
       DEPS_LOOKUP_PATHS+=("$path/dependencies.sh")
+      u_autoload_add_lookup_level "$path/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS
     done
   fi
 }
@@ -118,6 +188,7 @@ u_app_deps_get_lookup_paths() {
 #
 # @requires the following variables in calling scope :
 # - $alternatives
+# - $software_version
 # - $STACK_SERVICES
 #
 # Some applications require either one service (or software) OR another, like
@@ -132,9 +203,9 @@ u_app_deps_get_lookup_paths() {
 #   alternatives['..db']='mariadb,mysql,postgresql'
 #   alternatives['..webserver']='apache,nginx'
 #
-# @see u_app_resolve_deps()
+# @see u_stack_resolve_deps()
 #
-u_app_deps_resolve_alternatives() {
+u_stack_deps_resolve_alternatives() {
   local key
   local option
   local alt_options_arr

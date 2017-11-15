@@ -38,12 +38,20 @@ if [[ -z "$PROJECT_STACK" ]]; then
   return 1
 fi
 
-# (Re)start env vars aggregation.
+# (Re)start dependencies and env vars aggregation.
 unset ENV_VARS
 declare -A ENV_VARS
 ENV_VARS_COUNT=0
 ENV_VARS_UNIQUE_NAMES=()
 ENV_VARS_UNIQUE_KEYS=()
+
+# Get CWT globals required for aggregating dependencies and env vars.
+. cwt/env/vars.sh
+u_exec_foreach_env_vars u_assign_env_value
+
+# Aggregate dependencies and env vars.
+u_stack_get_specs "$PROJECT_STACK"
+. cwt/stack/init/aggregate_deps.sh
 . cwt/stack/init/aggregate_env_vars.sh
 
 # Write env vars in current instance's settings file.

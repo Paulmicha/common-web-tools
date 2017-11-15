@@ -207,7 +207,7 @@ u_env_models_get_lookup_paths() {
   fi
 
   ENV_MODELS_PATHS=()
-  u_env_models_lookup_ca_provisioning "cwt/provision/"
+  u_autoload_add_lookup_level "cwt/provision/" 'vars.sh' "$PROVISION_USING" ENV_MODELS_PATHS
 
   u_stack_get_specs "$stack"
 
@@ -226,7 +226,7 @@ u_env_models_get_lookup_paths() {
       u_env_models_lookup_version "cwt/provision/${ss_arr[0]}" "${ss_arr[1]}" true
     else
       u_array_add_once "cwt/provision/${stack_service}/vars.sh" ENV_MODELS_PATHS
-      u_env_models_lookup_ca_provisioning "cwt/provision/${stack_service}/"
+      u_autoload_add_lookup_level "cwt/provision/${stack_service}/" 'vars.sh' "$PROVISION_USING" ENV_MODELS_PATHS
     fi
   done
 
@@ -246,14 +246,14 @@ u_env_models_get_lookup_paths() {
       fi
     else
       u_array_add_once "cwt/provision/presets/$APP/${stack_preset}/vars.sh" ENV_MODELS_PATHS
-      u_env_models_lookup_ca_provisioning "cwt/provision/presets/$APP/${stack_preset}/"
+      u_autoload_add_lookup_level "cwt/provision/presets/$APP/${stack_preset}/" 'vars.sh' "$PROVISION_USING" ENV_MODELS_PATHS
 
       if [[ -n "$APP_VERSION" ]]; then
         app_path="cwt/provision/presets/$APP"
         for app_v in "${app_version_arr[@]}"; do
           app_path+="/$app_v"
           u_array_add_once "$app_path/${stack_preset}/vars.sh" ENV_MODELS_PATHS
-          u_env_models_lookup_ca_provisioning "$app_path/${stack_preset}/"
+          u_autoload_add_lookup_level "$app_path/${stack_preset}/" 'vars.sh' "$PROVISION_USING" ENV_MODELS_PATHS
         done
       fi
     fi
@@ -261,14 +261,14 @@ u_env_models_get_lookup_paths() {
 
   # App-related models.
   u_array_add_once "cwt/app/${APP}/env.vars.sh" ENV_MODELS_PATHS
-  u_env_models_lookup_ca_provisioning "cwt/app/${APP}/env."
+  u_autoload_add_lookup_level "cwt/app/${APP}/env." 'vars.sh' "$PROVISION_USING" ENV_MODELS_PATHS
 
   if [[ -n "$APP_VERSION" ]]; then
     app_path="cwt/app/$APP"
     for app_v in "${app_version_arr[@]}"; do
       app_path+="/$app_v"
       u_array_add_once "$app_path/env.vars.sh" ENV_MODELS_PATHS
-      u_env_models_lookup_ca_provisioning "$app_path/env."
+      u_autoload_add_lookup_level "$app_path/env." 'vars.sh' "$PROVISION_USING" ENV_MODELS_PATHS
     done
   fi
 }
@@ -289,7 +289,7 @@ u_env_models_lookup_version() {
 
   if [[ "$p_prepend_raw" == true ]]; then
     u_array_add_once "$path/vars.sh" ENV_MODELS_PATHS
-    u_env_models_lookup_ca_provisioning "$path/"
+    u_autoload_add_lookup_level "$path/" 'vars.sh' "$PROVISION_USING" ENV_MODELS_PATHS
   fi
 
   u_str_split1 version_arr "$p_version" '.'
@@ -300,118 +300,8 @@ u_env_models_lookup_version() {
       u_array_add_once "$path/vars.sh" ENV_MODELS_PATHS
     fi
 
-    u_env_models_lookup_ca_provisioning "$path/"
+    u_autoload_add_lookup_level "$path/" 'vars.sh' "$PROVISION_USING" ENV_MODELS_PATHS
   done
-}
-
-##
-# Conditionnally appends provisioning lookups.
-#
-# @see u_env_models_get_lookup_paths()
-# @see u_env_models_lookup_version()
-# @see u_env_item_split_version()
-#
-u_env_models_lookup_ca_provisioning() {
-  local p_prefix="$1"
-
-  local provisioning_arr=()
-  u_env_item_split_version provisioning_arr "$provisioning"
-
-  if [[ -n "${provisioning_arr[1]}" ]]; then
-    u_array_add_once "${p_prefix}${provisioning_arr[0]}.vars.sh" ENV_MODELS_PATHS
-
-    local v
-    local path="${p_prefix}${provisioning_arr[0]}-"
-    local version_arr=()
-
-    u_str_split1 version_arr "${provisioning_arr[1]}" '.'
-
-    for v in "${version_arr[@]}"; do
-      path+="$v."
-      u_array_add_once "${path}vars.sh" ENV_MODELS_PATHS
-    done
-
-  else
-    u_array_add_once "${p_prefix}${provisioning}.vars.sh" ENV_MODELS_PATHS
-  fi
-}
-
-##
-# [debug] Prints current env models lookup paths.
-#
-# @requires global $ENV_MODELS_PATHS in calling scope.
-# @see u_env_models_get_lookup_paths()
-#
-u_print_env_models_lookup_paths() {
-  local env_model
-
-  echo
-  echo "Env models lookup paths :"
-  echo
-
-  for env_model in "${ENV_MODELS_PATHS[@]}"; do
-    echo "$env_model"
-    if [[ -f "$env_model" ]]; then
-      echo "  exists"
-    fi
-  done
-  echo
-}
-
-##
-# Gets PROJECT_STACK specifications.
-#
-# @param 1 String : the PROJECT_STACK to "dissect".
-#
-# @see u_str_split1()
-# @see u_env_item_split_version()
-# @see u_in_array()
-#
-# @example
-#   u_stack_get_specs "$PROJECT_STACK"
-#   echo "$APP"
-#   echo "$APP_VERSION"
-#   for stack_preset in "${STACK_PRESETS[@]}"; do
-#     echo "$stack_preset"
-#   done
-#   for stack_service in "${STACK_SERVICES[@]}"; do
-#     echo "$stack_service"
-#   done
-#
-u_stack_get_specs() {
-  local p_project_stack="$1"
-
-  export APP
-  export APP_VERSION
-  export STACK_PRESETS
-  export STACK_SERVICES
-
-  # For bash version compatibility reasons, we replace variant separator '--'
-  # with a single character unlikely to produce unexpected results given the
-  # simple syntax of $PROJECT_STACK value.
-  # See https://stackoverflow.com/a/45201229 (#7)
-  local variant_sep='='
-  local project_stack_r=${p_project_stack/--/"$variant_sep"}
-  local stack_variant_arr
-  u_str_split1 stack_variant_arr $project_stack_r $variant_sep
-
-  APP="${stack_variant_arr[0]}"
-  APP_VERSION=''
-  STACK_PRESETS=()
-  STACK_SERVICES=()
-
-  local variants="${stack_variant_arr[1]}"
-
-  local app_arr
-  u_env_item_split_version app_arr $APP
-
-  if [[ -n "${app_arr[1]}" ]]; then
-    APP="${app_arr[0]}"
-    APP_VERSION="${app_arr[1]}"
-  fi
-
-  # Resolve app dependencies declared in 'dependencies.sh' files for current app.
-  u_app_resolve_deps
 }
 
 ##
