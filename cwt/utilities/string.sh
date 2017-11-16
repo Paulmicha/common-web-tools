@@ -57,16 +57,31 @@ u_random_str() {
 ##
 # Generates a slug from string.
 #
+# Accepts an additional parameter to specify the replacement character.
 # See https://gist.github.com/oneohthree/f528c7ae1e701ad990e6
 #
 # @param 1 String : the string to convert.
+# @param 2 [optional] String : the replacement character.
 #
 # @example
 #   SLUG=$(u_slugify "A string with non-standard characters and accents. éàù!îôï. Test out!")
-#   echo $SLUG # Result : "a-string-with-non-standard-characters-and-accents-eau-ioi-test-out"
+#   echo "$SLUG" # Result : "a-string-with-non-standard-characters-and-accents-eau-ioi-test-out"
+#
+# @example with different custom separator :
+#   # WARNING : regex special characters need escaping.
+#   SLUG_DOT=$(u_slugify "second test .. 456.2" '\.')
+#   echo "$SLUG" # Result : "second.test.456.2"
 #
 u_slugify() {
-  echo "${1}" | iconv -t ascii//TRANSLIT | sed -r s/[~\^]+//g | sed -r s/[^a-zA-Z0-9]+/-/g | sed -r s/^-+\|-+$//g | tr A-Z a-z
+  local p_str="$1"
+  local p_sep="$2"
+
+  local sep='-'
+  if [[ -n "$p_sep" ]]; then
+    sep="$p_sep"
+  fi
+
+  echo "$p_str" | iconv -t ascii//TRANSLIT | sed -r s/[~\^]+//g | sed -r s/[^a-zA-Z0-9]+/"$sep"/g | sed -r s/^"$sep"+\|"$sep"+$//g | tr A-Z a-z
 }
 
 ##

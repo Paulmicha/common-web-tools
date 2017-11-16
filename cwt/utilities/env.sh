@@ -160,12 +160,12 @@ u_print_env() {
     eval "[[ -z \"\$$env_var_name\" ]] && echo \"$env_var_name\" \(empty\)";
     eval "[[ -n \"\$$env_var_name\" ]] && echo \"$env_var_name = \$$env_var_name\"";
 
-    for key in ${ENV_VARS_UNIQUE_KEYS[@]}; do
-      val="${ENV_VARS[$env_var_name|$key]}"
-      if [[ -n "$val" ]]; then
-        echo "  - ${key} = ${ENV_VARS[${env_var_name}|${key}]}";
-      fi
-    done
+    # for key in ${ENV_VARS_UNIQUE_KEYS[@]}; do
+    #   val="${ENV_VARS[$env_var_name|$key]}"
+    #   if [[ -n "$val" ]]; then
+    #     echo "  - ${key} = ${ENV_VARS[${env_var_name}|${key}]}";
+    #   fi
+    # done
   done
   echo
 }

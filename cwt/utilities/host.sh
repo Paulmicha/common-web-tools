@@ -60,5 +60,9 @@ u_host_get_os() {
     version=$(uname -r)
   fi
 
+  # Prevent unexpected characters.
+  os=$(u_slugify "$os")
+  version=$(u_slugify "$version" '\.')
+
   echo "$os-$version" | tr '[:upper:]' '[:lower:]'
 }

@@ -72,8 +72,8 @@ EOF
 for env_var_name in ${ENV_VARS['.sorting']}; do
   u_str_split1 evn_arr $env_var_name '|'
   env_var_name="${evn_arr[1]}"
-  eval "[[ -z \"\$$env_var_name\" ]] && echo \"$env_var_name\"=\'\' >> \"$CURRENT_ENV_SETTINGS_FILE\""
-  eval "[[ -n \"\$$env_var_name\" ]] && echo \"$env_var_name=\\\"\$$env_var_name\\\"\" >> \"$CURRENT_ENV_SETTINGS_FILE\""
+  eval "[[ -z \"\$$env_var_name\" ]] && echo \"readonly $env_var_name\"=\'\' >> \"$CURRENT_ENV_SETTINGS_FILE\""
+  eval "[[ -n \"\$$env_var_name\" ]] && echo \"readonly $env_var_name=\\\"\$$env_var_name\\\"\" >> \"$CURRENT_ENV_SETTINGS_FILE\""
 done
 
 echo "Over."

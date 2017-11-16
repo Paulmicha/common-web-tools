@@ -12,4 +12,7 @@
 # @see cwt/env/README.md
 #
 
-software_version['php']='5.6'
+declare -a instance_types_mailhog_arr=("dev" "test" "stage")
+if u_in_array "$INSTANCE_TYPE" instance_types_mailhog_arr; then
+  softwares+='mailhog'
+fi

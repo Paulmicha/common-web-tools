@@ -22,22 +22,135 @@ This process generates a single file (`cwt/env/current/vars.sh`) by assembling 2
 1. dependency files - purpose : aggregate host-level *services* (or softwares) dependencies;
 1. env files called config or env *models* - purpose : aggregate env settings (global variables) necessary for configuring the local project instance and its services.
 
+Aggregation will include (or more precisely - *source*) the more generic files first, then gradually the more specific ones, and finally their corresponding customization (see *complements* in *autoload*).
+
+CWT provides a few example project dependencies and env models, but its purpose remains to be useful for your specific project(s). So the reason this process is detailed here is to better understand how to provide your own custom declarations.
+
+## Common syntax
+
+The following rules apply to both types of files in dynamically generated lookup paths (dependencies and env models) :
+
+- version numbers are extracted after the last `-` and may use dots to indicate minor and/or patch versions
+- variants are indicated after the "name" part of any declaration (project stack, software, etc.) by using 2 dashes `--`
+- multiple values are separated using a single comma `,`
+- presets are special variants meant to provide a group of tools, and are declared using the prefix `p-`
+
+Note that there can be **no space** between these characters for a single declaration.
+
+```sh
+# These are all valid examples illustrating the syntax rules described above :
+PROJECT_STACK='drupal'
+PROJECT_STACK='drupal-7'
+PROJECT_STACK='drupal-7.56'
+PROJECT_STACK='drupal-7.56--solr-5'
+PROJECT_STACK='drupal-7--solr-5.5,redis'
+PROJECT_STACK='drupal--solr,redis,varnish-4'
+PROJECT_STACK='drupal-7.56--solr,redis,p-nodejs-8'
+PROJECT_STACK='drupal-8--p-contenta-hyperhtml-2,redis,elasticsearch'
+```
+
 ## Software dependencies (required host services)
 
-Dependencies specify all services (or softwares) required to run the current project instance(s). They are used to list what will be provisioned on hosts.
+Dependencies specify all services (or softwares) required to run the current project instance(s). They are used to list what will be provisioned on hosts - including the provisioning tool itself, testing, deployment or log-related tools, etc.
 
 The list of dependencies is stored in the `$STACK_SERVICES` global variable. The syntax used to declare these dependencies allows to specify mutually exclusive alternative (uses either this OR that).
 
-```sh
-# Dependency declaration syntax examples - see cwt/app/drupal/dependencies.sh
+### Dependency declaration syntax
 
+Commented sample from example file `cwt/app/drupal/dependencies.sh` :
+
+```sh
 # Separate each item with a comma.
 # Use the '..' prefix to specify a list of mutually exclusive alternatives.
-softwares='php,..db,..webserver'
+softwares='php-7,..db,..webserver'
 
 # Each list of alternatives is a simple comma-separated string.
-alternatives['..db']='mariadb,mysql,postgresql'
-alternatives['..webserver']='apache,nginx'
+alternatives['..db']='mariadb-10,mysql-5,postgresql-10'
+alternatives['..webserver']='apache-2.4,nginx'
+```
+
+### Aggregation
+
+Here's a list of examples and their corresponding lookup paths. They represent possibilities corresponding to the project stack, provisioning method, and current host's OS and type (e.g. local, remote).
+
+Any existing file is included (sourced) in the order indicated.
+
+```sh
+# Running this on "Bash on Ubuntu on Windows 10" (tested on 2017/11/16) :
+. cwt/stack/init.sh -s drupal-7--solr-5,redis -p ansible-2 -y
+
+# ... yields these corresponding stack dependencies lookup paths :
+cwt/provision/local_host.dependencies.sh
+cwt/provision/ubuntu.dependencies.sh
+cwt/provision/ubuntu-14.dependencies.sh
+cwt/provision/ubuntu-14.04.dependencies.sh
+cwt/provision/ubuntu.local_host.dependencies.sh
+cwt/provision/ubuntu-14.local_host.dependencies.sh
+cwt/provision/ubuntu-14.04.local_host.dependencies.sh
+cwt/provision/ansible.dependencies.sh
+cwt/provision/ansible.ubuntu.dependencies.sh
+cwt/provision/ansible.ubuntu-14.dependencies.sh
+cwt/provision/ansible.ubuntu-14.04.dependencies.sh
+cwt/provision/ansible-2.dependencies.sh
+cwt/provision/ansible-2.ubuntu.dependencies.sh
+cwt/provision/ansible-2.ubuntu-14.dependencies.sh
+cwt/provision/ansible-2.ubuntu-14.04.dependencies.sh
+cwt/provision/ansible.local_host.dependencies.sh
+cwt/provision/ansible.ubuntu.local_host.dependencies.sh
+cwt/provision/ansible.ubuntu-14.local_host.dependencies.sh
+cwt/provision/ansible.ubuntu-14.04.local_host.dependencies.sh
+cwt/provision/ansible-2.local_host.dependencies.sh
+cwt/provision/ansible-2.ubuntu.local_host.dependencies.sh
+cwt/provision/ansible-2.ubuntu-14.local_host.dependencies.sh
+cwt/provision/ansible-2.ubuntu-14.04.local_host.dependencies.sh
+cwt/app/drupal/dependencies.sh
+cwt/app/drupal/local_host.dependencies.sh
+cwt/app/drupal/ubuntu.dependencies.sh
+cwt/app/drupal/ubuntu-14.dependencies.sh
+cwt/app/drupal/ubuntu-14.04.dependencies.sh
+cwt/app/drupal/ubuntu.local_host.dependencies.sh
+cwt/app/drupal/ubuntu-14.local_host.dependencies.sh
+cwt/app/drupal/ubuntu-14.04.local_host.dependencies.sh
+cwt/app/drupal/ansible.dependencies.sh
+cwt/app/drupal/ansible.ubuntu.dependencies.sh
+cwt/app/drupal/ansible.ubuntu-14.dependencies.sh
+cwt/app/drupal/ansible.ubuntu-14.04.dependencies.sh
+cwt/app/drupal/ansible-2.dependencies.sh
+cwt/app/drupal/ansible-2.ubuntu.dependencies.sh
+cwt/app/drupal/ansible-2.ubuntu-14.dependencies.sh
+cwt/app/drupal/ansible-2.ubuntu-14.04.dependencies.sh
+cwt/app/drupal/ansible.local_host.dependencies.sh
+cwt/app/drupal/ansible.ubuntu.local_host.dependencies.sh
+cwt/app/drupal/ansible.ubuntu-14.local_host.dependencies.sh
+cwt/app/drupal/ansible.ubuntu-14.04.local_host.dependencies.sh
+cwt/app/drupal/ansible-2.local_host.dependencies.sh
+cwt/app/drupal/ansible-2.ubuntu.local_host.dependencies.sh
+cwt/app/drupal/ansible-2.ubuntu-14.local_host.dependencies.sh
+cwt/app/drupal/ansible-2.ubuntu-14.04.local_host.dependencies.sh
+cwt/app/drupal/7/dependencies.sh
+cwt/app/drupal/7/local_host.dependencies.sh
+cwt/app/drupal/7/ubuntu.dependencies.sh
+cwt/app/drupal/7/ubuntu-14.dependencies.sh
+cwt/app/drupal/7/ubuntu-14.04.dependencies.sh
+cwt/app/drupal/7/ubuntu.local_host.dependencies.sh
+cwt/app/drupal/7/ubuntu-14.local_host.dependencies.sh
+cwt/app/drupal/7/ubuntu-14.04.local_host.dependencies.sh
+cwt/app/drupal/7/ansible.dependencies.sh
+cwt/app/drupal/7/ansible.ubuntu.dependencies.sh
+cwt/app/drupal/7/ansible.ubuntu-14.dependencies.sh
+cwt/app/drupal/7/ansible.ubuntu-14.04.dependencies.sh
+cwt/app/drupal/7/ansible-2.dependencies.sh
+cwt/app/drupal/7/ansible-2.ubuntu.dependencies.sh
+cwt/app/drupal/7/ansible-2.ubuntu-14.dependencies.sh
+cwt/app/drupal/7/ansible-2.ubuntu-14.04.dependencies.sh
+cwt/app/drupal/7/ansible.local_host.dependencies.sh
+cwt/app/drupal/7/ansible.ubuntu.local_host.dependencies.sh
+cwt/app/drupal/7/ansible.ubuntu-14.local_host.dependencies.sh
+cwt/app/drupal/7/ansible.ubuntu-14.04.local_host.dependencies.sh
+cwt/app/drupal/7/ansible-2.local_host.dependencies.sh
+cwt/app/drupal/7/ansible-2.ubuntu.local_host.dependencies.sh
+cwt/app/drupal/7/ansible-2.ubuntu-14.local_host.dependencies.sh
+cwt/app/drupal/7/ansible-2.ubuntu-14.04.local_host.dependencies.sh
 ```
 
 ## Configuration aggregation (env settings)
