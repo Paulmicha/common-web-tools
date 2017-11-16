@@ -50,7 +50,6 @@ ENV_VARS_UNIQUE_KEYS=()
 u_exec_foreach_env_vars u_assign_env_value
 
 # Aggregate dependencies and env vars.
-u_stack_get_specs "$PROJECT_STACK"
 . cwt/stack/init/aggregate_deps.sh
 . cwt/stack/init/aggregate_env_vars.sh
 

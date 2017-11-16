@@ -2,8 +2,6 @@
 
 The variables written and loaded using the scripts in `cwt/env` directory are used in all CWT tasks. Some are common to any type of stack, while others are specific to certain variants.
 
-## Operation
-
 The very first step required to use CWT is writing current instance's env settings, a task referred to as **stack init** :
 
 ```sh
@@ -11,9 +9,55 @@ The very first step required to use CWT is writing current instance's env settin
 # It provides options and/or terminal prompts to obtain all mandatory values,
 # then calls cwt/env/write.sh.
 . cwt/stack/init.sh
+
+# Optional arguments examples.
+# Details : see cwt/stack/init/get_args.sh
+. cwt/stack/init.sh -p ansible # Specify provisioning tool.
+. cwt/stack/init.sh -s nodejs-8 -y # Specify project stack + bypass prompts (will use defaults).
+. cwt/stack/init.sh -s drupal-7--redis,varnish-4,solr -y # Add services to the stack using '--' separator.
 ```
 
-This process generates a single file (`cwt/env/current/vars.sh`) by assembling any number of default env files - called config or env *models* - whose role is to declare all variables necessary for the current project instance : host-level dependencies, build/test tools, service-specific configuration...
+This process generates a single file (`cwt/env/current/vars.sh`) by assembling 2 types of files :
+
+1. dependency files - purpose : aggregate host-level *services* (or softwares) dependencies;
+1. env files called config or env *models* - purpose : aggregate env settings (global variables) necessary for configuring the local project instance and its services.
+
+## Software dependencies (required host services)
+
+Dependencies specify all services (or softwares) required to run the current project instance(s). They are used to list what will be provisioned on hosts.
+
+The list of dependencies is stored in the `$STACK_SERVICES` global variable. The syntax used to declare these dependencies allows to specify mutually exclusive alternative (uses either this OR that).
+
+```sh
+# Dependency declaration syntax examples - see cwt/app/drupal/dependencies.sh
+
+# Separate each item with a comma.
+# Use the '..' prefix to specify a list of mutually exclusive alternatives.
+softwares='php,..db,..webserver'
+
+# Each list of alternatives is a simple comma-separated string.
+alternatives['..db']='mariadb,mysql,postgresql'
+alternatives['..webserver']='apache,nginx'
+```
+
+## Configuration aggregation (env settings)
+
+```sh
+# Env models syntax examples - see cwt/env/vars.sh
+
+# 1. No default value provided.
+define PROJECT_STACK
+
+# 2. Immediate variable substitution (uses current shell scope variables).
+define PROJECT_DOCROOT "[default]=$PWD"
+
+# 3. Subshell demo (callback must echo result).
+define HOST_OS "[default]=$(u_host_get_os)"
+
+# 4. Variable substitution during env vars aggregation - see :
+# cwt/stack/init/aggregate_env_vars.sh
+define APP_DOCROOT "[default]=\$PROJECT_DOCROOT/web"
+```
 
 The aggregation rules consist of a correspondance between a basic syntax used in the `$PROJECT_STACK` value (+ `$PROVISION_USING` value) and optional directories + filenames matching it.
 

@@ -178,8 +178,15 @@ u_print_env() {
 # @param 2 [optional] String :
 #   $PROVISION_USING override (should exist in calling scope).
 #
+# @requires the following globals in calling scope :
+# - $APP
+# - $APP_VERSION
+# - $STACK_SERVICES
+# - $STACK_PRESETS
+# - $PROVISION_USING
+#
 # @see u_stack_get_specs()
-# @see u_env_item_split_version()
+# @see cwt/stack/init/aggregate_env_vars.sh
 #
 # @example
 #   u_env_models_get_lookup_paths 'drupal-7--p-opigno,solr,memcached' 'docker-compose-3'
@@ -208,7 +215,6 @@ u_env_models_get_lookup_paths() {
   fi
 
   ENV_MODELS_PATHS=()
-  u_stack_get_specs "$stack"
 
   if [[ -n "$APP_VERSION" ]]; then
     local app_v

@@ -56,7 +56,7 @@ While tools like Ansible, `docker-compose` or `nvm` already address these concer
   │   │   └── deploy/       <- Deployment-related scripts.
   │   ├── stack/            <- Services and/or workers management scripts.
   │   ├── test/             <- Automated tests related scripts.
-  │   └── utilities/        <- Bash functions includes (see "Autoload").
+  │   └── utilities/        <- CWT functions to hide complexity (see "Autoload").
   ├── dumps/                <- Database dump files (git-ignored).
   ├── web/                  <- [optional] The app dir - can be outside project dir ($APP_DOCROOT).
   └── .gitignore            <- Replace with your own and/or edit.

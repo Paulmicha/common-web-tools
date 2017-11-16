@@ -43,7 +43,7 @@ u_stack_get_specs() {
   # See https://stackoverflow.com/a/45201229 (#7)
   local variant_sep='='
   local project_stack_r=${p_project_stack/--/"$variant_sep"}
-  local stack_variant_arr
+  local stack_variant_arr=()
   u_str_split1 stack_variant_arr $project_stack_r $variant_sep
 
   APP="${stack_variant_arr[0]}"
@@ -51,10 +51,8 @@ u_stack_get_specs() {
   STACK_PRESETS=()
   STACK_SERVICES=()
 
-  local variants="${stack_variant_arr[1]}"
-
-  local app_arr
-  u_env_item_split_version app_arr $APP
+  local app_arr=()
+  u_env_item_split_version app_arr "$APP"
 
   if [[ -n "${app_arr[1]}" ]]; then
     APP="${app_arr[0]}"
@@ -62,6 +60,7 @@ u_stack_get_specs() {
   fi
 
   # Resolve app dependencies declared in 'dependencies.sh' files for current app.
+  local variants="${stack_variant_arr[1]}"
   u_stack_resolve_deps
 }
 
@@ -76,7 +75,8 @@ u_stack_get_specs() {
 # They are declared in files dynamically loaded in a similar way than env models.
 # See cwt/env/README.md
 #
-# @requires the following globals in calling scope :
+# @requires the following variables in calling scope :
+# - $variants
 # - $APP
 # - $APP_VERSION
 # - $STACK_SERVICES
@@ -100,14 +100,17 @@ u_stack_resolve_deps() {
   local alternatives
   local software_version
 
-  declare -A alternatives
-  declare -A software_version
-
   u_stack_deps_get_lookup_paths
 
   local dep_path
   for dep_path in "${DEPS_LOOKUP_PATHS[@]}"; do
     if [[ -f "$dep_path" ]]; then
+      softwares=''
+      unset alternatives
+      declare -A alternatives
+      unset software_version
+      declare -A software_version
+
       . "$dep_path"
       u_autoload_get_complement "$dep_path"
 
@@ -122,18 +125,27 @@ u_stack_resolve_deps() {
   done
 
   if [[ -n "$variants" ]]; then
-    local variants_arr
+    local variants_arr=()
     u_str_split1 variants_arr "$variants" ','
 
     local substr
+    local vi_wo_ver
+    local vi_arr
     for variant_item in "${variants_arr[@]}"; do
-      substr=${variant_item:0:2}
+      substr="${variant_item:0:2}"
 
       if [[ "$substr" == 'p-' ]]; then
         STACK_PRESETS+=(${variant_item:2})
+
       elif [[ "$substr" != '..' ]]; then
-        if [[ -n "${software_version[$variant_item]}" ]]; then
-          STACK_SERVICES+=("${variant_item}-${software_version[$variant_item]}")
+        vi_wo_ver="$variant_item"
+        u_env_item_split_version vi_arr "$variant_item"
+        if [[ -n "${vi_arr[1]}" ]]; then
+          vi_wo_ver="${vi_arr[0]}"
+        fi
+
+        if [[ -n "${software_version[$vi_wo_ver]}" ]]; then
+          STACK_SERVICES+=("${vi_wo_ver}-${software_version[$vi_wo_ver]}")
         else
           STACK_SERVICES+=($variant_item)
         fi
