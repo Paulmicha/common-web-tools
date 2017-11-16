@@ -61,6 +61,7 @@ u_assign_env_value() {
   local default_val="${ENV_VARS[$p_var|default]}"
 
   eval "export $p_var"
+  eval "unset $p_var"
 
   if [[ -n "$arg_val" ]]; then
     eval "$p_var='$arg_val'"
@@ -207,8 +208,6 @@ u_env_models_get_lookup_paths() {
   fi
 
   ENV_MODELS_PATHS=()
-  u_autoload_add_lookup_level "cwt/provision/" 'vars.sh' "$PROVISION_USING" ENV_MODELS_PATHS
-
   u_stack_get_specs "$stack"
 
   if [[ -n "$APP_VERSION" ]]; then
@@ -218,7 +217,24 @@ u_env_models_get_lookup_paths() {
     u_str_split1 app_version_arr "$APP_VERSION" '.'
   fi
 
-  # Host-related models.
+  # Provisioning-related models.
+  local p
+  local p_arr=()
+  u_env_item_split_version p_arr "$PROVISION_USING"
+  if [[ -n "${p_arr[1]}" ]]; then
+    local p_v
+    local p_path="cwt/provision/${p_arr[0]}"
+    local p_version_arr=()
+    u_array_add_once "$p_path/vars.sh" ENV_MODELS_PATHS
+    u_str_split1 p_version_arr "${p_arr[1]}" '.'
+    for p_v in "${p_version_arr[@]}"; do
+      p_path+="/$p_v"
+      u_array_add_once "$p_path/vars.sh" ENV_MODELS_PATHS
+    done
+  else
+    u_array_add_once "cwt/provision/${PROVISION_USING}/vars.sh" ENV_MODELS_PATHS
+  fi
+
   local ss_arr=()
   for stack_service in "${STACK_SERVICES[@]}"; do
     u_env_item_split_version ss_arr "$stack_service"

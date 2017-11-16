@@ -19,8 +19,10 @@ define REG_BACKEND "[default]=file"
 # define SECRETS_BACKEND
 
 define PROVISION_USING "[default]=docker-compose"
+define HOST_OS "[default]=$(u_host_get_os)"
+define HOST_TYPE "[default]=local"
 
-define APP_DOCROOT "[default]=$PWD/web"
+define APP_DOCROOT "[default]=\$PROJECT_DOCROOT/web"
 define INSTANCE_TYPE "[default]=dev"
 define INSTANCE_DOMAIN "[default]=$(u_get_instance_domain)"
 define INSTANCE_ALIAS

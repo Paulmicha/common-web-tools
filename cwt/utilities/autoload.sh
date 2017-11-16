@@ -27,12 +27,17 @@ u_autoload_add_lookup_level() {
   local p_suffix="$2"
   local p_name="$3"
   local p_lookups_var_name="$4"
+  local p_extra_level_name="$5"
 
   local name_version_arr=()
   u_env_item_split_version name_version_arr "$p_name"
 
   if [[ -n "${name_version_arr[1]}" ]]; then
     u_array_add_once "${p_prefix}${name_version_arr[0]}.${p_suffix}" $p_lookups_var_name
+
+    if [[ -n "$p_extra_level_name" ]]; then
+      u_autoload_add_lookup_level "${p_prefix}${name_version_arr[0]}." $p_suffix $p_extra_level_name $p_lookups_var_name
+    fi
 
     local v
     local path="${p_prefix}${name_version_arr[0]}-"
@@ -43,10 +48,18 @@ u_autoload_add_lookup_level() {
     for v in "${version_arr[@]}"; do
       path+="$v."
       u_array_add_once "${path}${p_suffix}" $p_lookups_var_name
+
+      if [[ -n "$p_extra_level_name" ]]; then
+        u_autoload_add_lookup_level "${path}" $p_suffix $p_extra_level_name $p_lookups_var_name
+      fi
     done
 
   else
     u_array_add_once "${p_prefix}${p_name}.${p_suffix}" $p_lookups_var_name
+
+    if [[ -n "$p_extra_level_name" ]]; then
+      u_autoload_add_lookup_level "${p_prefix}${p_name}." $p_suffix $p_extra_level_name $p_lookups_var_name
+    fi
   fi
 }
 

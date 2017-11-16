@@ -109,6 +109,7 @@ u_stack_resolve_deps() {
   for dep_path in "${DEPS_LOOKUP_PATHS[@]}"; do
     if [[ -f "$dep_path" ]]; then
       . "$dep_path"
+      u_autoload_get_complement "$dep_path"
 
       if [[ -n "$softwares" ]]; then
         if [[ -n "$variants" ]]; then
@@ -150,6 +151,8 @@ u_stack_resolve_deps() {
 # - $APP
 # - $APP_VERSION
 # - $PROVISION_USING
+# - $HOST_TYPE
+# - $HOST_OS
 #
 # @exports result in global $DEPS_LOOKUP_PATHS.
 #
@@ -162,11 +165,21 @@ u_stack_deps_get_lookup_paths() {
   DEPS_LOOKUP_PATHS=()
 
   # Provisioning-related dependencies.
-  u_autoload_add_lookup_level "cwt/provision/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS
+  # u_autoload_add_lookup_level "cwt/provision/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS
+  DEPS_LOOKUP_PATHS+=("cwt/provision/${HOST_TYPE}_host.dependencies.sh")
+  u_autoload_add_lookup_level "cwt/provision/" 'dependencies.sh' "$HOST_OS" DEPS_LOOKUP_PATHS
+  u_autoload_add_lookup_level "cwt/provision/" "${HOST_TYPE}_host.dependencies.sh" "$HOST_OS" DEPS_LOOKUP_PATHS
+  u_autoload_add_lookup_level "cwt/provision/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS "$HOST_OS"
+  u_autoload_add_lookup_level "cwt/provision/" "${HOST_TYPE}_host.dependencies.sh" "$PROVISION_USING" DEPS_LOOKUP_PATHS "$HOST_OS"
 
   # App-related dependencies.
   DEPS_LOOKUP_PATHS+=("cwt/app/$APP/dependencies.sh")
-  u_autoload_add_lookup_level "cwt/app/$APP/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS
+  # u_autoload_add_lookup_level "cwt/app/$APP/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS
+  DEPS_LOOKUP_PATHS+=("cwt/app/$APP/${HOST_TYPE}_host.dependencies.sh")
+  u_autoload_add_lookup_level "cwt/app/$APP/" 'dependencies.sh' "$HOST_OS" DEPS_LOOKUP_PATHS
+  u_autoload_add_lookup_level "cwt/app/$APP/" "${HOST_TYPE}_host.dependencies.sh" "$HOST_OS" DEPS_LOOKUP_PATHS
+  u_autoload_add_lookup_level "cwt/app/$APP/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS "$HOST_OS"
+  u_autoload_add_lookup_level "cwt/app/$APP/" "${HOST_TYPE}_host.dependencies.sh" "$PROVISION_USING" DEPS_LOOKUP_PATHS "$HOST_OS"
 
   if [[ -n "$APP_VERSION" ]]; then
     local v
@@ -178,7 +191,12 @@ u_stack_deps_get_lookup_paths() {
       path+="/$v"
 
       DEPS_LOOKUP_PATHS+=("$path/dependencies.sh")
-      u_autoload_add_lookup_level "$path/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS
+      # u_autoload_add_lookup_level "$path/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS
+      DEPS_LOOKUP_PATHS+=("$path/${HOST_TYPE}_host.dependencies.sh")
+      u_autoload_add_lookup_level "$path/" 'dependencies.sh' "$HOST_OS" DEPS_LOOKUP_PATHS
+      u_autoload_add_lookup_level "$path/" "${HOST_TYPE}_host.dependencies.sh" "$HOST_OS" DEPS_LOOKUP_PATHS
+      u_autoload_add_lookup_level "$path/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS "$HOST_OS"
+      u_autoload_add_lookup_level "$path/" "${HOST_TYPE}_host.dependencies.sh" "$PROVISION_USING" DEPS_LOOKUP_PATHS "$HOST_OS"
     done
   fi
 }

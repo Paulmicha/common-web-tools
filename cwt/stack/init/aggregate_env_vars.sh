@@ -21,10 +21,11 @@ fi
 for env_model in "${ENV_MODELS_PATHS[@]}"; do
   if [[ -f "$env_model" ]]; then
     . "$env_model"
+    u_autoload_get_complement "$env_model"
 
     # For now we prefer to re-process every global, every time we find a new
-    # model to include. This allows to allow conditional declarations in them
-    # (i.e. useful for settings that need to adapt/react to each other).
+    # model to include. This allows conditional declarations in them (i.e.
+    # useful for settings that need to adapt/react to each other).
     u_exec_foreach_env_vars u_assign_env_value
   fi
 done
