@@ -4,6 +4,7 @@
 # Dependencies declaration.
 #
 # This file is dynamically included during stack init.
+# @see require()
 # @see u_stack_resolve_deps()
 # @see u_stack_get_specs()
 # @see cwt/stack/init.sh
@@ -14,5 +15,5 @@
 
 declare -a instance_types_mailhog_arr=("dev" "test" "stage")
 if u_in_array "$INSTANCE_TYPE" instance_types_mailhog_arr; then
-  softwares+='mailhog'
+  require 'mailhog'
 fi

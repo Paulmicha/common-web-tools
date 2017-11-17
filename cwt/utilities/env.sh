@@ -25,12 +25,12 @@
 #
 u_exec_foreach_env_vars() {
   local p_callback="$1"
-  local evn_arr
+  local env_arr
   local env_var_name
 
   for env_var_name in ${ENV_VARS['.sorting']}; do
-    u_str_split1 evn_arr $env_var_name '|'
-    env_var_name="${evn_arr[1]}"
+    u_str_split1 env_arr $env_var_name '|'
+    env_var_name="${env_arr[1]}"
     $p_callback $env_var_name
   done
 }
@@ -145,7 +145,7 @@ define() {
 #
 u_print_env() {
   local env_var_name
-  local evn_arr
+  local env_arr
   local key
   local val
 
@@ -154,8 +154,8 @@ u_print_env() {
   echo
 
   for env_var_name in ${ENV_VARS['.sorting']}; do
-    u_str_split1 evn_arr $env_var_name '|'
-    env_var_name="${evn_arr[1]}"
+    u_str_split1 env_arr $env_var_name '|'
+    env_var_name="${env_arr[1]}"
 
     eval "[[ -z \"\$$env_var_name\" ]] && echo \"$env_var_name\" \(empty\)";
     eval "[[ -n \"\$$env_var_name\" ]] && echo \"$env_var_name = \$$env_var_name\"";

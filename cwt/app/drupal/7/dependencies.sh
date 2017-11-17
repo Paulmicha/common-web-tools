@@ -4,6 +4,7 @@
 # Dependencies declaration.
 #
 # This file is dynamically included during stack init.
+# @see require()
 # @see u_stack_resolve_deps()
 # @see u_stack_get_specs()
 # @see cwt/stack/init.sh

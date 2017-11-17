@@ -99,27 +99,25 @@ u_stack_resolve_deps() {
   local softwares
   local alternatives
   local software_version
+  local dep_path
+  declare -A alternatives
+  declare -A software_version
 
   u_stack_deps_get_lookup_paths
 
-  local dep_path
   for dep_path in "${DEPS_LOOKUP_PATHS[@]}"; do
+    softwares=''
+
     if [[ -f "$dep_path" ]]; then
-      softwares=''
-      unset alternatives
-      declare -A alternatives
-      unset software_version
-      declare -A software_version
-
       . "$dep_path"
-      u_autoload_get_complement "$dep_path"
+    fi
+    u_autoload_get_complement "$dep_path"
 
-      if [[ -n "$softwares" ]]; then
-        if [[ -n "$variants" ]]; then
-          variants="${variants},${softwares}"
-        else
-          variants="${softwares}"
-        fi
+    if [[ -n "$softwares" ]]; then
+      if [[ -n "$variants" ]]; then
+        variants="${variants},${softwares}"
+      else
+        variants="${softwares}"
       fi
     fi
   done
@@ -139,6 +137,7 @@ u_stack_resolve_deps() {
 
       elif [[ "$substr" != '..' ]]; then
         vi_wo_ver="$variant_item"
+
         u_env_item_split_version vi_arr "$variant_item"
         if [[ -n "${vi_arr[1]}" ]]; then
           vi_wo_ver="${vi_arr[0]}"
@@ -153,6 +152,34 @@ u_stack_resolve_deps() {
     done
 
     u_stack_deps_resolve_alternatives
+  fi
+}
+
+##
+# Adds new software to the list of dependencies.
+#
+# @requires the following variables in calling scope :
+# - $softwares
+#
+# @see u_stack_resolve_deps()
+#
+# For better readability in *dependencies.sh files, we exceptionally name that
+# function without following the usual convention.
+#
+# @examples (write)
+#   require my_software-name
+#   require my_software-name-1.2.3
+#
+# @example (read)
+#   u_autoload_print_lookup_paths DEPS_LOOKUP_PATHS "Stack dependencies"
+#
+require() {
+  local p_input="$1"
+
+  if [[ -n "$softwares" ]]; then
+    softwares="${softwares},${p_input}"
+  else
+    softwares="${p_input}"
   fi
 }
 

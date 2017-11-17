@@ -22,13 +22,13 @@ This process generates a single file (`cwt/env/current/vars.sh`) by assembling 2
 1. dependency files - purpose : aggregate host-level *services* (or softwares) dependencies;
 1. env files called config or env *models* - purpose : aggregate env settings (global variables) necessary for configuring the local project instance and its services.
 
-Aggregation will include (or more precisely - *source*) the more generic files first, then gradually the more specific ones, and finally their corresponding customization (see *complements* in *autoload*).
+Aggregation will include (or more precisely - load using bash `source` command) the more generic files first, then gradually the more specific ones, each file allowing to provide its own customization. See *complements* documentation at `cwt/custom/complements/README.md`.
 
-CWT provides a few example project dependencies and env models, but its purpose remains to be useful for your specific project(s). So the reason this process is detailed here is to better understand how to provide your own custom declarations.
+CWT provides a few example project dependencies and env models, but its purpose is to be useful for your specific project(s). So the reason this process is detailed here is to better understand how to provide your own custom declarations.
 
-## Common syntax
+## Project stack syntax
 
-The following rules apply to both types of files in dynamically generated lookup paths (dependencies and env models) :
+The `$PROJECT_STACK` variable is the main source used to determine all the possibilities of file names and paths that can be loaded during stack init (the *lookup paths*). The following rules apply to both types of dynamically generated lookup paths (dependencies and env models) :
 
 - version numbers are extracted after the last `-` and may use dots to indicate minor and/or patch versions
 - variants are indicated after the "name" part of any declaration (project stack, software, etc.) by using 2 dashes `--`
@@ -51,22 +51,27 @@ PROJECT_STACK='drupal-8--p-contenta-hyperhtml-2,redis,elasticsearch'
 
 ## Software dependencies (required host services)
 
-Dependencies specify all services (or softwares) required to run the current project instance(s). They are used to list what will be provisioned on hosts - including the provisioning tool itself, testing, deployment or log-related tools, etc.
+Dependencies specify all services (or softwares) required to run the current project instance(s). They are used to list what needs to be provisioned on hosts - including the provisioning tool itself, testing, deployment or log-related tools, etc.
 
-The list of dependencies is stored in the `$STACK_SERVICES` global variable. The syntax used to declare these dependencies allows to specify mutually exclusive alternative (uses either this OR that).
+The list of dependencies is stored in the `$STACK_SERVICES` global variable. The syntax used to declare these dependencies allows to specify mutually exclusive alternative (i.e. uses either this program *OR* that one).
 
 ### Dependency declaration syntax
 
 Commented sample from example file `cwt/app/drupal/dependencies.sh` :
 
 ```sh
-# Separate each item with a comma.
 # Use the '..' prefix to specify a list of mutually exclusive alternatives.
-softwares='php-7,..db,..webserver'
+require 'php-7'
+require '..db'
+require '..webserver'
 
 # Each list of alternatives is a simple comma-separated string.
 alternatives['..db']='mariadb-10,mysql-5,postgresql-10'
 alternatives['..webserver']='apache-2.4,nginx'
+
+# Alter software version (notably useful in specific dependencies files loaded
+# after generic ones).
+software_version['php']='5.6'
 ```
 
 ### Aggregation
@@ -77,7 +82,7 @@ Any existing file is included (sourced) in the order indicated.
 
 ```sh
 # Running this on "Bash on Ubuntu on Windows 10" (tested on 2017/11/16) :
-. cwt/stack/init.sh -s drupal-7--solr-5,redis -p ansible-2 -y
+. cwt/stack/init.sh -s drupal-7--varnish-4,redis -p ansible-2 -y
 
 # ... yields these corresponding stack dependencies lookup paths :
 cwt/provision/local_host.dependencies.sh
