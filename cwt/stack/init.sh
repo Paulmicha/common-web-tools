@@ -55,3 +55,7 @@ u_exec_foreach_env_vars u_assign_env_value
 
 # Write env vars in current instance's settings file.
 . cwt/env/write.sh
+
+
+# Allow custom complements for this script.
+u_autoload_get_complement "$BASH_SOURCE"

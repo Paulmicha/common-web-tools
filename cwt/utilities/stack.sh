@@ -253,6 +253,8 @@ u_stack_deps_get_lookup_paths() {
       u_autoload_add_lookup_level "$path/" "${HOST_TYPE}_host.dependencies.sh" "$INSTANCE_TYPE" DEPS_LOOKUP_PATHS "$PROVISION_USING"
     done
   fi
+
+  # TODO presets dependencies.
 }
 
 ##
@@ -300,4 +302,23 @@ u_stack_deps_resolve_alternatives() {
       done
     fi
   done
+}
+
+##
+# Adds or installs a service required by the current project instance.
+#
+# For docker-compose provisioning, this will append services to the YAML file.
+# For ansible provisioning, this will append them to the playbook.
+# For scripts, this checks if software is already installed. If not, it will
+# attempt to find and execute a setup script matching the local host OS for each
+# service.
+#
+# @requires the following globals in calling scope :
+# - $PROVISION_USING
+# - $HOST_OS
+#
+# @see u_host_provision()
+#
+u_stack_add_service() {
+  # todo
 }

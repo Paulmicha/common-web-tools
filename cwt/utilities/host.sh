@@ -10,6 +10,40 @@
 #
 
 ##
+# Installs all services required to run the current project instance.
+#
+# @param 1 [optional] String : host to provision (defaults to local host).
+#
+# @requires cwt/stack/init.sh (must have already been run at least once).
+# @requires the following globals in calling scope :
+# - $PROJECT_STACK
+# - $PROVISION_USING
+# - $HOST_OS
+#
+# @see u_provisioning_preprocess()
+# @see u_stack_add_service()
+#
+u_host_provision() {
+  local p_host="$1"
+  local stack_service
+  local ss_version_arr
+
+  u_provisioning_preprocess
+
+  u_stack_get_specs "$PROJECT_STACK"
+  for stack_service in "${STACK_SERVICES[@]}"; do
+    u_env_item_split_version ss_version_arr "$stack_service"
+
+    # TODO remote host install.
+    if [[ -n "${ss_version_arr[1]}" ]]; then
+      u_stack_add_service "${ss_version_arr[0]}" "${ss_version_arr[1]}"
+    else
+      u_stack_add_service "$stack_service"
+    fi
+  done
+}
+
+##
 # Returns current host IP address.
 #
 # See https://stackoverflow.com/a/25851186

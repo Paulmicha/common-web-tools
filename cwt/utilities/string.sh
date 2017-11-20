@@ -92,3 +92,19 @@ u_slugify() {
 u_slugify_u() {
   echo "${1}" | iconv -t ascii//TRANSLIT | sed -r s/[~\^]+//g | sed -r s/[^a-zA-Z0-9]+/_/g | sed -r s/^_+\|_+$//g | tr A-Z a-z
 }
+
+##
+# Prompts for a value in terminal.
+#
+# @param 1 String : the question.
+#
+# @example
+#   input_git_user_name=$(u_prompt "please enter your Git user name : ")
+#   echo "You entered : '$input_git_user_name'"
+#
+u_prompt() {
+  local p_question="$1"
+  local input=''
+  read -p "$p_question" input
+  echo "$input"
+}
