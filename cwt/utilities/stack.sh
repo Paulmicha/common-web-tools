@@ -215,10 +215,17 @@ u_stack_deps_get_lookup_paths() {
   DEPS_LOOKUP_PATHS+=("cwt/app/$APP/dependencies.sh")
   # u_autoload_add_lookup_level "cwt/app/$APP/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS
   DEPS_LOOKUP_PATHS+=("cwt/app/$APP/${HOST_TYPE}_host.dependencies.sh")
+
   u_autoload_add_lookup_level "cwt/app/$APP/" 'dependencies.sh' "$HOST_OS" DEPS_LOOKUP_PATHS
   u_autoload_add_lookup_level "cwt/app/$APP/" "${HOST_TYPE}_host.dependencies.sh" "$HOST_OS" DEPS_LOOKUP_PATHS
+
   u_autoload_add_lookup_level "cwt/app/$APP/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS "$HOST_OS"
   u_autoload_add_lookup_level "cwt/app/$APP/" "${HOST_TYPE}_host.dependencies.sh" "$PROVISION_USING" DEPS_LOOKUP_PATHS "$HOST_OS"
+
+  u_autoload_add_lookup_level "cwt/app/$APP/" 'dependencies.sh' "$INSTANCE_TYPE" DEPS_LOOKUP_PATHS "$HOST_OS"
+  u_autoload_add_lookup_level "cwt/app/$APP/" "${HOST_TYPE}_host.dependencies.sh" "$INSTANCE_TYPE" DEPS_LOOKUP_PATHS "$HOST_OS"
+  u_autoload_add_lookup_level "cwt/app/$APP/" 'dependencies.sh' "$INSTANCE_TYPE" DEPS_LOOKUP_PATHS "$PROVISION_USING"
+  u_autoload_add_lookup_level "cwt/app/$APP/" "${HOST_TYPE}_host.dependencies.sh" "$INSTANCE_TYPE" DEPS_LOOKUP_PATHS "$PROVISION_USING"
 
   if [[ -n "$APP_VERSION" ]]; then
     local v
@@ -231,11 +238,19 @@ u_stack_deps_get_lookup_paths() {
 
       DEPS_LOOKUP_PATHS+=("$path/dependencies.sh")
       # u_autoload_add_lookup_level "$path/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS
+
       DEPS_LOOKUP_PATHS+=("$path/${HOST_TYPE}_host.dependencies.sh")
+
       u_autoload_add_lookup_level "$path/" 'dependencies.sh' "$HOST_OS" DEPS_LOOKUP_PATHS
       u_autoload_add_lookup_level "$path/" "${HOST_TYPE}_host.dependencies.sh" "$HOST_OS" DEPS_LOOKUP_PATHS
+
       u_autoload_add_lookup_level "$path/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS "$HOST_OS"
       u_autoload_add_lookup_level "$path/" "${HOST_TYPE}_host.dependencies.sh" "$PROVISION_USING" DEPS_LOOKUP_PATHS "$HOST_OS"
+
+      u_autoload_add_lookup_level "$path/" 'dependencies.sh' "$INSTANCE_TYPE" DEPS_LOOKUP_PATHS "$HOST_OS"
+      u_autoload_add_lookup_level "$path/" "${HOST_TYPE}_host.dependencies.sh" "$INSTANCE_TYPE" DEPS_LOOKUP_PATHS "$HOST_OS"
+      u_autoload_add_lookup_level "$path/" 'dependencies.sh' "$INSTANCE_TYPE" DEPS_LOOKUP_PATHS "$PROVISION_USING"
+      u_autoload_add_lookup_level "$path/" "${HOST_TYPE}_host.dependencies.sh" "$INSTANCE_TYPE" DEPS_LOOKUP_PATHS "$PROVISION_USING"
     done
   fi
 }

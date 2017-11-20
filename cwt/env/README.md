@@ -57,9 +57,17 @@ The list of dependencies is stored in the `$STACK_SERVICES` global variable. The
 
 ### Dependency declaration syntax
 
+Files declaring dependencies are named `*dependencies.sh`, and use the following syntax :
+
 ```sh
-# Use the '..' prefix to specify a list of mutually exclusive alternatives.
+# Add a software dependency.
+require 'php'
+
+# Version number is optional.
 require 'php-7'
+require 'php-5.6'
+
+# Use the '..' prefix to specify a list of mutually exclusive alternatives.
 require '..db'
 require '..webserver'
 
@@ -74,9 +82,9 @@ software_version['php']='5.6'
 
 ### Dependencies aggregation
 
-Here's a "stack init" example listing its corresponding dependencies lookup paths. They represent all possibilities matching the project stack, provisioning method, and current host's OS and type (e.g. local, remote).
+Here's a "stack init" example listing its corresponding dependencies lookup paths. They represent all possibilities matching the `$PROJECT_STACK`, provisioning method (`$PROVISION_USING`), current host's OS and type (e.g. `local`, `remote`), and project's `$INSTANCE_TYPE` (e.g. `dev`, `test`, `qa`, `stage`, `preprod`, `live`, `production`).
 
-Any existing file is included (sourced) in the order indicated.
+Any existing file is included (sourced) in the order indicated, each one allowing to provide its own customization. See *complements* documentation at `cwt/custom/complements/README.md`.
 
 ```sh
 # Running this on "Bash on Ubuntu on Windows 10" (tested on 2017/11/16) :
@@ -130,6 +138,18 @@ cwt/app/drupal/ansible-2.local_host.dependencies.sh
 cwt/app/drupal/ansible-2.ubuntu.local_host.dependencies.sh
 cwt/app/drupal/ansible-2.ubuntu-14.local_host.dependencies.sh
 cwt/app/drupal/ansible-2.ubuntu-14.04.local_host.dependencies.sh
+cwt/app/drupal/dev.dependencies.sh
+cwt/app/drupal/dev.ubuntu.dependencies.sh
+cwt/app/drupal/dev.ubuntu-14.dependencies.sh
+cwt/app/drupal/dev.ubuntu-14.04.dependencies.sh
+cwt/app/drupal/dev.local_host.dependencies.sh
+cwt/app/drupal/dev.ubuntu.local_host.dependencies.sh
+cwt/app/drupal/dev.ubuntu-14.local_host.dependencies.sh
+cwt/app/drupal/dev.ubuntu-14.04.local_host.dependencies.sh
+cwt/app/drupal/dev.ansible.dependencies.sh
+cwt/app/drupal/dev.ansible-2.dependencies.sh
+cwt/app/drupal/dev.ansible.local_host.dependencies.sh
+cwt/app/drupal/dev.ansible-2.local_host.dependencies.sh
 cwt/app/drupal/7/dependencies.sh
 cwt/app/drupal/7/local_host.dependencies.sh
 cwt/app/drupal/7/ubuntu.dependencies.sh
@@ -154,6 +174,18 @@ cwt/app/drupal/7/ansible-2.local_host.dependencies.sh
 cwt/app/drupal/7/ansible-2.ubuntu.local_host.dependencies.sh
 cwt/app/drupal/7/ansible-2.ubuntu-14.local_host.dependencies.sh
 cwt/app/drupal/7/ansible-2.ubuntu-14.04.local_host.dependencies.sh
+cwt/app/drupal/7/dev.dependencies.sh
+cwt/app/drupal/7/dev.ubuntu.dependencies.sh
+cwt/app/drupal/7/dev.ubuntu-14.dependencies.sh
+cwt/app/drupal/7/dev.ubuntu-14.04.dependencies.sh
+cwt/app/drupal/7/dev.local_host.dependencies.sh
+cwt/app/drupal/7/dev.ubuntu.local_host.dependencies.sh
+cwt/app/drupal/7/dev.ubuntu-14.local_host.dependencies.sh
+cwt/app/drupal/7/dev.ubuntu-14.04.local_host.dependencies.sh
+cwt/app/drupal/7/dev.ansible.dependencies.sh
+cwt/app/drupal/7/dev.ansible-2.dependencies.sh
+cwt/app/drupal/7/dev.ansible.local_host.dependencies.sh
+cwt/app/drupal/7/dev.ansible-2.local_host.dependencies.sh
 ```
 
 ## Configuration (env settings)
@@ -185,16 +217,13 @@ The way this process works is :
 
 - get `$PROJECT_STACK` value (see examples below) and `$PROVISION_USING` value - if not provided in `cwt/stack/init.sh` arguments
 - add the common, generic `cwt/env/vars.sh` model
-- check if additional, optional rules-matching models exist
-- assemble all models found
-- assign values to the variables they contain by using terminal prompts - if not provided (or instructed to use default values) in `cwt/stack/init.sh` arguments
+- assemble all models found (*lookup paths*)
+- assign values to the variables they contain by using terminal prompts - if not provided (or instructed to always use default values) in `cwt/stack/init.sh` arguments
 - write the result to `cwt/env/current/vars.sh`
 
-The aggregation rules consist of a correspondance between a basic syntax used in the `$PROJECT_STACK` value (+ `$PROVISION_USING` value) and optional directories + filenames matching it.
+Here's a "stack init" example listing its corresponding env models lookup paths. They represent all possibilities matching the `$PROJECT_STACK` and provisioning method (`$PROVISION_USING`).
 
-Here's a list of examples and their corresponding lookup paths. They represent possibilities corresponding to the project stack, provisioning method, and current host's OS and type (e.g. local, remote).
-
-Any existing file is included (sourced) in the order indicated.
+Any existing file is included (sourced) in the order indicated, each one allowing to provide its own customization. See *complements* documentation at `cwt/custom/complements/README.md`.
 
 ```sh
 # Calling stack init with these parameters :
@@ -254,7 +283,7 @@ TODO
 
 TODO
 
-### Lookup paths related to instance type (dev, test, qa, stage, preprod, live, production)
+### Lookup paths related to instance type
 
 TODO
 
