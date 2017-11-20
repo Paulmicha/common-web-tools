@@ -2,8 +2,6 @@
 
 The variables written and loaded using the scripts in `cwt/env` directory are used in all CWT tasks. Some are common to any type of stack, while others are specific to certain variants.
 
-## Operation
-
 The very first step required to use CWT is writing current instance's env settings, a task referred to as **stack init** :
 
 ```sh
@@ -11,11 +9,177 @@ The very first step required to use CWT is writing current instance's env settin
 # It provides options and/or terminal prompts to obtain all mandatory values,
 # then calls cwt/env/write.sh.
 . cwt/stack/init.sh
+
+# Optional arguments examples.
+# Details : see cwt/stack/init/get_args.sh
+. cwt/stack/init.sh -p ansible # Specify provisioning tool.
+. cwt/stack/init.sh -s nodejs-8 -y # Specify project stack + bypass prompts (will use defaults).
+. cwt/stack/init.sh -s drupal-7--redis,varnish-4,solr -y # Add services to the stack using '--' separator.
 ```
 
-This process generates a single file (`cwt/env/current/vars.sh`) by assembling any number of default env files - called config or env *models* - whose role is to declare all variables necessary for the current project instance : host-level dependencies, build/test tools, service-specific configuration...
+This process generates a single file (`cwt/env/current/vars.sh`) by assembling 2 types of files :
 
-The aggregation rules consist of a correspondance between a basic syntax used in the `$PROJECT_STACK` value (+ `$PROVISION_USING` value) and optional directories + filenames matching it.
+1. dependency files - purpose : aggregate host-level *services* (or softwares) dependencies;
+1. env files called config or env *models* - purpose : aggregate env settings (global variables) necessary for configuring the local project instance and its services.
+
+Aggregation will include (or more precisely - load using bash `source` command) the more generic files first, then gradually the more specific ones, each file allowing to provide its own customization. See *complements* documentation at `cwt/custom/complements/README.md`.
+
+CWT provides a few example project dependencies and env models, but its purpose is to be useful for your specific project(s). So the reason this process is detailed here is to better understand how to provide your own custom declarations.
+
+## Project stack syntax
+
+The `$PROJECT_STACK` variable is the main source used to determine all the possibilities of file names and paths that can be loaded during stack init (the *lookup paths*). The following rules apply to both types of dynamically generated lookup paths (dependencies and env models) :
+
+- version numbers are extracted after the last `-` and may use dots to indicate minor and/or patch versions
+- variants are indicated after the "name" part of any declaration (project stack, software, etc.) by using 2 dashes `--`
+- multiple values are separated using a single comma `,`
+- presets are special variants meant to provide a group of tools, and are declared using the prefix `p-`
+
+Note that there can be **no space** between these characters for a single declaration.
+
+```sh
+# These are all valid examples illustrating the syntax rules described above :
+PROJECT_STACK='drupal'
+PROJECT_STACK='drupal-7'
+PROJECT_STACK='drupal-7.56'
+PROJECT_STACK='drupal-7.56--solr-5'
+PROJECT_STACK='drupal-7--solr-5.5,redis'
+PROJECT_STACK='drupal--solr,redis,varnish-4'
+PROJECT_STACK='drupal-7.56--solr,redis,p-nodejs-8'
+PROJECT_STACK='drupal-8--p-contenta-hyperhtml-2,redis,elasticsearch'
+```
+
+## Software dependencies (required host services)
+
+Dependencies specify all services (or softwares) required to run the current project instance(s). They are used to list what needs to be provisioned on hosts - including the provisioning tool itself, testing, deployment or log-related tools, etc.
+
+The list of dependencies is stored in the `$STACK_SERVICES` global variable. The syntax used to declare these dependencies allows to specify mutually exclusive alternative (i.e. uses either this program *OR* that one).
+
+### Dependency declaration syntax
+
+```sh
+# Use the '..' prefix to specify a list of mutually exclusive alternatives.
+require 'php-7'
+require '..db'
+require '..webserver'
+
+# Each list of alternatives is a simple comma-separated string.
+alternatives['..db']='mariadb-10,mysql-5,postgresql-10'
+alternatives['..webserver']='apache-2.4,nginx'
+
+# Alter software version (notably useful in specific dependencies files loaded
+# after generic ones).
+software_version['php']='5.6'
+```
+
+### Dependencies aggregation
+
+Here's a "stack init" example listing its corresponding dependencies lookup paths. They represent all possibilities matching the project stack, provisioning method, and current host's OS and type (e.g. local, remote).
+
+Any existing file is included (sourced) in the order indicated.
+
+```sh
+# Running this on "Bash on Ubuntu on Windows 10" (tested on 2017/11/16) :
+. cwt/stack/init.sh -s drupal-7--varnish-4,redis -p ansible-2 -y
+
+# ... yields these corresponding stack dependencies lookup paths :
+cwt/provision/local_host.dependencies.sh
+cwt/provision/ubuntu.dependencies.sh
+cwt/provision/ubuntu-14.dependencies.sh
+cwt/provision/ubuntu-14.04.dependencies.sh
+cwt/provision/ubuntu.local_host.dependencies.sh
+cwt/provision/ubuntu-14.local_host.dependencies.sh
+cwt/provision/ubuntu-14.04.local_host.dependencies.sh
+cwt/provision/ansible.dependencies.sh
+cwt/provision/ansible.ubuntu.dependencies.sh
+cwt/provision/ansible.ubuntu-14.dependencies.sh
+cwt/provision/ansible.ubuntu-14.04.dependencies.sh
+cwt/provision/ansible-2.dependencies.sh
+cwt/provision/ansible-2.ubuntu.dependencies.sh
+cwt/provision/ansible-2.ubuntu-14.dependencies.sh
+cwt/provision/ansible-2.ubuntu-14.04.dependencies.sh
+cwt/provision/ansible.local_host.dependencies.sh
+cwt/provision/ansible.ubuntu.local_host.dependencies.sh
+cwt/provision/ansible.ubuntu-14.local_host.dependencies.sh
+cwt/provision/ansible.ubuntu-14.04.local_host.dependencies.sh
+cwt/provision/ansible-2.local_host.dependencies.sh
+cwt/provision/ansible-2.ubuntu.local_host.dependencies.sh
+cwt/provision/ansible-2.ubuntu-14.local_host.dependencies.sh
+cwt/provision/ansible-2.ubuntu-14.04.local_host.dependencies.sh
+cwt/app/drupal/dependencies.sh
+cwt/app/drupal/local_host.dependencies.sh
+cwt/app/drupal/ubuntu.dependencies.sh
+cwt/app/drupal/ubuntu-14.dependencies.sh
+cwt/app/drupal/ubuntu-14.04.dependencies.sh
+cwt/app/drupal/ubuntu.local_host.dependencies.sh
+cwt/app/drupal/ubuntu-14.local_host.dependencies.sh
+cwt/app/drupal/ubuntu-14.04.local_host.dependencies.sh
+cwt/app/drupal/ansible.dependencies.sh
+cwt/app/drupal/ansible.ubuntu.dependencies.sh
+cwt/app/drupal/ansible.ubuntu-14.dependencies.sh
+cwt/app/drupal/ansible.ubuntu-14.04.dependencies.sh
+cwt/app/drupal/ansible-2.dependencies.sh
+cwt/app/drupal/ansible-2.ubuntu.dependencies.sh
+cwt/app/drupal/ansible-2.ubuntu-14.dependencies.sh
+cwt/app/drupal/ansible-2.ubuntu-14.04.dependencies.sh
+cwt/app/drupal/ansible.local_host.dependencies.sh
+cwt/app/drupal/ansible.ubuntu.local_host.dependencies.sh
+cwt/app/drupal/ansible.ubuntu-14.local_host.dependencies.sh
+cwt/app/drupal/ansible.ubuntu-14.04.local_host.dependencies.sh
+cwt/app/drupal/ansible-2.local_host.dependencies.sh
+cwt/app/drupal/ansible-2.ubuntu.local_host.dependencies.sh
+cwt/app/drupal/ansible-2.ubuntu-14.local_host.dependencies.sh
+cwt/app/drupal/ansible-2.ubuntu-14.04.local_host.dependencies.sh
+cwt/app/drupal/7/dependencies.sh
+cwt/app/drupal/7/local_host.dependencies.sh
+cwt/app/drupal/7/ubuntu.dependencies.sh
+cwt/app/drupal/7/ubuntu-14.dependencies.sh
+cwt/app/drupal/7/ubuntu-14.04.dependencies.sh
+cwt/app/drupal/7/ubuntu.local_host.dependencies.sh
+cwt/app/drupal/7/ubuntu-14.local_host.dependencies.sh
+cwt/app/drupal/7/ubuntu-14.04.local_host.dependencies.sh
+cwt/app/drupal/7/ansible.dependencies.sh
+cwt/app/drupal/7/ansible.ubuntu.dependencies.sh
+cwt/app/drupal/7/ansible.ubuntu-14.dependencies.sh
+cwt/app/drupal/7/ansible.ubuntu-14.04.dependencies.sh
+cwt/app/drupal/7/ansible-2.dependencies.sh
+cwt/app/drupal/7/ansible-2.ubuntu.dependencies.sh
+cwt/app/drupal/7/ansible-2.ubuntu-14.dependencies.sh
+cwt/app/drupal/7/ansible-2.ubuntu-14.04.dependencies.sh
+cwt/app/drupal/7/ansible.local_host.dependencies.sh
+cwt/app/drupal/7/ansible.ubuntu.local_host.dependencies.sh
+cwt/app/drupal/7/ansible.ubuntu-14.local_host.dependencies.sh
+cwt/app/drupal/7/ansible.ubuntu-14.04.local_host.dependencies.sh
+cwt/app/drupal/7/ansible-2.local_host.dependencies.sh
+cwt/app/drupal/7/ansible-2.ubuntu.local_host.dependencies.sh
+cwt/app/drupal/7/ansible-2.ubuntu-14.local_host.dependencies.sh
+cwt/app/drupal/7/ansible-2.ubuntu-14.04.local_host.dependencies.sh
+```
+
+## Configuration (env settings)
+
+Env settings are global variables used to configure the local project instance and its services. Every time `cwt/stack/init.sh` is called, current instance's env file is (over)written.
+
+### Env models syntax
+
+Files declaring env models are named `*vars.sh`, and use the following syntax :
+
+```sh
+# 1. No default value provided.
+define PROJECT_STACK
+
+# 2. Immediate variable substitution (uses current shell scope variables).
+define PROJECT_DOCROOT "[default]=$PWD"
+
+# 3. Subshell demo (callback must echo result).
+define HOST_OS "[default]=$(u_host_get_os)"
+
+# 4. Variable substitution during env vars aggregation - see :
+# cwt/stack/init/aggregate_env_vars.sh
+define APP_DOCROOT "[default]=\$PROJECT_DOCROOT/web"
+```
+
+### Env models aggregation
 
 The way this process works is :
 
@@ -26,54 +190,77 @@ The way this process works is :
 - assign values to the variables they contain by using terminal prompts - if not provided (or instructed to use default values) in `cwt/stack/init.sh` arguments
 - write the result to `cwt/env/current/vars.sh`
 
-Every time `cwt/stack/init.sh` is called, current instance's env file is (over)written.
+The aggregation rules consist of a correspondance between a basic syntax used in the `$PROJECT_STACK` value (+ `$PROVISION_USING` value) and optional directories + filenames matching it.
 
-`$PROJECT_STACK` and `$PROVISION_USING` values are used to derive the rest of conditional settings and custom overrides/complements lookup paths. Aggregation will include generic models first, then more specific ones, and finally their corresponding customization (overrides or complements)
+Here's a list of examples and their corresponding lookup paths. They represent possibilities corresponding to the project stack, provisioning method, and current host's OS and type (e.g. local, remote).
 
-CWT provides a few models but its purpose remains to be useful for your specific project(s), so the reason this process is detailed here is to better understand how to provide your own custom env settings declarations.
+Any existing file is included (sourced) in the order indicated.
 
-To illustrate how lookups work, we use the following examples for possible `$PROJECT_STACK` values :
+```sh
+# Calling stack init with these parameters :
+. cwt/stack/init.sh -s drupal--contenta,redis,varnish-4,solr-5.5 -y
 
-1. `contenta` (nothing else specified = use latest version of the corresponding "barebone" stack + project settings)
-1. `drupal-7--php-5.4,redis,solr-3` (request additional services after the *variant* or *modifier* separator `--` and then separate multiple services by `,` if needed)
-1. `phenomic--libp2p,p-preact` (predefined combos or custom namespaces may be provided as *presets*, freely named - uses `p-` prefix to avoid potential collisions with services)
+# ... yields these corresponding env models lookup paths :
+cwt/provision/docker-compose/vars.sh
+cwt/provision/contenta/vars.sh
+cwt/provision/contenta/docker-compose.vars.sh
+cwt/provision/redis/vars.sh
+cwt/provision/redis/docker-compose.vars.sh
+cwt/provision/varnish/vars.sh
+cwt/provision/varnish/docker-compose.vars.sh
+cwt/provision/varnish/4/vars.sh
+cwt/provision/varnish/4/docker-compose.vars.sh
+cwt/provision/solr/vars.sh
+cwt/provision/solr/docker-compose.vars.sh
+cwt/provision/solr/5/vars.sh
+cwt/provision/solr/5/docker-compose.vars.sh
+cwt/provision/solr/5/5/vars.sh
+cwt/provision/solr/5/5/docker-compose.vars.sh
+cwt/provision/mailhog/vars.sh
+cwt/provision/mailhog/docker-compose.vars.sh
+cwt/provision/samba/vars.sh
+cwt/provision/samba/docker-compose.vars.sh
+cwt/provision/php/vars.sh
+cwt/provision/php/docker-compose.vars.sh
+cwt/provision/php/7/vars.sh
+cwt/provision/php/7/docker-compose.vars.sh
+cwt/provision/apache/vars.sh
+cwt/provision/apache/docker-compose.vars.sh
+cwt/provision/apache/2/vars.sh
+cwt/provision/apache/2/docker-compose.vars.sh
+cwt/provision/apache/2/4/vars.sh
+cwt/provision/apache/2/4/docker-compose.vars.sh
+cwt/provision/mariadb/vars.sh
+cwt/provision/mariadb/docker-compose.vars.sh
+cwt/provision/mariadb/10/vars.sh
+cwt/provision/mariadb/10/docker-compose.vars.sh
+cwt/app/drupal/env.vars.sh
+cwt/app/drupal/env.docker-compose.vars.sh
+```
 
-The config models paths looked up for each example are listed below, in order. Each "candidate" may be overridden or complemented using the normal customization pattern (see `cwt/custom/README.md`).
+## Lookup paths correspondance
 
-### Example 1 : `PROJECT_STACK=contenta`
+Both examples listed above exhibit some common patterns in the correspondance rules used to match host, stack, or project instance related values.
 
-- `cwt/provision/${PROVISION_USING}.vars.sh`
-- corresponding `provision` customizations
-- `cwt/app/contenta/env.vars.sh`
-- `cwt/app/contenta/env.${PROVISION_USING}.vars.sh`
-- corresponding `app` customizations (same order)
+### Lookup paths related to version numbers
 
-### Example 2 : `PROJECT_STACK=drupal-7--php-5.4,redis,solr-3`
+TODO
 
-- `cwt/provision/${PROVISION_USING}.vars.sh`
-- `cwt/provision/php/${PROVISION_USING}.vars.sh`
-- `cwt/provision/php/5/${PROVISION_USING}.vars.sh`
-- `cwt/provision/php/5.4/${PROVISION_USING}.vars.sh`
-- `cwt/provision/redis/${PROVISION_USING}.vars.sh`
-- `cwt/provision/solr/${PROVISION_USING}.vars.sh`
-- `cwt/provision/solr/3/${PROVISION_USING}.vars.sh`
-- corresponding `provision` customizations (same order)
-- `cwt/app/drupal/env.vars.sh`
-- `cwt/app/drupal/env.${PROVISION_USING}.vars.sh`
-- `cwt/app/drupal/7/env.vars.sh`
-- `cwt/app/drupal/7/env.${PROVISION_USING}.vars.sh`
-- corresponding `app` customizations (same order)
+### Lookup paths related to host's OS and type
 
-### Example 3 : `PROJECT_STACK=phenomic--libp2p,p-preact`
+TODO
 
-- `cwt/provision/${PROVISION_USING}.vars.sh`
-- `cwt/provision/libp2p/${PROVISION_USING}.vars.sh`
-- `cwt/provision/presets/phenomic/preact.vars.sh`
-- `cwt/provision/presets/phenomic/preact.${PROVISION_USING}.vars.sh`
-- corresponding `provision` customizations (same order)
-- `cwt/app/phenomic/env.vars.sh`
-- `cwt/app/phenomic/env.${PROVISION_USING}.vars.sh`
-- corresponding `app` customizations (same order)
+### Lookup paths related to provisioning method
+
+TODO
+
+### Lookup paths related to instance type (dev, test, qa, stage, preprod, live, production)
+
+TODO
+
+### Lookup paths related to "preset" variants
+
+TODO
 
 ## Roadmap
 
