@@ -101,16 +101,30 @@ u_autoload_print_lookup_paths() {
 # rest of the calling script).
 #
 # This allows to completely replace a default CWT script.
+# @example
+#   eval `u_autoload_override "$BASH_SOURCE"`
 #
-# Usage :
-# $ eval `u_autoload_override "$BASH_SOURCE"`
+# Another use is to break a lookup loop if a replacement exists.
+# @example
+#   for prov_model in "${PROV_MODELS_LOOKUP_PATHS[@]}"; do
+#   if [[ -f "$prov_model" ]]; then
+#     eval $(u_autoload_override "$prov_model" 'continue')
+#     # (snip) default exec goes here.
+#   fi
+# done
 #
 u_autoload_override() {
   local p_script_path="$1"
-  local override=${p_script_path/cwt/"cwt/custom/overrides"}
+  local p_operand="$2"
 
+  local operand='return'
+  if [[ -n "$p_operand" ]]; then
+    operand="$p_operand"
+  fi
+
+  local override=${p_script_path/cwt/"cwt/custom/overrides"}
   if [[ -f "$override" ]]; then
-    echo ". $override ; return"
+    echo ". $override ; $operand"
   fi
 }
 

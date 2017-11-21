@@ -19,6 +19,8 @@
 # - $PROJECT_STACK
 # - $PROVISION_USING
 # - $HOST_OS
+# - $HOST_TYPE
+# - $INSTANCE_TYPE
 #
 # @see u_provisioning_preprocess()
 # @see u_stack_add_service()
@@ -28,9 +30,9 @@ u_host_provision() {
   local stack_service
   local ss_version_arr
 
+  u_stack_get_specs "$PROJECT_STACK"
   u_provisioning_preprocess
 
-  u_stack_get_specs "$PROJECT_STACK"
   for stack_service in "${STACK_SERVICES[@]}"; do
     u_env_item_split_version ss_version_arr "$stack_service"
 
