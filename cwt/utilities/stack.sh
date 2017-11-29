@@ -14,10 +14,10 @@
 #
 # @param 1 String : the PROJECT_STACK to "dissect".
 #
-# @exports String : $APP
-# @exports String : $APP_VERSION
-# @exports Array : $STACK_PRESETS
-# @exports Array : $STACK_SERVICES
+# @exports String APP
+# @exports String APP_VERSION
+# @exports Array STACK_PRESETS (via u_stack_get_presets)
+# @exports Array STACK_SERVICES
 #
 # @see u_str_split1()
 # @see u_env_item_split_version()
@@ -39,54 +39,40 @@ u_stack_get_specs() {
 
   export APP
   export APP_VERSION
-  export STACK_PRESETS
   export STACK_SERVICES
 
-  # For bash version compatibility reasons, we replace variant separator '--'
-  # with a single character unlikely to produce unexpected results given the
-  # simple syntax of $PROJECT_STACK value.
-  # See https://stackoverflow.com/a/45201229 (#7)
-  local variant_sep='='
-  local project_stack_r=${p_project_stack/--/"$variant_sep"}
-  local stack_variant_arr=()
-  u_str_split1 stack_variant_arr $project_stack_r $variant_sep
-
-  APP="${stack_variant_arr[0]}"
-  APP_VERSION=''
-  STACK_PRESETS=()
   STACK_SERVICES=()
 
-  local app_arr=()
-  u_env_item_split_version app_arr "$APP"
-
-  if [[ -n "${app_arr[1]}" ]]; then
-    APP="${app_arr[0]}"
-    APP_VERSION="${app_arr[1]}"
-  fi
-
+  APP=$(u_stack_get_part app "$p_project_stack")
+  APP_VERSION=$(u_stack_get_part app_version "$p_project_stack")
 
   # Resolve app dependencies declared in 'dependencies.sh' files for current app.
-  local variants="${stack_variant_arr[1]}"
-  u_stack_get_presets "$variants"
-  u_stack_resolve_deps
+  u_stack_get_presets "$p_project_stack"
+  u_stack_resolve_deps "$p_project_stack"
 }
 
 ##
 # Gets presets in PROJECT_STACK "variants" part.
 #
-# @param 1 String : the PROJECT_STACK "variants" part.
+# @param 1 String : the PROJECT_STACK value.
+#
+# @exports Array STACK_PRESETS
 #
 # @example
-#   u_stack_get_presets "p-contenta-1,redis,solr"
+#   u_stack_get_presets "drupal-8--p-contenta-1,redis,solr"
 #   for stack_preset in "${STACK_PRESETS[@]}"; do
 #     echo "$stack_preset"
 #   done
 #
 u_stack_get_presets() {
-  local p_variants="$1"
+  local p_project_stack="$1"
+  local variants=$(u_stack_get_part variants "$p_project_stack")
   local variants_arr=()
 
-  u_str_split1 variants_arr "$p_variants" ','
+  export STACK_PRESETS
+  STACK_PRESETS=()
+
+  u_str_split1 variants_arr "$variants" ','
 
   local substr
   local variant_item
@@ -101,6 +87,59 @@ u_stack_get_presets() {
 }
 
 ##
+# Extracts a part of the PROJECT_STACK value.
+#
+# @param 1 String : the part we want.
+# @param 2 String : the $PROJECT_STACK value.
+#
+# @example : get the "app" and "app_version" parts :
+#   app=$(u_stack_get_part app "drupal-8--p-contenta-1,redis,solr")
+#   echo "$app" # outputs "drupal"
+#   app_version=$(u_stack_get_part app_version "drupal-8--p-contenta-1,redis,solr")
+#   echo "$app_version" # outputs "8"
+#
+# @example : get the "variants" part :
+#   variants=$(u_stack_get_part variants "drupal-8--p-contenta-1,redis,solr")
+#   echo "$variants" # outputs "p-contenta-1,redis,solr"
+#
+u_stack_get_part() {
+  local p_part="$1"
+  local p_project_stack="$2"
+
+  # For bash version compatibility reasons, we replace variant separator '--'
+  # with a single character unlikely to produce unexpected results given the
+  # simple syntax of $PROJECT_STACK value.
+  # See https://stackoverflow.com/a/45201229 (#7)
+  local variant_sep='='
+  local project_stack_r=${p_project_stack/--/"$variant_sep"}
+  local stack_variant_arr=()
+  u_str_split1 stack_variant_arr "$project_stack_r" "$variant_sep"
+
+  case "$p_part" in
+
+    # For these parts, the argument is the local variable name.
+    app|app_version)
+      local app="${stack_variant_arr[0]}"
+      local app_version=''
+      local app_arr=()
+
+      u_env_item_split_version app_arr "$app"
+
+      if [[ -n "${app_arr[1]}" ]]; then
+        app="${app_arr[0]}"
+        app_version="${app_arr[1]}"
+      fi
+
+      eval "echo \"\$$p_part\""
+      ;;
+
+    variants)
+      echo "${stack_variant_arr[1]}"
+      ;;
+  esac
+}
+
+##
 # Loads dependency declarations and aggregates results in $STACK_SERVICES.
 #
 # Dependencies specify all services (or softwares) required to run the current
@@ -109,8 +148,9 @@ u_stack_get_presets() {
 # They are declared in files dynamically loaded in a similar way than env models.
 # See cwt/env/README.md
 #
+# @param 1 String : the $PROJECT_STACK value.
+#
 # @requires the following variables in calling scope :
-# - $variants
 # - $APP
 # - $APP_VERSION
 # - $STACK_SERVICES
@@ -121,7 +161,7 @@ u_stack_get_presets() {
 # @see cwt/stack/init/aggregate_deps.sh
 #
 # @example
-#   u_stack_resolve_deps
+#   u_stack_resolve_deps "$PROJECT_STACK"
 #   for stack_preset in "${STACK_PRESETS[@]}"; do
 #     echo "$stack_preset"
 #   done
@@ -130,12 +170,18 @@ u_stack_get_presets() {
 #   done
 #
 u_stack_resolve_deps() {
+  local p_project_stack="$1"
+
+  local variants
   local softwares
   local alternatives
   local software_version
   local dep_path
+
   declare -A alternatives
   declare -A software_version
+
+  variants=$(u_stack_get_part variants "$p_project_stack")
 
   u_stack_deps_get_lookup_paths
 
@@ -167,7 +213,7 @@ u_stack_resolve_deps() {
       substr="${variant_item:0:2}"
 
       if [[ "$substr" == 'p-' ]]; then
-        STACK_PRESETS+=(${variant_item:2})
+        u_array_add_once "${variant_item:2}" STACK_PRESETS
 
       elif [[ "$substr" != '..' ]]; then
         vi_wo_ver="$variant_item"
@@ -285,7 +331,11 @@ u_stack_deps_get_lookup_paths() {
 #
 u_stack_deps_add_lookup_variants_by_path() {
   local p_path="$1"
-  DEPS_LOOKUP_PATHS+=("$p_path/dependencies.sh")
+
+  if [[ "$p_path" != 'cwt/provision' ]]; then
+    DEPS_LOOKUP_PATHS+=("$p_path/dependencies.sh")
+  fi
+
   DEPS_LOOKUP_PATHS+=("$p_path/${HOST_TYPE}_host.dependencies.sh")
   u_autoload_add_lookup_level "$p_path/" 'dependencies.sh' "$HOST_OS" DEPS_LOOKUP_PATHS
   u_autoload_add_lookup_level "$p_path/" "${HOST_TYPE}_host.dependencies.sh" "$HOST_OS" DEPS_LOOKUP_PATHS

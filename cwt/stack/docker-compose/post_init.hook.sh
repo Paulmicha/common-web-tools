@@ -34,7 +34,7 @@ if [[ ($P_YES == 0) && (-f "$docker_compose_env_file") ]]; then
 fi
 
 # (Re)init destination file (make empty).
-echo '' > "$docker_compose_env_file"
+echo -n '' > "$docker_compose_env_file"
 
 # Write every aggregated globals.
 # @see cwt/stack/init/aggregate_env_vars.sh

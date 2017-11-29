@@ -28,8 +28,8 @@ u_autoload_add_lookup_level() {
   local p_name="$3"
   local p_lookups_var_name="$4"
   local p_extra_level_name="$5"
-
   local p_sep="$6"
+
   local sep="."
   if [[ -n "$p_sep" ]]; then
     sep="$p_sep"
