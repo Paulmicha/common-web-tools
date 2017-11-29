@@ -29,6 +29,12 @@ u_autoload_add_lookup_level() {
   local p_lookups_var_name="$4"
   local p_extra_level_name="$5"
 
+  local p_sep="$6"
+  local sep="."
+  if [[ -n "$p_sep" ]]; then
+    sep="$p_sep"
+  fi
+
   local name_version_arr=()
   u_env_item_split_version name_version_arr "$p_name"
 
@@ -46,7 +52,7 @@ u_autoload_add_lookup_level() {
     u_str_split1 version_arr "${name_version_arr[1]}" '.'
 
     for v in "${version_arr[@]}"; do
-      path+="$v."
+      path+="${v}${sep}"
       u_array_add_once "${path}${p_suffix}" $p_lookups_var_name
 
       if [[ -n "$p_extra_level_name" ]]; then
@@ -55,10 +61,10 @@ u_autoload_add_lookup_level() {
     done
 
   else
-    u_array_add_once "${p_prefix}${p_name}.${p_suffix}" $p_lookups_var_name
+    u_array_add_once "${p_prefix}${p_name}${sep}${p_suffix}" $p_lookups_var_name
 
     if [[ -n "$p_extra_level_name" ]]; then
-      u_autoload_add_lookup_level "${p_prefix}${p_name}." $p_suffix $p_extra_level_name $p_lookups_var_name
+      u_autoload_add_lookup_level "${p_prefix}${p_name}${sep}" $p_suffix $p_extra_level_name $p_lookups_var_name
     fi
   fi
 }
@@ -107,11 +113,11 @@ u_autoload_print_lookup_paths() {
 # Another use is to break a lookup loop if a replacement exists.
 # @example
 #   for prov_model in "${PROV_MODELS_LOOKUP_PATHS[@]}"; do
-#   if [[ -f "$prov_model" ]]; then
-#     eval $(u_autoload_override "$prov_model" 'continue')
-#     # (snip) default exec goes here.
-#   fi
-# done
+#     if [[ -f "$prov_model" ]]; then
+#       eval $(u_autoload_override "$prov_model" 'continue')
+#       # (snip) default exec goes here.
+#     fi
+#   done
 #
 u_autoload_override() {
   local p_script_path="$1"

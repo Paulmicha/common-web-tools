@@ -91,6 +91,7 @@ Any existing file is included (sourced) in the order indicated, each one allowin
 . cwt/stack/init.sh -s drupal-7--varnish-4,redis -p ansible-2 -y
 
 # ... yields these corresponding stack dependencies lookup paths :
+cwt/provision/dependencies.sh
 cwt/provision/local_host.dependencies.sh
 cwt/provision/ubuntu.dependencies.sh
 cwt/provision/ubuntu-14.dependencies.sh
@@ -114,6 +115,18 @@ cwt/provision/ansible-2.local_host.dependencies.sh
 cwt/provision/ansible-2.ubuntu.local_host.dependencies.sh
 cwt/provision/ansible-2.ubuntu-14.local_host.dependencies.sh
 cwt/provision/ansible-2.ubuntu-14.04.local_host.dependencies.sh
+cwt/provision/dev.dependencies.sh
+cwt/provision/dev.ubuntu.dependencies.sh
+cwt/provision/dev.ubuntu-14.dependencies.sh
+cwt/provision/dev.ubuntu-14.04.dependencies.sh
+cwt/provision/dev.local_host.dependencies.sh
+cwt/provision/dev.ubuntu.local_host.dependencies.sh
+cwt/provision/dev.ubuntu-14.local_host.dependencies.sh
+cwt/provision/dev.ubuntu-14.04.local_host.dependencies.sh
+cwt/provision/dev.ansible.dependencies.sh
+cwt/provision/dev.ansible-2.dependencies.sh
+cwt/provision/dev.ansible.local_host.dependencies.sh
+cwt/provision/dev.ansible-2.local_host.dependencies.sh
 cwt/app/drupal/dependencies.sh
 cwt/app/drupal/local_host.dependencies.sh
 cwt/app/drupal/ubuntu.dependencies.sh
@@ -227,12 +240,10 @@ Any existing file is included (sourced) in the order indicated, each one allowin
 
 ```sh
 # Calling stack init with these parameters :
-. cwt/stack/init.sh -s drupal--contenta,redis,varnish-4,solr-5.5 -y
+. cwt/stack/init.sh -s drupal--p-contenta-1,redis,varnish-4,solr-5.5 -y
 
 # ... yields these corresponding env models lookup paths :
 cwt/provision/docker-compose/vars.sh
-cwt/provision/contenta/vars.sh
-cwt/provision/contenta/docker-compose.vars.sh
 cwt/provision/redis/vars.sh
 cwt/provision/redis/docker-compose.vars.sh
 cwt/provision/varnish/vars.sh
@@ -263,6 +274,18 @@ cwt/provision/mariadb/vars.sh
 cwt/provision/mariadb/docker-compose.vars.sh
 cwt/provision/mariadb/10/vars.sh
 cwt/provision/mariadb/10/docker-compose.vars.sh
+cwt/provision/presets/contenta/vars.sh
+cwt/provision/presets/contenta/docker-compose.vars.sh
+cwt/provision/presets/contenta/1/vars.sh
+cwt/provision/presets/contenta/1/docker-compose.vars.sh
+cwt/app/presets/contenta/vars.sh
+cwt/app/presets/contenta/docker-compose.vars.sh
+cwt/app/presets/contenta/1/vars.sh
+cwt/app/presets/contenta/1/docker-compose.vars.sh
+cwt/custom/presets/contenta/vars.sh
+cwt/custom/presets/contenta/docker-compose.vars.sh
+cwt/custom/presets/contenta/1/vars.sh
+cwt/custom/presets/contenta/1/docker-compose.vars.sh
 cwt/app/drupal/env.vars.sh
 cwt/app/drupal/env.docker-compose.vars.sh
 ```

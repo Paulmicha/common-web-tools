@@ -9,7 +9,6 @@
 # $ . cwt/stack/init.sh                 # Will prompt to confirm/edit every default value
 # $ . cwt/stack/init.sh -s drupal-7     # Short name/value argument syntax
 # $ . cwt/stack/init.sh -s nodejs -y    # "-y" will use default values, no prompts
-# $ . cwt/stack/init.sh --stack=drupal-7 --yes      # Longer name/value argument syntax (equivalent)
 #
 
 . cwt/bash_utils.sh
@@ -56,6 +55,14 @@ u_exec_foreach_env_vars u_assign_env_value
 # Write env vars in current instance's settings file.
 . cwt/env/write.sh
 
+# Apply git-related settings.
+. cwt/git/apply_config.sh
+
+# Apply correct ownership and permissions.
+. cwt/fixperms.sh
 
 # Allow custom complements for this script.
 u_autoload_get_complement "$BASH_SOURCE"
+
+# Trigger post-init hooks.
+u_hook_call stack init post

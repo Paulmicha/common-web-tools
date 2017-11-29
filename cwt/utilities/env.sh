@@ -254,30 +254,20 @@ u_env_models_get_lookup_paths() {
 
   # Presets-related models.
   local sp_arr=()
+  local sp_type
+  local sp_types='provision app custom'
+
   for stack_preset in "${STACK_PRESETS[@]}"; do
     u_env_item_split_version sp_arr "$stack_preset"
     if [[ -n "${sp_arr[1]}" ]]; then
-      u_env_models_lookup_version "cwt/provision/presets/$APP/${sp_arr[0]}" "${sp_arr[1]}" true
-
-      if [[ -n "$APP_VERSION" ]]; then
-        app_path="cwt/provision/presets/$APP"
-        for app_v in "${app_version_arr[@]}"; do
-          app_path+="/$app_v"
-          u_env_models_lookup_version "$app_path/${sp_arr[0]}" "${sp_arr[1]}" true
-        done
-      fi
+      for sp_type in $sp_types; do
+        u_env_models_lookup_version "cwt/$sp_type/presets/${sp_arr[0]}" "${sp_arr[1]}" true
+      done
     else
-      u_array_add_once "cwt/provision/presets/$APP/${stack_preset}/vars.sh" ENV_MODELS_PATHS
-      u_autoload_add_lookup_level "cwt/provision/presets/$APP/${stack_preset}/" 'vars.sh' "$PROVISION_USING" ENV_MODELS_PATHS
-
-      if [[ -n "$APP_VERSION" ]]; then
-        app_path="cwt/provision/presets/$APP"
-        for app_v in "${app_version_arr[@]}"; do
-          app_path+="/$app_v"
-          u_array_add_once "$app_path/${stack_preset}/vars.sh" ENV_MODELS_PATHS
-          u_autoload_add_lookup_level "$app_path/${stack_preset}/" 'vars.sh' "$PROVISION_USING" ENV_MODELS_PATHS
-        done
-      fi
+      for sp_type in $sp_types; do
+        u_array_add_once "cwt/$sp_type/presets/${stack_preset}/vars.sh" ENV_MODELS_PATHS
+        u_autoload_add_lookup_level "cwt/$sp_type/presets/${stack_preset}/" 'vars.sh' "$PROVISION_USING" ENV_MODELS_PATHS
+      done
     fi
   done
 

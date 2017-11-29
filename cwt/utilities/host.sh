@@ -43,6 +43,10 @@ u_host_provision() {
       u_stack_add_service "$stack_service"
     fi
   done
+
+  # TODO postprocess could implement complements ? Hook-like additions ?
+  # e.g. cron tasks, vhosts, https certificates, etc.
+  # u_provisioning_postprocess
 }
 
 ##
@@ -99,6 +103,9 @@ u_host_get_os() {
   # Prevent unexpected characters.
   os=$(u_slugify "$os")
   version=$(u_slugify "$version" '\.')
+
+  # Prevent '-gnu-linux' in OS name.
+  os=${os/-gnu-linux/""}
 
   echo "$os-$version" | tr '[:upper:]' '[:lower:]'
 }

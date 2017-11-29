@@ -14,6 +14,11 @@
 #
 # @param 1 String : the PROJECT_STACK to "dissect".
 #
+# @exports String : $APP
+# @exports String : $APP_VERSION
+# @exports Array : $STACK_PRESETS
+# @exports Array : $STACK_SERVICES
+#
 # @see u_str_split1()
 # @see u_env_item_split_version()
 # @see u_in_array()
@@ -59,15 +64,44 @@ u_stack_get_specs() {
     APP_VERSION="${app_arr[1]}"
   fi
 
+
   # Resolve app dependencies declared in 'dependencies.sh' files for current app.
   local variants="${stack_variant_arr[1]}"
+  u_stack_get_presets "$variants"
   u_stack_resolve_deps
 }
 
 ##
-# Loads dependency declarations and aggregates results in $STACK_SERVICES.
+# Gets presets in PROJECT_STACK "variants" part.
 #
-# Also populates STACK_PRESETS.
+# @param 1 String : the PROJECT_STACK "variants" part.
+#
+# @example
+#   u_stack_get_presets "p-contenta-1,redis,solr"
+#   for stack_preset in "${STACK_PRESETS[@]}"; do
+#     echo "$stack_preset"
+#   done
+#
+u_stack_get_presets() {
+  local p_variants="$1"
+  local variants_arr=()
+
+  u_str_split1 variants_arr "$p_variants" ','
+
+  local substr
+  local variant_item
+
+  for variant_item in "${variants_arr[@]}"; do
+    substr="${variant_item:0:2}"
+
+    if [[ "$substr" == 'p-' ]]; then
+      STACK_PRESETS+=(${variant_item:2})
+    fi
+  done
+}
+
+##
+# Loads dependency declarations and aggregates results in $STACK_SERVICES.
 #
 # Dependencies specify all services (or softwares) required to run the current
 # project instance(s). They are used to list what will be provisioned on hosts.
@@ -192,6 +226,7 @@ require() {
 # - $PROVISION_USING
 # - $HOST_TYPE
 # - $HOST_OS
+# - $STACK_PRESETS
 #
 # @exports result in global $DEPS_LOOKUP_PATHS.
 #
@@ -204,29 +239,10 @@ u_stack_deps_get_lookup_paths() {
   DEPS_LOOKUP_PATHS=()
 
   # Provisioning-related dependencies.
-  # u_autoload_add_lookup_level "cwt/provision/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS
-  DEPS_LOOKUP_PATHS+=("cwt/provision/${HOST_TYPE}_host.dependencies.sh")
-  u_autoload_add_lookup_level "cwt/provision/" 'dependencies.sh' "$HOST_OS" DEPS_LOOKUP_PATHS
-  u_autoload_add_lookup_level "cwt/provision/" "${HOST_TYPE}_host.dependencies.sh" "$HOST_OS" DEPS_LOOKUP_PATHS
-  u_autoload_add_lookup_level "cwt/provision/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS "$HOST_OS"
-  u_autoload_add_lookup_level "cwt/provision/" "${HOST_TYPE}_host.dependencies.sh" "$PROVISION_USING" DEPS_LOOKUP_PATHS "$HOST_OS"
+  u_stack_deps_add_lookup_variants_by_path "cwt/provision"
 
   # App-related dependencies.
-  DEPS_LOOKUP_PATHS+=("cwt/app/$APP/dependencies.sh")
-  # u_autoload_add_lookup_level "cwt/app/$APP/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS
-  DEPS_LOOKUP_PATHS+=("cwt/app/$APP/${HOST_TYPE}_host.dependencies.sh")
-
-  u_autoload_add_lookup_level "cwt/app/$APP/" 'dependencies.sh' "$HOST_OS" DEPS_LOOKUP_PATHS
-  u_autoload_add_lookup_level "cwt/app/$APP/" "${HOST_TYPE}_host.dependencies.sh" "$HOST_OS" DEPS_LOOKUP_PATHS
-
-  u_autoload_add_lookup_level "cwt/app/$APP/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS "$HOST_OS"
-  u_autoload_add_lookup_level "cwt/app/$APP/" "${HOST_TYPE}_host.dependencies.sh" "$PROVISION_USING" DEPS_LOOKUP_PATHS "$HOST_OS"
-
-  u_autoload_add_lookup_level "cwt/app/$APP/" 'dependencies.sh' "$INSTANCE_TYPE" DEPS_LOOKUP_PATHS "$HOST_OS"
-  u_autoload_add_lookup_level "cwt/app/$APP/" "${HOST_TYPE}_host.dependencies.sh" "$INSTANCE_TYPE" DEPS_LOOKUP_PATHS "$HOST_OS"
-  u_autoload_add_lookup_level "cwt/app/$APP/" 'dependencies.sh' "$INSTANCE_TYPE" DEPS_LOOKUP_PATHS "$PROVISION_USING"
-  u_autoload_add_lookup_level "cwt/app/$APP/" "${HOST_TYPE}_host.dependencies.sh" "$INSTANCE_TYPE" DEPS_LOOKUP_PATHS "$PROVISION_USING"
-
+  u_stack_deps_add_lookup_variants_by_path "cwt/app/$APP"
   if [[ -n "$APP_VERSION" ]]; then
     local v
     local path="cwt/app/$APP"
@@ -235,26 +251,50 @@ u_stack_deps_get_lookup_paths() {
     u_str_split1 version_arr "$APP_VERSION" '.'
     for v in "${version_arr[@]}"; do
       path+="/$v"
-
-      DEPS_LOOKUP_PATHS+=("$path/dependencies.sh")
-      # u_autoload_add_lookup_level "$path/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS
-
-      DEPS_LOOKUP_PATHS+=("$path/${HOST_TYPE}_host.dependencies.sh")
-
-      u_autoload_add_lookup_level "$path/" 'dependencies.sh' "$HOST_OS" DEPS_LOOKUP_PATHS
-      u_autoload_add_lookup_level "$path/" "${HOST_TYPE}_host.dependencies.sh" "$HOST_OS" DEPS_LOOKUP_PATHS
-
-      u_autoload_add_lookup_level "$path/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS "$HOST_OS"
-      u_autoload_add_lookup_level "$path/" "${HOST_TYPE}_host.dependencies.sh" "$PROVISION_USING" DEPS_LOOKUP_PATHS "$HOST_OS"
-
-      u_autoload_add_lookup_level "$path/" 'dependencies.sh' "$INSTANCE_TYPE" DEPS_LOOKUP_PATHS "$HOST_OS"
-      u_autoload_add_lookup_level "$path/" "${HOST_TYPE}_host.dependencies.sh" "$INSTANCE_TYPE" DEPS_LOOKUP_PATHS "$HOST_OS"
-      u_autoload_add_lookup_level "$path/" 'dependencies.sh' "$INSTANCE_TYPE" DEPS_LOOKUP_PATHS "$PROVISION_USING"
-      u_autoload_add_lookup_level "$path/" "${HOST_TYPE}_host.dependencies.sh" "$INSTANCE_TYPE" DEPS_LOOKUP_PATHS "$PROVISION_USING"
+      u_stack_deps_add_lookup_variants_by_path "$path"
     done
   fi
 
-  # TODO presets dependencies.
+  # Presets-related dependencies.
+  local sp_arr=()
+  local sp_v
+  local sp_path
+  local sp_type
+  local sp_types='provision app custom'
+
+  for stack_preset in "${STACK_PRESETS[@]}"; do
+    u_env_item_split_version sp_arr "$stack_preset"
+    if [[ -n "${sp_arr[1]}" ]]; then
+      for sp_type in $sp_types; do
+        sp_path="cwt/$sp_type/presets"
+        for sp_v in "${sp_arr[@]}"; do
+          sp_path+="/$sp_v"
+          u_stack_deps_add_lookup_variants_by_path "$sp_path"
+        done
+      done
+    else
+      for sp_type in $sp_types; do
+        u_stack_deps_add_lookup_variants_by_path "cwt/$sp_type/presets/${stack_preset}"
+      done
+    fi
+  done
+}
+
+##
+# Internal deps lookups helper.
+#
+u_stack_deps_add_lookup_variants_by_path() {
+  local p_path="$1"
+  DEPS_LOOKUP_PATHS+=("$p_path/dependencies.sh")
+  DEPS_LOOKUP_PATHS+=("$p_path/${HOST_TYPE}_host.dependencies.sh")
+  u_autoload_add_lookup_level "$p_path/" 'dependencies.sh' "$HOST_OS" DEPS_LOOKUP_PATHS
+  u_autoload_add_lookup_level "$p_path/" "${HOST_TYPE}_host.dependencies.sh" "$HOST_OS" DEPS_LOOKUP_PATHS
+  u_autoload_add_lookup_level "$p_path/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS "$HOST_OS"
+  u_autoload_add_lookup_level "$p_path/" "${HOST_TYPE}_host.dependencies.sh" "$PROVISION_USING" DEPS_LOOKUP_PATHS "$HOST_OS"
+  u_autoload_add_lookup_level "$p_path/" 'dependencies.sh' "$INSTANCE_TYPE" DEPS_LOOKUP_PATHS "$HOST_OS"
+  u_autoload_add_lookup_level "$p_path/" "${HOST_TYPE}_host.dependencies.sh" "$INSTANCE_TYPE" DEPS_LOOKUP_PATHS "$HOST_OS"
+  u_autoload_add_lookup_level "$p_path/" 'dependencies.sh' "$INSTANCE_TYPE" DEPS_LOOKUP_PATHS "$PROVISION_USING"
+  u_autoload_add_lookup_level "$p_path/" "${HOST_TYPE}_host.dependencies.sh" "$INSTANCE_TYPE" DEPS_LOOKUP_PATHS "$PROVISION_USING"
 }
 
 ##
@@ -305,7 +345,10 @@ u_stack_deps_resolve_alternatives() {
 }
 
 ##
-# Adds or installs a service required by the current project instance.
+# TODO Adds or installs a service required by the current project instance.
+#
+# WIP - refacto in progress : this requires more thinking before implementing :
+# tools like Lando or static sites projects won't need the same kind of process.
 #
 # For docker-compose provisioning, this will append services to the YAML file.
 # For ansible provisioning, this will append them to the playbook.
@@ -319,6 +362,5 @@ u_stack_deps_resolve_alternatives() {
 #
 # @see u_host_provision()
 #
-u_stack_add_service() {
-  # todo
-}
+# u_stack_add_service() {
+# }

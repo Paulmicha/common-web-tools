@@ -10,6 +10,14 @@
 #
 
 ##
+# TODO Executes installation script corresponding to provisioning method.
+#
+# @see cwt/provision/dependencies.sh
+#
+# u_provisioning_install_deps() {
+# }
+
+##
 # Pre-processes host provision during stack setup.
 #
 # Ansible and Docker-compose use *.yml files to "wrap" a stack as a complete
@@ -26,6 +34,7 @@
 #
 # TODO this also raises another question : should we support provisioning using
 # both Ansible *and* docker-compose (provision the provisioning) ?
+# See also https://docs.devwithlando.io/started.html
 #
 # @requires the following globals in calling scope :
 # - $PROVISION_USING
@@ -48,14 +57,14 @@ u_provisioning_preprocess() {
     provision_type="${provision_version_arr[0]}"
   fi
 
-  local prov_model
-  for prov_model in "${PROV_MODELS_LOOKUP_PATHS[@]}"; do
-    if [[ -f "$prov_model" ]]; then
-      # TODO use sed to replace placeholders inside a copy instead of sourcing.
-      # eval $(u_autoload_override "$prov_model" 'continue')
-      # . "$prov_model"
-    fi
-  done
+  # TODO use sed to replace placeholders inside a copy instead of sourcing.
+  # local prov_model
+  # for prov_model in "${PROV_MODELS_LOOKUP_PATHS[@]}"; do
+  #   if [[ -f "$prov_model" ]]; then
+  #     eval $(u_autoload_override "$prov_model" 'continue')
+  #     . "$prov_model"
+  #   fi
+  # done
 }
 
 ##
@@ -83,4 +92,33 @@ u_provisioning_models_get_lookup_paths() {
   u_autoload_add_lookup_level "provision/" "${INSTANCE_TYPE}.${HOST_TYPE}_host.dist.yml" "$PROVISION_USING" PROV_MODELS_LOOKUP_PATHS "$HOST_OS"
 
   # TODO presets lookups.
+}
+
+##
+# Gets a provisioning-related script path given a subject and an operation.
+#
+# It will look for any matching file and return the most "specific" one.
+#
+# @requires the following global in calling scope :
+# - $PROVISION_USING
+#
+# @example
+#   the_script=$(u_provisioning_get_script stack start)
+#   . "$the_script"
+#
+u_provisioning_get_script() {
+  local p_subject="$1"
+  local p_operation="$2"
+  local most_specific_match=''
+  local script_lookup_path=''
+  local script_lookup_paths=()
+
+  u_autoload_add_lookup_level "cwt/$p_subject/" "${p_operation}.sh" "$PROVISION_USING" script_lookup_paths '' '/'
+  for script_lookup_path in "${script_lookup_paths[@]}"; do
+    if [[ -f "$script_lookup_path" ]]; then
+      most_specific_match="$script_lookup_path"
+    fi
+  done
+
+  echo "$most_specific_match"
 }

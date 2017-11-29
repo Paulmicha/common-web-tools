@@ -15,6 +15,8 @@
 # $ . cwt/bash_utils.sh
 #
 
+. cwt/utilities/autoload.sh
+
 for file in $( find cwt/utilities/* -type f -print0 | xargs -0 ); do
   . "$file"
   u_autoload_get_complement "$file"
