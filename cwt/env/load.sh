@@ -11,7 +11,7 @@
 # . cwt/env/load.sh
 #
 
-if [ ! -f "cwt/env/current/vars.sh" ]; then
+if [[ ! -f "cwt/env/current/vars.sh" ]]; then
   echo
   echo "Error in $BASH_SOURCE line $LINENO: no env settings found."
   echo "-> Run cwt/stack/init.sh first."
@@ -20,9 +20,15 @@ if [ ! -f "cwt/env/current/vars.sh" ]; then
 fi
 
 # Load current instance env settings (globals) + ignore readonly errors.
-. cwt/env/current/vars.sh 2> /dev/null
+# [wip] TODO evaluate not requiring readonly globals.
+# . cwt/env/current/vars.sh 2> /dev/null
+. cwt/env/current/vars.sh
 
-# Load global bash utils and aliases.
+# Load global bash utils.
 . cwt/bash_utils.sh
+
+# TODO evaluate removing 'registry' feature.
 . cwt/env/registry.sh
-. cwt/aliases.sh
+
+# Load bash aliases.
+u_hook_app_call 'bash' 'alias'

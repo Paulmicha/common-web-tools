@@ -16,6 +16,8 @@
 . cwt/stack/stop.sh
 
 # Execute the "rebuild" script corresponding to provisioning method.
+# TODO use hook instead
+# @see cwt/utilities/hook.sh
 script="$(u_provisioning_get_script 'stack' 'rebuild')"
 if [[ -f "$script" ]]; then
   . "$script"

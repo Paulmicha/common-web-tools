@@ -16,6 +16,8 @@
 . cwt/stack/stop.sh
 
 # Execute the "restart" script corresponding to provisioning method.
+# TODO use hook instead
+# @see cwt/utilities/hook.sh
 script="$(u_provisioning_get_script 'stack' 'restart')"
 if [[ -f "$script" ]]; then
   . "$script"

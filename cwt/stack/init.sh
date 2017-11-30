@@ -59,10 +59,10 @@ u_exec_foreach_env_vars u_assign_env_value
 . cwt/git/apply_config.sh
 
 # Apply correct ownership and permissions.
-. cwt/fixperms.sh
+u_hook_app_call 'apply' 'ownership_and_perms'
 
 # Allow custom complements for this script.
 u_autoload_get_complement "$BASH_SOURCE"
 
 # Trigger post-init hooks.
-u_hook_call stack init post
+u_hook_call 'stack' 'init' 'post'

@@ -12,6 +12,9 @@
 #
 
 . cwt/env/load.sh
+
+# TODO use hook instead
+# @see cwt/utilities/hook.sh
 . cwt/provision/dependencies.sh
 
 
