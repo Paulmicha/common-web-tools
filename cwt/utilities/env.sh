@@ -123,9 +123,9 @@ u_assign_env_value() {
 # function without following the usual convention.
 #
 # @examples (write)
-#   define MY_VAR_NAME
-#   define MY_VAR_NAME "Simple string declaration (non-configurable / no prompt to customize during init)"
-#   define MY_VAR_NAME2 "[default]=test"
+#   global MY_VAR_NAME
+#   global MY_VAR_NAME "Simple string declaration (non-configurable / no prompt to customize during init)"
+#   global MY_VAR_NAME2 "[default]=test"
 #
 #   # Custom keys may be used, provided they don't clash with the following keys
 #   # already used internally by CWT :
@@ -135,25 +135,24 @@ u_assign_env_value() {
 #   # - 'no_prompt'
 #   # - 'append'
 #   # - 'if-VAR_NAME'
-#   define MY_VAR_NAME3 "[key]=value [key2]='value 2' [key3]='$(my_callback_function)'"
+#   global MY_VAR_NAME3 "[key]=value [key2]='value 2' [key3]='$(my_callback_function)'"
 #
 # @examples (append)
 #   # Notice there cannot be any space inside each value.
-#   define MY_MULTI_VALUE_VAR "[append]=multiple"
-#   define MY_MULTI_VALUE_VAR "[append]=declarations"
-#   define MY_MULTI_VALUE_VAR "[append]=will-be"
-#   define MY_MULTI_VALUE_VAR "[append]=appended/to"
-#   define MY_MULTI_VALUE_VAR "[append]=a_SPACE_separated_string"
+#   global MY_MULTI_VALUE_VAR "[append]=multiple"
+#   global MY_MULTI_VALUE_VAR "[append]=declarations"
+#   global MY_MULTI_VALUE_VAR "[append]=will-be"
+#   global MY_MULTI_VALUE_VAR "[append]=appended/to"
+#   global MY_MULTI_VALUE_VAR "[append]=a_SPACE_separated_string"
 #   # Example read :
-#   u_exec_foreach_env_vars u_assign_env_value
 #   for val in $MY_MULTI_VALUE_VAR; do
 #     echo "MY_MULTI_VALUE_VAR value : $val"
 #   done
 #
 # @examples (condition)
-#   define MY_VAR "hello value"
-#   define MY_COND_VAR_NOMATCH "[if-MY_VAR]=test [default]=foo"
-#   define MY_COND_VAR_MATCH "[if-MY_VAR]='hello value' [default]=bar"
+#   global MY_VAR "hello value"
+#   global MY_COND_VAR_NOMATCH "[if-MY_VAR]=test [default]=foo"
+#   global MY_COND_VAR_MATCH "[if-MY_VAR]='hello value' [default]=bar"
 #   # To verify (should only output MY_COND_VAR_MATCH) :
 #   u_exec_foreach_env_vars u_assign_env_value
 #   u_print_env
@@ -161,7 +160,7 @@ u_assign_env_value() {
 # @example (read)
 #   u_print_env
 #
-define() {
+global() {
   local p_var_name="$1"
   local p_values="$2"
   local p_prevent_export="$3"
@@ -194,7 +193,7 @@ define() {
             ;;
 
           # Appends multiple values to the same var. Allow globals to be
-          # "redefined" multiple times to add values (space-separated string).
+          # declared multiple times to add values (space-separated string).
           append)
             if [[ -n "${ENV_VARS[$p_var_name|values]}" ]]; then
               ENV_VARS["${p_var_name}|values"]+=" ${values_arr[$key]}"
@@ -233,7 +232,7 @@ define() {
 ##
 # [debug] Prints current environment globals and their associated data.
 #
-# @see define()
+# @see global()
 #
 u_print_env() {
   local env_var_name

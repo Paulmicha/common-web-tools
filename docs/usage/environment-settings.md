@@ -210,18 +210,53 @@ Env settings are global variables used to configure the local project instance a
 Files declaring env models are named `*vars.sh`, and use the following syntax :
 
 ```sh
-# 1. No default value provided.
-define PROJECT_STACK
+# Basic usage.
+# 1. Will prompt for input during stack init (unless the -y argument is used).
+# 2. Same thing, but entering an empty value will use the default value. Also,
+#   when the -y argument is used, it will automatically use the default.
+global PROJECT_STACK # 1.
+global MY_VAR_NAME "Simple string declaration (non-configurable / no prompt to customize during init)"
+global MY_VAR_NAME2 "[default]=test" # 2.
 
-# 2. Immediate variable substitution (uses current shell scope variables).
-define PROJECT_DOCROOT "[default]=$PWD"
+# Immediate variable substitution (uses current shell scope variables).
+global PROJECT_DOCROOT "[default]=$PWD"
 
-# 3. Subshell demo (callback must echo result).
-define HOST_OS "[default]=$(u_host_get_os)"
+# Subshell can be used (callback must echo result).
+global HOST_OS "[default]='$(u_host_get_os)'"
 
-# 4. Variable substitution during env vars aggregation - see :
-# cwt/stack/init/aggregate_env_vars.sh
-define APP_DOCROOT "[default]=\$PROJECT_DOCROOT/web"
+# Variable substitution (requires that the other var be already declared).
+global APP_DOCROOT "[default]=\$PROJECT_DOCROOT/web"
+
+# Custom keys may be used, provided they don't clash with the following keys
+# already used internally by CWT :
+# - 'default'
+# - 'value'
+# - 'values'
+# - 'no_prompt'
+# - 'append'
+# - 'if-VAR_NAME'
+global MY_VAR_NAME3 "[key]=value [key2]='value 2'"
+
+# The global declaration syntax also supports 'append' : it allows globals to be
+# declared multiple times to add values (space-separated string).
+# Notice there cannot be any space inside each value.
+global MY_MULTI_VALUE_VAR "[append]=multiple"
+global MY_MULTI_VALUE_VAR "[append]=declarations"
+global MY_MULTI_VALUE_VAR "[append]=will-be"
+global MY_MULTI_VALUE_VAR "[append]=appended/to"
+global MY_MULTI_VALUE_VAR "[append]=a_SPACE_separated_string"
+# Example read :
+for val in $MY_MULTI_VALUE_VAR; do
+  echo "MY_MULTI_VALUE_VAR value : $val"
+done
+
+# Finally, it supports conditional declaration.
+global MY_VAR "hello value"
+global MY_COND_VAR_NOMATCH "[if-MY_VAR]=test [default]=foo"
+global MY_COND_VAR_MATCH "[if-MY_VAR]='hello value' [default]=bar"
+# To verify (should only output MY_COND_VAR_MATCH) :
+u_exec_foreach_env_vars u_assign_env_value
+u_print_env
 ```
 
 ### Env models aggregation
@@ -240,7 +275,7 @@ Any existing file is included (sourced) in the order indicated, each one allowin
 
 ```sh
 # Calling stack init with these parameters :
-. cwt/stack/init.sh -s drupal--contenta,redis,varnish-4,solr-5.5 -y
+. cwt/stack/init.sh -s drupal--p-contenta-1,redis,varnish-4,solr-5.5 -y
 
 # ... yields these corresponding env models lookup paths :
 cwt/provision/docker-compose/vars.sh
