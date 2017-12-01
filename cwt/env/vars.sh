@@ -12,14 +12,14 @@
 
 global PROJECT_STACK
 global PROJECT_DOCROOT "[default]=$PWD"
-global APP_DOCROOT "[default]=\$PROJECT_DOCROOT/web"
+global APP_DOCROOT "[default]=$PROJECT_DOCROOT/web"
 global INSTANCE_TYPE "[default]=dev"
 global INSTANCE_DOMAIN "[default]='$(u_get_instance_domain)'"
 global INSTANCE_ALIAS
 
 global CWT_MODE "[default]=separate"
 global APP_GIT_ORIGIN "[if-CWT_MODE]=separate"
-global APP_GIT_DIR "[default]=\$APP_DOCROOT [if-CWT_MODE]=separate"
+global APP_GIT_WORK_TREE "[if-CWT_MODE]=separate [default]=$APP_DOCROOT"
 
 global HOST_TYPE "[default]=local"
 global HOST_OS "[default]='$(u_host_get_os)'"
@@ -30,3 +30,5 @@ global DEPLOY_USING "[default]=git"
 global REG_BACKEND "[default]=file"
 # TODO else consider using a separate store for secrets, see cwt/env/README.md.
 # global SECRETS_BACKEND
+
+global CWT_CUSTOM_DIR "[default]=cwt/custom"

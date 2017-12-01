@@ -128,7 +128,7 @@ u_autoload_override() {
     operand="$p_operand"
   fi
 
-  local override=${p_script_path/cwt/"cwt/custom/overrides"}
+  local override=${p_script_path/cwt/"$(u_autoload_get_custom_dir)/overrides"}
   if [[ -f "$override" ]]; then
     echo ". $override ; $operand"
   fi
@@ -147,9 +147,25 @@ u_autoload_override() {
 #
 u_autoload_get_complement() {
   local p_script_path="$1"
-  local complement=${p_script_path/cwt/"cwt/custom/complements"}
+  local complement=${p_script_path/cwt/"$(u_autoload_get_custom_dir)/complements"}
 
   if [[ -f "$complement" ]]; then
     . "$complement"
   fi
+}
+
+##
+# Returns customizations base dir.
+#
+# If global CWT_CUSTOM_DIR exists in calling scope, it will be used. Otherwise,
+# it will return the hardcoded default value 'cwt/custom'.
+#
+# @see cwt/custom/README.md
+#
+u_autoload_get_custom_dir() {
+  local base_dir='cwt/custom'
+  if [[ -n "$CWT_CUSTOM_DIR" ]]; then
+    base_dir="$CWT_CUSTOM_DIR"
+  fi
+  echo "$base_dir"
 }

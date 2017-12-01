@@ -24,7 +24,7 @@ export P_PROJECT_STACK
 export P_PROJECT_DOCROOT
 export P_APP_DOCROOT
 export P_APP_GIT_ORIGIN
-export P_APP_GIT_DIR
+export P_APP_GIT_WORK_TREE
 export P_INSTANCE_TYPE
 export P_INSTANCE_DOMAIN
 
@@ -32,6 +32,8 @@ export P_INSTANCE_DOMAIN
 export P_HOST_TYPE
 export P_PROVISION_USING
 export P_DEPLOY_USING
+export P_CWT_MODE
+export P_CWT_CUSTOM_DIR
 export P_YES
 export P_VERBOSE
 
@@ -40,7 +42,7 @@ unset P_PROJECT_STACK
 unset P_PROJECT_DOCROOT
 unset P_APP_DOCROOT
 unset P_APP_GIT_ORIGIN
-unset P_APP_GIT_DIR
+unset P_APP_GIT_WORK_TREE
 unset P_INSTANCE_TYPE
 unset P_INSTANCE_DOMAIN
 unset P_HOST_TYPE
@@ -56,13 +58,15 @@ while [ "$#" -gt 0 ]; do
     -o) P_PROJECT_DOCROOT="$2"; shift 2;;
     -a) P_APP_DOCROOT="$2"; shift 2;;
     -g) P_APP_GIT_ORIGIN="$2"; shift 2;;
-    -i) P_APP_GIT_DIR="$2"; shift 2;;
+    -i) P_APP_GIT_WORK_TREE="$2"; shift 2;;
     -t) P_INSTANCE_TYPE="$2"; shift 2;;
     -d) P_INSTANCE_DOMAIN="$2"; shift 2;;
 
     -h) P_HOST_TYPE="$2"; shift 2;;
     -p) P_PROVISION_USING="$2"; shift 2;;
     -e) P_DEPLOY_USING="$2"; shift 2;;
+    -m) P_CWT_MODE="$2"; shift 2;;
+    -c) P_CWT_CUSTOM_DIR="$2"; shift 2;;
     -y) P_YES=1; shift 1;;
     -v) P_VERBOSE=1; shift 1;;
 

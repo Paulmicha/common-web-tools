@@ -407,7 +407,7 @@ u_hook_add_presets_lookup_variants() {
         done
       done
 
-      sp_path="cwt/custom/presets"
+      sp_path="$(u_autoload_get_custom_dir)/presets"
       for sp_v in "${sp_arr[@]}"; do
         sp_path+="/$sp_v"
         case "$p_type" in
@@ -429,7 +429,7 @@ u_hook_add_presets_lookup_variants() {
         esac
       done
 
-      sp_path="cwt/custom/presets/$stack_preset"
+      sp_path="$(u_autoload_get_custom_dir)/presets/$stack_preset"
       case "$p_type" in
         event_only)
           u_hook_add_e_lookup_variants "$sp_path" ;;

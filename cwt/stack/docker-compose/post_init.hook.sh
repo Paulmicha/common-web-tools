@@ -11,6 +11,8 @@
 # Write env vars to docker-compose specific ".env" file (in project root dir).
 docker_compose_env_file='.env'
 
+echo "Writing docker-compose settings in $docker_compose_env_file ..."
+
 # First make sure we have something to write.
 if [[ -z "$ENV_VARS_COUNT" ]]; then
   echo
@@ -44,3 +46,6 @@ for env_var_name in ${ENV_VARS['.sorting']}; do
   eval "[[ -z \"\$$env_var_name\" ]] && echo \"$env_var_name\"= >> \"$docker_compose_env_file\""
   eval "[[ -n \"\$$env_var_name\" ]] && echo \"$env_var_name=\$$env_var_name\" >> \"$docker_compose_env_file\""
 done
+
+echo "Writing docker-compose settings in $docker_compose_env_file : done."
+echo

@@ -220,12 +220,10 @@ global MY_VAR_NAME2 "[default]=test" # 2.
 
 # Immediate variable substitution (uses current shell scope variables).
 global PROJECT_DOCROOT "[default]=$PWD"
+global APP_DOCROOT "[default]=$PROJECT_DOCROOT/web"
 
 # Subshell can be used (callback must echo result).
 global HOST_OS "[default]='$(u_host_get_os)'"
-
-# Variable substitution (requires that the other var be already declared).
-global APP_DOCROOT "[default]=\$PROJECT_DOCROOT/web"
 
 # Custom keys may be used, provided they don't clash with the following keys
 # already used internally by CWT :
@@ -255,7 +253,14 @@ global MY_VAR "hello value"
 global MY_COND_VAR_NOMATCH "[if-MY_VAR]=test [default]=foo"
 global MY_COND_VAR_MATCH "[if-MY_VAR]='hello value' [default]=bar"
 # To verify (should only output MY_COND_VAR_MATCH) :
+u_print_env
+
+# Deferred variable substitution (advanced usage : when the 3rd param is used,
+# the global is not immediately exported in current shell).
+global MY_DEFERRED_VAR "[default]=/example/absolute/path" true
+global MY_DEPENDANT_VAR "[default]=\$MY_DEFERRED_VAR/test" true
 u_exec_foreach_env_vars u_assign_env_value
+# To verify (MY_DEPENDANT_VAR should output '/example/absolute/path/test') :
 u_print_env
 ```
 
