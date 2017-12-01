@@ -59,38 +59,3 @@ u_array_add_once() {
     eval "$haystack_var_name+=($needle)"
   fi
 }
-
-##
-# Quicksorts positional arguments
-#
-# Return is in array qsort_ret.
-# See https://stackoverflow.com/a/30576368
-#
-# @example
-#   array=(a c b f 3 5)
-#   u_array_sort "${array[@]}"
-#   # To debug result :
-#   declare -p qsort_ret
-#
-u_array_sort() {
-  (($#==0)) && return 0
-  local stack=( 0 $(($#-1)) ) beg end i pivot smaller larger
-  qsort_ret=("$@")
-  while ((${#stack[@]})); do
-    beg=${stack[0]}
-    end=${stack[1]}
-    stack=( "${stack[@]:2}" )
-    smaller=() larger=()
-    pivot=${qsort_ret[beg]}
-    for ((i=beg+1;i<=end;++i)); do
-      if [[ "${qsort_ret[i]}" < "$pivot" ]]; then
-        smaller+=( "${qsort_ret[i]}" )
-      else
-        larger+=( "${qsort_ret[i]}" )
-      fi
-    done
-    qsort_ret=( "${qsort_ret[@]:0:beg}" "${smaller[@]}" "$pivot" "${larger[@]}" "${qsort_ret[@]:end+1}" )
-    if ((${#smaller[@]}>=2)); then stack+=( "$beg" "$((beg+${#smaller[@]}-1))" ); fi
-    if ((${#larger[@]}>=2)); then stack+=( "$((end-${#larger[@]}+1))" "$end" ); fi
-  done
-}

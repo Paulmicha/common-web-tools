@@ -5,6 +5,13 @@
 #
 # This file is dynamically included when the "hook" is triggered.
 #
+# TODO this assumes ownership_and_perms settings for any drupal app provisioned
+# with docker-compose, and should be overridden if necessary.
+# @see u_autoload_override()
+# @see u_hook_call()
+#
 
-# TODO
-echo "TODO : apply ownership_and_perms for drupal app provisioned with docker-compose"
+# User 82 is www-data in Docker images like wodby/drupal-php.
+if [[ -n "$APP_DOCROOT" ]]; then
+  chown 82:82 "$APP_DOCROOT" -R
+fi

@@ -56,15 +56,22 @@ u_exec_foreach_env_vars() {
 #
 u_assign_env_value() {
   local p_var="$1"
+  local multi_values=''
+
+  eval "export $p_var"
 
   eval "local arg_val=\$P_${p_var}"
   local default_val="${ENV_VARS[$p_var|default]}"
 
-  eval "export $p_var"
-  eval "unset $p_var"
-
   if [[ -n "$arg_val" ]]; then
     eval "$p_var='$arg_val'"
+
+  # Handle non-configurable vars.
+  elif [[ "${ENV_VARS[$p_var|no_prompt]}" == 1 ]]; then
+    eval "$p_var='${ENV_VARS[$p_var|value]}'"
+  elif [[ -n "${ENV_VARS[$p_var|values]}" ]]; then
+    multi_values=$(u_string_trim "${ENV_VARS[$p_var|values]}")
+    eval "$p_var='$multi_values'"
 
   elif [[ $P_YES == 0 ]]; then
     echo
@@ -76,9 +83,19 @@ u_assign_env_value() {
     fi
   fi
 
+  # Assign default value fallback if the value is empty (e.g. may have been the
+  # result of entering empty value in prompt).
   local empty_test=$(eval "echo \"\$$p_var\"")
   if [[ (-z "$empty_test") && (-n "$default_val") ]]; then
     eval "$p_var='$default_val'"
+  fi
+
+  # Once prompt has been made, prevent repeated calls for this var (recursion).
+  # @see cwt/stack/init/aggregate_env_vars.sh
+  # Except for 'append' vars (multiple values must pile-up on each call).
+  if [[ ("${ENV_VARS[$p_var|no_prompt]}" != 1) && (-z "$multi_values") ]]; then
+    ENV_VARS[$p_var|no_prompt]=1
+    ENV_VARS[$p_var|value]=$(eval "echo \"\$$p_var\"")
   fi
 }
 
@@ -88,9 +105,10 @@ u_assign_env_value() {
 # Increments a shared counter to maintain order, because some variables may depend
 # on each other.
 #
-# @param 1 String : global variable name (readonly).
-# @param 2 [optional] String :
-#   values with syntax like : "[group]='the group name' [default]=test"
+# @param 1 String : global variable name.
+# @param 2 [optional] String : non-configurable value or key/value syntax (see
+#   examples below)
+# @param 3 Integer : flag to prevent automatic export.
 #
 # @requires the following globals in calling scope (main shell) :
 # - $ENV_VARS
@@ -106,8 +124,39 @@ u_assign_env_value() {
 #
 # @examples (write)
 #   define MY_VAR_NAME
+#   define MY_VAR_NAME "Simple string declaration (non-configurable / no prompt to customize during init)"
 #   define MY_VAR_NAME2 "[default]=test"
-#   define MY_VAR_NAME3 "[key]=value [key2]='value 2' [key3]=$(my_callback_function)"
+#
+#   # Custom keys may be used, provided they don't clash with the following keys
+#   # already used internally by CWT :
+#   # - 'default'
+#   # - 'value'
+#   # - 'values'
+#   # - 'no_prompt'
+#   # - 'append'
+#   # - 'if-VAR_NAME'
+#   define MY_VAR_NAME3 "[key]=value [key2]='value 2' [key3]='$(my_callback_function)'"
+#
+# @examples (append)
+#   # Notice there cannot be any space inside each value.
+#   define MY_MULTI_VALUE_VAR "[append]=multiple"
+#   define MY_MULTI_VALUE_VAR "[append]=declarations"
+#   define MY_MULTI_VALUE_VAR "[append]=will-be"
+#   define MY_MULTI_VALUE_VAR "[append]=appended/to"
+#   define MY_MULTI_VALUE_VAR "[append]=a_SPACE_separated_string"
+#   # Example read :
+#   u_exec_foreach_env_vars u_assign_env_value
+#   for val in $MY_MULTI_VALUE_VAR; do
+#     echo "MY_MULTI_VALUE_VAR value : $val"
+#   done
+#
+# @examples (condition)
+#   define MY_VAR "hello value"
+#   define MY_COND_VAR_NOMATCH "[if-MY_VAR]=test [default]=foo"
+#   define MY_COND_VAR_MATCH "[if-MY_VAR]='hello value' [default]=bar"
+#   # To verify (should only output MY_COND_VAR_MATCH) :
+#   u_exec_foreach_env_vars u_assign_env_value
+#   u_print_env
 #
 # @example (read)
 #   u_print_env
@@ -115,6 +164,53 @@ u_assign_env_value() {
 define() {
   local p_var_name="$1"
   local p_values="$2"
+  local p_prevent_export="$3"
+
+  if [[ -n "$p_values" ]]; then
+
+    # If the value does not begin with '[', assume the var non-configurable.
+    if [[ "${p_values:0:1}" != '[' ]]; then
+      ENV_VARS["${p_var_name}|value"]="$p_values"
+      ENV_VARS["${p_var_name}|no_prompt"]=1
+
+    # Key/value store system.
+    else
+      local values_arr
+      eval "declare -A values_arr=( $p_values )"
+      for key in "${!values_arr[@]}"; do
+        u_array_add_once "$key" ENV_VARS_UNIQUE_KEYS
+        case "$key" in
+
+          # Handles conditional declarations. Prevents declaring the variable
+          # altogether if the depending variable's value does not match the one
+          # provided.
+          if-*)
+            local depending_var="${key:3}"
+            local depending_value=$(eval "echo \"\$$depending_var\"")
+
+            if [[ "$depending_value" != "${values_arr[$key]}" ]]; then
+              return 0
+            fi
+            ;;
+
+          # Appends multiple values to the same var. Allow globals to be
+          # "redefined" multiple times to add values (space-separated string).
+          append)
+            if [[ -n "${ENV_VARS[$p_var_name|values]}" ]]; then
+              ENV_VARS["${p_var_name}|values"]+=" ${values_arr[$key]}"
+            else
+              ENV_VARS["${p_var_name}|values"]="${values_arr[$key]}"
+            fi
+            ;;
+
+          # Default.
+          *)
+            ENV_VARS["${p_var_name}|${key}"]="${values_arr[$key]}"
+            ;;
+        esac
+      done
+    fi
+  fi
 
   # These globals allow dynamic handling of args and default values.
   if ! u_in_array $p_var_name ENV_VARS_UNIQUE_NAMES; then
@@ -126,15 +222,11 @@ define() {
     ENV_VARS['.sorting']+=" ${ENV_VARS_COUNT}|${p_var_name} "
   fi
 
-  if [[ -n "$p_values" ]]; then
-    local values_arr
-    eval "declare -A values_arr=( $p_values )"
-    for key in "${!values_arr[@]}"; do
-      if ! u_in_array $key ENV_VARS_UNIQUE_KEYS; then
-        ENV_VARS_UNIQUE_KEYS+=($key)
-      fi
-      ENV_VARS["${p_var_name}|${key}"]="${values_arr[$key]}"
-    done
+  # Immediately attempt to export that variable unless explicitly prevented.
+  # This allows conditional declarations in them (i.e. useful for settings that
+  # need to adapt/react to each other).
+  if [[ -z "$p_prevent_export" ]]; then
+    u_assign_env_value "$p_var_name"
   fi
 }
 
@@ -160,12 +252,12 @@ u_print_env() {
     eval "[[ -z \"\$$env_var_name\" ]] && echo \"$env_var_name\" \(empty\)";
     eval "[[ -n \"\$$env_var_name\" ]] && echo \"$env_var_name = \$$env_var_name\"";
 
-    # for key in ${ENV_VARS_UNIQUE_KEYS[@]}; do
-    #   val="${ENV_VARS[$env_var_name|$key]}"
-    #   if [[ -n "$val" ]]; then
-    #     echo "  - ${key} = ${ENV_VARS[${env_var_name}|${key}]}";
-    #   fi
-    # done
+    for key in ${ENV_VARS_UNIQUE_KEYS[@]}; do
+      val="${ENV_VARS[$env_var_name|$key]}"
+      if [[ -n "$val" ]]; then
+        echo "  - ${key} = ${ENV_VARS[${env_var_name}|${key}]}";
+      fi
+    done
   done
   echo
 }

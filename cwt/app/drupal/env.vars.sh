@@ -15,3 +15,9 @@
 define DRUPAL_FILES_DIR "[default]=\$APP_DOCROOT/sites/default/files"
 define DRUPAL_TMP_DIR "[default]=\$PROJECT_DOCROOT/tmp"
 define DRUPAL_PRIVATE_DIR "[default]=\$PROJECT_DOCROOT/private"
+
+define PROTECTED_FILES "[append]=\$APP_DOCROOT/sites/default/settings.php"
+
+define WRITEABLE_DIRS "[append]=\$DRUPAL_FILES_DIR"
+define WRITEABLE_DIRS "[append]=\$DRUPAL_TMP_DIR"
+define WRITEABLE_DIRS "[append]=\$DRUPAL_PRIVATE_DIR"

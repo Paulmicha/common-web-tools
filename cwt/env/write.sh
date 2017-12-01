@@ -80,5 +80,5 @@ for env_var_name in ${ENV_VARS['.sorting']}; do
   eval "[[ -n \"\$$env_var_name\" ]] && echo \"$env_var_name=\\\"\$$env_var_name\\\"\" >> \"$CURRENT_ENV_SETTINGS_FILE\""
 done
 
-echo "Over."
+echo "Writing settings in $CURRENT_ENV_SETTINGS_FILE : done."
 echo

@@ -108,3 +108,18 @@ u_prompt() {
   read -p "$p_question" input
   echo "$input"
 }
+
+##
+# Removes trailing white space.
+#
+# See https://stackoverflow.com/questions/369758/how-to-trim-whitespace-from-a-bash-variable
+#
+# @param 1 String : the string to trim.
+#
+# @example
+#   str_trimmed=$(u_string_trim " testing space trim ")
+#   echo "str_trimmed = '$str_trimmed'"
+#
+u_string_trim() {
+  echo "$(echo -e "$1" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+}

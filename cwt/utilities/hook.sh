@@ -25,6 +25,7 @@
 # @param 1 String : prefix for hook files lookups.
 # @param 2 String : suffix for hook files lookups.
 # @param 3 [optional] String : additional variant for hook files lookups.
+# @param 4 [optional] String : additional "base" lookups.
 #
 # @example
 #   PROJECT_STACK='drupal-8.4--p-contenta-1,redis,solr'
@@ -83,7 +84,10 @@ u_hook_app_call() {
     u_stack_get_specs "$PROJECT_STACK"
   fi
 
-  local lookup_subjects="app/$APP"
+  local lookup_subjects="app app/$APP"
+  if [[ -n "$4" ]]; then
+    lookup_subjects+=" $4"
+  fi
 
   # Also match app version specific scripts.
   if [[ -n "$APP_VERSION" ]]; then

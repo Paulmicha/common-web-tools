@@ -23,6 +23,8 @@ export P_PROJECT_STACK
 # @see cwt/env/vars.sh
 export P_PROJECT_DOCROOT
 export P_APP_DOCROOT
+export P_APP_GIT_ORIGIN
+export P_APP_GIT_DIR
 export P_INSTANCE_TYPE
 export P_INSTANCE_DOMAIN
 
@@ -37,6 +39,8 @@ export P_VERBOSE
 unset P_PROJECT_STACK
 unset P_PROJECT_DOCROOT
 unset P_APP_DOCROOT
+unset P_APP_GIT_ORIGIN
+unset P_APP_GIT_DIR
 unset P_INSTANCE_TYPE
 unset P_INSTANCE_DOMAIN
 unset P_HOST_TYPE
@@ -51,6 +55,8 @@ while [ "$#" -gt 0 ]; do
 
     -o) P_PROJECT_DOCROOT="$2"; shift 2;;
     -a) P_APP_DOCROOT="$2"; shift 2;;
+    -g) P_APP_GIT_ORIGIN="$2"; shift 2;;
+    -i) P_APP_GIT_DIR="$2"; shift 2;;
     -t) P_INSTANCE_TYPE="$2"; shift 2;;
     -d) P_INSTANCE_DOMAIN="$2"; shift 2;;
 
