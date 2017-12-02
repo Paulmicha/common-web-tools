@@ -38,11 +38,11 @@ This pattern might be used to integrate some [existing (and more elaborate) Bash
 
 The general principle is : *file structure* should indicate intent. CWT's organization follows task (action), subject and/or facts, and the [semver convention](https://semver.org/).
 
-The order or imbrication is still under study, but given CWT's minimalist ambition, it probably will remain just a principle (guideline).
+The order or imbrication is still under study, but given CWT's minimalist ambition, it probably will remain just a principle.
 
-This is not really a pattern and more a basic guideline to name folders, scripts or functions. It may also help deciding how to split or group operations and inform folder structure choices.
+As this is not really a pattern and more a basic guideline to name folders, scripts or functions, it may help deciding how to split or group operations and inform folder structure choices.
 
 - **Purpose**:
     - Less hesitation
     - Self-explanation
-- **Caveat**: Potential identic file names in different folders, see [this article about JS component-oriented file structure](https://hackernoon.com/the-100-correct-way-to-structure-a-react-app-or-why-theres-no-such-thing-3ede534ef1ed)
+- **Caveat**: Identic file names in different folders, see [this article about JS component-oriented file structure](https://hackernoon.com/the-100-correct-way-to-structure-a-react-app-or-why-theres-no-such-thing-3ede534ef1ed)
