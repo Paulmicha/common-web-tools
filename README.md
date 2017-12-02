@@ -89,7 +89,7 @@ Ultimately, it should not compete with other projects (and I couldn't find a bet
 
 This section illustrates a minimalist approach to organizational problems. It's still under study. Long-term considerations involve code generators, IEML, and the relationship between philosophy and programming ("naming things", "no language exists in isolation"). Short-term : makefile integration ?
 
-The file structure follows naming conventions. Typically facts, actions, subjects are used to categorize fragments of bash scripts meant to be sourced directly inside custom scripts (not included in the CWT project).
+The file structure follows [loose naming and folder structure conventions](https://paulmicha.github.io/common-web-tools/about/patterns.html). Typically facts, actions, subjects are used to categorize fragments of bash scripts meant to be sourced directly inside custom scripts (not included in the CWT project).
 
 ```txt
 /path/to/project/           ← Project root dir ($PROJECT_DOCROOT).

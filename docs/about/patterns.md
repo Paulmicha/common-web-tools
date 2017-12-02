@@ -9,18 +9,12 @@ Briefly explains basic architectural aspects of CWT.
     - Sharing the same top-level [*current shell*](http://wiki.bash-hackers.org/scripting/processtree), or "main shell"
 - **Caveat**: global scope abuse is an anti-pattern: potential variables collision, etc.
 - **How to mitigate**:
-    - KISS radically
-    - [Make globals immutable (`readonly`) and use them sparingly](http://www.kfirlavi.com/blog/2012/11/14/defensive-bash-programming/)
     - Use functions with `local` vars for isolable parts
     - Follow variable and function naming conventions, see section *conventions used in code* below
+    - KISS radically
+    - [Make globals immutable (`readonly`) and use them sparingly](http://www.kfirlavi.com/blog/2012/11/14/defensive-bash-programming/)
 
 ## "Autoload" (dynamic sourcing)
-
-Notably used in:
-
-- `cwt/bash_utils.sh`
-- `cwt/stack/init.sh`
-- `cwt/utilities/hook.sh`
 
 - **Purpose**:
     - Leaziness (not really dependency management)
@@ -29,18 +23,26 @@ Notably used in:
     - relies on global antipattern (See *Systematic sourcing from project root dir*)
     - wasteful performance-wise
     - no accidental infinite recursion prevention
+    - potentially excessive fragmentation / over-abstracting / over-engineering (YAGNI)
 - **How to mitigate**:
-    - Provide [CWT self tests](https://github.com/sstephenson/bats) in `cwt/test/self`
+    - [TODO] Provide [CWT self tests](https://github.com/sstephenson/bats) in `cwt/test/self`
+    - Elements indicated in *Systematic sourcing from project root dir* apply here too
 
-This pattern might be used to integrate some [existing (and more elaborate) Bash projects](https://github.com/awesome-lists/awesome-bash).
+Notably used in:
+
+- `cwt/bash_utils.sh`
+- `cwt/stack/init.sh`
+- `cwt/utilities/hook.sh`
+
+This pattern should not prevent CWT to co-exist alongside existing tools [and/or Bash projects](https://github.com/awesome-lists/awesome-bash).
 
 ## Folders & files naming
 
-The general principle is : *file structure* should indicate intent. CWT's organization follows task (action), subject and/or facts, and the [semver convention](https://semver.org/).
+The general principle is : *file structure* should indicate intent. CWT's organization imbricates tasks (actions) by subject and/or fact(s) and/or preset(s), and the [semver convention](https://semver.org/) where appropriate.
 
-The order or imbrication is still under study, but given CWT's minimalist ambition, it probably will remain just a principle.
+Given CWT's minimalist ambition, dir/file naming could be just a principle.
 
-As this is not really a pattern and more a basic guideline to name folders, scripts or functions, it may help deciding how to split or group operations and inform folder structure choices.
+The only pattern is depth level : **deeper = more specific**. Consider this a loose guideline to name folders, scripts or functions - also informing how to imbricate folders, and split / group / combine scripts (or includes).
 
 - **Purpose**:
     - Less hesitation
