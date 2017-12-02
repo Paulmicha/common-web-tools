@@ -8,6 +8,7 @@
     1. [Overview](about/overview.md)
     1. [Patterns](about/patterns.md)
     1. [Conventions](about/conventions.md)
+    1. [Alter / Extend CWT](about/alter_extend.md)
     1. Existing tools considerations
     1. Serverless / decentralized projects
 1. Using CWT

@@ -8,7 +8,7 @@ WIP / not ready for use yet (re-organization + evaluation stage, documentation-d
 
 Scripts bash for usual devops tasks aimed at relatively small web projects.
 
-CWT is not a program; it's a generic, customizable "glue" between programs. Simple, loosely articulated bash script fragments.
+CWT is not a program; it's a generic, customizable "glue" between programs. Simple, loosely articulated bash scripts.
 
 ## PURPOSE
 
@@ -83,7 +83,7 @@ See section *Frequent tasks (howtos / FAQ)* for details.
 
 CWT is under construction. Folders might still move around depending on its use, until I feel it can start proper versionning. Consider this repo a scratchpad for now.
 
-CWT essentially relies on a relative global namepace. Its creation process involves building it "on the fly" in other side projects in which each step listed above (*Next steps*) is achieved by specific, custom scripts placed in a different `scripts` dir alongside `cwt` in `PROJECT_DOCROOT`.
+CWT essentially relies on a relative global namepace. Its creation process involves building it "on the fly" in other side projects in which each step listed above (*Next steps*) is achieved by specific, custom scripts placed in a different `scripts` dir alongside `cwt` in `PROJECT_DOCROOT`. In such cases, `CWT_CUSTOM_DIR` is also set to `$PROJECT_DOCROOT/scripts` (See the *Alter / Extend CWT* section).
 
 Ultimately, it should not compete with other projects (and I couldn't find a better word than "glue" for now, sorry).
 
@@ -95,13 +95,13 @@ The file structure follows [loose naming and folder structure conventions](https
 /path/to/project/           ← Project root dir ($PROJECT_DOCROOT).
   ├── cwt/
   │   ├── app/              ← [WIP] App init / (re)build / watch fragments.
-  │   ├── custom/           ← [configurable] default "modules" dir (complements, overrides, hooks)
+  │   ├── custom/           ← [configurable] default "modules" dir (alter or extend CWT. $CWT_CUSTOM_DIR)
   │   ├── db/               ← [WIP] Database-related fragments.
   │   ├── env/              ← Environment settings fragments (global variables).
   │   │   └── current/      ← Generated settings specific to local instance (git-ignored).
   │   ├── git/              ← Versionning-related fragments.
   │   │   └── hooks/        ← [WIP] Entry points for auto-exec (tests, code linting, etc.)
-  │   ├── provision/        ← [WIP] Host-level dependencies related fragments.
+  │   ├── provision/        ← [WIP] Host-level dependencies related fragments (softwares setup).
   │   ├── remote/           ← [TODO] Remote operations fragments (add, provision, etc.)
   │   │   └── deploy/       ← [TODO] Deployment-related fragments.
   │   ├── stack/            ← [WIP] Services and/or workers management fragments.
@@ -112,6 +112,67 @@ The file structure follows [loose naming and folder structure conventions](https
   ├── web/                  ← [configurable] The app dir - can be outside project dir ($APP_DOCROOT).
   └── .gitignore            ← Replace with your own and/or edit.
 ```
+
+## Alter / Extend CWT
+
+There a different ways to alter or extend CWT. They usually consist in providing your own bash files in `CWT_CUSTOM_DIR` following the conventions listed below.
+
+It relies on [a minimalist "autoload" pattern](https://paulmicha.github.io/common-web-tools/about/patterns.html) (see **caveats** and **ways to mitigate** in documentation).
+
+Notable alteration/extension entry points :
+
+- `cwt/bash_utils.sh`
+- `cwt/stack/init.sh`
+
+WIP note : **complements** may be removed and be replaced by **hooks**.
+
+### Complements
+
+Given any bash include (sourced script fragment), the **complement** pattern simply attempts to include another corresponding file. The correspondance matches the relative path from `$PROJECT_DOCROOT/cwt` in `$CWT_CUSTOM_DIR` : if the complementary file exists, it is included (sourced) right where `u_autoload_get_complement()` is called.
+
+Simple example from `cwt/bash_utils.sh` :
+
+```sh
+for file in $(find cwt/utilities/* -type f -print0 | xargs -0); do
+  . "$file"
+  u_autoload_get_complement "$file"
+done
+```
+
+### Hooks
+
+TODO
+
+### Overrides
+
+Same as the **complement** pattern, but this only includes the corresponding file :
+
+Given any bash include (sourced script fragment), the **override** pattern attempts to include another corresponding file. The correspondance matches the relative path from `$PROJECT_DOCROOT/cwt` in `$CWT_CUSTOM_DIR` : if the overriding file exists, it is included (sourced) instead.
+
+Example in `cwt/git/apply_config.sh` :
+
+```sh
+# When called in current shell scope, this will prevent the rest of the script
+# to run - return early - if an override for the current file (calling this) was
+# found and sourced.
+eval $(u_autoload_override "$BASH_SOURCE")
+```
+
+Example in `u_hook_call()` :
+
+```sh
+for hook_script in "${lookup_paths[@]}"; do
+  if [[ -f "$hook_script" ]]; then
+    eval $(u_autoload_override "$hook_script" 'continue')
+    . "$hook_script"
+  fi
+  u_autoload_get_complement "$hook_script"
+done
+```
+
+### Presets
+
+TODO
 
 ## Frequent tasks (howtos / FAQ)
 

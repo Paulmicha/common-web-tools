@@ -6,7 +6,7 @@ This page presents the CWT project.
 
 Scripts bash for usual devops tasks aimed at relatively small web projects.
 
-CWT is not a program; it's a generic, customizable "glue" between programs. Simple, loosely articulated bash script fragments.
+CWT is not a program; it's a generic, customizable "glue" between programs. Simple, loosely articulated bash scripts.
 
 ## PURPOSE
 
@@ -41,7 +41,7 @@ While tools like Ansible, `docker-compose` or `nvm` already address these concer
 
 CWT is under construction. Folders might still move around depending on its use, until I feel it can start proper versionning. Consider this repo a scratchpad for now.
 
-CWT essentially relies on a relative global namepace. Its creation process involves building it "on the fly" in other side projects in which each step listed above (*Next steps*) is achieved by specific, custom scripts placed in a different `scripts` dir alongside `cwt` in `PROJECT_DOCROOT`.
+CWT essentially relies on a relative global namepace. Its creation process involves building it "on the fly" in other side projects in which each step listed above (*Next steps*) is achieved by specific, custom scripts placed in a different `scripts` dir alongside `cwt` in `PROJECT_DOCROOT`. In such cases, `CWT_CUSTOM_DIR` is also set to `$PROJECT_DOCROOT/scripts` (See the *Alter / Extend CWT* section).
 
 Ultimately, it should not compete with other projects (and I couldn't find a better word than "glue" for now, sorry).
 
@@ -53,13 +53,13 @@ The file structure follows [loose naming and folder structure conventions](https
 /path/to/project/           <- Project root dir ($PROJECT_DOCROOT).
   ├── cwt/
   │   ├── app/              <- [WIP] App init / (re)build / watch fragments.
-  │   ├── custom/           <- [configurable] default "modules" dir (complements, overrides, hooks)
+  │   ├── custom/           <- [configurable] default "modules" dir (alter or extend CWT. $CWT_CUSTOM_DIR)
   │   ├── db/               <- [WIP] Database-related fragments.
   │   ├── env/              <- Environment settings fragments (global variables).
   │   │   └── current/      <- Generated settings specific to local instance (git-ignored).
   │   ├── git/              <- Versionning-related fragments.
   │   │   └── hooks/        <- [WIP] Entry points for auto-exec (tests, code linting, etc.)
-  │   ├── provision/        <- [WIP] Host-level dependencies related fragments.
+  │   ├── provision/        <- [WIP] Host-level dependencies related fragments (softwares setup).
   │   ├── remote/           <- [TODO] Remote operations fragments (add, provision, etc.)
   │   │   └── deploy/       <- [TODO] Deployment-related fragments.
   │   ├── stack/            <- [WIP] Services and/or workers management fragments.

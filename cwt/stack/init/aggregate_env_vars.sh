@@ -21,6 +21,6 @@ fi
 for env_model in "${ENV_MODELS_PATHS[@]}"; do
   if [[ -f "$env_model" ]]; then
     . "$env_model"
-    u_autoload_get_complement "$env_model"
   fi
+  u_autoload_get_complement "$env_model"
 done
