@@ -79,7 +79,7 @@ When CWT files are in place alongside the rest of the project :
 
 See section *Frequent tasks (howtos / FAQ)* for details.
 
-## File structure
+## File structure (and status)
 
 CWT is under construction. Folders might still move around depending on its use, until I feel it can start proper versionning. Consider this repo a scratchpad for now.
 
@@ -94,21 +94,22 @@ The file structure follows naming conventions. Typically facts, actions, subject
 ```txt
 /path/to/project/           ← Project root dir ($PROJECT_DOCROOT).
   ├── cwt/
-  │   ├── app/              ← App init / (re)build / watch fragments.
+  │   ├── app/              ← [WIP] App init / (re)build / watch fragments.
   │   ├── custom/           ← [configurable] default "modules" dir (complements, overrides, hooks)
-  │   ├── db/               ← Database-related fragments.
+  │   ├── db/               ← [WIP] Database-related fragments.
   │   ├── env/              ← Environment settings fragments (global variables).
   │   │   └── current/      ← Generated settings specific to local instance (git-ignored).
   │   ├── git/              ← Versionning-related fragments.
-  │   │   └── hooks/        ← Entry points for auto-exec (tests, code linting, etc.)
-  │   ├── provision/        ← Host-level dependencies setup scripts.
-  │   ├── remote/           ← Remote operations scripts (add, provision, etc.)
-  │   │   └── deploy/       ← Deployment-related scripts.
-  │   ├── stack/            ← Services and/or workers management scripts.
-  │   ├── test/             ← Automated tests related scripts.
-  │   └── utilities/        ← CWT functions to hide complexity (see "Autoload").
-  ├── dumps/                ← Database dump files (git-ignored).
-  ├── web/                  ← [optional] The app dir - can be outside project dir ($APP_DOCROOT).
+  │   │   └── hooks/        ← [WIP] Entry points for auto-exec (tests, code linting, etc.)
+  │   ├── provision/        ← [WIP] Host-level dependencies related fragments.
+  │   ├── remote/           ← [TODO] Remote operations fragments (add, provision, etc.)
+  │   │   └── deploy/       ← [TODO] Deployment-related fragments.
+  │   ├── stack/            ← [WIP] Services and/or workers management fragments.
+  │   ├── test/             ← [TODO] Automated tests related fragments.
+  │   │   └── self/         ← [TODO] CWT internal tests.
+  │   └── utilities/        ← CWT internal functions (hides complexity).
+  ├── dumps/                ← [configurable] Database dump files (git-ignored).
+  ├── web/                  ← [configurable] The app dir - can be outside project dir ($APP_DOCROOT).
   └── .gitignore            ← Replace with your own and/or edit.
 ```
 
@@ -116,7 +117,7 @@ The file structure follows naming conventions. Typically facts, actions, subject
 
 Unless otherwise stated, all the examples below are to be run on *local* host from `PROJECT_DOCROOT` as sudo or root (i.e. for host provisioning support).
 
-**NB** : Currently, no exit codes are used in any top-level entry points listed below. These scripts (and all those sourced in the "main shell") use `return` instead of `exit`. CWT attempts to follow [Google's Shell Style Guide](https://google.github.io/styleguide/shell.xml) where possible.
+**NB** : Currently, no exit codes are used in any top-level entry points listed below. These fragments (and all those sourced in the "main shell") use `return` instead of `exit`. CWT attempts to follow [Google's Shell Style Guide](https://google.github.io/styleguide/shell.xml) where possible.
 
 Regarding ways to alter existing scripts, [the pattern "Autoload"](https://paulmicha.github.io/common-web-tools/about/patterns.html) usually means :
 

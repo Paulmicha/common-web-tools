@@ -6,7 +6,7 @@ This page presents the CWT project.
 
 Scripts bash for usual devops tasks aimed at relatively small web projects.
 
-CWT is not a program; it's a generic, customizable "glue" between programs. Simple, loosely articulated wrapper scripts.
+CWT is not a program; it's a generic, customizable "glue" between programs. Simple, loosely articulated bash script fragments.
 
 ## PURPOSE
 
@@ -37,27 +37,36 @@ Over the years, the maintenance of older projects can become tedious. For instan
 
 While tools like Ansible, `docker-compose` or `nvm` already address these concerns, adapting or integrating such projects to use these tools for common tasks requires some amount of work (or "glue").
 
-## File structure
+## File structure (and status)
+
+CWT is under construction. Folders might still move around depending on its use, until I feel it can start proper versionning. Consider this repo a scratchpad for now.
+
+CWT essentially relies on a relative global namepace. Its creation process involves building it "on the fly" in other side projects in which each step listed above (*Next steps*) is achieved by specific, custom scripts placed in a different `scripts` dir alongside `cwt` in `PROJECT_DOCROOT`.
+
+Ultimately, it should not compete with other projects (and I couldn't find a better word than "glue" for now, sorry).
+
+This section illustrates a minimalist approach to organizational problems. It's still under study. Long-term considerations involve code generators, IEML, and the relationship between philosophy and programming ("naming things", "no language exists in isolation"). Short-term : makefile integration ?
+
+The file structure follows naming conventions. Typically facts, actions, subjects are used to categorize fragments of bash scripts - or "includes" - meant to be sourced directly inside custom scripts (not included in the CWT project).
 
 ```txt
 /path/to/project/           <- Project root dir ($PROJECT_DOCROOT).
   ├── cwt/
-  │   ├── app/              <- App setup / watch / (re)build scripts.
-  │   ├── custom/
-  │   │   ├── complements/  <- [optional] Add your custom script complements here (see "Autoload").
-  │   │   └── overrides/    <- [optional] Add your custom script overrides here (see "Autoload").
-  │   ├── db/               <- Database-related scripts.
-  │   ├── env/              <- Environment settings write / load scripts.
+  │   ├── app/              <- [WIP] App init / (re)build / watch fragments.
+  │   ├── custom/           <- [configurable] default "modules" dir (complements, overrides, hooks)
+  │   ├── db/               <- [WIP] Database-related fragments.
+  │   ├── env/              <- Environment settings fragments (global variables).
   │   │   └── current/      <- Generated settings specific to local instance (git-ignored).
-  │   ├── git/
-  │   │   └── hooks/        <- Entry points for auto-exec tests, code linting, etc.
-  │   ├── provision/        <- Host-level dependencies setup scripts.
-  │   ├── remote/           <- Remote operations scripts (add, provision, etc.)
-  │   │   └── deploy/       <- Deployment-related scripts.
-  │   ├── stack/            <- Services and/or workers management scripts.
-  │   ├── test/             <- Automated tests related scripts.
-  │   └── utilities/        <- CWT functions to hide complexity (see "Autoload").
-  ├── dumps/                <- Database dump files (git-ignored).
-  ├── web/                  <- [optional] The app dir - can be outside project dir ($APP_DOCROOT).
+  │   ├── git/              <- Versionning-related fragments.
+  │   │   └── hooks/        <- [WIP] Entry points for auto-exec (tests, code linting, etc.)
+  │   ├── provision/        <- [WIP] Host-level dependencies related fragments.
+  │   ├── remote/           <- [TODO] Remote operations fragments (add, provision, etc.)
+  │   │   └── deploy/       <- [TODO] Deployment-related fragments.
+  │   ├── stack/            <- [WIP] Services and/or workers management fragments.
+  │   ├── test/             <- [TODO] Automated tests related fragments.
+  │   │   └── self/         <- [TODO] CWT internal tests.
+  │   └── utilities/        <- CWT internal functions (hides complexity).
+  ├── dumps/                <- [configurable] Database dump files (git-ignored).
+  ├── web/                  <- [configurable] The app dir - can be outside project dir ($APP_DOCROOT).
   └── .gitignore            <- Replace with your own and/or edit.
 ```
