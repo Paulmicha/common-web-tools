@@ -8,7 +8,7 @@ WIP / not ready for use yet (re-organization + evaluation stage, documentation-d
 
 Scripts bash for usual devops tasks aimed at relatively small web projects.
 
-CWT is not a program; it's a generic, customizable "glue" between programs. Simple, loosely articulated wrapper scripts.
+CWT is not a program; it's a generic, customizable "glue" between programs. Simple, loosely articulated bash script fragments.
 
 ## PURPOSE
 
@@ -81,18 +81,26 @@ See section *Frequent tasks (howtos / FAQ)* for details.
 
 ## File structure
 
+CWT is under construction. Folders might still move around depending on its use, until I feel it can start proper versionning. Consider this repo a scratchpad for now.
+
+CWT essentially relies on a relative global namepace. Its creation process involves building it "on the fly" in other side projects in which each step listed above (*Next steps*) is achieved by specific, custom scripts placed in a different `scripts` dir alongside `cwt` in `PROJECT_DOCROOT`.
+
+Ultimately, it should not compete with other projects (and I couldn't find a better word than "glue" for now, sorry).
+
+This section illustrates a minimalist approach to organizational problems. It's still under study. Long-term considerations involve code generators, IEML, and the relationship between philosophy and programming ("naming things", "no language exists in isolation"). Short-term : makefile integration ?
+
+The file structure follows naming conventions. Typically facts, actions, subjects are used to categorize fragments of bash scripts meant to be sourced directly inside custom scripts (not included in the CWT project).
+
 ```txt
 /path/to/project/           ← Project root dir ($PROJECT_DOCROOT).
   ├── cwt/
-  │   ├── app/              ← App setup / watch / (re)build scripts.
-  │   ├── custom/
-  │   │   ├── complements/  ← [optional] Add your custom script complements here (see "Autoload").
-  │   │   └── overrides/    ← [optional] Add your custom script overrides here (see "Autoload").
-  │   ├── db/               ← Database-related scripts.
-  │   ├── env/              ← Environment settings write / load scripts.
+  │   ├── app/              ← App init / (re)build / watch fragments.
+  │   ├── custom/           ← [configurable] default "modules" dir (complements, overrides, hooks)
+  │   ├── db/               ← Database-related fragments.
+  │   ├── env/              ← Environment settings fragments (global variables).
   │   │   └── current/      ← Generated settings specific to local instance (git-ignored).
-  │   ├── git/
-  │   │   └── hooks/        ← Entry points for auto-exec tests, code linting, etc.
+  │   ├── git/              ← Versionning-related fragments.
+  │   │   └── hooks/        ← Entry points for auto-exec (tests, code linting, etc.)
   │   ├── provision/        ← Host-level dependencies setup scripts.
   │   ├── remote/           ← Remote operations scripts (add, provision, etc.)
   │   │   └── deploy/       ← Deployment-related scripts.
@@ -106,14 +114,14 @@ See section *Frequent tasks (howtos / FAQ)* for details.
 
 ## Frequent tasks (howtos / FAQ)
 
-Unless otherwise stated, all the examples below are to be run on *local* host from `/path/to/project/` as sudo or root.
+Unless otherwise stated, all the examples below are to be run on *local* host from `PROJECT_DOCROOT` as sudo or root (i.e. for host provisioning support).
 
-**NB** : Currently, no exit codes are used in any top-level entry points listed below. These scripts (and all those sourced in the "main shell") use `return` instead of `exit`.
+**NB** : Currently, no exit codes are used in any top-level entry points listed below. These scripts (and all those sourced in the "main shell") use `return` instead of `exit`. CWT attempts to follow [Google's Shell Style Guide](https://google.github.io/styleguide/shell.xml) where possible.
 
-Regarding ways to alter the execution of existing scripts and/or its order, the pattern "Autoload" usually means :
+Regarding ways to alter existing scripts, [the pattern "Autoload"](https://paulmicha.github.io/common-web-tools/about/patterns.html) usually means :
 
-- Use `return` when working in the main shell scope - i.e. in your custom scripts autoloaded from `cwt/custom/overrides` and `cwt/custom/complements`
 - Wrap customizations in functions or subshells
+- Use `return` when working in the main shell scope - i.e. in your custom scripts autoloaded from `cwt/custom/overrides` and `cwt/custom/complements`
 
 ### Initialize local instance env settings
 
