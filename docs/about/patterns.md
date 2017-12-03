@@ -34,7 +34,7 @@ Notably used in:
 - `cwt/stack/init.sh`
 - `cwt/utilities/hook.sh`
 
-This pattern should not prevent CWT to co-exist alongside existing tools [and/or Bash projects](https://github.com/awesome-lists/awesome-bash).
+This pattern should not prevent CWT to co-exist alongside [existing tools](https://paulmicha.github.io/common-web-tools/about/tools-considerations.html) and/or [Bash projects](https://github.com/awesome-lists/awesome-bash).
 
 ## Folders & files naming
 

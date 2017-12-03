@@ -9,8 +9,6 @@ Notable alteration/extension entry points :
 - `cwt/bash_utils.sh`
 - `cwt/stack/init.sh`
 
-WIP note : **complements** may be removed and be replaced by **hooks**.
-
 ## Complements
 
 Given any bash include (sourced script fragment), the **complement** pattern simply attempts to include another corresponding file. The correspondance matches the relative path from `$PROJECT_DOCROOT/cwt` in `$CWT_CUSTOM_DIR` : if the complementary file exists, it is included (sourced) right where `u_autoload_get_complement()` is called.
