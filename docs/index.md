@@ -8,38 +8,28 @@
     1. [Overview](about/overview.md)
     1. [Patterns](about/patterns.md)
     1. [Conventions](about/conventions.md)
-    1. [Alter / Extend CWT](about/alter_extend.md)
     1. [Tools considerations](about/tools_considerations.md)
-    1. Serverless / decentralized projects (de-siloing techs)
 1. Using CWT
     1. [Getting started](usage/getting-started.md)
-        1. [Environment settings](usage/environment-settings.md)
-        1. Remote operations
-    1. [Provisioning (install host-level dependencies)](usage/tasks.md#install-host-level-dependencies)
-        1. Locally
-        1. Remotely
-    1. Manage host services
-        1. Locally
-        1. Remotely
-    1. Initialize project instance
-        1. Locally
-        1. Remotely
+    1. [Instance init (environment settings)](usage/environment-settings.md)
+    1. [Host provision (install software dependencies)](usage/tasks.md#install-host-level-dependencies)
     1. Testing
         1. CWT tasks
         1. Projects
-            1. Locally
-            1. Remotely
-    1. Deploying
-        1. Using Git
-        1. Using Webhooks
-        1. Other tools
-    1. Synchronizing
-        1. Local to remote
-        1. Remote to local
-1. Productivity helpers
-    1. CWT usage examples / case studies
-    1. Snippets
-        1. [Bash](snippets/bash.md)
+    1. Remote
+        1. Getting started (add remote)
+        1. Instance init (environment settings)
+        1. Host provision (install software dependencies)
+        1. Deploying
+            1. Using Git
+            1. Using Webhooks
+            1. Other tools
+        1. Synchronizing
+            1. Local to remote
+            1. Remote to local
+    1. Serverless / decentralized projects (de-siloing techs)
+1. [Alter / Extend CWT](about/alter_extend.md)
+1. CWT usage examples / case studies
 
 ## About documentation
 
