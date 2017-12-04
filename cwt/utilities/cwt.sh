@@ -44,7 +44,8 @@ u_cwt_trigger() {
 # u_autoload_override() or u_hook() + u_hook_${CWT_SUBJECTS} every time we need
 # those includes.
 #
-# This could theoretically allow "modules" by temporarily switching current
+# This could theoretically allow self-contained "presets" (bunch of includes
+# loosely bundled in a single dir) by temporarily prefixing current (main)
 # shell's relative file path.
 #
 # u_cwt_preset_wrapper() {

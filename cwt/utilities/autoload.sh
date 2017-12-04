@@ -10,6 +10,23 @@
 #
 
 ##
+# Autoloads all matching includes.
+#
+u_autoload_all_includes() {
+  # [wip] TODO.
+  echo "debug u_autoload_all_includes() : $@"
+  u_hook "$@"
+}
+
+##
+# Autoloads the most "specific" include only.
+#
+u_autoload_most_specific_include() {
+  # [wip] TODO.
+  echo "debug u_autoload_most_specific_include() : $@"
+}
+
+##
 # Adds n+1 lookup paths in same dir, with or without version suffix.
 #
 # Allows specific overrides without adding extra depth in dir structure.
