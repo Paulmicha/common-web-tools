@@ -34,20 +34,26 @@ export P_PROVISION_USING
 export P_DEPLOY_USING
 export P_CWT_MODE
 export P_CWT_CUSTOM_DIR
+
 export P_YES
 export P_VERBOSE
 
 # Make sure any previously set globals cannot interfere by resetting them.
 unset P_PROJECT_STACK
+
 unset P_PROJECT_DOCROOT
 unset P_APP_DOCROOT
 unset P_APP_GIT_ORIGIN
 unset P_APP_GIT_WORK_TREE
 unset P_INSTANCE_TYPE
 unset P_INSTANCE_DOMAIN
+
 unset P_HOST_TYPE
 unset P_PROVISION_USING
 unset P_DEPLOY_USING
+unset P_CWT_MODE
+unset P_CWT_CUSTOM_DIR
+
 P_YES=0
 P_VERBOSE=0
 
@@ -67,6 +73,7 @@ while [ "$#" -gt 0 ]; do
     -e) P_DEPLOY_USING="$2"; shift 2;;
     -m) P_CWT_MODE="$2"; shift 2;;
     -c) P_CWT_CUSTOM_DIR="$2"; shift 2;;
+
     -y) P_YES=1; shift 1;;
     -v) P_VERBOSE=1; shift 1;;
 

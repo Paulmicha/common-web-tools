@@ -47,6 +47,7 @@ u_cwt_trigger() {
 # This could theoretically allow self-contained "presets" (bunch of includes
 # loosely bundled in a single dir) by temporarily prefixing current (main)
 # shell's relative file path.
+# + simple lists ("piles" of CWT_SUBJECTS) -> implement offset or index ?
 #
 # u_cwt_preset_wrapper() {
 # }

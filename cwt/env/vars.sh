@@ -31,9 +31,9 @@ global REG_BACKEND "[default]=file"
 # TODO else consider using a separate store for secrets, see cwt/env/README.md.
 # global SECRETS_BACKEND
 
-global CWT_CUSTOM_DIR "[default]=cwt/custom"
+# [wip] TODO streamline lookup paths (reuse abstraction in hooks, globals and deps).
+global CWT_SUBJECTS 'app env git provision remote stack service task worker logger cwt'
+global CWT_ACTIONS 'bootstrap init load reload unload install reinstall uninstall build rebuild start restart stop add remove process trigger watch compile test plan delay deploy destroy'
+global CWT_HOOK_TYPES 'pre post'
 
-# TODO streamline lookup paths (reuse abstraction in hooks, globals and deps).
-# global CWT_SUBJECTS 'app env git provision remote stack'
-# global CWT_ACTIONS 'bootstrap load make build rebuild start restart stop deploy destroy process'
-# global CWT_HOOK_TYPES 'pre post'
+global CWT_CUSTOM_DIR "[default]=cwt/custom"

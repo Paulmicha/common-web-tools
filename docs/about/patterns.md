@@ -46,10 +46,12 @@ This pattern should not prevent CWT to co-exist alongside [existing tools](https
 
 The general principle is : *file structure* should indicate `subject` + `intent`.
 
-Folders are used to imbricate tasks (actions) by subject first, then action and/or fact(s) and/or preset(s) and/or [semver convention](https://semver.org/) are used to name files where appropriate. See [environment settings](https://paulmicha.github.io/common-web-tools/about/environment-settings.html) and [alter / extend](https://paulmicha.github.io/common-web-tools/about/alter_extend.html).
+Folders are used to imbricate tasks by subject first, then action and/or fact(s) and/or preset(s) and/or [semver convention](https://semver.org/) are used to name files where appropriate. See [environment settings](https://paulmicha.github.io/common-web-tools/about/environment-settings.html) and [alter / extend](https://paulmicha.github.io/common-web-tools/about/alter_extend.html).
 
 TODO (missing documentation) For filenames syntax, see conventions / **double extension pattern**.
 
 Given CWT's minimalist ambition, dir/file naming could be just a principle not strictly followed.
+
+TODO (missing documentation) see *Recursion (flexibility in lookup paths)*.
 
 The only pattern is depth level : **deeper = more specific**.
