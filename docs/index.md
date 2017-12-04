@@ -6,15 +6,21 @@
 
 1. About CWT
     1. [Overview](about/overview.md)
+    1. [Tools considerations](about/tools_considerations.md)
+    1. [Autoload](about/autoload.md)
+    1. [Globals](about/globals.md)
     1. [Patterns](about/patterns.md)
     1. [Conventions](about/conventions.md)
-    1. [Tools considerations](about/tools_considerations.md)
 1. Using CWT
     1. [Getting started](usage/getting-started.md)
     1. [Instance init (environment settings)](usage/environment-settings.md)
-    1. [Host provision (install software dependencies)](usage/tasks.md#install-host-level-dependencies)
+    1. [Host provisioning (install software dependencies)](usage/tasks.md#install-host-level-dependencies)
+    1. Compilation / watch (+ makefiles ?)
+    1. Generating
+        1. CWT code
+        1. Projects
     1. Testing
-        1. CWT tasks
+        1. CWT itself
         1. Projects
     1. Remote
         1. Getting started (add remote)
