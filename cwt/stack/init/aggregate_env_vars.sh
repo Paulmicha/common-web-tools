@@ -4,7 +4,7 @@
 # Aggregates env vars.
 #
 # This process consists in :
-# - including any existing matching models
+# - including any existing matching includes
 # - exporting each variable defined in them as global
 # - assigning their value - either by terminal prompt, or a default values if
 #   no matching argument is found
@@ -12,13 +12,13 @@
 # @see cwt/stack/init.sh
 #
 
-u_env_models_get_lookup_paths
+u_env_includes_get_lookup_paths
 
 if [[ $P_VERBOSE == 1 ]]; then
-  u_autoload_print_lookup_paths ENV_MODELS_PATHS "Env models"
+  u_autoload_print_lookup_paths ENV_INCLUDES_PATHS "Env includes"
 fi
 
-for env_model in "${ENV_MODELS_PATHS[@]}"; do
+for env_model in "${ENV_INCLUDES_PATHS[@]}"; do
   if [[ -f "$env_model" ]]; then
     . "$env_model"
   fi

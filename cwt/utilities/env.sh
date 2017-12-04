@@ -119,7 +119,7 @@ u_assign_env_value() {
 # @see cwt/stack/init.sh
 # @see cwt/stack/init/aggregate_env_vars.sh
 #
-# For better readability in env models files, we exceptionally name that
+# For better readability in env includes files, we exceptionally name that
 # function without following the usual convention.
 #
 # @examples (write)
@@ -262,7 +262,7 @@ u_print_env() {
 }
 
 ##
-# Gets env settings models lookup paths.
+# Gets env settings includes lookup paths.
 #
 # @param 1 [optional] String :
 #   $PROJECT_STACK override (should exist in calling scope).
@@ -280,16 +280,16 @@ u_print_env() {
 # @see cwt/stack/init/aggregate_env_vars.sh
 #
 # @example
-#   u_env_models_get_lookup_paths 'drupal-7--p-opigno,solr,memcached' 'docker-compose-3'
-#   for env_model in "${ENV_MODELS_PATHS[@]}"; do
+#   u_env_includes_get_lookup_paths 'drupal-7--p-opigno,solr,memcached' 'docker-compose-3'
+#   for env_model in "${ENV_INCLUDES_PATHS[@]}"; do
 #     echo "$env_model"
 #   done
 #
-u_env_models_get_lookup_paths() {
+u_env_includes_get_lookup_paths() {
   local p_project_stack="$1"
   local p_provision_using="$2"
 
-  export ENV_MODELS_PATHS
+  export ENV_INCLUDES_PATHS
 
   local stack
   if [[ -n "$p_project_stack" ]]; then
@@ -305,7 +305,7 @@ u_env_models_get_lookup_paths() {
     provisioning="$PROVISION_USING"
   fi
 
-  ENV_MODELS_PATHS=()
+  ENV_INCLUDES_PATHS=()
 
   if [[ -n "$APP_VERSION" ]]; then
     local app_v
@@ -314,7 +314,7 @@ u_env_models_get_lookup_paths() {
     u_str_split1 app_version_arr "$APP_VERSION" '.'
   fi
 
-  # Provisioning-related models.
+  # Provisioning-related includes.
   local p
   local p_arr=()
   u_env_item_split_version p_arr "$PROVISION_USING"
@@ -322,28 +322,28 @@ u_env_models_get_lookup_paths() {
     local p_v
     local p_path="cwt/provision/${p_arr[0]}"
     local p_version_arr=()
-    u_array_add_once "$p_path/vars.sh" ENV_MODELS_PATHS
+    u_array_add_once "$p_path/vars.sh" ENV_INCLUDES_PATHS
     u_str_split1 p_version_arr "${p_arr[1]}" '.'
     for p_v in "${p_version_arr[@]}"; do
       p_path+="/$p_v"
-      u_array_add_once "$p_path/vars.sh" ENV_MODELS_PATHS
+      u_array_add_once "$p_path/vars.sh" ENV_INCLUDES_PATHS
     done
   else
-    u_array_add_once "cwt/provision/${PROVISION_USING}/vars.sh" ENV_MODELS_PATHS
+    u_array_add_once "cwt/provision/${PROVISION_USING}/vars.sh" ENV_INCLUDES_PATHS
   fi
 
   local ss_arr=()
   for stack_service in "${STACK_SERVICES[@]}"; do
     u_env_item_split_version ss_arr "$stack_service"
     if [[ -n "${ss_arr[1]}" ]]; then
-      u_env_models_lookup_version "cwt/provision/${ss_arr[0]}" "${ss_arr[1]}" true
+      u_env_includes_lookup_version "cwt/provision/${ss_arr[0]}" "${ss_arr[1]}" true
     else
-      u_array_add_once "cwt/provision/${stack_service}/vars.sh" ENV_MODELS_PATHS
-      u_autoload_add_lookup_level "cwt/provision/${stack_service}/" 'vars.sh' "$PROVISION_USING" ENV_MODELS_PATHS
+      u_array_add_once "cwt/provision/${stack_service}/vars.sh" ENV_INCLUDES_PATHS
+      u_autoload_add_lookup_level "cwt/provision/${stack_service}/" 'vars.sh' "$PROVISION_USING" ENV_INCLUDES_PATHS
     fi
   done
 
-  # Presets-related models.
+  # Presets-related includes.
   local sp_arr=()
   local sp_type
   local sp_types='provision app custom'
@@ -352,26 +352,26 @@ u_env_models_get_lookup_paths() {
     u_env_item_split_version sp_arr "$stack_preset"
     if [[ -n "${sp_arr[1]}" ]]; then
       for sp_type in $sp_types; do
-        u_env_models_lookup_version "cwt/$sp_type/presets/${sp_arr[0]}" "${sp_arr[1]}" true
+        u_env_includes_lookup_version "cwt/$sp_type/presets/${sp_arr[0]}" "${sp_arr[1]}" true
       done
     else
       for sp_type in $sp_types; do
-        u_array_add_once "cwt/$sp_type/presets/${stack_preset}/vars.sh" ENV_MODELS_PATHS
-        u_autoload_add_lookup_level "cwt/$sp_type/presets/${stack_preset}/" 'vars.sh' "$PROVISION_USING" ENV_MODELS_PATHS
+        u_array_add_once "cwt/$sp_type/presets/${stack_preset}/vars.sh" ENV_INCLUDES_PATHS
+        u_autoload_add_lookup_level "cwt/$sp_type/presets/${stack_preset}/" 'vars.sh' "$PROVISION_USING" ENV_INCLUDES_PATHS
       done
     fi
   done
 
-  # App-related models.
-  u_array_add_once "cwt/app/${APP}/env.vars.sh" ENV_MODELS_PATHS
-  u_autoload_add_lookup_level "cwt/app/${APP}/env." 'vars.sh' "$PROVISION_USING" ENV_MODELS_PATHS
+  # App-related includes.
+  u_array_add_once "cwt/app/${APP}/env.vars.sh" ENV_INCLUDES_PATHS
+  u_autoload_add_lookup_level "cwt/app/${APP}/env." 'vars.sh' "$PROVISION_USING" ENV_INCLUDES_PATHS
 
   if [[ -n "$APP_VERSION" ]]; then
     app_path="cwt/app/$APP"
     for app_v in "${app_version_arr[@]}"; do
       app_path+="/$app_v"
-      u_array_add_once "$app_path/env.vars.sh" ENV_MODELS_PATHS
-      u_autoload_add_lookup_level "$app_path/env." 'vars.sh' "$PROVISION_USING" ENV_MODELS_PATHS
+      u_array_add_once "$app_path/env.vars.sh" ENV_INCLUDES_PATHS
+      u_autoload_add_lookup_level "$app_path/env." 'vars.sh' "$PROVISION_USING" ENV_INCLUDES_PATHS
     done
   fi
 }
@@ -379,9 +379,9 @@ u_env_models_get_lookup_paths() {
 ##
 # Appends version number lookups.
 #
-# @see u_env_models_get_lookup_paths()
+# @see u_env_includes_get_lookup_paths()
 #
-u_env_models_lookup_version() {
+u_env_includes_lookup_version() {
   local p_prefix="$1"
   local p_version="$2"
   local p_prepend_raw="$3"
@@ -391,8 +391,8 @@ u_env_models_lookup_version() {
   local version_arr=()
 
   if [[ "$p_prepend_raw" == true ]]; then
-    u_array_add_once "$path/vars.sh" ENV_MODELS_PATHS
-    u_autoload_add_lookup_level "$path/" 'vars.sh' "$PROVISION_USING" ENV_MODELS_PATHS
+    u_array_add_once "$path/vars.sh" ENV_INCLUDES_PATHS
+    u_autoload_add_lookup_level "$path/" 'vars.sh' "$PROVISION_USING" ENV_INCLUDES_PATHS
   fi
 
   u_str_split1 version_arr "$p_version" '.'
@@ -400,10 +400,10 @@ u_env_models_lookup_version() {
     path+="/$v"
 
     if [[ "$p_prepend_raw" == true ]]; then
-      u_array_add_once "$path/vars.sh" ENV_MODELS_PATHS
+      u_array_add_once "$path/vars.sh" ENV_INCLUDES_PATHS
     fi
 
-    u_autoload_add_lookup_level "$path/" 'vars.sh' "$PROVISION_USING" ENV_MODELS_PATHS
+    u_autoload_add_lookup_level "$path/" 'vars.sh' "$PROVISION_USING" ENV_INCLUDES_PATHS
   done
 }
 

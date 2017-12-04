@@ -43,23 +43,23 @@ Ultimately, it should not compete with [other projects](https://paulmicha.github
 
 This section illustrates a minimalist approach to organizational problems. It's still under study. Long-term considerations involve code generators, IEML, and the relationship between philosophy and programming ("naming things", "no language exists in isolation" - i.e. [schema.org](http://schema.org/docs/full.html)). Short-term : makefile integration ?
 
-The file structure follows [loose naming and folder structure conventions](https://paulmicha.github.io/common-web-tools/about/patterns.html). Typically facts, actions, subjects are used to categorize fragments of bash scripts meant to be sourced directly inside custom scripts (not included in the CWT project).
+The file structure follows [loose naming and folder structure conventions](https://paulmicha.github.io/common-web-tools/about/patterns.html). Typically facts, actions, subjects are used to categorize includes of bash scripts meant to be sourced directly inside custom scripts (not included in the CWT project).
 
 ```txt
 /path/to/project/           <- Project root dir ($PROJECT_DOCROOT).
   ├── cwt/
-  │   ├── app/              <- [WIP] App init / (re)build / watch fragments.
+  │   ├── app/              <- [WIP] App init / (re)build / watch includes.
   │   ├── custom/           <- [configurable] default "modules" dir (alter or extend CWT. $CWT_CUSTOM_DIR).
-  │   ├── db/               <- [WIP] Database-related fragments.
-  │   ├── env/              <- Environment settings fragments (global variables).
+  │   ├── db/               <- [WIP] Database-related includes.
+  │   ├── env/              <- Environment settings includes (global variables).
   │   │   └── current/      <- Generated settings specific to local instance (git-ignored).
-  │   ├── git/              <- Versionning-related fragments.
+  │   ├── git/              <- Versionning-related includes.
   │   │   └── hooks/        <- [WIP] Entry points for auto-exec (tests, code linting, etc.)
-  │   ├── provision/        <- [WIP] Host-level dependencies related fragments (softwares setup).
-  │   ├── remote/           <- [TODO] Remote operations fragments (add, provision, etc.)
-  │   │   └── deploy/       <- [TODO] Deployment-related fragments.
-  │   ├── stack/            <- [WIP] Services and/or workers management fragments.
-  │   ├── test/             <- [TODO] Automated tests related fragments.
+  │   ├── provision/        <- [WIP] Host-level dependencies related includes (softwares setup).
+  │   ├── remote/           <- [TODO] Remote operations includes (add, provision, etc.)
+  │   │   └── deploy/       <- [TODO] Deployment-related includes.
+  │   ├── stack/            <- [WIP] Services and/or workers management includes.
+  │   ├── test/             <- [TODO] Automated tests related includes.
   │   │   └── self/         <- [TODO] CWT internal tests.
   │   └── utilities/        <- CWT internal functions (hides complexity).
   ├── dumps/                <- [configurable] Database dump files (git-ignored).

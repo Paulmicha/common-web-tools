@@ -20,15 +20,15 @@ The very first step required to use CWT is writing current instance's env settin
 This process generates a single file (`cwt/env/current/vars.sh`) by assembling 2 types of files :
 
 1. dependency files - purpose : aggregate host-level *services* (or softwares) dependencies;
-1. env files called config or env *models* - purpose : aggregate env settings (global variables) necessary for configuring the local project instance and its services.
+1. env files called config or env *includes* - purpose : aggregate env settings (global variables) necessary for configuring the local project instance and its services.
 
 Aggregation will include (or more precisely - load using bash `source` command) the more generic files first, then gradually the more specific ones, each file allowing to provide its own customization. See *complements* documentation at `cwt/custom/complements/README.md`.
 
-CWT provides a few example project dependencies and env models, but its purpose is to be useful for your specific project(s). So the reason this process is detailed here is to better understand how to provide your own custom declarations.
+CWT provides a few example project dependencies and env includes, but its purpose is to be useful for your specific project(s). So the reason this process is detailed here is to better understand how to provide your own custom declarations.
 
 ## Project stack syntax
 
-The `$PROJECT_STACK` variable is the main source used to determine all the possibilities of file names and paths that can be loaded during stack init (the *lookup paths*). The following rules apply to both types of dynamically generated lookup paths (dependencies and env models) :
+The `$PROJECT_STACK` variable is the main source used to determine all the possibilities of file names and paths that can be loaded during stack init (the *lookup paths*). The following rules apply to both types of dynamically generated lookup paths (dependencies and env includes) :
 
 - version numbers are extracted after the last `-` and may use dots to indicate minor and/or patch versions
 - variants are indicated after the "name" part of any declaration (project stack, software, etc.) by using 2 dashes `--`
@@ -205,9 +205,9 @@ cwt/app/drupal/7/dev.ansible-2.local_host.dependencies.sh
 
 Env settings are global variables used to configure the local project instance and its services. Every time `cwt/stack/init.sh` is called, current instance's env file is (over)written.
 
-### Env models syntax
+### Env includes syntax
 
-Files declaring env models are named `*vars.sh`, and use the following syntax :
+Files declaring env includes are named `*vars.sh`, and use the following syntax :
 
 ```sh
 # Basic usage.
@@ -264,17 +264,17 @@ u_exec_foreach_env_vars u_assign_env_value
 u_print_env
 ```
 
-### Env models aggregation
+### Env includes aggregation
 
 The way this process works is :
 
 - get `$PROJECT_STACK` value (see examples below) and `$PROVISION_USING` value - if not provided in `cwt/stack/init.sh` arguments
 - add the common, generic `cwt/env/vars.sh` model
-- assemble all models found (*lookup paths*)
+- assemble all includes found (*lookup paths*)
 - assign values to the variables they contain by using terminal prompts - if not provided (or instructed to always use default values) in `cwt/stack/init.sh` arguments
 - write the result to `cwt/env/current/vars.sh`
 
-Here's a "stack init" example listing its corresponding env models lookup paths. They represent all possibilities matching the `$PROJECT_STACK` and provisioning method (`$PROVISION_USING`).
+Here's a "stack init" example listing its corresponding env includes lookup paths. They represent all possibilities matching the `$PROJECT_STACK` and provisioning method (`$PROVISION_USING`).
 
 Any existing file is included (sourced) in the order indicated, each one allowing to provide its own customization. See *complements* documentation at `cwt/custom/complements/README.md`.
 
@@ -282,7 +282,7 @@ Any existing file is included (sourced) in the order indicated, each one allowin
 # Calling stack init with these parameters :
 . cwt/stack/init.sh -s drupal--p-contenta-1,redis,varnish-4,solr-5.5 -y
 
-# ... yields these corresponding env models lookup paths :
+# ... yields these corresponding env includes lookup paths :
 cwt/provision/docker-compose/vars.sh
 cwt/provision/redis/vars.sh
 cwt/provision/redis/docker-compose.vars.sh

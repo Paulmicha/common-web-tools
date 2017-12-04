@@ -23,7 +23,7 @@ Briefly explains basic architectural aspects of CWT.
     - relies on global antipattern (See *Systematic sourcing from project root dir*)
     - wasteful performance-wise
     - no accidental infinite recursion prevention
-    - potentially excessive fragmentation / over-abstracting / over-engineering (YAGNI)
+    - potentially excessive includeation / over-abstracting / over-engineering (YAGNI)
 - **How to mitigate**:
     - [TODO] Provide [CWT self tests](https://github.com/sstephenson/bats) in `cwt/test/self`
     - Elements indicated in *Systematic sourcing from project root dir* apply here too
@@ -38,6 +38,12 @@ This pattern should not prevent CWT to co-exist alongside [existing tools](https
 
 ## Folders & files naming
 
+- **Purpose**:
+    - Less hesitation
+    - Self-explanation
+- **Caveat**: Identic file names in different folders, see [this article about JS component-oriented file structure](https://hackernoon.com/the-100-correct-way-to-structure-a-react-app-or-why-theres-no-such-thing-3ede534ef1ed)
+- **How to mitigate**: Not much, really... Brievety is favored over the downside mentioned above, because of the explicit reliance on (file) **tree**.
+
 The general principle is : *file structure* should indicate `subject` + `intent`.
 
 Folders are used to imbricate tasks (actions) by subject first, then action and/or fact(s) and/or preset(s) and/or [semver convention](https://semver.org/) are used to name files where appropriate. See [environment settings](https://paulmicha.github.io/common-web-tools/about/environment-settings.html) and [alter / extend](https://paulmicha.github.io/common-web-tools/about/alter_extend.html).
@@ -47,8 +53,3 @@ TODO (missing documentation) For filenames syntax, see conventions / **double ex
 Given CWT's minimalist ambition, dir/file naming could be just a principle not strictly followed.
 
 The only pattern is depth level : **deeper = more specific**.
-
-- **Purpose**:
-    - Less hesitation
-    - Self-explanation
-- **Caveat**: Identic file names in different folders, see [this article about JS component-oriented file structure](https://hackernoon.com/the-100-correct-way-to-structure-a-react-app-or-why-theres-no-such-thing-3ede534ef1ed)

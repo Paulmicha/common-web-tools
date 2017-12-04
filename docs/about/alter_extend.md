@@ -11,7 +11,7 @@ Notable alteration/extension entry points :
 
 ## Complements
 
-Given any bash include (sourced script fragment), the **complement** pattern simply attempts to include another corresponding file. The correspondance matches the relative path from `$PROJECT_DOCROOT/cwt` in `$CWT_CUSTOM_DIR` : if the complementary file exists, it is included (sourced) right where `u_autoload_get_complement()` is called.
+Given any bash include (sourced script include), the **complement** pattern simply attempts to include another corresponding file. The correspondance matches the relative path from `$PROJECT_DOCROOT/cwt` in `$CWT_CUSTOM_DIR` : if the complementary file exists, it is included (sourced) right where `u_autoload_get_complement()` is called.
 
 Simple example from `cwt/bash_utils.sh` :
 
@@ -30,7 +30,7 @@ TODO
 
 Same as the **complement** pattern, but this only includes the corresponding file :
 
-Given any bash include (sourced script fragment), the **override** pattern attempts to include another corresponding file. The correspondance matches the relative path from `$PROJECT_DOCROOT/cwt` in `$CWT_CUSTOM_DIR` : if the overriding file exists, it is included (sourced) instead.
+Given any bash include (sourced script include), the **override** pattern attempts to include another corresponding file. The correspondance matches the relative path from `$PROJECT_DOCROOT/cwt` in `$CWT_CUSTOM_DIR` : if the overriding file exists, it is included (sourced) instead.
 
 Example in `cwt/git/apply_config.sh` :
 

@@ -15,12 +15,12 @@
 # Allows specific overrides without adding extra depth in dir structure.
 #
 # @see u_stack_deps_get_lookup_paths()
-# @see u_env_models_get_lookup_paths()
+# @see u_env_includes_get_lookup_paths()
 # @see cwt/stack/init/aggregate_env_vars.sh
 #
 # @example
 #   u_autoload_add_lookup_level "cwt/app/$APP/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS
-#   u_autoload_add_lookup_level "cwt/app/$APP/env." 'vars.sh' "$PROVISION_USING" ENV_MODELS_PATHS
+#   u_autoload_add_lookup_level "cwt/app/$APP/env." 'vars.sh' "$PROVISION_USING" ENV_INCLUDES_PATHS
 #
 u_autoload_add_lookup_level() {
   local p_prefix="$1"
@@ -76,7 +76,7 @@ u_autoload_add_lookup_level() {
 #
 # @example
 #   u_autoload_print_lookup_paths DEPS_LOOKUP_PATHS "App dependencies"
-#   u_autoload_print_lookup_paths ENV_MODELS_PATHS "Env models"
+#   u_autoload_print_lookup_paths ENV_INCLUDES_PATHS "Env includes"
 #
 u_autoload_print_lookup_paths() {
   local p_arr=${1}[@]
@@ -112,7 +112,7 @@ u_autoload_print_lookup_paths() {
 #
 # Another use is to break a lookup loop if a replacement exists.
 # @example
-#   for prov_model in "${PROV_MODELS_LOOKUP_PATHS[@]}"; do
+#   for prov_model in "${PROV_INCLUDES_LOOKUP_PATHS[@]}"; do
 #     if [[ -f "$prov_model" ]]; then
 #       eval $(u_autoload_override "$prov_model" 'continue')
 #       # (snip) default exec goes here.

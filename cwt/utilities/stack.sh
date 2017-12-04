@@ -145,7 +145,6 @@ u_stack_get_part() {
 # Dependencies specify all services (or softwares) required to run the current
 # project instance(s). They are used to list what will be provisioned on hosts.
 #
-# They are declared in files dynamically loaded in a similar way than env models.
 # See cwt/env/README.md
 #
 # @param 1 String : the $PROJECT_STACK value.
