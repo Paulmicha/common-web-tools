@@ -44,7 +44,7 @@ ENV_VARS_COUNT=0
 ENV_VARS_UNIQUE_NAMES=()
 ENV_VARS_UNIQUE_KEYS=()
 
-# Get CWT globals required for aggregating dependencies and env vars.
+# Get CWT core globals required for aggregating dependencies and env vars.
 . cwt/env/vars.sh
 
 # Aggregate dependencies and env vars.
@@ -55,11 +55,11 @@ ENV_VARS_UNIQUE_KEYS=()
 . cwt/env/write.sh
 
 # Apply correct ownership and permissions.
-u_hook_app_call 'apply' 'ownership_and_perms' '' 'stack'
+u_hook_app 'apply' 'ownership_and_perms' '' 'stack'
 
 # Allow custom complements for this script.
 # TODO evaluate removal of the 'complement' customization method.
 u_autoload_get_complement "$BASH_SOURCE"
 
 # Trigger stack/post-init hook.
-u_hook_call 'stack' 'init' 'post'
+u_hook 'stack' 'init' 'post'

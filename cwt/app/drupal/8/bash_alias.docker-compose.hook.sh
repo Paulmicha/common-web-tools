@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##
-# Implements u_hook_app_call 'bash' 'alias'.
+# Implements u_hook_app 'bash' 'alias'.
 #
 # This file is dynamically included when the "hook" is triggered.
 #

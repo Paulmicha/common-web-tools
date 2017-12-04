@@ -30,5 +30,10 @@ fi
 # TODO evaluate removing 'registry' feature.
 . cwt/env/registry.sh
 
-# Load bash aliases.
-u_hook_app_call 'bash' 'alias'
+# Load app bash aliases.
+# TODO : would it make sense to load any aliases here (instead of just for app) ?
+# NB: aliases are not expanded when the shell is not interactive, unless the
+# expand_aliases shell option is set using shopt.
+# See https://unix.stackexchange.com/a/1498
+shopt -s expand_aliases
+u_hook_app 'bash' 'alias'

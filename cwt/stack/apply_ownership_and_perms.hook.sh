@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##
-# Implements u_hook_app_call 'apply' 'ownership_and_perms' '' 'stack'.
+# Implements u_hook_app 'apply' 'ownership_and_perms' '' 'stack'.
 #
 # This file is dynamically included when the "hook" is triggered.
 #

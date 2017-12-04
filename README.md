@@ -152,7 +152,7 @@ Example in `cwt/git/apply_config.sh` :
 eval $(u_autoload_override "$BASH_SOURCE")
 ```
 
-Example in `u_hook_call()` :
+Example in `u_hook()` :
 
 ```sh
 for hook_script in "${lookup_paths[@]}"; do

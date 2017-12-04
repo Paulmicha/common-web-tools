@@ -19,7 +19,7 @@
 # [wip] Refacto : rename hook call function.
 #
 # include_all() {
-#   u_hook_call "$@"
+#   u_hook "$@"
 # }
 
 ##
@@ -44,7 +44,7 @@
 #   PROJECT_STACK='drupal-8.4--p-contenta-1,redis,solr'
 #   PROVISION_USING='docker-compose'
 #
-#   u_hook_app_call 'apply' 'ownership_and_perms'
+#   u_hook_app 'apply' 'ownership_and_perms'
 #
 #   # Yields the following lookup paths :
 #     cwt/app/drupal/apply/ownership_and_perms.hook.sh
@@ -92,7 +92,7 @@
 #     cwt/custom/presets/contenta/1/apply_ownership_and_perms.hook.sh
 #     cwt/custom/presets/contenta/1/apply_ownership_and_perms.docker-compose.hook.sh
 #
-u_hook_app_call() {
+u_hook_app() {
   if [[ -z "$APP" ]]; then
     u_stack_get_specs "$PROJECT_STACK"
   fi
@@ -115,7 +115,7 @@ u_hook_app_call() {
     done
   fi
 
-  u_hook_call "$1" "$2" "$3" "$lookup_subjects"
+  u_hook "$1" "$2" "$3" "$lookup_subjects"
 }
 
 ##
@@ -134,7 +134,7 @@ u_hook_app_call() {
 #
 #   PROJECT_STACK='drupal-8.4--p-contenta-1,redis,solr'
 #   PROVISION_USING='docker-compose'
-#   u_hook_call 'stack' 'setup'
+#   u_hook 'stack' 'setup'
 #
 #   # Yields the following lookup paths :
 #     cwt/app/stack/setup.hook.sh
@@ -221,7 +221,7 @@ u_hook_app_call() {
 #
 #   PROJECT_STACK='drupal-8.4--p-contenta-1,redis,solr'
 #   PROVISION_USING='docker-compose'
-#   u_hook_call 'stack' 'init' 'post'
+#   u_hook 'stack' 'init' 'post'
 #
 #   # Yields the following lookup paths :
 #     cwt/app/stack/post_init.hook.sh
@@ -303,7 +303,7 @@ u_hook_app_call() {
 #     cwt/custom/presets/contenta/1/stack_post_init.hook.sh
 #     cwt/custom/presets/contenta/1/stack_post_init.docker-compose.hook.sh
 #
-u_hook_call() {
+u_hook() {
   local p_subject="$1"
   local p_event="$2"
   local p_phase="$3"
@@ -352,7 +352,7 @@ u_hook_call() {
 
   # Debug.
   if [[ $P_VERBOSE == 1 ]]; then
-    u_autoload_print_lookup_paths lookup_paths "u_hook_call $p_subject $p_event $p_phase $p_lookup_subjects"
+    u_autoload_print_lookup_paths lookup_paths "u_hook $p_subject $p_event $p_phase $p_lookup_subjects"
   fi
 
   local hook_script=''

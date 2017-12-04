@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##
-# Implements u_hook_call 'stack' 'init' 'post'.
+# Implements u_hook 'stack' 'init' 'post'.
 #
 # @requires the following variables in calling scope (main shell) :
 # @see cwt/env/current/vars.sh

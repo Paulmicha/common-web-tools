@@ -32,3 +32,8 @@ global REG_BACKEND "[default]=file"
 # global SECRETS_BACKEND
 
 global CWT_CUSTOM_DIR "[default]=cwt/custom"
+
+# TODO streamline lookup paths (reuse abstraction in hooks, globals and deps).
+# global CWT_SUBJECTS 'app env git provision remote stack'
+# global CWT_ACTIONS 'bootstrap load make build rebuild start restart stop deploy destroy process'
+# global CWT_HOOK_TYPES 'pre post'
