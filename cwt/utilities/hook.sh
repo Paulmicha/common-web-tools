@@ -16,6 +16,19 @@
 #
 
 ##
+# [wip] Refacto : rename hook call function.
+#
+# include_all() {
+#   u_hook_call "$@"
+# }
+
+##
+# [wip] introduce variant to only include most specific file ?
+#
+# include_most_specific() {
+# }
+
+##
 # Sources scripts for specific app.
 #
 # @requires the following global in calling scope :

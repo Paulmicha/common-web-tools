@@ -38,11 +38,15 @@ This pattern should not prevent CWT to co-exist alongside [existing tools](https
 
 ## Folders & files naming
 
-The general principle is : *file structure* should indicate intent. CWT's organization imbricates tasks (actions) by subject and/or fact(s) and/or preset(s), and the [semver convention](https://semver.org/) where appropriate.
+The general principle is : *file structure* should indicate `subject` + `intent`.
 
-Given CWT's minimalist ambition, dir/file naming could be just a principle.
+Folders are used to imbricate tasks (actions) by subject first, then action and/or fact(s) and/or preset(s) and/or [semver convention](https://semver.org/) are used to name files where appropriate. See [environment settings](https://paulmicha.github.io/common-web-tools/about/environment-settings.html) and [alter / extend](https://paulmicha.github.io/common-web-tools/about/alter_extend.html).
 
-The only pattern is depth level : **deeper = more specific**. Consider this a loose guideline to name folders, scripts or functions - also informing how to imbricate folders, and split / group / combine scripts (or includes).
+TODO (missing documentation) For filenames syntax, see conventions / **double extension pattern**.
+
+Given CWT's minimalist ambition, dir/file naming could be just a principle not strictly followed.
+
+The only pattern is depth level : **deeper = more specific**.
 
 - **Purpose**:
     - Less hesitation
