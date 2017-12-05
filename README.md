@@ -29,27 +29,35 @@ The approach here is to provide a minimal base for abstracting usual tasks while
 
 ## WHY
 
-To be more productive. To [standardize](https://imgs.xkcd.com/comics/standards.png) the use of common solutions for targeted use cases - see *purpose*.
+To be more productive. To easily test and quickly throw away what doesn't work. To [standardize](https://imgs.xkcd.com/comics/standards.png) the use of common solutions for targeted use cases - see *purpose*.
 
-Over the years, the maintenance of older projects can become tedious. For instance, when old VMs are deleted, it can be difficult to recreate a compatible local dev environment supporting all dependencies from that project "technological era".
-
-While tools like Ansible, `docker-compose` or `nvm` already address these concerns, adapting or integrating such projects to use these tools for common tasks requires some amount of work (or "glue").
-
-## What could an ideal solution look like ?
-
-Given targeted public - see *purpose*, experimental projects tend to be easily overrated. Yet productivity is relative and complex, so it might as well come down to questions like :
+Productivity (and simplicity) are relative and complex topics, so it might as well come down to questions like :
 
 - "does it look like I'll bother enough ?"
 - "what's there to gain ?"
 
-The plethora of tools available nowadays gives an outlook to what [decentralization](https://pierrelevyblog.com/2017/10/06/the-next-platform) means. It can seem titanesque to evaluate [existing tools](https://paulmicha.github.io/common-web-tools/about/tools-considerations.html), so patterns like *presets* (or *recipes*) / declarative approaches (i.e. `*.yml` files) could be concepts simple enough to quickly "get".
+While tools like Ansible, `docker-compose` or `nvm` already address these concerns, adapting or integrating such projects to use these tools for common tasks requires some amount of work (or "glue").
 
-The ideal solution would be measured in cognitive ressource, I think. How quickly do I get these problems of the way, *everytime* ?
+"*[...] There are core parts of the technology that deliver most of the value / differentiator, and these are important to get right. There’s usually then a bunch of other software and services which is more like scaffolding; **you have it around in order to get stuff done**.*
+*[...] “Mash-up” shouldn’t be a dirty hackfest concept.*"
 
-In short : apply focus on language and communication - that's the ultimate goal.
+-- From Alex Hudson's article (2017/10/14) : [Software architecture is failing](https://www.alexhudson.com/2017/10/14/software-architecture-failing/)
 
-**NB** [wip] : consider this repo a scratchpad.
-TODO sketch out ideas.
+See also RDX's article from 2016/07/20 : [Modern Software Over-Engineering Mistakes](https://medium.com/@rdsubhas/10-modern-software-engineering-mistakes-bc67fbef4fc8).
+
+## What could an ideal solution look like ?
+
+It can seem titanesque to evaluate many [tools available nowadays](https://paulmicha.github.io/common-web-tools/about/tools-considerations.html), so patterns like *presets* (or *recipes*) / declarative approaches (i.e. `*.yml` files) could be concepts simple enough to quickly "get".
+
+The ideal solution would be measured in cognitive ressource, I think. How do I quickly get these problems out of the way, *everytime* ?
+
+My current intuition of an "ideal" scaffolding tool is to apply focus on [language](https://pierrelevyblog.com/2017/10/06/the-next-platform) and communication - that's the ultimate goal.
+
+"*I want to hear from people pushing standard stuff beyond its limits. I think we grossly underestimate what off-the-shelf systems can do, and grossly overestimate the capabilities of the things we develop ourselves. It’s time to talk much more about real-world, practical, medium-enterprise software architecture.*
+
+*[...] Software development should be the tool of last resort: “we’re building this because it doesn’t exist in the form we need it”. I want to hear from more tech leaders about how they solved a problem without building the software, and tactics for avoiding development. [...] I want to hear more about projects that deferred decisions and put off architecting until much later in the process.*"
+
+-- From Alex Hudson's article (2017/10/14) : [Software architecture is failing](https://www.alexhudson.com/2017/10/14/software-architecture-failing/)
 
 ## Preprequisites
 

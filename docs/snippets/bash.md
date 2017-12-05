@@ -1,5 +1,50 @@
 # Bash snippets
 
+## Remote execution + handling Arbitrary Arguments
+
+```sh
+# See https://unix.stackexchange.com/questions/87405/how-can-i-execute-local-script-on-remote-machine-and-include-arguments
+# -> https://unix.stackexchange.com/a/326672
+
+# With bash or ksh as /bin/sh
+runRemote() {
+  local args script
+
+  script=$1; shift
+
+  # generate eval-safe quoted version of current argument list
+  printf -v args '%q ' "$@"
+
+  # pass that through on the command line to bash -s
+  # note that $args is parsed remotely by /bin/sh, not by bash!
+  ssh user@remote-addr "bash -s -- $args" < "$script"
+}
+
+# With Any POSIX-Compliant /bin/sh
+runRemote() {
+  local script=$1; shift
+  local args
+  printf -v args '%q ' "$@"
+  ssh user@remote-addr "bash -s" <<EOF
+
+  # pass quoted arguments through for parsing by remote bash
+  set -- $args
+
+  # substitute literal script text into heredoc
+  $(< "$script")
+
+EOF
+}
+
+# Usage (for either of the above)
+
+# if your time should be three arguments
+runRemote /var/www/html/ops1/sysMole -time Aug 18 18
+
+# if your time should be one string
+runRemote /var/www/html/ops1/sysMole -time "Aug 18 18"
+```
+
 ## Split string using delimiter to array
 
 ```sh

@@ -36,4 +36,12 @@ global CWT_SUBJECTS 'app env git provision remote stack service task worker logg
 global CWT_ACTIONS 'bootstrap init load reload unload install reinstall uninstall build rebuild start restart stop add remove process trigger watch compile test plan delay deploy destroy'
 global CWT_HOOK_TYPES 'pre post'
 
+# Alter / extend base path. TODO evaluate switching this value "on the fly" (see
+# [wip] documentation about recursion).
 global CWT_CUSTOM_DIR "[default]=cwt/custom"
+
+# Declaring additional hosts. NB : each host must declare exactly 3 'append'
+# globals - example :
+# global REMOTE_HOSTS "[append]=cwt-remote.example.com"
+# global REMOTE_HOSTS_CMDS "[append]='ssh -p123 username@remote.domain.tld'"
+# global REMOTE_HOSTS_TYPES "[append]=dev"

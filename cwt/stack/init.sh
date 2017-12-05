@@ -24,6 +24,7 @@ export ENV_VARS_UNIQUE_KEYS
 
 export PROJECT_STACK="$P_PROJECT_STACK"
 export PROVISION_USING="$P_PROVISION_USING"
+export CWT_CUSTOM_DIR="$P_CWT_CUSTOM_DIR"
 export CURRENT_ENV_SETTINGS_FILE='cwt/env/current/vars.sh'
 
 if [[ (-z "$PROJECT_STACK") && ($P_YES == 0) ]]; then

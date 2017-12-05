@@ -10,19 +10,32 @@
 #
 
 ##
-# Autoloads all matching includes.
+# [wip] TODO Autoloads all matching includes.
 #
 u_autoload_all_includes() {
-  # [wip] TODO.
   echo "debug u_autoload_all_includes() : $@"
-  u_hook "$@"
+
+
+  # [wip] TODO valuate using u_hook() to either produce filepath lookups OR dynamic function names ?
+  # examples :
+
+  # u_hook 'file-lookup' "$@"
+
+  # u_hook 'function' "$@"
+  # is_executable() {
+  #   typeset TYPE_RESULT="`type -t $1`"
+  #   if [ "$TYPE_RESULT" == 'function' ]; then
+  #     return 0
+  #   else
+  #     return 1
+  #   fi
+  # }
 }
 
 ##
-# Autoloads the most "specific" include only.
+# [wip] TODO Autoloads the most "specific" include only.
 #
 u_autoload_most_specific_include() {
-  # [wip] TODO.
   echo "debug u_autoload_most_specific_include() : $@"
 }
 

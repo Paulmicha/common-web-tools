@@ -23,6 +23,8 @@ if [[ -f "$script" ]]; then
   . "$script"
 fi
 
+. cwt/stack/start.sh
+
 
 # Allow custom complements for this script.
 u_autoload_get_complement "$BASH_SOURCE"
