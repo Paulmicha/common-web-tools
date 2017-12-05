@@ -6,7 +6,7 @@
 
 1. About CWT
     1. [Overview](about/overview.md)
-    1. [Tools considerations](about/tools_considerations.md)
+    1. [Tools considerations](about/tools-considerations.md)
     1. [Autoload](about/autoload.md)
     1. [Globals](about/globals.md)
     1. [Patterns](about/patterns.md)
@@ -34,7 +34,7 @@
             1. Local to remote
             1. Remote to local
     1. Serverless / decentralized projects (de-siloing techs)
-1. [Alter / Extend CWT](about/alter_extend.md)
+1. [Alter / Extend CWT](about/alter-extend.md)
 1. CWT usage examples / case studies
 
 ## About documentation
