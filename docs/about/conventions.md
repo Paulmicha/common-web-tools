@@ -18,7 +18,7 @@ global CWT_VARIANTS 'pre post'
 Given these arbitrary global variables (and values) - `CWT_SUBJECTS`, `CWT_ACTIONS` and `CWT_VARIANTS` (all space-separated strings) - we can attempt some formalism in the method of determining "possibilities". For instance :
 
 1. Pick any combination of CWT_SUBJECTS, CWT_ACTIONS and/or CWT_VARIANTS.
-1. Pick a differenciation syntax using prefix/suffix and/or delimiters like : `(space) -_,;:|=!?#&/*+.--` and/or enclosures such as : `____()[]{}""''`
+1. Pick a differenciation syntax using **prefix/suffix** and/or **delimiters** like : `(space) -_,;:|=!?#&/*+.--` and/or **enclosures** such as : `____()[]{}""''` and/or **placeholders** like : `__replace_this_MY_VARNAME_value__`
 1. Pick a [generative mecanism](flexibility-adaptability-variation.html)
 
 ## Logical operators
@@ -30,11 +30,12 @@ TODO (missing documentation) evaluate relevance of pointing towards syntactic re
 ## Bash syntax
 
 - Folder paths in variables : NEVER append trailing slash
+- Bash script files using `*.sh` extension are meant to be `source`d (not executed directly)
+- Bash script files using a **multiple extension pattern** - e.g. `*.deps.sh`, `*.vars.sh`, `*.hook.sh` will ALWAYS be dynamically sourced.
+- Bash script files named *without extension* are meant to be executed (not `source`d directly)
 - Sourcing : prefer the shorter notation - single dot, ex: `. cwt/aliases.sh`
-- UPPERCASE / lowercase differenciates global variables from `local` variables (only used in function scopes)
+- TODO document relativity (wrapping, isolation) in [flexibility (adaptability through variation)](flexibility-adaptability-variation.html) UPPERCASE / lowercase differenciates global variables from `local` variables (only used in function scopes)
 - Parameters : variables storing values coming from arguments are prefixed with `P_` or `p_` (for *parameter*), ex: `$P_PROJECT_STACK`. See `cwt/stack/init.sh`
 - Function names for utilities in `cwt/utilities` are all prefixed by `u_` (for *utility*), ex: `u_autoload_override`
 - Separator for a single name having multiple words : use underscores `_` in variables, functions, and script/include names. Use dashes `-` in folder names.
-- Dashes `-` in stack names are used to dynamically match env settings "dist" files (includes) - 1 dash = 1 dir level, ex: stack name `my_stack_name-3` would trigger lookups in `cwt/env/dist/my-stack-name/app.vars.sh.dist`, `cwt/env/dist/my-stack-name/3/app.vars.sh.dist`, etc. See `cwt/env/README.md`.
-
-TODO double file extension pattern
+- Semver suffixes start with `-` (e.g. in stack names), and are used to generate lookup paths for includes.
