@@ -11,10 +11,10 @@
     1. [Globals](about/globals.md)
     1. [Patterns](about/patterns.md)
     1. [Conventions](about/conventions.md)
-    1. [Flexibility](about/flexibility.md)
+    1. [Flexibility (adaptability through variation)](about/flexibility-adaptability-variation.md)
 1. Using CWT
     1. [Getting started](usage/getting-started.md)
-    1. [Instance init (environment settings)](usage/environment-settings.md)
+    1. [Instance init](usage/instance-init.md)
     1. [Host provisioning (install software dependencies)](usage/tasks.md#install-host-level-dependencies)
     1. Compilation / watch (+ makefiles ?)
     1. Generating

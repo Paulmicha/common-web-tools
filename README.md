@@ -103,9 +103,9 @@ There are 2 ways to use CWT in existing or new projects :
 
 When CWT files are in place alongside the rest of the project :
 
-- Initialize "stack" (environment settings)
-- Provision local and/or remote host
-- Install new application instance(s) (local and/or remote)
+- Init local instance
+- Install host-level software (local and/or remote provisioning)
+- Install app instance(s) (local and/or remote)
 - [optional] Implement automated tests
 - [optional] Implement deployment to desired remote instance(s)
 

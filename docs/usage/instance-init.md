@@ -1,4 +1,6 @@
-# Environment settings
+# Instance init
+
+TODO rework this documentation
 
 The variables written and loaded using the scripts in `cwt/env` directory are used in all CWT tasks. Some are common to any type of stack, while others are specific to certain variants.
 

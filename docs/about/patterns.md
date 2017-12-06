@@ -41,18 +41,17 @@ This pattern should not prevent CWT to co-exist alongside [existing tools](https
 - **Purpose**:
     - Less hesitation
     - Self-explanation
-    - [Flexibility](flexibility.html)
+    - [flexibility (adaptability through variation)](flexibility-adaptability-variation.html)
 - **Caveat**: Identic file names in different folders, see [this article about JS component-oriented file structure](https://hackernoon.com/the-100-correct-way-to-structure-a-react-app-or-why-theres-no-such-thing-3ede534ef1ed)
 - **How to mitigate**: Not much, really... Brievety is favored over the downside mentioned above, because of the explicit reliance on (file) **tree**.
 
 The general principle is : *file structure* should indicate `subject` + `intent`.
 
-Folders are used to imbricate tasks by subject first, then action and/or fact(s) and/or preset(s) and/or [semver convention](https://semver.org/) are used to name files where appropriate. See [environment settings](https://paulmicha.github.io/common-web-tools/about/environment-settings.html) and [alter / extend](https://paulmicha.github.io/common-web-tools/about/alter-extend.html).
+Folders are used to imbricate tasks by subject first, then action and/or fact(s) and/or preset(s) and/or [semver convention](https://semver.org/) are used to name files where appropriate. See [instance init](https://paulmicha.github.io/common-web-tools/usage/instance-init.html) and [alter / extend](https://paulmicha.github.io/common-web-tools/about/alter-extend.html).
 
 Given CWT's minimalist ambition, dir/file naming could be just a principle not strictly followed.
 
 Potential patterns could be :
 
-- depth level : **deeper = more specific**,
-- folder tree + file naming : see [conventions](conventions.html),
-- recursion : see [flexibility (adaptability through variation)](flexibility-adaptability-variation.html).
+- depth level : **deeper = more specific**
+- folder tree + file naming : see [conventions](conventions.html)
