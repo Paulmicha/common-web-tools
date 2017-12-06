@@ -18,9 +18,11 @@ This requires a logic to get only 1 output.
 # TODO provide minimal example.
 ```
 
-## Relativity / isolation
+## Relativity / isolation / modularity
 
-TODO explore modularity by mutating reference points (at "runtime"), such as the `CWT_CUSTOM` global ?
+TODO could just be a switch to make globals not use `export` in some scope / function.
+
+TODO evaluate temporarily mutating reference points at runtime (i.e. `CWT_CUSTOM`) ?
 
 ```sh
 # TODO provide minimal example.
