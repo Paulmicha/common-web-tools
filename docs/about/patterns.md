@@ -23,7 +23,7 @@ Briefly explains basic architectural aspects of CWT.
     - relies on global antipattern (See *Systematic sourcing from project root dir*)
     - wasteful performance-wise
     - no accidental infinite recursion prevention
-    - potentially excessive includeation / over-abstracting / over-engineering (YAGNI)
+    - potentially excessive fragmentation / over-abstracting / over-engineering (YAGNI)
 - **How to mitigate**:
     - [TODO] Provide [CWT self tests](https://github.com/sstephenson/bats) in `cwt/test/self`
     - Elements indicated in *Systematic sourcing from project root dir* apply here too
