@@ -20,7 +20,7 @@
 # @exports Array STACK_SERVICES
 #
 # @see u_str_split1()
-# @see u_env_item_split_version()
+# @see u_instance_item_split_version()
 # @see u_in_array()
 #
 # @example
@@ -123,7 +123,7 @@ u_stack_get_part() {
       local app_version=''
       local app_arr=()
 
-      u_env_item_split_version app_arr "$app"
+      u_instance_item_split_version app_arr "$app"
 
       if [[ -n "${app_arr[1]}" ]]; then
         app="${app_arr[0]}"
@@ -217,7 +217,7 @@ u_stack_resolve_deps() {
       elif [[ "$substr" != '..' ]]; then
         vi_wo_ver="$variant_item"
 
-        u_env_item_split_version vi_arr "$variant_item"
+        u_instance_item_split_version vi_arr "$variant_item"
         if [[ -n "${vi_arr[1]}" ]]; then
           vi_wo_ver="${vi_arr[0]}"
         fi
@@ -308,7 +308,7 @@ u_stack_deps_get_lookup_paths() {
   local sp_types='provision app custom'
 
   for stack_preset in "${STACK_PRESETS[@]}"; do
-    u_env_item_split_version sp_arr "$stack_preset"
+    u_instance_item_split_version sp_arr "$stack_preset"
     if [[ -n "${sp_arr[1]}" ]]; then
       for sp_type in $sp_types; do
         sp_path="cwt/$sp_type/presets"

@@ -45,7 +45,7 @@ GLOBALS_COUNT=0
 GLOBALS_UNIQUE_NAMES=()
 GLOBALS_UNIQUE_KEYS=()
 
-# Get CWT core globals required for aggregating dependencies and env vars.
+# Get CWT globals required for aggregating dependencies and env vars.
 . cwt/env/vars.sh
 
 # Aggregate dependencies and env vars.

@@ -31,14 +31,12 @@ global REG_BACKEND "[default]=file"
 # TODO else consider using a separate store for secrets, see cwt/env/README.md.
 # global SECRETS_BACKEND
 
-# [wip] TODO streamline lookup paths (reuse abstraction in hooks, globals and deps).
-global CWT_SUBJECTS 'app env git provision remote stack service task worker logger cwt'
-global CWT_ACTIONS 'bootstrap init load reload unload install reinstall uninstall build rebuild start restart stop add remove process trigger watch compile test plan delay deploy destroy'
-global CWT_VARIANTS 'pre post'
-
-# Alter / extend base path. TODO evaluate switching this value "on the fly" (see
-# [wip] documentation about recursion).
 global CWT_CUSTOM_DIR "[default]=cwt/custom"
+
+# TODO streamline lookup paths (reuse abstraction in hooks, globals and deps).
+# global CWT_SUBJECTS 'app env git provision remote stack'
+# global CWT_ACTIONS 'load make build rebuild start restart stop deploy destroy process'
+# global CWT_HOOK_TYPES 'pre post'
 
 # Declaring additional hosts. NB : each host must declare exactly 3 'append'
 # globals - example :

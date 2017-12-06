@@ -40,11 +40,11 @@ echo -n '' > "$docker_compose_env_file"
 
 # Write every aggregated globals.
 # @see cwt/stack/init/aggregate_env_vars.sh
-for env_var_name in ${GLOBALS['.sorting']}; do
-  u_str_split1 evn_arr $env_var_name '|'
-  env_var_name="${evn_arr[1]}"
-  eval "[[ -z \"\$$env_var_name\" ]] && echo \"$env_var_name\"= >> \"$docker_compose_env_file\""
-  eval "[[ -n \"\$$env_var_name\" ]] && echo \"$env_var_name=\$$env_var_name\" >> \"$docker_compose_env_file\""
+for global_name in ${GLOBALS['.sorting']}; do
+  u_str_split1 evn_arr $global_name '|'
+  global_name="${evn_arr[1]}"
+  eval "[[ -z \"\$$global_name\" ]] && echo \"$global_name\"= >> \"$docker_compose_env_file\""
+  eval "[[ -n \"\$$global_name\" ]] && echo \"$global_name=\$$global_name\" >> \"$docker_compose_env_file\""
 done
 
 echo "Writing docker-compose settings in $docker_compose_env_file : done."

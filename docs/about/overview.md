@@ -45,9 +45,9 @@ See also RDX's article from 2016/07/20 : [Modern Software Over-Engineering Mista
 
 ## What could an ideal solution look like ?
 
-It can seem titanesque to evaluate many [tools available nowadays](https://paulmicha.github.io/common-web-tools/about/tools-considerations.html), so patterns like *presets* (or *recipes*) / declarative approaches (i.e. `*.yml` files) could be concepts simple enough to quickly "get".
-
 The ideal solution would be measured in cognitive ressource - i.e. how do I quickly get these problems out of the way, *everytime* ?
+
+It can seem titanesque to evaluate many [tools available nowadays](https://paulmicha.github.io/common-web-tools/about/tools-considerations.html), so patterns like *presets* (or *recipes*) / declarative approaches (i.e. `*.yml` files) could be concepts simple enough to quickly "get".
 
 My current intuition of an "ideal" scaffolding tool is to apply focus on [language](https://pierrelevyblog.com/2017/10/06/the-next-platform) and communication (information design) - that's the ultimate goal.
 
@@ -56,6 +56,12 @@ My current intuition of an "ideal" scaffolding tool is to apply focus on [langua
 *[...] Software development should be the tool of last resort: “we’re building this because it doesn’t exist in the form we need it”. I want to hear from more tech leaders about how they solved a problem without building the software, and tactics for avoiding development. [...] I want to hear more about projects that deferred decisions and put off architecting until much later in the process.*"
 
 -- From Alex Hudson's article (2017/10/14) : [Software architecture is failing](https://www.alexhudson.com/2017/10/14/software-architecture-failing/)
+
+TODO document software evaluation process
+
+TODO "frontier" (borders, delimitation) / what modularity teaches is to [hide complexity](https://www.youtube.com/watch?v=vypCsVm5z28) by fragmentation (*"people got mad when I put it all in one file"*).
+
+TODO explore relativity in [shell scopes](http://wiki.bash-hackers.org/scripting/processtree) (wrapping, isolation) - e.g. `local`, `export`...
 
 ## File structure (and status)
 

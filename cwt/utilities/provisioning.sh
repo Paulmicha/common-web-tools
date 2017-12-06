@@ -53,7 +53,7 @@ u_provisioning_preprocess() {
   u_provisioning_includes_get_lookup_paths
 
   provision_type="$PROVISION_USING"
-  u_env_item_split_version provision_version_arr "$PROVISION_USING"
+  u_instance_item_split_version provision_version_arr "$PROVISION_USING"
   if [[ -n "${provision_version_arr[1]}" ]]; then
     provision_type="${provision_version_arr[0]}"
   fi

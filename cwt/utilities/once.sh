@@ -3,6 +3,8 @@
 ##
 # Utility functions to make sure scripts run once.
 #
+# TODO [wip] evaluate removal of this feature.
+#
 # Checks per host and/or app instance.
 # TODO local and/or remote (2 ways).
 #

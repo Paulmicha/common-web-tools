@@ -19,7 +19,7 @@ if [[ -z "$GLOBALS_COUNT" ]]; then
   echo
   return 1
 elif [[ $P_VERBOSE == 1 ]]; then
-  u_print_env
+  u_global_debug
 fi
 
 # And make sure that we have a file path to write to.
@@ -69,15 +69,15 @@ EOF
 
 # Write every aggregated globals.
 # @see cwt/stack/init/aggregate_env_vars.sh
-for env_var_name in ${GLOBALS['.sorting']}; do
-  u_str_split1 evn_arr $env_var_name '|'
-  env_var_name="${evn_arr[1]}"
+for global_name in ${GLOBALS['.sorting']}; do
+  u_str_split1 evn_arr $global_name '|'
+  global_name="${evn_arr[1]}"
 
   # [wip] TODO evaluate not requiring readonly globals.
-  # eval "[[ -z \"\$$env_var_name\" ]] && echo \"readonly $env_var_name\"=\'\' >> \"$CURRENT_ENV_SETTINGS_FILE\""
-  # eval "[[ -n \"\$$env_var_name\" ]] && echo \"readonly $env_var_name=\\\"\$$env_var_name\\\"\" >> \"$CURRENT_ENV_SETTINGS_FILE\""
-  eval "[[ -z \"\$$env_var_name\" ]] && echo \"export $env_var_name\"=\'\' >> \"$CURRENT_ENV_SETTINGS_FILE\""
-  eval "[[ -n \"\$$env_var_name\" ]] && echo \"export $env_var_name=\\\"\$$env_var_name\\\"\" >> \"$CURRENT_ENV_SETTINGS_FILE\""
+  # eval "[[ -z \"\$$global_name\" ]] && echo \"readonly $global_name\"=\'\' >> \"$CURRENT_ENV_SETTINGS_FILE\""
+  # eval "[[ -n \"\$$global_name\" ]] && echo \"readonly $global_name=\\\"\$$global_name\\\"\" >> \"$CURRENT_ENV_SETTINGS_FILE\""
+  eval "[[ -z \"\$$global_name\" ]] && echo \"export $global_name\"=\'\' >> \"$CURRENT_ENV_SETTINGS_FILE\""
+  eval "[[ -n \"\$$global_name\" ]] && echo \"export $global_name=\\\"\$$global_name\\\"\" >> \"$CURRENT_ENV_SETTINGS_FILE\""
 done
 
 echo "Writing settings in $CURRENT_ENV_SETTINGS_FILE : done."

@@ -6,6 +6,8 @@
 # This file is dynamically included when the "hook" is triggered.
 #
 
+echo "($BASH_SOURCE loaded by u_hook_app $@)"
+
 # [wip] TODO avoid hardcoded service name - touches upon services configurability.
 alias composer="docker-compose exec --user 82 php composer"
 

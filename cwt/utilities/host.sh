@@ -34,7 +34,7 @@ u_host_provision() {
   u_provisioning_preprocess
 
   for stack_service in "${STACK_SERVICES[@]}"; do
-    u_env_item_split_version ss_version_arr "$stack_service"
+    u_instance_item_split_version ss_version_arr "$stack_service"
 
     # TODO remote host install.
     if [[ -n "${ss_version_arr[1]}" ]]; then

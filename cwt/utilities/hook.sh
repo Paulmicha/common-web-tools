@@ -404,7 +404,7 @@ u_hook_add_presets_lookup_variants() {
   local p_type="$1"
 
   for stack_preset in "${STACK_PRESETS[@]}"; do
-    u_env_item_split_version sp_arr "$stack_preset"
+    u_instance_item_split_version sp_arr "$stack_preset"
 
     if [[ -n "${sp_arr[1]}" ]]; then
       for lookup_subject in $lookup_subjects; do

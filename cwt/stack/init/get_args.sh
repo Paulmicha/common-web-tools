@@ -28,6 +28,11 @@ export P_APP_GIT_WORK_TREE
 export P_INSTANCE_TYPE
 export P_INSTANCE_DOMAIN
 
+# Optional remote host(s).
+export P_REMOTE_INSTANCES
+export P_REMOTE_INSTANCES_CMDS
+export P_REMOTE_INSTANCES_TYPES
+
 # Configurable CWT internals.
 export P_HOST_TYPE
 export P_PROVISION_USING
@@ -48,6 +53,10 @@ unset P_APP_GIT_WORK_TREE
 unset P_INSTANCE_TYPE
 unset P_INSTANCE_DOMAIN
 
+unset P_REMOTE_INSTANCES
+unset P_REMOTE_INSTANCES_CMDS
+unset P_REMOTE_INSTANCES_TYPES
+
 unset P_HOST_TYPE
 unset P_PROVISION_USING
 unset P_DEPLOY_USING
@@ -57,6 +66,7 @@ unset P_CWT_CUSTOM_DIR
 P_YES=0
 P_VERBOSE=0
 
+# TODO temporary syntax before trying github.com/matejak/argbash.
 while [ "$#" -gt 0 ]; do
   case "$1" in
     -s) P_PROJECT_STACK="$2"; shift 2;;
@@ -67,6 +77,10 @@ while [ "$#" -gt 0 ]; do
     -i) P_APP_GIT_WORK_TREE="$2"; shift 2;;
     -t) P_INSTANCE_TYPE="$2"; shift 2;;
     -d) P_INSTANCE_DOMAIN="$2"; shift 2;;
+
+    -r) P_REMOTE_INSTANCES="$2"; shift 2;;
+    -u) P_REMOTE_INSTANCES_CMDS="$2"; shift 2;;
+    -q) P_REMOTE_INSTANCES_TYPES="$2"; shift 2;;
 
     -h) P_HOST_TYPE="$2"; shift 2;;
     -p) P_PROVISION_USING="$2"; shift 2;;

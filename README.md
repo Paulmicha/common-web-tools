@@ -47,11 +47,11 @@ See also RDX's article from 2016/07/20 : [Modern Software Over-Engineering Mista
 
 ## What could an ideal solution look like ?
 
+The ideal solution would be measured in cognitive ressource - i.e. how do I quickly get these problems out of the way, *everytime* ?
+
 It can seem titanesque to evaluate many [tools available nowadays](https://paulmicha.github.io/common-web-tools/about/tools-considerations.html), so patterns like *presets* (or *recipes*) / declarative approaches (i.e. `*.yml` files) could be concepts simple enough to quickly "get".
 
-The ideal solution would be measured in cognitive ressource, I think. How do I quickly get these problems out of the way, *everytime* ?
-
-My current intuition of an "ideal" scaffolding tool is to apply focus on [language](https://pierrelevyblog.com/2017/10/06/the-next-platform) and communication - that's the ultimate goal.
+My current intuition of an "ideal" scaffolding tool is to apply focus on [language](https://pierrelevyblog.com/2017/10/06/the-next-platform) and communication (information design) - that's the ultimate goal.
 
 "*I want to hear from people pushing standard stuff beyond its limits. I think we grossly underestimate what off-the-shelf systems can do, and grossly overestimate the capabilities of the things we develop ourselves. It’s time to talk much more about real-world, practical, medium-enterprise software architecture.*
 
@@ -59,7 +59,11 @@ My current intuition of an "ideal" scaffolding tool is to apply focus on [langua
 
 -- From Alex Hudson's article (2017/10/14) : [Software architecture is failing](https://www.alexhudson.com/2017/10/14/software-architecture-failing/)
 
-Another question is the "frontier" (delimitation). What modularity teaches is to hide complexity. The issue of fragmentation (isolation) remains.
+TODO document software evaluation process
+
+TODO "frontier" (borders, delimitation) / what modularity teaches is to [hide complexity](https://www.youtube.com/watch?v=vypCsVm5z28) by fragmentation (*"people got mad when I put it all in one file"*).
+
+TODO explore relativity in [shell scopes](http://wiki.bash-hackers.org/scripting/processtree) (wrapping, isolation) - e.g. `local`, `export`...
 
 ## Preprequisites
 

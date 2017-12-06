@@ -253,15 +253,15 @@ global MY_VAR "hello value"
 global MY_COND_VAR_NOMATCH "[if-MY_VAR]=test [default]=foo"
 global MY_COND_VAR_MATCH "[if-MY_VAR]='hello value' [default]=bar"
 # To verify (should only output MY_COND_VAR_MATCH) :
-u_print_env
+u_global_debug
 
 # Deferred variable substitution (advanced usage : when the 3rd param is used,
 # the global is not immediately exported in current shell).
 global MY_DEFERRED_VAR "[default]=/example/absolute/path" true
 global MY_DEPENDANT_VAR "[default]=\$MY_DEFERRED_VAR/test" true
-u_exec_foreach_env_vars u_assign_env_value
+u_global_foreach u_global_assign_value
 # To verify (MY_DEPENDANT_VAR should output '/example/absolute/path/test') :
-u_print_env
+u_global_debug
 ```
 
 ### Env includes aggregation

@@ -12,13 +12,13 @@
 # @see cwt/stack/init.sh
 #
 
-u_env_includes_get_lookup_paths
+u_global_get_includes_lookup_paths
 
 if [[ $P_VERBOSE == 1 ]]; then
-  u_autoload_print_lookup_paths ENV_INCLUDES_PATHS "Env includes"
+  u_autoload_print_lookup_paths GLOBALS_INCLUDES_PATHS "Env includes"
 fi
 
-for env_model in "${ENV_INCLUDES_PATHS[@]}"; do
+for env_model in "${GLOBALS_INCLUDES_PATHS[@]}"; do
   if [[ -f "$env_model" ]]; then
     . "$env_model"
   fi

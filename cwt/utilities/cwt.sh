@@ -51,15 +51,3 @@ u_cwt_trigger() {
 #
 # u_cwt_preset_wrapper() {
 # }
-
-##
-# Determines if a function exists in current shell scope.
-#
-u_cwt_function_exists() {
-  typeset TYPE_RESULT="`type -t $1`"
-  if [ "$TYPE_RESULT" == 'function' ]; then
-    return 0
-  else
-    return 1
-  fi
-}
