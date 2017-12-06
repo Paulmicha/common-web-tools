@@ -59,6 +59,8 @@ My current intuition of an "ideal" scaffolding tool is to apply focus on [langua
 
 -- From Alex Hudson's article (2017/10/14) : [Software architecture is failing](https://www.alexhudson.com/2017/10/14/software-architecture-failing/)
 
+Another question is the "frontier" (delimitation). What modularity teaches is to hide complexity. The issue of fragmentation (isolation) remains.
+
 ## Preprequisites
 
 - Local & remote hosts or VMs with bash support
