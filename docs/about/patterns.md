@@ -2,7 +2,7 @@
 
 Briefly explains basic architectural aspects of CWT.
 
-## Systematic sourcing from project root dir
+## Reference scope (systematic sourcing from project root dir)
 
 - **Purpose**:
     - Simplicity for including (subshell exec or source) any file from anywhere - always use the same relative reference path everywhere
@@ -10,15 +10,16 @@ Briefly explains basic architectural aspects of CWT.
 - **Caveat**: global scope abuse is an anti-pattern: potential variables collision, etc.
 - **How to mitigate**:
     - Use functions with `local` vars for isolable parts
-    - Follow variable and function naming conventions, see section *conventions used in code* below
+    - Follow variable and function naming [conventions](conventions.html).
     - KISS radically
     - [Make globals immutable (`readonly`) and use them sparingly](http://www.kfirlavi.com/blog/2012/11/14/defensive-bash-programming/)
+    - Balance modularity (complexity) / strive for minimalism.
 
-## "Autoload" (dynamic sourcing)
+## "Autoload" (dynamic includes)
 
 - **Purpose**:
     - Leaziness (not really dependency management)
-    - Convention over configuration
+    - [Convention](conventions.html) over configuration
 - **Caveats**:
     - relies on global antipattern (See *Systematic sourcing from project root dir*)
     - wasteful performance-wise
@@ -41,6 +42,7 @@ This pattern should not prevent CWT to co-exist alongside [existing tools](https
 - **Purpose**:
     - Less hesitation
     - Self-explanation
+    - [Flexibility](flexibility.html)
 - **Caveat**: Identic file names in different folders, see [this article about JS component-oriented file structure](https://hackernoon.com/the-100-correct-way-to-structure-a-react-app-or-why-theres-no-such-thing-3ede534ef1ed)
 - **How to mitigate**: Not much, really... Brievety is favored over the downside mentioned above, because of the explicit reliance on (file) **tree**.
 
