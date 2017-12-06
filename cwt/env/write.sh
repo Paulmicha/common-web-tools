@@ -12,7 +12,7 @@
 #
 
 # First make sure we have something to write.
-if [[ -z "$ENV_VARS_COUNT" ]]; then
+if [[ -z "$GLOBALS_COUNT" ]]; then
   echo
   echo "Error in $BASH_SOURCE line $LINENO: nothing to write."
   echo "Aborting (1)."
@@ -69,7 +69,7 @@ EOF
 
 # Write every aggregated globals.
 # @see cwt/stack/init/aggregate_env_vars.sh
-for env_var_name in ${ENV_VARS['.sorting']}; do
+for env_var_name in ${GLOBALS['.sorting']}; do
   u_str_split1 evn_arr $env_var_name '|'
   env_var_name="${evn_arr[1]}"
 

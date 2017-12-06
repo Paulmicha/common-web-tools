@@ -22,14 +22,6 @@ u_autoload_all_includes() {
   # u_hook 'file-lookup' "$@"
 
   # u_hook 'function' "$@"
-  # is_executable() {
-  #   typeset TYPE_RESULT="`type -t $1`"
-  #   if [ "$TYPE_RESULT" == 'function' ]; then
-  #     return 0
-  #   else
-  #     return 1
-  #   fi
-  # }
 }
 
 ##

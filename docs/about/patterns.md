@@ -11,9 +11,8 @@ Briefly explains basic architectural aspects of CWT.
 - **How to mitigate**:
     - Use functions with `local` vars for isolable parts
     - Follow variable and function naming [conventions](conventions.html).
-    - KISS radically
+    - KISS radically / strive for minimalism / limit modularity (only introduce when absolutely necessary)
     - [Make globals immutable (`readonly`) and use them sparingly](http://www.kfirlavi.com/blog/2012/11/14/defensive-bash-programming/)
-    - Balance modularity (complexity) / strive for minimalism.
 
 ## "Autoload" (dynamic includes)
 

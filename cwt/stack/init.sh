@@ -17,10 +17,10 @@
 . cwt/stack/init/get_args.sh
 
 # These globals are needed throughout this task's related scripts.
-export ENV_VARS
-export ENV_VARS_COUNT
-export ENV_VARS_UNIQUE_NAMES
-export ENV_VARS_UNIQUE_KEYS
+export GLOBALS
+export GLOBALS_COUNT
+export GLOBALS_UNIQUE_NAMES
+export GLOBALS_UNIQUE_KEYS
 
 export PROJECT_STACK="$P_PROJECT_STACK"
 export PROVISION_USING="$P_PROVISION_USING"
@@ -39,11 +39,11 @@ if [[ -z "$PROJECT_STACK" ]]; then
 fi
 
 # (Re)start dependencies and env vars aggregation.
-unset ENV_VARS
-declare -A ENV_VARS
-ENV_VARS_COUNT=0
-ENV_VARS_UNIQUE_NAMES=()
-ENV_VARS_UNIQUE_KEYS=()
+unset GLOBALS
+declare -A GLOBALS
+GLOBALS_COUNT=0
+GLOBALS_UNIQUE_NAMES=()
+GLOBALS_UNIQUE_KEYS=()
 
 # Get CWT core globals required for aggregating dependencies and env vars.
 . cwt/env/vars.sh

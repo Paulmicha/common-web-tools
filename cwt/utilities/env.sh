@@ -15,8 +15,8 @@
 # Executes given callback function for all env vars discovered so far.
 #
 # @requires the following globals in calling scope (main shell) :
-# - $ENV_VARS
-# - $ENV_VARS_UNIQUE_NAMES
+# - $GLOBALS
+# - $GLOBALS_UNIQUE_NAMES
 #
 # @see cwt/stack/init/aggregate_env_vars.sh
 #
@@ -28,7 +28,7 @@ u_exec_foreach_env_vars() {
   local env_arr
   local env_var_name
 
-  for env_var_name in ${ENV_VARS['.sorting']}; do
+  for env_var_name in ${GLOBALS['.sorting']}; do
     u_str_split1 env_arr $env_var_name '|'
     env_var_name="${env_arr[1]}"
     $p_callback $env_var_name
@@ -45,7 +45,7 @@ u_exec_foreach_env_vars() {
 #
 # @requires the following globals in calling scope :
 # - $P_YES
-# - $ENV_VARS
+# - $GLOBALS
 # - $P_MY_VAR_NAME (replacing 'MY_VAR_NAME' with the actual var name)
 #
 # @see cwt/stack/init/get_args.sh
@@ -61,16 +61,16 @@ u_assign_env_value() {
   eval "export $p_var"
 
   eval "local arg_val=\$P_${p_var}"
-  local default_val="${ENV_VARS[$p_var|default]}"
+  local default_val="${GLOBALS[$p_var|default]}"
 
   if [[ -n "$arg_val" ]]; then
     eval "$p_var='$arg_val'"
 
   # Handle non-configurable vars.
-  elif [[ "${ENV_VARS[$p_var|no_prompt]}" == 1 ]]; then
-    eval "$p_var='${ENV_VARS[$p_var|value]}'"
-  elif [[ -n "${ENV_VARS[$p_var|values]}" ]]; then
-    multi_values=$(u_string_trim "${ENV_VARS[$p_var|values]}")
+  elif [[ "${GLOBALS[$p_var|no_prompt]}" == 1 ]]; then
+    eval "$p_var='${GLOBALS[$p_var|value]}'"
+  elif [[ -n "${GLOBALS[$p_var|values]}" ]]; then
+    multi_values=$(u_string_trim "${GLOBALS[$p_var|values]}")
     eval "$p_var='$multi_values'"
 
   elif [[ $P_YES == 0 ]]; then
@@ -93,14 +93,14 @@ u_assign_env_value() {
   # Once prompt has been made, prevent repeated calls for this var (recursion).
   # @see cwt/stack/init/aggregate_env_vars.sh
   # Except for 'append' vars (multiple values must pile-up on each call).
-  if [[ ("${ENV_VARS[$p_var|no_prompt]}" != 1) && (-z "$multi_values") ]]; then
-    ENV_VARS[$p_var|no_prompt]=1
-    ENV_VARS[$p_var|value]=$(eval "echo \"\$$p_var\"")
+  if [[ ("${GLOBALS[$p_var|no_prompt]}" != 1) && (-z "$multi_values") ]]; then
+    GLOBALS[$p_var|no_prompt]=1
+    GLOBALS[$p_var|value]=$(eval "echo \"\$$p_var\"")
   fi
 }
 
 ##
-# Adds new variable in $ENV_VARS.
+# Adds new variable in $GLOBALS.
 #
 # Increments a shared counter to maintain order, because some variables may depend
 # on each other.
@@ -111,11 +111,12 @@ u_assign_env_value() {
 # @param 3 Integer : flag to prevent automatic export.
 #
 # @requires the following globals in calling scope (main shell) :
-# - $ENV_VARS
-# - $ENV_VARS_COUNT
-# - $ENV_VARS_UNIQUE_NAMES
-# - $ENV_VARS_UNIQUE_KEYS
+# - $GLOBALS
+# - $GLOBALS_COUNT
+# - $GLOBALS_UNIQUE_NAMES
+# - $GLOBALS_UNIQUE_KEYS
 #
+# @see u_assign_env_value()
 # @see cwt/stack/init.sh
 # @see cwt/stack/init/aggregate_env_vars.sh
 #
@@ -169,56 +170,80 @@ global() {
 
     # If the value does not begin with '[', assume the var non-configurable.
     if [[ "${p_values:0:1}" != '[' ]]; then
-      ENV_VARS["${p_var_name}|value"]="$p_values"
-      ENV_VARS["${p_var_name}|no_prompt"]=1
+      GLOBALS["${p_var_name}|value"]="$p_values"
+      GLOBALS["${p_var_name}|no_prompt"]=1
 
     # Key/value store system.
     else
-      local values_arr
-      eval "declare -A values_arr=( $p_values )"
-      for key in "${!values_arr[@]}"; do
-        u_array_add_once "$key" ENV_VARS_UNIQUE_KEYS
+      local declaration_arr
+
+      # Transform input string to associative array.
+      eval "declare -A declaration_arr=( $p_values )"
+
+      for key in "${!declaration_arr[@]}"; do
+        u_array_add_once "$key" GLOBALS_UNIQUE_KEYS
+
         case "$key" in
 
           # Handles conditional declarations. Prevents declaring the variable
           # altogether if the depending variable's value does not match the one
-          # provided.
-          if-*)
+          # provided (matching using operator provided as a prefix).
+          if-*|notif-*)
             local depending_var="${key:3}"
             local depending_value=$(eval "echo \"\$$depending_var\"")
-
-            if [[ "$depending_value" != "${values_arr[$key]}" ]]; then
-              return 0
-            fi
-            ;;
+            case "$key" in
+              notif-*)
+                if [[ "$depending_value" == "${declaration_arr[$key]}" ]]; then
+                  return 0
+                fi
+              ;;
+              if-*)
+                if [[ "$depending_value" != "${declaration_arr[$key]}" ]]; then
+                  return 0
+                fi
+              ;;
+            esac
+          ;;
 
           # Appends multiple values to the same var. Allow globals to be
           # declared multiple times to add values (space-separated string).
           append)
-            if [[ -n "${ENV_VARS[$p_var_name|values]}" ]]; then
-              ENV_VARS["${p_var_name}|values"]+=" ${values_arr[$key]}"
+            # Ability to scope values in different "piles" using the 'to' key.
+            # Defaults to 'values'.
+            local append_to='values'
+
+            echo "${declaration_arr[to]}"
+
+            if [[ -n "${GLOBALS[$p_var_name|values]}" ]]; then
+              GLOBALS["${p_var_name}|$append_to"]+=" ${declaration_arr[$key]}"
             else
-              ENV_VARS["${p_var_name}|values"]="${values_arr[$key]}"
+              GLOBALS["${p_var_name}|$append_to"]="${declaration_arr[$key]}"
             fi
-            ;;
+          ;;
+
+          # Skip reserved internal keys - e.g. The 'append' logic requires to
+          # disregard the 'to' key.
+          to)
+            continue
+          ;;
 
           # Default.
           *)
-            ENV_VARS["${p_var_name}|${key}"]="${values_arr[$key]}"
-            ;;
+            GLOBALS["${p_var_name}|${key}"]="${declaration_arr[$key]}"
+          ;;
         esac
       done
     fi
   fi
 
   # These globals allow dynamic handling of args and default values.
-  if ! u_in_array $p_var_name ENV_VARS_UNIQUE_NAMES; then
-    ((++ENV_VARS_COUNT))
-    ENV_VARS_UNIQUE_NAMES+=($p_var_name)
+  if ! u_in_array $p_var_name GLOBALS_UNIQUE_NAMES; then
+    ((++GLOBALS_COUNT))
+    GLOBALS_UNIQUE_NAMES+=($p_var_name)
 
     # This will be used to sort the array when complete.
     # See https://stackoverflow.com/a/39543809
-    ENV_VARS['.sorting']+=" ${ENV_VARS_COUNT}|${p_var_name} "
+    GLOBALS['.sorting']+=" ${GLOBALS_COUNT}|${p_var_name} "
   fi
 
   # Immediately attempt to export that variable unless explicitly prevented.
@@ -244,17 +269,17 @@ u_print_env() {
   echo "Defined globals :"
   echo
 
-  for env_var_name in ${ENV_VARS['.sorting']}; do
+  for env_var_name in ${GLOBALS['.sorting']}; do
     u_str_split1 env_arr $env_var_name '|'
     env_var_name="${env_arr[1]}"
 
     eval "[[ -z \"\$$env_var_name\" ]] && echo \"$env_var_name\" \(empty\)";
     eval "[[ -n \"\$$env_var_name\" ]] && echo \"$env_var_name = \$$env_var_name\"";
 
-    for key in ${ENV_VARS_UNIQUE_KEYS[@]}; do
-      val="${ENV_VARS[$env_var_name|$key]}"
+    for key in ${GLOBALS_UNIQUE_KEYS[@]}; do
+      val="${GLOBALS[$env_var_name|$key]}"
       if [[ -n "$val" ]]; then
-        echo "  - ${key} = ${ENV_VARS[${env_var_name}|${key}]}";
+        echo "  - ${key} = ${GLOBALS[${env_var_name}|${key}]}";
       fi
     done
   done

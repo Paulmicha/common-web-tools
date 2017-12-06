@@ -42,6 +42,7 @@ global CWT_CUSTOM_DIR "[default]=cwt/custom"
 
 # Declaring additional hosts. NB : each host must declare exactly 3 'append'
 # globals - example :
-# global REMOTE_HOSTS "[append]=cwt-remote.example.com"
-# global REMOTE_HOSTS_CMDS "[append]='ssh -p123 username@remote.domain.tld'"
-# global REMOTE_HOSTS_TYPES "[append]=dev"
+# global REMOTE_INSTANCES "[append]=cwt-remote.instance.com"
+# global REMOTE_INSTANCES_CMDS "[append]='ssh -p123 username@remote.domain.tld' [to]=connect"
+# global REMOTE_INSTANCES_CMDS "[append]='/path/to/remote/instance/docroot' [to]=get-PROJECT_DOCROOT"
+# global REMOTE_INSTANCES_TYPES "[append]=dev"

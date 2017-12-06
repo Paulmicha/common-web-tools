@@ -19,7 +19,7 @@ Given these arbitrary global variables (and values) - `CWT_SUBJECTS`, `CWT_ACTIO
 
 1. Pick any combination of CWT_SUBJECTS, CWT_ACTIONS and/or CWT_VARIANTS.
 1. Pick a differenciation syntax using prefix/suffix and/or delimiters like : `(space) -_,;:|=!?#&/*+.--` and/or enclosures such as : `____()[]{}""''`
-1. Pick a generative mecanism
+1. Pick a [generative mecanism](flexibility.html)
 
 ## Logical operators
 
@@ -29,6 +29,7 @@ TODO (missing documentation) evaluate relevance of pointing towards syntactic re
 
 ## Bash syntax
 
+- Folder paths in variables : NEVER append trailing slash
 - Sourcing : prefer the shorter notation - single dot, ex: `. cwt/aliases.sh`
 - UPPERCASE / lowercase differenciates global variables from `local` variables (only used in function scopes)
 - Parameters : variables storing values coming from arguments are prefixed with `P_` or `p_` (for *parameter*), ex: `$P_PROJECT_STACK`. See `cwt/stack/init.sh`
