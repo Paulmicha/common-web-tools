@@ -1,10 +1,10 @@
-# Flexibility
+# Flexibility (adaptability through variation)
 
 See [conventions](conventions.html) for syntax - this documentation exemplifies mecanisms and use cases.
 
 ## Inclusivity
 
-This is the simplest way to add possibilities or "entry points". Just expand trees :
+This is the simplest way to add possibilities or "entry points" (expanding trees) :
 
 ```sh
 # TODO provide minimal example.
@@ -18,9 +18,9 @@ This requires a logic to get only 1 output.
 # TODO provide minimal example.
 ```
 
-## Relativity
+## Relativity / isolation
 
-Allows modularity by mutating reference points (at "runtime"), such as the `CWT_CUSTOM` global.
+TODO explore modularity by mutating reference points (at "runtime"), such as the `CWT_CUSTOM` global ?
 
 ```sh
 # TODO provide minimal example.

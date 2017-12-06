@@ -53,7 +53,6 @@ Given CWT's minimalist ambition, dir/file naming could be just a principle not s
 
 Potential patterns could be :
 
-- depth level : **deeper = more specific**.
-- TODO (missing documentation) For filenames syntax, see conventions / **double extension pattern**.
-
-TODO (missing documentation) see *Recursion (flexibility in lookup paths)*.
+- depth level : **deeper = more specific**,
+- folder tree + file naming : see [conventions](conventions.html),
+- recursion : see [flexibility (adaptability through variation)](flexibility-adaptability-variation.html).

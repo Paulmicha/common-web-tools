@@ -1,6 +1,6 @@
 # Conventions
 
-See [flexibility](flexibility.html) for mecanisms and use cases - this documentation exemplifies syntax.
+See [flexibility (adaptability through variation)](flexibility-adaptability-variation.html) for mecanisms and use cases - this documentation exemplifies syntax.
 
 ## Naming things
 
@@ -19,7 +19,7 @@ Given these arbitrary global variables (and values) - `CWT_SUBJECTS`, `CWT_ACTIO
 
 1. Pick any combination of CWT_SUBJECTS, CWT_ACTIONS and/or CWT_VARIANTS.
 1. Pick a differenciation syntax using prefix/suffix and/or delimiters like : `(space) -_,;:|=!?#&/*+.--` and/or enclosures such as : `____()[]{}""''`
-1. Pick a [generative mecanism](flexibility.html)
+1. Pick a [generative mecanism](flexibility-adaptability-variation.html)
 
 ## Logical operators
 

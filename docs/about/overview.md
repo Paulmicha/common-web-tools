@@ -59,7 +59,13 @@ My current intuition of an "ideal" scaffolding tool is to apply focus on [langua
 
 TODO document software evaluation process
 
-TODO "frontier" (borders, delimitation) / what modularity teaches is to [hide complexity](https://www.youtube.com/watch?v=vypCsVm5z28) by fragmentation (*"people got mad when I put it all in one file"*).
+TODO "frontier" (borders, delimitation) / what [modularity](https://www.youtube.com/watch?v=vypCsVm5z28) teaches is to **hide complexity** by fragmentation (*"people got mad when I put it all in one file"*).
+
+"*[Start] with a list of difficult design decisions or design decisions that are likely to change. Each module is then designed to hide such a decision from the others*"
+
+-- David Parnas, *on the criteria to be used in decomposing systems into modules* (1971)
+
+See also Ben Frain's *eCSS* book [chapter 5. File organisation and naming conventions](http://ecss.io/chapter5.html).
 
 TODO explore relativity in [shell scopes](http://wiki.bash-hackers.org/scripting/processtree) (wrapping, isolation) - e.g. `local`, `export`...
 
