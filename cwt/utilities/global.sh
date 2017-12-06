@@ -12,6 +12,44 @@
 #
 
 ##
+# Reads value by key for 'append' globals declaring 'to' keys.
+#
+# @example
+#   global REMOTE_INSTANCES_CMDS "[append]='/path/to/remote/instance/docroot' [to]=PROJECT_DOCROOT"
+#   u_global_read_key 'PROJECT_DOCROOT' "$REMOTE_INSTANCES_CMDS"
+#   # -> result : "/path/to/remote/instance/docroot"
+#
+u_global_read_key() {
+  local p_key="$1"
+  local p_sub_keyed_str="$2"
+
+  local prefix_delimiter="$(u_cwt_common_val globals-key-prefix)"
+  local tmp_space_placeholder="$(u_cwt_common_val globals-tmp-space-placeholder)"
+
+  local sub_keyed_str_item=''
+  local sub_keyed_str_key=''
+  local sub_keyed_str_val=''
+
+  local output=''
+
+  for sub_keyed_str_item in $p_sub_keyed_str; do
+
+    # Match last occurence of key from the end of the string.
+    # See http://wiki.bash-hackers.org/syntax/pe#from_the_end
+    sub_keyed_str_key="${sub_keyed_str_item%%$prefix_delimiter*}"
+
+    if [[ "$sub_keyed_str_key" == "$p_key" ]]; then
+      # Match 1st occurence of key from the beginning of the string.
+      # See http://wiki.bash-hackers.org/syntax/pe#from_the_beginning
+      sub_keyed_str_val="${sub_keyed_str_item#*$prefix_delimiter}"
+      output+="$(u_str_replace "$tmp_space_placeholder" ' ' "$sub_keyed_str_val") "
+    fi
+  done
+
+  echo $(u_string_trim "$output")
+}
+
+##
 # Executes given callback function for all env vars discovered so far.
 #
 # @requires the following globals in calling scope (main shell) :
@@ -48,6 +86,7 @@ u_global_foreach() {
 # - $GLOBALS
 # - $P_MY_VAR_NAME (replacing 'MY_VAR_NAME' with the actual var name)
 #
+# @see global()
 # @see cwt/stack/init/get_args.sh
 # @see cwt/stack/init/aggregate_env_vars.sh
 #
@@ -66,13 +105,39 @@ u_global_assign_value() {
   if [[ -n "$arg_val" ]]; then
     eval "$p_var='$arg_val'"
 
-  # Handle non-configurable vars.
+  # Non-configurable vars.
   elif [[ "${GLOBALS[$p_var|no_prompt]}" == 1 ]]; then
     eval "$p_var='${GLOBALS[$p_var|value]}'"
+
+  # List or "pile" of values (space-separated string).
   elif [[ -n "${GLOBALS[$p_var|values]}" ]]; then
     multi_values=$(u_string_trim "${GLOBALS[$p_var|values]}")
     eval "$p_var='$multi_values'"
 
+  # Implement several entries per global using the 'to' key (contains "subkey").
+  # Syntax : space-separated string using '.' as prefix delimiter, i.e :
+  # MY_VAR='key1.value key2.another_value'
+  # Workaround : values cannot contain spaces, so they are replaced by an
+  #   arbitrary value (unlikely to collide) for backward-conversion during read.
+  # @see u_global_read_key()
+  elif [[ -n "${GLOBALS[$p_var|tos]}" ]]; then
+    local sub_val
+    local sub_key
+    local sub_keys=$(u_string_trim "${GLOBALS[$p_var|tos]}")
+    local prefix_delimiter="$(u_cwt_common_val globals-key-prefix)"
+
+    for sub_key in $sub_keys; do
+      if [[ -n "${GLOBALS[$p_var|$sub_key]}" ]]; then
+        sub_val=$(u_string_trim "${GLOBALS[$p_var|$sub_key]}")
+        sub_val="$(u_str_replace ' ' "$(u_cwt_common_val globals-tmp-space-placeholder)" "$sub_val")"
+        multi_values+="${sub_key}${prefix_delimiter}${sub_val} "
+      fi
+    done
+
+    multi_values="$(u_string_trim "$multi_values")"
+    eval "$p_var='$multi_values'"
+
+  # Skippable default value assignment.
   elif [[ $P_YES == 0 ]]; then
     echo
     if [[ -n "$default_val" ]]; then
@@ -212,7 +277,9 @@ global() {
             # Defaults to 'values'.
             local append_to='values'
 
-            echo "${declaration_arr[to]}"
+            if [[ -n "${declaration_arr[to]}" ]]; then
+              append_to="${declaration_arr[to]}"
+            fi
 
             if [[ -n "${GLOBALS[$p_var_name|values]}" ]]; then
               GLOBALS["${p_var_name}|$append_to"]+=" ${declaration_arr[$key]}"
@@ -221,10 +288,14 @@ global() {
             fi
           ;;
 
-          # Skip reserved internal keys - e.g. The 'append' logic requires to
-          # disregard the 'to' key.
+          # For 'append' using the 'to' key, we need to easily fetch all "piles"
+          # (all values that were used in 'to').
           to)
-            continue
+            if [[ -n "${GLOBALS[$p_var_name|tos]}" ]]; then
+              GLOBALS["${p_var_name}|tos"]+=" ${declaration_arr[$key]}"
+            else
+              GLOBALS["${p_var_name}|tos"]="${declaration_arr[$key]}"
+            fi
           ;;
 
           # Default.

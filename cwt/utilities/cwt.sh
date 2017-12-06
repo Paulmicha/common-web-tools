@@ -1,11 +1,25 @@
 #!/bin/bash
 
 ##
-# CWT-related utility functions.
+# CWT internals related utility functions.
 #
 # This file is dynamically loaded.
 # @see cwt/bash_utils.sh
 #
+
+##
+# Centralizes arbitrary unique values (e.g. for delimiters, placeholders, etc).
+#
+# @example
+#   unique_delimiter_str="$(u_cwt_common_val globals-key-prefix)"
+#   echo "$unique_delimiter_str"
+#
+u_cwt_common_val() {
+  case "$1" in
+    globals-key-prefix) echo ":cwt-gkp:" ;;
+    globals-tmp-space-placeholder) echo ":cwt-tsph:" ;;
+  esac
+}
 
 ##
 # [debug] Triggers CWT_ACTIONS by CWT_SUBJECTS + CWT_VARIANTS.

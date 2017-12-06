@@ -42,5 +42,5 @@ global CWT_CUSTOM_DIR "[default]=cwt/custom"
 # globals - example :
 # global REMOTE_INSTANCES "[append]=cwt-remote.instance.com"
 # global REMOTE_INSTANCES_CMDS "[append]='ssh -p123 username@remote.domain.tld' [to]=connect"
-# global REMOTE_INSTANCES_CMDS "[append]='/path/to/remote/instance/docroot' [to]=get-PROJECT_DOCROOT"
+# global REMOTE_INSTANCES_CMDS "[append]='/path/to/remote/instance/docroot' [to]=PROJECT_DOCROOT"
 # global REMOTE_INSTANCES_TYPES "[append]=dev"
