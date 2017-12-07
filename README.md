@@ -6,24 +6,26 @@ WIP / not ready for use yet (re-organization + evaluation stage, documentation-d
 
 ## WHAT
 
-Scripts bash for usual devops tasks aimed at relatively small web projects.
+"Scaffolding" CLI for usual development tasks aimed at relatively small web projects.
 
-CWT is not a program; it's a generic, customizable "glue" between programs. Simple, loosely articulated bash scripts.
+CWT is not a program; it's a generic, customizable "glue" between programs. Simple, loosely articulated bash scripts with a minimalist ambition.
 
 ## PURPOSE
 
-Provide a common set of commands to execute variable implementations of the following tasks :
+TL;DR the *raison d'être* of - or *need* addressed by - CWT is to **maintain a standard CLI** while easily swapping out implementations (i.e. "not marrying them").
 
-- install host-level dependencies (provision required packets/apps/services) - locally and/or remotely
+CWT provides a common set of commands to execute variable implementations of the following tasks :
+
+- install host-level dependencies (provision required packets/apps/services - e.g. docker, node, etc) - locally and/or remotely
 - instanciate project locally and/or remotely, with variants per env. type - dev, test, live... (e.g. get or generate services credentials, write local app settings, create database, build...)
 - implement deployment and/or automated tests
 - remote 2-way sync
 
-CWT targets individual developers or relatively small teams attempting to streamline or implement a common workflow across older *and* newer projects.
+CWT targets individual developers or relatively small teams attempting to streamline or implement a common workflow across older *and* newer projects (see *targeted audience* section below).
 
 ## HOW
 
-Abstracting differences to streamline recurrent devops needs.
+Abstracting differences to streamline recurrent web development needs.
 
 The approach here is to provide a minimal base for abstracting usual tasks while allowing to complement, combine, replace or add specific operations **with or without** [existing tools](https://paulmicha.github.io/common-web-tools/about/tools-considerations.html).
 
@@ -45,7 +47,17 @@ While tools like Ansible, `docker-compose` or `nvm` already address these concer
 
 See also RDX's article from 2016/07/20 : [Modern Software Over-Engineering Mistakes](https://medium.com/@rdsubhas/10-modern-software-engineering-mistakes-bc67fbef4fc8).
 
-## What could an ideal solution look like ?
+## Targeted audience
+
+Developers with or without much knowledge on using a terminal (CLI) working under Linux, MacOS, or Windows (using [Git Bash](https://git-for-windows.github.io/) or [Windows Subsystem for Linux ("bash on Ubuntu on Windows")](https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux)).
+
+## Why bash
+
+If CWT targets the same portability as Python (~ since [2011](https://unix.stackexchange.com/a/24808)), why not just use that language instead ?
+
+That choice has more to do with personal interest, self-teaching, and minimalism (though one could perfectly implement a minimalist scaffolding tool in either language).
+
+## What could an ideal solution look like (high-level goal)
 
 The ideal solution would be measured in cognitive ressource - i.e. how do I quickly get these problems out of the way, *everytime* ?
 
@@ -70,6 +82,10 @@ TODO "frontier" (borders, delimitation) / what [modularity](https://www.youtube.
 See also Ben Frain's *eCSS* book [chapter 5. File organisation and naming conventions](http://ecss.io/chapter5.html).
 
 TODO explore relativity in [shell scopes](http://wiki.bash-hackers.org/scripting/processtree) (wrapping, isolation) - e.g. `local`, `export`...
+
+TODO explore decentralized / "web de-siloing" technologies and [contributopia.org](https://contributopia.org)
+
+TODO evaluate minimalist GUI opportunity (Electron ?)
 
 ## Preprequisites
 
