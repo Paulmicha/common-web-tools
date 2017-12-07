@@ -12,7 +12,7 @@ CWT is not a program; it's a generic, customizable "glue" between programs. Simp
 
 ## PURPOSE
 
-TL;DR the *raison d'être* of - or *need* addressed by - CWT is to **maintain a standard CLI** while easily swapping out implementations (i.e. "not marrying them").
+TL;DR the *raison d'être* of - or *need* addressed by - CWT is to **maintain a standard CLI** while easily swapping out [implementations](https://paulmicha.github.io/common-web-tools/about/tools-considerations.html) (i.e. "not marrying them").
 
 CWT provides a common set of commands to execute variable implementations of the following tasks :
 
