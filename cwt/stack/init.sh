@@ -11,7 +11,7 @@
 # $ . cwt/stack/init.sh -s nodejs -y    # "-y" will use default values, no prompts
 #
 
-. cwt/bash_utils.sh
+. cwt/bootstrap.sh
 
 # Get named script arguments.
 . cwt/stack/init/get_args.sh

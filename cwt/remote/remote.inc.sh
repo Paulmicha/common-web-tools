@@ -4,7 +4,7 @@
 # Remote host-related utility functions.
 #
 # This file is dynamically loaded.
-# @see cwt/bash_utils.sh
+# @see cwt/bootstrap.sh
 #
 
 ##

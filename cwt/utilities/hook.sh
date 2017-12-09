@@ -10,23 +10,10 @@
 # - u_hook_cwt() [proposition] for "internal" triggers (related to CWT, like stack/post-init)
 #
 # This file is dynamically loaded.
-# @see cwt/bash_utils.sh
+# @see cwt/bootstrap.sh
 #
 # Convention : functions names are all prefixed by "u" (for "utility").
 #
-
-##
-# [wip] Refacto : rename hook call function.
-#
-# include_all() {
-#   u_hook "$@"
-# }
-
-##
-# [wip] introduce variant to only include most specific file ?
-#
-# include_most_specific() {
-# }
 
 ##
 # Sources scripts for specific app.

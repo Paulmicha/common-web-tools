@@ -6,7 +6,7 @@
 # @see cwt/env/registry/file.sh
 #
 # This file is dynamically loaded.
-# @see cwt/bash_utils.sh
+# @see cwt/bootstrap.sh
 #
 # Convention : functions names are all prefixed by "u" (for "utility").
 #

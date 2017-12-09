@@ -6,48 +6,10 @@
 # See cwt/env/README.md
 #
 # This file is dynamically loaded.
-# @see cwt/bash_utils.sh
+# @see cwt/bootstrap.sh
 #
 # Convention : functions names are all prefixed by "u" (for "utility").
 #
-
-##
-# Reads value by key for 'append' globals declaring 'to' keys.
-#
-# @example
-#   global REMOTE_INSTANCES_CMDS "[append]='/path/to/remote/instance/docroot' [to]=PROJECT_DOCROOT"
-#   u_global_read_key 'PROJECT_DOCROOT' "$REMOTE_INSTANCES_CMDS"
-#   # -> result : "/path/to/remote/instance/docroot"
-#
-u_global_read_key() {
-  local p_key="$1"
-  local p_sub_keyed_str="$2"
-
-  local prefix_delimiter="$(u_cwt_common_val globals-key-prefix)"
-  local tmp_space_placeholder="$(u_cwt_common_val globals-tmp-space-placeholder)"
-
-  local sub_keyed_str_item=''
-  local sub_keyed_str_key=''
-  local sub_keyed_str_val=''
-
-  local output=''
-
-  for sub_keyed_str_item in $p_sub_keyed_str; do
-
-    # Match last occurence of key from the end of the string.
-    # See http://wiki.bash-hackers.org/syntax/pe#from_the_end
-    sub_keyed_str_key="${sub_keyed_str_item%%$prefix_delimiter*}"
-
-    if [[ "$sub_keyed_str_key" == "$p_key" ]]; then
-      # Match 1st occurence of key from the beginning of the string.
-      # See http://wiki.bash-hackers.org/syntax/pe#from_the_beginning
-      sub_keyed_str_val="${sub_keyed_str_item#*$prefix_delimiter}"
-      output+="$(u_str_replace "$tmp_space_placeholder" ' ' "$sub_keyed_str_val") "
-    fi
-  done
-
-  echo $(u_string_trim "$output")
-}
 
 ##
 # Executes given callback function for all env vars discovered so far.
@@ -119,17 +81,17 @@ u_global_assign_value() {
   # MY_VAR='key1.value key2.another_value'
   # Workaround : values cannot contain spaces, so they are replaced by an
   #   arbitrary value (unlikely to collide) for backward-conversion during read.
-  # @see u_global_read_key()
+  # @see u_string_kss_read()
   elif [[ -n "${GLOBALS[$p_var|tos]}" ]]; then
     local sub_val
     local sub_key
     local sub_keys=$(u_string_trim "${GLOBALS[$p_var|tos]}")
-    local prefix_delimiter="$(u_cwt_common_val globals-key-prefix)"
+    local prefix_delimiter="$(u_string_common_val kss-prefix)"
 
     for sub_key in $sub_keys; do
       if [[ -n "${GLOBALS[$p_var|$sub_key]}" ]]; then
         sub_val=$(u_string_trim "${GLOBALS[$p_var|$sub_key]}")
-        sub_val="$(u_str_replace ' ' "$(u_cwt_common_val globals-tmp-space-placeholder)" "$sub_val")"
+        sub_val="$(u_str_replace ' ' "$(u_string_common_val tmp-space-placeholder)" "$sub_val")"
         multi_values+="${sub_key}${prefix_delimiter}${sub_val} "
       fi
     done

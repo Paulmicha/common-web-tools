@@ -24,7 +24,7 @@
 #
 # @example : implement "once per host (per user)" flag from inside a sourced
 #   script using the local project registry.
-#   THIS_ABS_PATH=$(u_get_script_path ${BASH_SOURCE[0]})
+#   THIS_ABS_PATH=$(u_fs_absolute_path ${BASH_SOURCE[0]})
 #   if $(u_check_once "${THIS_ABS_PATH} arg"); then
 #     echo "Proceed."
 #   else

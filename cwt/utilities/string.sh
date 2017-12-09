@@ -4,10 +4,95 @@
 # String-related utility functions.
 #
 # This script is dynamically loaded.
-# @see cwt/bash_utils.sh
+# @see cwt/bootstrap.sh
 #
 # Convention : functions names are all prefixed by "u" (for "utility").
 #
+
+##
+# Reads value by key for "keyed" space-separated strings.
+#
+# @example
+#   my_kss_str=''
+#   eval "$(u_string_kss_write 'my_kss_str' 'key1' 'A This string/cannot #~ contain | {} [any] test ; quotes or asterisks (stars)')"
+#   eval "$(u_string_kss_write 'my_kss_str' 'key2' 'B qsd')"
+#   eval "$(u_string_kss_write 'my_kss_str' 'key3' 'C test')"
+#   u_string_kss_read 'key2' "$my_kss_str" # outputs : 'B qsd'
+#   u_string_kss_read 'key3' "$my_kss_str" # outputs : 'C test'
+#
+#   # Globals using the following syntax also use this technique :
+#   global REMOTE_INSTANCES_CMDS "[append]='/path/to/remote/instance/docroot' [to]=PROJECT_DOCROOT"
+#   u_string_kss_read 'PROJECT_DOCROOT' "$REMOTE_INSTANCES_CMDS"
+#   # -> result : "/path/to/remote/instance/docroot"
+#
+u_string_kss_read() {
+  local p_key="$1"
+  local p_sub_keyed_str="$2"
+
+  local prefix_delimiter="$(u_string_common_val kss-prefix)"
+  local tmp_space_placeholder="$(u_string_common_val tmp-space-placeholder)"
+
+  local sub_keyed_str_item=''
+  local sub_keyed_str_key=''
+  local sub_keyed_str_val=''
+
+  local output=''
+
+  for sub_keyed_str_item in $p_sub_keyed_str; do
+
+    # Match last occurence of key from the end of the string.
+    # See http://wiki.bash-hackers.org/syntax/pe#from_the_end
+    sub_keyed_str_key="${sub_keyed_str_item%%$prefix_delimiter*}"
+
+    if [[ "$sub_keyed_str_key" == "$p_key" ]]; then
+      # Match 1st occurence of key from the beginning of the string.
+      # See http://wiki.bash-hackers.org/syntax/pe#from_the_beginning
+      sub_keyed_str_val="${sub_keyed_str_item#*$prefix_delimiter}"
+      output+="$(u_str_replace "$tmp_space_placeholder" ' ' "$sub_keyed_str_val") "
+    fi
+  done
+
+  echo $(u_string_trim "$output")
+}
+
+##
+# Adds a single value (string, no quotes) to a keyed space-separated string.
+#
+# @requires String var whose name is $1 in calling scope.
+#
+# @param 1 String the variable name that will store the formattedkey/value pair.
+# @param 2 String the key.
+# @param 2 String the value. WARNING : cannot contain * or unescaped $ chars.
+#
+# @example
+#   my_kss_str=''
+#   eval "$(u_string_kss_write 'my_kss_str' 'key1' 'This string/cannot #~ contain | {} [any] test ; quotes or asterisks (stars))"
+#
+u_string_kss_write() {
+  local p_var="$1"
+  local p_key="$2"
+  local p_val="$3"
+
+  local prefix_delimiter="$(u_string_common_val kss-prefix)"
+  local tmp_space_placeholder="$(u_string_common_val tmp-space-placeholder)"
+  local val="${p_val//' '/"$tmp_space_placeholder"}"
+
+  echo "$p_var+=\" ${p_key}${prefix_delimiter}${val} \""
+}
+
+##
+# Centralizes arbitrary unique values (e.g. for delimiters, placeholders, etc).
+#
+# @example
+#   unique_delimiter_str="$(u_string_common_val kss-prefix)"
+#   echo "$unique_delimiter_str"
+#
+u_string_common_val() {
+  case "$1" in
+    kss-prefix) echo ":cwt-kssp:" ;;
+    tmp-space-placeholder) echo ":cwt-tsph:" ;;
+  esac
+}
 
 ##
 # Replaces all occurences of a substring by another in given string.

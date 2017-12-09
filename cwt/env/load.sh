@@ -25,7 +25,7 @@ fi
 . cwt/env/current/vars.sh
 
 # Load global bash utils.
-. cwt/bash_utils.sh
+. cwt/bootstrap.sh
 
 # TODO evaluate removing 'registry' feature.
 . cwt/env/registry.sh

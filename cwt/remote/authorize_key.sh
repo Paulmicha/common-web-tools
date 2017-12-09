@@ -39,7 +39,7 @@ if ! [ -e ~/.ssh/id_rsa.pub ] ; then
 fi
 
 # Check this hasn't been run before.
-THIS_ABS_PATH=$(u_get_script_path ${BASH_SOURCE[0]})
+THIS_ABS_PATH=$(u_fs_absolute_path ${BASH_SOURCE[0]})
 if $(u_check_once "${THIS_ABS_PATH} ${1}"); then
   echo ""
   echo "Proceeding to authorize key for '${1}'. Please confirm and/or connect in the following steps."

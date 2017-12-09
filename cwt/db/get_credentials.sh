@@ -6,7 +6,7 @@
 # This script initializes a random password the first time it is called (but
 # not on subsequent calls). It is idempotent.
 #
-# @requires cwt/bash_utils.sh
+# @requires cwt/bootstrap.sh
 # @requires global $INSTANCE_DOMAIN in scope.
 #
 # Usage :

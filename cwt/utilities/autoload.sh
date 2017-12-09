@@ -4,7 +4,7 @@
 # Autoloading-related utility functions.
 #
 # This file is dynamically loaded.
-# @see cwt/bash_utils.sh
+# @see cwt/bootstrap.sh
 #
 # Convention : functions names are all prefixed by "u" (for "utility").
 #
@@ -126,11 +126,19 @@ u_autoload_print_lookup_paths() {
 # rest of the calling script).
 #
 # This allows to completely replace a default CWT script.
+#
+# @param 1 String the original file include path relative to PROJECT_DOCROOT.
+# @param 2 [optional] String the statement to use when an override is found.
+# @param 3 [optional] String custom statement allowing to react differently.
+#
+# @see u_cwt_extensions()
+# @see cwt/bootstrap.sh
+#
 # @example
+#   # Basic (default) behavior : source override and return early.
 #   eval `u_autoload_override "$BASH_SOURCE"`
 #
-# Another use is to break a lookup loop if a replacement exists.
-# @example
+#   # Break a lookup loop if an override is found.
 #   for prov_model in "${PROV_INCLUDES_LOOKUP_PATHS[@]}"; do
 #     if [[ -f "$prov_model" ]]; then
 #       eval $(u_autoload_override "$prov_model" 'continue')
@@ -138,9 +146,18 @@ u_autoload_print_lookup_paths() {
 #     fi
 #   done
 #
+#   # Only get the override filepath to customize reaction.
+#   local override_file=''
+#   local extensions_declaration="cwt/cwt_extensions.txt"
+#   eval $(u_autoload_override "$extensions_declaration" '' 'override_file="$override"')
+#   if [[ -n "$override_file" ]]; then
+#     echo "An override has been found : $override_file"
+#   fi
+#
 u_autoload_override() {
   local p_script_path="$1"
   local p_operand="$2"
+  local p_reaction="$3"
 
   local operand='return'
   if [[ -n "$p_operand" ]]; then
@@ -148,13 +165,21 @@ u_autoload_override() {
   fi
 
   local override=${p_script_path/cwt/"$(u_autoload_get_custom_dir)/overrides"}
+
   if [[ -f "$override" ]]; then
-    echo ". $override ; $operand"
+    # Allows to react to the presence of an override differently.
+    if [[ -n "$p_reaction" ]]; then
+      echo "$p_reaction"
+
+    # Normal behavior (see examples in function docblock).
+    else
+      echo ". $override ; $operand"
+    fi
   fi
 }
 
 ##
-# Sources complement of given script.
+# [TODO document new arg] Sources complement of given script.
 #
 # Checks if its counterpart exists in cwt/custom/complements, and if it does,
 # source it in the scope of the calling script.
@@ -166,10 +191,18 @@ u_autoload_override() {
 #
 u_autoload_get_complement() {
   local p_script_path="$1"
+  local p_reaction="$2"
+
   local complement=${p_script_path/cwt/"$(u_autoload_get_custom_dir)/complements"}
 
   if [[ -f "$complement" ]]; then
-    . "$complement"
+
+    # Allows to react to the presence of a complement differently.
+    if [[ "$p_reaction" == 'get_complement_filepath' ]]; then
+      echo "$complement"
+    else
+      . "$complement"
+    fi
   fi
 }
 
