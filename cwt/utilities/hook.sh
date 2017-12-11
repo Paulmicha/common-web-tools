@@ -3,11 +3,7 @@
 ##
 # Hooks-related utility functions.
 #
-# TODO evaluate using a more generic function that could be "wrapped" by others
-# to achieve different types of lookups, e.g. :
-# - u_hook() could act as a base function dealing with variation-related params (like currently $p_lookup_subjects)
-# - u_hook_app() already provides lookups specific to current app and its version
-# - u_hook_cwt() [proposition] for "internal" triggers (related to CWT, like stack/post-init)
+# TODO [wip] refacto using u_cwt_extend().
 #
 # This file is dynamically loaded.
 # @see cwt/bootstrap.sh

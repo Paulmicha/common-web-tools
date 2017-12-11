@@ -178,9 +178,9 @@ u_cwt_extend() {
 # @param n+2 the rest of the arguments are forwarded to dynamic function name.
 #
 # @example
-#   extensions="$(u_cwt_get extensions 'path/to/relative/dir')"
+#   extensions="$(u_cwt_get extensions words 'path/to/relative/dir')"
 #   echo "$extensions"
-#   # @see u_cwt_get_extensible_words()
+#   # @see u_cwt_get_extending_words()
 #
 u_cwt_get() {
   local p_which_values="$1"
@@ -190,9 +190,9 @@ u_cwt_get() {
   case "$p_type" in
 
     # These values are meant for the same ".gitignore"-like lookup pattern.
-    # @see u_cwt_get_extensible_words()
+    # @see u_cwt_get_extending_words()
     words)
-      echo "$(u_cwt_get_extensible_words $p_which_values $@)"
+      echo "$(u_cwt_get_extending_words $p_which_values $@)"
     ;;
 
     # Default : attempt to call the function name "u_cwt_$p_which_values".
@@ -212,21 +212,24 @@ u_cwt_get() {
 # @see "conventions" + "extensibility" documentation.
 # @see u_cwt_extend()
 #
+# TODO explore possibility of prefix + suffix (delimited by dot ?) + namespace
+# variations in words for adding different ways to extend / alter CWT.
+#
 # @param 1 [optional] String relative path (defaults to './cwt' = CWT "core").
 # @param 2 [optional] String globals "namespace" (defaults to 'CWT').
 #
 # @example
 #   # Example with subjects.
-#   words="$(u_cwt_get_extensible_words subjects 'path/to/relative/dir' 'MY_NAMESPACE')"
+#   words="$(u_cwt_get_extending_words subjects 'path/to/relative/dir' 'MY_NAMESPACE')"
 #   echo "$words"
 #   # Yields for ex. "app db env git provision remote stack test instance"
 #
 #   # Example with extensions.
-#   words="$(u_cwt_get_extensible_words extensions 'path/to/relative/dir' 'MY_NAMESPACE')"
+#   words="$(u_cwt_get_extending_words extensions 'path/to/relative/dir' 'MY_NAMESPACE')"
 #   echo "$words"
 #   # Yields for ex. "predicates actions variants combos"
 #
-u_cwt_get_extensible_words() {
+u_cwt_get_extending_words() {
   local p_suffix="$1"
   local p_path="$2"
   local p_namespace="$3"

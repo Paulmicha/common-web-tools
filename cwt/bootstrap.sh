@@ -18,23 +18,17 @@ export CWT_EXTENSIONS
 # Include required utilities.
 . cwt/utilities/autoload.sh
 for file in $(find cwt/utilities/* -type f -print0 | xargs -0); do
-  eval $(u_autoload_override "$file" 'continue')
-
   . "$file"
-
   u_autoload_get_complement "$file"
 done
 
-# Get CWT core "objects".
+# Initializes hooks and lookups (CWT extension mecanisms).
 u_cwt_extend
 
 # Load optional additional includes.
 if [[ -n "$CWT_INC" ]]; then
   for file in $CWT_INC; do
-    eval $(u_autoload_override "$file" 'continue')
-
     . "$file"
-
     u_autoload_get_complement "$file"
   done
 fi
