@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##
 # Implements u_hook_app 'apply' 'ownership_and_perms' '' 'stack'.

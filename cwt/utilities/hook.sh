@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##
 # Hooks-related utility functions.
@@ -80,7 +80,7 @@ u_hook_app() {
     u_stack_get_specs "$PROJECT_STACK"
   fi
 
-  local lookup_subjects="app app/$APP"
+  local lookup_subjects="pp app/$APP $CWT_CUSTOM_DIR"
   if [[ -n "$4" ]]; then
     lookup_subjects+=" $4"
   fi

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##
 # Filesystem (fs) related utility functions.
@@ -10,13 +10,80 @@
 #
 
 ##
+# Adds or updates a single line in given file.
+#
+# NB : hasn't been tested when pattern matches several lines.
+#
+# @param 1 String : the matching pattern (recognizes which line to update).
+# @param 2 String : the entire new line to write.
+# @param 3 String : (writeable) file path.
+#
+# @example
+#   u_fs_update_line 'MY_VAR=' 'MY_VAR="new-val"' path/to/writeable/file
+#
+u_fs_update_line() {
+  local p_pattern="$1"
+  local p_new_line="$2"
+  local p_file_path="$3"
+
+  if [[ ! -f "$p_file_path" ]]; then
+    echo
+    echo "Error in u_fs_update_line() - $BASH_SOURCE line $LINENO: file $p_file_path was not found." >&2
+    echo "Aborting (1)." >&2
+    echo
+    return 1
+  fi
+
+  local haystack="$(< "$p_file_path")"
+  if [[ -z "$haystack" ]]; then
+    echo "$p_new_line" > "$p_file_path"
+    return
+  fi
+
+  # Escape backslash, forward slash and ampersand for use as a sed replacement.
+  # See https://stackoverflow.com/a/42727904
+  p_new_line=$(echo "$p_new_line" | sed -e 's/[\/&]/\\&/g')
+
+  sed -e "s,${p_pattern}.*,${p_new_line},g" -i "$p_file_path"
+}
+
+##
+# Writes given string to a file only once.
+#
+# @param 1 String : the string to append to the file.
+# @param 2 String : (writeable) file path.
+#
+# @example
+#   u_fs_write_once '--test A' path/to/writeable/file # File contents appended.
+#   u_fs_write_once '--test A' path/to/writeable/file # (unchanged)
+#   u_fs_write_once '--test B' path/to/writeable/file # File contents appended.
+#
+u_fs_write_once() {
+  local p_needle="$1"
+  local p_file_path="$2"
+
+  local haystack="$(< "$p_file_path")"
+
+  if [[ -z "$haystack" ]]; then
+    echo "$p_needle" > "$p_file_path"
+    return
+  fi
+
+  local new_str="$(u_string_append_once $'\n'"$p_needle" "$haystack")"
+
+  if [[ "$new_str" != "$haystack" ]]; then
+    echo "$new_str" > "$p_file_path"
+  fi
+}
+
+##
 # Gets a list of folder by path and maxdepth.
 #
 # @param 1 [optional] String base path (defaults to '.').
 # @param 2 [optional] Integer max depth (defaults to 1).
 #
 # @example
-#   dir_list=$(u_fs_tree_dir_list)
+#   dir_list=$(u_fs_dir_list)
 #   echo "$dir_list"
 #
 u_fs_dir_list() {
@@ -46,7 +113,7 @@ u_fs_dir_list() {
 # @param 3 [optional] name matching pattern (defaults to '*.sh').
 #
 # @example
-#   file_list=$(u_fs_tree_file_list)
+#   file_list=$(u_fs_file_list)
 #   echo "$file_list"
 #
 u_fs_file_list() {
@@ -68,7 +135,7 @@ u_fs_file_list() {
     p_match_pattern='*.sh'
   fi
 
-  file_list="$(find $p_path -maxdepth $p_maxdepth -type f -name "$p_match_pattern" -printf '%P\n')"
+  file_list="$(find "$p_path" -maxdepth "$p_maxdepth" -type f -name "$p_match_pattern" -printf '%P\n')"
 
   echo "$file_list"
 }

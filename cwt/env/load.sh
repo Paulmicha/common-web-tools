@@ -1,7 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##
 # Loads current environment vars and aliases.
+#
+# TODO [wip] Rename this file to implement u_hook 'cwt' 'bootstrap' instead.
 #
 # This script is idempotent (can be imported many times). Note: combined scripts
 # may result in sourcing this file many times over, because for simplicity there
@@ -35,4 +37,6 @@ fi
 # expand_aliases shell option is set using shopt.
 # See https://unix.stackexchange.com/a/1498
 shopt -s expand_aliases
+
+# TODO [wip] Refacto hooks to follow u_cwt_extend().
 u_hook_app 'bash' 'alias'

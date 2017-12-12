@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##
 # Writes current local instance env settings.
@@ -49,7 +49,7 @@ fi
 
 # (Re)init destination file (make empty).
 cat > "$CURRENT_ENV_SETTINGS_FILE" <<'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##
 # Current instance env settings file.

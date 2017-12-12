@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##
 # Letsencrypt renew HTTPS certificate (certbot) cron setup.

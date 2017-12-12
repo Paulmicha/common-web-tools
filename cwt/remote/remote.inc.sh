@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##
 # Remote host-related utility functions.
@@ -49,4 +49,52 @@ u_remote_cmd_wrapper() {
   else
     eval "ssh $p_ssh \"bash -s\" < \"$p_script\""
   fi
+}
+
+##
+# Adds a remote instance to current instance's existing globals.
+#
+# @param 1 String : remote instance's host domain.
+# @param 2 String : remote instance's type (dev, production, etc).
+# @param 3 String : remote instance's host connection command.
+# @param 4 String : remote instance's PROJECT_DOCROOT value.
+# @param 5 [optional] String : remote instance's APP_DOCROOT value. Defaults to:
+#   "$p_project_docroot/web"
+# @param 6 [optional] Array : additional declarations in the form:
+#   "[append]=$p_host_type [to]=$p_host_domain|type"
+#
+# @example
+#   # Basic example with only mandatory params :
+#   u_remote_instance_add \
+#     'remote.instance.cwt.com' \
+#     'dev' \
+#     'ssh -p123 username@cwt.com' \
+#     '/path/to/remote/instance/docroot'
+#
+u_remote_instance_add() {
+  local p_host_domain="$1"
+  local p_host_type="$2"
+  local p_connect_cmd="$3"
+  local p_project_docroot="$4"
+  local p_app_docroot="$5"
+  local p_extra_declarations=$6[@]
+
+  if [[ -z "$p_app_docroot" ]]; then
+    p_app_docroot="$p_project_docroot/web"
+  fi
+
+  declare -a declarations
+
+  declarations+=("[append]=$p_host_domain [to]=domains")
+  declarations+=("[append]=$p_host_type [to]=$p_host_domain|type")
+  declarations+=("[append]='$p_connect_cmd' [to]=$p_host_domain|connect")
+  declarations+=("[append]='$p_project_docroot' [to]=$p_host_domain|PROJECT_DOCROOT")
+  declarations+=("[append]='$p_app_docroot' [to]=$p_host_domain|APP_DOCROOT")
+
+  local declaration
+  for declaration in ${!p_extra_declarations}; do
+    declarations+=("$declaration")
+  done
+
+  u_global_update_var 'REMOTE_INSTANCES' declarations
 }

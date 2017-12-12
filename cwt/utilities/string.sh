@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##
 # String-related utility functions.
@@ -8,6 +8,34 @@
 #
 # Convention : functions names are all prefixed by "u" (for "utility").
 #
+
+##
+# Appends a given value to a string only once.
+#
+# @param 1 String : the value to append.
+# @param 2 String : to which str to append that value to.
+#
+# @example
+#   str='Foo bar'
+#   str="$(u_string_append_once '--test A' "$str")" # str='Foo bar--test A'
+#   str="$(u_string_append_once '--test A' "$str")" # (unchanged)
+#   str="$(u_string_append_once '--test B' "$str")" # str='Foo bar--test A--test B'
+#
+u_string_append_once() {
+  local p_needle="$1"
+  local p_haystack="$2"
+
+  if [[ -z "$p_haystack" ]]; then
+    echo -n "$p_needle"
+    return
+  fi
+
+  if [[ "$p_haystack" != *"$p_needle"* ]]; then
+    echo -n "${p_haystack}${p_needle}"
+  else
+    echo -n "${p_haystack}"
+  fi
+}
 
 ##
 # Reads value by key for "keyed" space-separated strings.

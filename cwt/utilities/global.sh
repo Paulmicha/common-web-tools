@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##
 # GLobals-related utility functions.
@@ -10,6 +10,75 @@
 #
 # Convention : functions names are all prefixed by "u" (for "utility").
 #
+
+##
+# Updates a single global (AFTER stack init).
+#
+# @param 1 String : the global variable name.
+# @param 2 Array : the global declaration(s).
+# @param 3 [optional] String : the settings file path.
+#
+# @prereq cwt/env/write.sh
+# @see global()
+# @see u_fs_update_line()
+#
+# @example
+#   # Single declaration :
+#   u_global_update_var MY_GLOBAL ("my value")
+#
+#   # Multiple declarations :
+#   declare -a declarations
+#   remote_domain='remote.instance.cwt.com'
+#   declarations+=("[append]=$remote_domain [to]=domains")
+#   declarations+=("[append]=dev [to]=$remote_domain|type")
+#   declarations+=("[append]='ssh -p123 username@cwt.com' [to]=$remote_domain|connect")
+#   declarations+=("[append]='/path/to/remote/instance/docroot' [to]=$remote_domain|PROJECT_DOCROOT")
+#   declarations+=("[append]='/path/to/remote/instance/docroot/web' [to]=$remote_domain|APP_DOCROOT")
+#   u_global_update_var REMOTE_INSTANCES declarations
+#
+u_global_update_var() {
+  local p_global="$1"
+  local p_declarations=${2}[@]
+  local p_file_path="$3"
+
+  local settings='cwt/env/current/vars.sh'
+  if [[ -n "$p_file_path" ]]; then
+    settings="$p_file_path"
+  fi
+
+  # We need the destination file to exist before continuing.
+  if [[ ! -f "$settings" ]]; then
+    echo
+    echo "Error in u_global_update_var() - $BASH_SOURCE line $LINENO: no settings found in current instance." >&2
+    echo "Aborting (1)." >&2
+    echo
+    return 1
+  fi
+
+  # Ensure we cannot accidentally inherit declarations from previous operations
+  # in current shell scope.
+  unset GLOBALS
+  declare -A GLOBALS
+  GLOBALS_COUNT=0
+  GLOBALS_UNIQUE_NAMES=()
+  GLOBALS_UNIQUE_KEYS=()
+
+  local declaration
+  for declaration in ${!p_declarations}; do
+    global "$p_global" "$declaration"
+  done
+
+  local new_line
+  if [[ -z "$p_declarations" ]]; then
+    eval "new_line=\"$p_global=''\""
+  else
+    eval "new_line=\"$p_global=\\\"\$$p_global\\\"\""
+  fi
+
+  u_fs_update_line "$p_global=" "$new_line" "$settings"
+
+  # TODO For docker-compose stacks, keep the '.env' file in sync as well.
+}
 
 ##
 # Executes given callback function for all env vars discovered so far.

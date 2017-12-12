@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##
 # Add Local SSH keys to remote host(s) authorized keys.

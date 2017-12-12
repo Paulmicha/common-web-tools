@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##
 # LAMP server quick setup script for local dev (Drupal / Symfony friendly).

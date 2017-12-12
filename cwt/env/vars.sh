@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##
 # Global env settings declaration.
@@ -33,9 +33,10 @@ global REG_BACKEND "[default]=file"
 
 global CWT_CUSTOM_DIR "[default]=cwt/custom"
 
-# Declaring additional hosts. NB : each host must declare exactly 3 'append'
-# globals - example :
-# global REMOTE_INSTANCES "[append]=cwt-remote.instance.com"
-# global REMOTE_INSTANCES_CMDS "[append]='ssh -p123 username@remote.domain.tld' [to]=connect"
-# global REMOTE_INSTANCES_CMDS "[append]='/path/to/remote/instance/docroot' [to]=PROJECT_DOCROOT"
-# global REMOTE_INSTANCES_TYPES "[append]=dev"
+# Declaring additional hosts. Example :
+# remote_domain='remote.instance.cwt.com'
+# global REMOTE_INSTANCES "[append]=$remote_domain [to]=domains"
+# global REMOTE_INSTANCES "[append]=dev [to]=$remote_domain|type"
+# global REMOTE_INSTANCES "[append]='ssh -p123 username@cwt.com' [to]=$remote_domain|connect"
+# global REMOTE_INSTANCES "[append]='/path/to/remote/instance/docroot' [to]=$remote_domain|PROJECT_DOCROOT"
+# global REMOTE_INSTANCES "[append]='/path/to/remote/instance/docroot/web' [to]=$remote_domain|APP_DOCROOT"

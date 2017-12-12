@@ -1,6 +1,7 @@
 cwt
 instance
 app
+cron
 db
 env
 git
