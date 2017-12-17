@@ -20,6 +20,10 @@
 /cwt/env/current/*
 !/cwt/env/current/README.md
 
+# Remote instances.
+/cwt/remote/instances/*
+!/cwt/remote/instances/README.md
+
 # Private files, outside of public (web) dir.
 /private/*
 !/private/README.md

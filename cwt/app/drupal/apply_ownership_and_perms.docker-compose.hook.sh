@@ -11,7 +11,35 @@
 # @see u_hook()
 #
 
+# TODO [wip] handle differences like php-fpm / apache.
+CHMOD_W_FILES='0660'
+CHMOD_W_DIRS='1771'
+CHMOD_NW_FILES='0750'
+CHMOD_NW_DIRS='0750'
+
 # User 82 is www-data in Docker images like wodby/drupal-php.
 if [[ -n "$APP_DOCROOT" ]]; then
+
+  # Common ownership.
   chown 82:82 "$APP_DOCROOT" -R
+
+  # Non-writeable files.
+  find "$APP_DOCROOT" -type f -exec chmod $CHMOD_NW_FILES {} +
+
+  # Non-writeable dirs.
+  find "$APP_DOCROOT" -type d -exec chmod $CHMOD_NW_DIRS {} +
+fi
+
+if [[ -n "$WRITEABLE_DIRS" ]]; then
+  for writeable_dir in $WRITEABLE_DIRS; do
+
+    # Common ownership in writeable dirs.
+    chown 82:82 "$writeable_dir" -R
+
+    # Writeable files.
+    find "$writeable_dir" -type f -exec chmod $CHMOD_W_FILES {} +
+
+    # Writeable dirs.
+    find "$writeable_dir" -type d -exec chmod $CHMOD_W_DIRS {} +
+  done
 fi
