@@ -10,14 +10,17 @@
 ##
 # Initializes hooks and lookups (CWT extension mecanisms).
 #
-# Exports "namespaced" globals (prefixed by optional 2nd argument).
+# @param 1 [optional] String relative path (defaults to './cwt' = CWT "core").
+# @param 2 [optional] String globals "namespace" (defaults to 'CWT').
+#
+# Exports "namespaced" globals (prefixed by 'CWT' or optional 2nd argument). Ex:
+# @export CWT_SUBJECTS
+# @export CWT_ACTIONS
+#
 # @see "conventions" + "extensibility" documentation.
 #
 # This process uses files similar to .gitignore : they control which functions
 # and files are loaded during "bootstrap".
-#
-# @param 1 [optional] String relative path (defaults to './cwt' = CWT "core").
-# @param 2 [optional] String globals "namespace" (defaults to 'CWT').
 #
 u_cwt_extend() {
   local p_path="$1"
@@ -73,7 +76,8 @@ u_cwt_extend() {
     # Ignore subjects that do NOT have a dedicated folder (e.g. meant for
     # function-based hooks only).
     if [[ ! -d "$p_path/$subject" ]]; then
-      eval "$(u_string_kss_write ${p_namespace}_SUBJECTS "$subject" "$p_path")"
+      # eval "$(u_string_kss_write ${p_namespace}_SUBJECTS "$subject" "$p_path")"
+      eval "${p_namespace}_SUBJECTS+=\"$subject \""
       continue
     fi
 
@@ -84,7 +88,8 @@ u_cwt_extend() {
     diff=0
 
     # Start "group" with subject = the containing folder.
-    eval "$(u_string_kss_write ${p_namespace}_SUBJECTS "$subject" "$p_path")"
+    # eval "$(u_string_kss_write ${p_namespace}_SUBJECTS "$subject" "$p_path")"
+    eval "${p_namespace}_SUBJECTS+=\"$subject \""
 
     # Default actions are all *.sh files NOT using multiple extension pattern in
     # that dir (also excludes "dotfiles" - file names starting with '.').
@@ -102,7 +107,8 @@ u_cwt_extend() {
         continue
       fi
 
-      eval "$(u_string_kss_write ${p_namespace}_ACTIONS "$file" "$p_path/$subject")"
+      # eval "$(u_string_kss_write ${p_namespace}_ACTIONS "$file" "$p_path/$subject")"
+      eval "${p_namespace}_ACTIONS+=\"${subject}:$file \""
     done
 
     # The 'INC' extensions are a simple list of files to be sourced in
@@ -127,7 +133,8 @@ u_cwt_extend() {
           local added_val=''
 
           for added_val in $file_contents; do
-            eval "$(u_string_kss_write "${p_namespace}_${uppercase}" "$added_val" "$p_path/$subject")"
+            # eval "$(u_string_kss_write "${p_namespace}_${uppercase}" "$added_val" "$p_path/$subject")"
+            eval "${p_namespace}_${uppercase}+=\"${subject}:$added_val \""
           done
         fi
       fi

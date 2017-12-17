@@ -12,10 +12,53 @@
 #
 
 ##
-# [wip] TODO Refacto hooks.
+# Includes scripts by namespace, subject, action, variant, and prefix/suffix.
+#
+# Also attempts to call functions matching the corresponding lookup patterns.
+#
+# @requires the following globals in calling scope :
+# - NAMESPACE
+# - CWT_SUBJECTS or ${p_namespace}_SUBJECTS
+# - CWT_ACTIONS or ${p_namespace}_ACTIONS
+#
+# @uses the following globals in calling scope if available (optional) :
+# - CWT_VARIANTS or ${p_namespace}_VARIANTS (defaults to empty)
+# - CWT_PREFIX_SUFFIX or ${p_namespace}_PREFIX_SUFFIX (defaults to pre/post by action)
+#
+# @see u_cwt_extend()
+#
+# @example
+#   u_hook_v2 'CWT' '*' 'bootstrap'
 #
 u_hook_v2() {
-  echo "debug u_hook_v2 $@"
+  local p_namespace="$1"
+  local p_subjects_filter="$2"
+  local p_actions_filter="$3"
+  local p_variants_filter="$4"
+  local p_prefix_suffix_filter="$5"
+
+  if [[ -z "$p_namespace" ]]; then
+    p_namespace='CWT'
+  fi
+
+  eval "local subjects=\"\$${p_namespace}_SUBJECTS\""
+  eval "local actions=\"\$${p_namespace}_ACTIONS\""
+  eval "local variants=\"\$${p_namespace}_VARIANTS\""
+  eval "local prefix_suffix=\"\$${p_namespace}_PREFIX_SUFFIX\""
+
+  if [[ -z "$subjects" ]]; then
+    return 1
+  fi
+  if [[ -z "$actions" ]]; then
+    return 2
+  fi
+
+  if [[ (-z "$p_subjects_filter") || ("$p_subjects_filter" == '*') ]]; then
+    p_subjects_filter="$subjects"
+  fi
+  if [[ (-z "$p_actions_filter") || ("$p_actions_filter" == '*') ]]; then
+    p_actions_filter="$actions"
+  fi
 
   # cwt/custom/presets/contenta/1/init.hook.sh
   # cwt/custom/presets/contenta/1/init.docker-compose.hook.sh

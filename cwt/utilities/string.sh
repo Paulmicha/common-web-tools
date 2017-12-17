@@ -38,33 +38,6 @@ u_string_append_once() {
 }
 
 ##
-# [debug] Prints all data defined in given "keyed" space-separated string.
-#
-# @example
-#   u_string_kss_debug "$my_kss_str" 'my_kss_str'
-#
-u_string_kss_debug() {
-  local p_sub_keyed_str="$1"
-  local p_name="$2"
-
-  local keys="$(u_string_kss_get_keys "$p_sub_keyed_str")"
-  local key
-  local val
-
-  echo
-  echo "'$p_name' has the following keys : $keys"
-  echo
-
-  for key in $keys; do
-    val="$(u_string_kss_read "$key" "$p_sub_keyed_str")"
-    if [[ -n "$val" ]]; then
-      echo "  ${p_name}.${key} = $val"
-    fi
-  done
-  echo
-}
-
-##
 # Gets all keys defined in given "keyed" space-separated string.
 #
 # @example
@@ -136,7 +109,14 @@ u_string_kss_read() {
       # Match 1st occurence of key from the beginning of the string.
       # See http://wiki.bash-hackers.org/syntax/pe#from_the_beginning
       sub_keyed_str_val="${sub_keyed_str_item#*$prefix_delimiter}"
+<<<<<<< HEAD
       output+="$(u_str_replace "$tmp_space_placeholder" ' ' "$sub_keyed_str_val") "
+=======
+
+      # Decode the value that was base64-encoded to workaround spaces.
+      # @see u_string_kss_write()
+      output+=" $(printf "%s" "$sub_keyed_str_val" | base64 --decode) "
+>>>>>>> 3b26e24... Fix u_string_kss_read().
     fi
   done
 
@@ -166,6 +146,34 @@ u_string_kss_write() {
   local val="${p_val//' '/"$tmp_space_placeholder"}"
 
   echo "$p_var+=\" ${p_key}${prefix_delimiter}${val} \""
+}
+
+##
+# [debug] Prints all data defined in given "keyed" space-separated string.
+#
+# @example
+#   u_string_kss_debug 'MY_VAR_NAME'
+#
+u_string_kss_debug() {
+  local p_var_name="$1"
+
+  eval "local sub_keyed_str=\"\$$p_var_name\""
+
+  local keys="$(u_string_kss_get_keys "$sub_keyed_str")"
+  local key
+  local val
+
+  echo
+  echo "'$p_var_name' has the following keys : $keys"
+  echo
+
+  for key in $keys; do
+    val="$(u_string_kss_read "$key" "$sub_keyed_str")"
+    if [[ -n "$val" ]]; then
+      echo "  ${p_var_name}.${key} = $val"
+    fi
+  done
+  echo
 }
 
 ##

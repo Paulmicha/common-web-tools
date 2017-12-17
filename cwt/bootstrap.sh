@@ -12,6 +12,9 @@
 #   . cwt/bootstrap.sh
 #
 
+# Measure time elapsed.
+SECONDS=0
+
 # This allows to customize CWT extensibility.
 export CWT_EXTENSIONS
 
@@ -22,8 +25,16 @@ for file in $(find cwt/utilities/* -type f -print0 | xargs -0); do
   u_autoload_get_complement "$file"
 done
 
+echo
+echo "Seconds elapsed - include required utilities = $SECONDS"
+echo
+
 # Initializes hooks and lookups (CWT extension mecanisms).
 u_cwt_extend
+
+echo
+echo "Seconds elapsed - u_cwt_extend = $SECONDS"
+echo
 
 # Load optional additional includes.
 if [[ -n "$CWT_INC" ]]; then
@@ -33,5 +44,13 @@ if [[ -n "$CWT_INC" ]]; then
   done
 fi
 
+echo
+echo "Seconds elapsed - optional additional includes = $SECONDS"
+echo
+
 # Call any 'bootstrap' hooks.
 u_hook 'cwt' 'bootstrap'
+
+echo
+echo "Seconds elapsed - u_hook 'cwt' 'bootstrap' = $SECONDS"
+echo

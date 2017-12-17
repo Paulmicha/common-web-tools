@@ -10,6 +10,9 @@
 # TODO provide tests / CI examples.
 #
 
+# TODO evaluate swapping global namespace at runtime (e.g. in presets ~ "modules").
+global NAMESPACE "CWT"
+
 global PROJECT_STACK
 global PROJECT_DOCROOT "[default]=$PWD"
 global APP_DOCROOT "[default]=$PROJECT_DOCROOT/web"

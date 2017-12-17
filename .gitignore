@@ -20,7 +20,7 @@
 /cwt/env/current/*
 !/cwt/env/current/README.md
 
-# Remote instances.
+# Ignore remote instances defined on current local instance.
 /cwt/remote/instances/*
 !/cwt/remote/instances/README.md
 
