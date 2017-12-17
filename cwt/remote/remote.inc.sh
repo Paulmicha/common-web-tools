@@ -54,11 +54,22 @@ u_remote_cmd_wrapper() {
 ##
 # Adds a remote instance to current instance's existing globals.
 #
+<<<<<<< HEAD
 # @param 1 String : remote instance's host domain.
 # @param 2 String : remote instance's type (dev, production, etc).
 # @param 3 String : remote instance's host connection command.
 # @param 4 String : remote instance's PROJECT_DOCROOT value.
 # @param 5 [optional] String : remote instance's APP_DOCROOT value. Defaults to:
+=======
+# TODO prevent for instances where HOST_TYPE != 'local' ?
+#
+# @param 1 String : remote instance's id (short name, no space, _a-zA-Z0-9 only).
+# @param 2 String : remote instance's host domain.
+# @param 3 String : remote instance's type (dev, production, etc).
+# @param 4 String : remote instance's host connection command.
+# @param 5 String : remote instance's PROJECT_DOCROOT value.
+# @param 6 [optional] String : remote instance's APP_DOCROOT value. Defaults to:
+>>>>>>> 8afe287... [wip] Refacto hooks.
 #   "$p_project_docroot/web"
 # @param 6 [optional] Array : additional declarations in the form:
 #   "[append]=$p_host_type [to]=$p_host_domain|type"

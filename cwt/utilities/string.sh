@@ -38,6 +38,66 @@ u_string_append_once() {
 }
 
 ##
+# [debug] Prints all data defined in given "keyed" space-separated string.
+#
+# @example
+#   u_string_kss_debug "$my_kss_str" 'my_kss_str'
+#
+u_string_kss_debug() {
+  local p_sub_keyed_str="$1"
+  local p_name="$2"
+
+  local keys="$(u_string_kss_get_keys "$p_sub_keyed_str")"
+  local key
+  local val
+
+  echo
+  echo "'$p_name' has the following keys : $keys"
+  echo
+
+  for key in $keys; do
+    val="$(u_string_kss_read "$key" "$p_sub_keyed_str")"
+    if [[ -n "$val" ]]; then
+      echo "  ${p_name}.${key} = $val"
+    fi
+  done
+  echo
+}
+
+##
+# Gets all keys defined in given "keyed" space-separated string.
+#
+# @example
+#   my_kss_str=''
+#   eval "$(u_string_kss_write 'my_kss_str' 'key1' 'qsdljq sldkqj sdlkqjs dlkj')"
+#   eval "$(u_string_kss_write 'my_kss_str' 'key2' 'B qsd')"
+#   eval "$(u_string_kss_write 'my_kss_str' 'key3' 'C test')"
+#   u_string_kss_get_keys "$my_kss_str" # outputs : 'key1 key2 key3'
+#
+u_string_kss_get_keys() {
+  local p_sub_keyed_str="$1"
+
+  local prefix_delimiter="$(u_string_common_val kss-prefix)"
+
+  local sub_keyed_str_item=''
+  local sub_keyed_str_key=''
+  local sub_keyed_str_val=''
+
+  local output=''
+
+  for sub_keyed_str_item in $p_sub_keyed_str; do
+
+    # Match last occurence of key from the end of the string.
+    # See http://wiki.bash-hackers.org/syntax/pe#from_the_end
+    sub_keyed_str_key="${sub_keyed_str_item%%$prefix_delimiter*}"
+
+    output+=" $(u_string_trim "$sub_keyed_str_key")"
+  done
+
+  echo $(u_string_trim "$output")
+}
+
+##
 # Reads value by key for "keyed" space-separated strings.
 #
 # @example
