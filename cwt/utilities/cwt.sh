@@ -76,7 +76,6 @@ u_cwt_extend() {
     # Ignore subjects that do NOT have a dedicated folder (e.g. meant for
     # function-based hooks only).
     if [[ ! -d "$p_path/$subject" ]]; then
-      # eval "$(u_string_kss_write ${p_namespace}_SUBJECTS "$subject" "$p_path")"
       eval "${p_namespace}_SUBJECTS+=\"$subject \""
       continue
     fi
@@ -88,7 +87,6 @@ u_cwt_extend() {
     diff=0
 
     # Start "group" with subject = the containing folder.
-    # eval "$(u_string_kss_write ${p_namespace}_SUBJECTS "$subject" "$p_path")"
     eval "${p_namespace}_SUBJECTS+=\"$subject \""
 
     # Default actions are all *.sh files NOT using multiple extension pattern in
@@ -107,7 +105,6 @@ u_cwt_extend() {
         continue
       fi
 
-      # eval "$(u_string_kss_write ${p_namespace}_ACTIONS "$file" "$p_path/$subject")"
       eval "${p_namespace}_ACTIONS+=\"${subject}:$file \""
     done
 
@@ -133,7 +130,6 @@ u_cwt_extend() {
           local added_val=''
 
           for added_val in $file_contents; do
-            # eval "$(u_string_kss_write "${p_namespace}_${uppercase}" "$added_val" "$p_path/$subject")"
             eval "${p_namespace}_${uppercase}+=\"${subject}:$added_val \""
           done
         fi
