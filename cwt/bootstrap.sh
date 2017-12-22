@@ -17,11 +17,8 @@ eval "once=\$${NAMESPACE}_BS_FLAG"
 if [[ -z "$once" ]]; then
   eval "export ${NAMESPACE}_BS_FLAG=1"
 
-  # This allows to customize CWT extensibility.
-  export CWT_EXTENSIONS
-
   # Include required utilities.
-  . cwt/utilities/autoload.sh
+  . cwt/utilities/autoload.sh # TODO include once (convenience).
   for file in $(find cwt/utilities/* -type f -print0 | xargs -0); do
     . "$file"
     u_autoload_get_complement "$file"

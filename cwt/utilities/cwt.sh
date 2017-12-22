@@ -13,14 +13,35 @@
 # @param 1 [optional] String relative path (defaults to './cwt' = CWT "core").
 # @param 2 [optional] String globals "namespace" (defaults to 'CWT').
 #
-# Exports "namespaced" globals (prefixed by 'CWT' or optional 2nd argument). Ex:
-# @export CWT_SUBJECTS
-# @export CWT_ACTIONS
+# Exports "namespaced" globals prefixed by 'CWT' or optional 2nd argument.
+# E.g. :
+# @export CWT_STATES (var name hardcoded. See 1)
+# @export CWT_SUBJECTS (var name hardcoded. See 2)
+# @export CWT_ACTIONS (See 3)
+# @export CWT_VARIANTS (See 3)
+# @export CWT_PREFIX_SUFFIX (See 3)
+#
+# 1. The default state values are read from a dotfile (cwt/.cwt_states).
+# 2. By default, contains the list of depth 1 folders (in ./cwt).
+#   If the dotfile '.cwt_subjects' is present in current level, it overrides
+#   the entire list and may introduce values that are not folders.
+#   If the dotfile '.cwt_subjects.append' exists, its values are added.
+# 3. These variables names are read from the default cwt/.cwt_extensions file.
+#   They contain values formed like this, given subject='stack' :
+#   - actions : provide list of all *.sh files in 'cwt/stack' by default (without
+#     the file extension.).
+#     The dotfiles '.cwt_actions' and '.cwt_actions.append' have the same role
+#     as the 'subjects' ones described in 2 but must be placed inside 'cwt/stack'.
+#   - variants : TODO
+#   - prefix_suffix : TODO
 #
 # @see "conventions" + "extensibility" documentation.
 #
-# This process uses files similar to .gitignore : they control which functions
-# and files are loaded during "bootstrap".
+# This process uses dotfiles similar to .gitignore (e.g. cwt/.cwt_subjects) :
+# they control which files are included (sourced) during "bootstrap" depending
+# on current local instance "state" (e.g. uninstalled, initialized, running).
+#
+# The default states are also read from a dotfile (cwt/.cwt_states).
 #
 u_cwt_extend() {
   local p_path="$1"
