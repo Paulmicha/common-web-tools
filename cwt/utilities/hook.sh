@@ -17,25 +17,27 @@
 # Also attempts to call functions matching the corresponding lookup patterns.
 #
 # @requires the following globals in calling scope :
-# - NAMESPACE
-# - CWT_SUBJECTS or ${p_namespace}_SUBJECTS
 # - CWT_ACTIONS or ${p_namespace}_ACTIONS
 #
 # @uses the following globals in calling scope if available (optional) :
+# - CWT_SUBJECTS or ${p_namespace}_SUBJECTS (defaults to every subject)
+# - NAMESPACE (defaults to 'CWT')
 # - CWT_VARIANTS or ${p_namespace}_VARIANTS (defaults to empty)
 # - CWT_PREFIX_SUFFIX or ${p_namespace}_PREFIX_SUFFIX (defaults to pre/post by action)
 #
 # @see u_cwt_extend()
 #
 # @example
-#   u_hook_v2 'CWT' '*' 'bootstrap'
+#   u_hook_namespaced 'bootstrap'
 #
-u_hook_v2() {
-  local p_namespace="$1"
+u_hook_namespaced() {
+  # Mandatory param.
+  local p_actions_filter="$1"
+  # Optional params.
   local p_subjects_filter="$2"
-  local p_actions_filter="$3"
-  local p_variants_filter="$4"
-  local p_prefix_suffix_filter="$5"
+  local p_variants_filter="$3"
+  local p_prefix_suffix_filter="$4"
+  local p_namespace="$5"
 
   if [[ -z "$p_namespace" ]]; then
     p_namespace='CWT'

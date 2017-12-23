@@ -14,7 +14,16 @@
 # @param 2 String : file path to local script to execute remotely.
 # @param ... The rest will be forwarded to the script.
 #
-# @prereq manual setup on remote.
+# @requires the following global variables in calling scope :
+# - REMOTE_INSTANCE_CONNECT_CMD : a command that MUST accept another command as
+#   input - e.g. "ssh -p123 username@example.com".
+# - REMOTE_INSTANCE_PROJECT_DOCROOT : path from where that script must be
+#   executed on remote host. Useful for situations where a similar filesystem
+#   is used, e.g. a partial clone of the same repo lives on the remote host in
+#   order to "bootstrap" CWT-based scripts remotely to operate that instance.
+#
+# TODO provision automatically the following prerequisites during stack init :
+# @prereq manual setup on remote (requires a select up-to-date sync of scripts).
 # @prereq u_remote_instance_add() already launched locally at least once.
 #
 # @example
@@ -73,9 +82,9 @@ u_remote_script_wrapper() {
 #   # Basic example with only mandatory params :
 #   u_remote_instance_add \
 #     'my_short_id' \
-#     'remote.instance.cwt.com' \
+#     'remote.instance.example.com' \
 #     'dev' \
-#     'ssh -p123 username@cwt.com' \
+#     'ssh -p123 username@example.com' \
 #     '/path/to/remote/instance/docroot'
 #
 u_remote_instance_add() {

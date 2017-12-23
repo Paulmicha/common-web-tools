@@ -12,6 +12,15 @@
 #   . cwt/bootstrap.sh
 #
 
+# Advanced usage : allows swapping global namespace at runtime. Used for
+# exporting dynamic global variables names.
+# NB : not every global is namespaced. The hardcoded ones are to be considered
+# CWT internal globals.
+# @see u_cwt_extend()
+if [[ -z "$NAMESPACE" ]]; then
+  export NAMESPACE='CWT'
+fi
+
 # Makes sure bootstrap runs once per namespace.
 eval "once=\$${NAMESPACE}_BS_FLAG"
 if [[ -z "$once" ]]; then
@@ -23,6 +32,9 @@ if [[ -z "$once" ]]; then
     . "$file"
     u_autoload_get_complement "$file"
   done
+
+  # TODO [wip] refacto state using functions for namespace support (see below).
+  export STATE='new'
 
   # Initializes hooks and lookups (CWT extension mecanisms).
   u_cwt_extend
