@@ -9,15 +9,15 @@
 #
 # TODO provide tests / CI examples.
 #
+# These global variables are essential CWT internal values. Each should have a
+# corresponding argument in the cwt/stack/init.sh script.
+# @see cwt/stack/init/get_args.sh
+#
 
 # Scripts should consider that any STATE value is an error, except for OK_STATES.
 # NB : the STATE global variable is first defined during bootstrap.
 # @see cwt/bootstrap.sh
 global OK_STATES "[default]='installed initialized running'"
-
-# These global variables are essential CWT internal values. Each has a
-# corresponding argument in the cwt/stack/init.sh script.
-# @see cwt/stack/init/get_args.sh
 global PROJECT_STACK
 global PROJECT_DOCROOT "[default]=$PWD"
 global APP_DOCROOT "[default]=$PROJECT_DOCROOT/web"
