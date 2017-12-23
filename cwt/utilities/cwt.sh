@@ -43,14 +43,12 @@
 #     is the same - it will impact the generation of lookup paths.
 #
 #   - 2.2 variants : declare how to look for files to include in hooks (events)
-#     PER ACTION (by subject).
-#     By default - unless overridden, each action gets assigned the following
-#     variants used to form lookup paths :
+#     PER ACTION (by subject). They define which global variables are used
+#     (and how - e.g. separator, position) in lookup paths PER ACTION.
+#     The previous naming + dotfile pattern applies (see 2.1).
 #
-#   - variants : contains global variables + describes their use in the "autoload"
-#     process, PER ACTION.
-#
-#   - prefix_suffix : TODO
+#   - 2.3 prefix_suffix : 'pre' + 'post' are provided by default for all actions.
+#     The previous naming + dotfile pattern applies (see 2.1).
 #
 # @see "conventions" + "extensibility" documentation.
 #

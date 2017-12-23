@@ -25,10 +25,11 @@ global INSTANCE_TYPE "[default]=dev"
 global INSTANCE_DOMAIN "[default]='$(u_get_instance_domain)'"
 global INSTANCE_ALIAS
 
-# This allows supportting multi-repo projects, e.g. 1 repo for the app, 1 for
-# the "dev stack", or any other combination of any number of repos.
-# Use CWT_MODE='monolithic' for single-repo projects.
-# Use CWT_MODE='separate' for multi-repo projects (mandatory app Git details).
+# This allows supporting multi-repo projects, i.e. 1 repo for the app + 1 for
+# the "dev stack" :
+# - Use CWT_MODE='monolithic' for single-repo projects.
+# - Use CWT_MODE='separate' for multi-repo projects (mandatory app Git details).
+# TODO support any other combination of any number of repos ?
 global CWT_MODE "[default]=separate"
 global APP_GIT_ORIGIN "[if-CWT_MODE]=separate"
 global APP_GIT_WORK_TREE "[if-CWT_MODE]=separate [default]=$APP_DOCROOT"
