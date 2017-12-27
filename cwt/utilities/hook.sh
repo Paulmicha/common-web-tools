@@ -12,7 +12,7 @@
 #
 
 ##
-# Includes scripts by namespace, subject, action, variant, and prefix/suffix.
+# Sources includes by namespace, subject, action, variant, and prefix/suffix.
 #
 # Also attempts to call functions matching the corresponding lookup patterns.
 #
@@ -23,12 +23,44 @@
 # - CWT_SUBJECTS or ${p_namespace}_SUBJECTS (defaults to every subject)
 # - NAMESPACE (defaults to 'CWT')
 # - CWT_VARIANTS or ${p_namespace}_VARIANTS (defaults to empty)
-# - CWT_PREFIX_SUFFIX or ${p_namespace}_PREFIX_SUFFIX (defaults to pre/post by action)
+# - CWT_PREFIXES or ${p_namespace}_PREFIXES (defaults to pre/post by action)
 #
 # @see u_cwt_extend()
 #
-# @example
+# @examples
+#
+#   # 1. When providing a single action :
 #   u_hook_namespaced 'bootstrap'
+#   # Yields the following lookup paths (ALL includes found are sourced) :
+#   # - cwt/<CWT_SUBJECTS>/bootstrap.hook.sh
+#   # - cwt/<CWT_SUBJECTS>/<CWT_PREFIXES+sep>bootstrap.hook.sh
+#   # - cwt/<CWT_SUBJECTS>/bootstrap<CWT_VARIANTS+sep>.hook.sh
+#   # - cwt/custom/presets/<CWT_PRESETS+semver>/<CWT_SUBJECTS>/bootstrap.hook.sh
+#   # - cwt/custom/presets/<CWT_PRESETS+semver>/<CWT_SUBJECTS>/<CWT_PREFIXES+sep>bootstrap.hook.sh
+#   # - cwt/custom/presets/<CWT_PRESETS+semver>/<CWT_SUBJECTS>/bootstrap<CWT_VARIANTS+sep>.hook.sh
+#
+#   # 2. When providing an action + a filter by subject :
+#   u_hook_namespaced 'init' 'stack'
+#   # Yields the following lookup paths (ALL includes found are sourced) :
+#   # - cwt/stack/init.hook.sh
+#   # - cwt/stack/<CWT_PREFIXES+sep>init.hook.sh
+#   # - cwt/stack/init<CWT_VARIANTS+sep>.hook.sh
+#   # - cwt/custom/presets/<CWT_PRESETS+semver>/stack/init.hook.sh
+#   # - cwt/custom/presets/<CWT_PRESETS+semver>/stack/<CWT_PREFIXES+sep>init.hook.sh
+#   # - cwt/custom/presets/<CWT_PRESETS+semver>/stack/init<CWT_VARIANTS+sep>.hook.sh
+#
+#   # 3. When providing an action + a filter by several subjects :
+#   u_hook_namespaced 'apply_ownership_and_perms' 'stack app'
+#   # Yields the following lookup paths (ALL includes found are sourced) :
+#   # See 2. for each subject.
+#
+#   # 4. When providing an action + a filter by 1 or several subjects + a variant(s) filter :
+#   u_hook_namespaced 'provision' 'stack' 'PROVISION_USING HOST_TYPE'
+#   # Yields the following lookup paths (ALL includes found are sourced) :
+#   # See 3. minus filtered variants.
+#
+#   # 5. When providing an action + a filter by 1 or several subjects + a variant(s) filter :
+#   # TODO
 #
 u_hook_namespaced() {
   # Mandatory param.
@@ -50,7 +82,7 @@ u_hook_namespaced() {
   eval "local subjects=\"\$${p_namespace}_SUBJECTS\""
   eval "local actions=\"\$${p_namespace}_ACTIONS\""
   eval "local variants=\"\$${p_namespace}_VARIANTS\""
-  eval "local prefix_suffix=\"\$${p_namespace}_PREFIX_SUFFIX\""
+  eval "local prefix_suffix=\"\$${p_namespace}_PREFIXES\""
 
   if [[ -z "$subjects" ]]; then
     return 1
@@ -147,7 +179,7 @@ u_hook_app() {
     u_stack_get_specs "$PROJECT_STACK"
   fi
 
-  local lookup_subjects="pp app/$APP $CWT_CUSTOM_DIR"
+  local lookup_subjects="app app/$APP $CWT_CUSTOM_DIR"
   if [[ -n "$4" ]]; then
     lookup_subjects+=" $4"
   fi

@@ -29,6 +29,9 @@
 !/private/README.md
 !/private/.htaccess
 
+# Docker-compose env file generated during stack init.
+/.env
+
 # Customizations.
 /cwt/custom/*
 !/cwt/custom/README.md

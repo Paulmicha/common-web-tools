@@ -22,8 +22,9 @@
 # E.g. given global NAMESPACE='CWT' :
 # @export CWT_SUBJECTS (See 1)
 # @export CWT_ACTIONS (See 2.1)
-# @export CWT_PREFIX_SUFFIX (See 2.2)
+# @export CWT_PREFIXES (See 2.2)
 # @export CWT_VARIANTS (See 2.3)
+# @export CWT_PRESETS (See 3)
 #
 # 1. By default, contains the list of depth 1 folders names in ./cwt (w/o slashes).
 #   If the dotfile '.cwt_subjects' is present in current level, it overrides
@@ -50,6 +51,11 @@
 #     (and how - e.g. separator, position) in lookup paths PER ACTION.
 #     The previous naming + dotfile pattern applies (see 2.1).
 #
+# 3. This only applies AFTER stack init has been run once if the global env var
+#   CWT_CUSTOM_DIR was assigned a different value than 'cwt/custom'.
+#   It contains a list of folders containing the exact same structure as 'cwt'.
+#   Every extension mecanism explained in 1 & 2 above applies to each preset.
+#
 # @see "conventions" + "extensibility" documentation.
 #
 u_cwt_extend() {
@@ -66,7 +72,7 @@ u_cwt_extend() {
 
   # Multiple extensions pattern : export as "namespace"-prefixed globals.
   local ext
-  local extensions="SUBJECTS ACTIONS PREFIX_SUFFIX VARIANTS"
+  local extensions="SUBJECTS ACTIONS PREFIXES VARIANTS"
   for ext in $extensions; do
     eval "export ${p_namespace}_${ext}"
   done
@@ -158,7 +164,7 @@ u_cwt_extend() {
 
     # For all the other cases : files contents must be read to add values to
     # the corresponding CWT globals.
-    extensions="prefix_suffix variants"
+    extensions="prefixes variants"
     for ext in $extensions; do
       # These are similar to .gitignore files : they whitelist CWT extensions.
       file="$p_path/$subject/.${subject}_${ext}"
@@ -178,20 +184,49 @@ u_cwt_extend() {
     done
   done
 
-  # Post-process initial bootstrap phase : resolve and combinations.
-  # u_cwt_extend_combinations
+  # If presets are detected, loop through each of them to aggregate namespaced
+  # primitives.
+  # Restrict this to CWT namespace only.
+  if [[ "$p_namespace" == 'CWT' ]]; then
+    export CWT_PRESETS
+    u_cwt_presets
+  fi
 }
 
 ##
-# TODO [wip] Makes a 2nd pass to provide object combinations.
+# Loads presets if any exist.
 #
-# u_cwt_extend_combinations() {
-#   # Always add these 2 default variants for every action.
-#   # if [[ "$ext" == 'actions' ]]; then
-#   #   eval "$(u_string_kss_write CWT_VARIANTS "pre_$added_val" "$p_path/$dir")"
-#   #   eval "$(u_string_kss_write CWT_VARIANTS "post_$added_val" "$p_path/$dir")"
-#   # fi
-# }
+# @requires CWT_PRESETS global in calling scope.
+# @see u_cwt_extend()
+#
+u_cwt_presets() {
+  local presets_dir="cwt/custom"
+  if [[ -n "$CWT_CUSTOM_DIR" ]]; then
+    presets_dir="$CWT_CUSTOM_DIR"
+  fi
+
+  local preset
+  local presets_list=$(u_fs_dir_list "$presets_dir")
+
+  for preset in $presets_list; do
+
+    # Ignore dirnames starting with '.'.
+    if [[ "${preset:0:1}" == '.' ]]; then
+      continue
+    fi
+
+    # Ignore reserved dirnames 'complements' and 'overrides'.
+    # @see cwt/custom/README.md
+    if [[ ("$preset" == 'complements') || ("$preset" == 'overrides') ]]; then
+      continue
+    fi
+
+    eval "CWT_PRESETS+=\"$preset \""
+
+    # Aggregate namespaced primitives for every preset.
+    u_cwt_extend "$presets_dir/$preset"
+  done
+}
 
 ##
 # Returns contents of dotfiles similar to ".gitignore" files.
