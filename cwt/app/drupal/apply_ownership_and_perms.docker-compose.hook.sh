@@ -43,3 +43,13 @@ if [[ -n "$WRITEABLE_DIRS" ]]; then
     find "$writeable_dir" -type d -exec chmod $CHMOD_W_DIRS {} +
   done
 fi
+
+if [[ -n "$WRITEABLE_FILES" ]]; then
+  for writeable_file in $WRITEABLE_FILES; do
+
+    # Common ownership in writeable files.
+    chown 82:82 "$writeable_file"
+
+    chmod $CHMOD_W_FILES "$writeable_file"
+  done
+fi

@@ -33,8 +33,8 @@ if [[ -z "$once" ]]; then
     u_autoload_get_complement "$file"
   done
 
-  # TODO [wip] refacto state using functions for namespace support (see below).
-  export INSTANCE_STATE='new'
+  # TODO [wip] workaround instance state limitations (e.g. unhandled shutdown).
+  u_instance_get_state
 
   # Initializes hooks and lookups (CWT extension mecanisms).
   u_cwt_extend
@@ -45,6 +45,11 @@ if [[ -z "$once" ]]; then
       . "$file"
       u_autoload_get_complement "$file"
     done
+  fi
+
+  # If stack init was run at least once, automatically load global env vars.
+  if [[ -f "cwt/env/current/vars.sh" ]]; then
+    . cwt/env/load.sh
   fi
 
   # Call any 'bootstrap' hooks.

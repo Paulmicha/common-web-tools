@@ -93,6 +93,13 @@ u_git_apply_config() {
 # - $p_git_dir - String : the git dir. Defaults to none or
 #   "$p_git_work_tree/.git".
 #
+# @example
+#   u_git_wrapper status
+#
+#   # Execute the same command in another dir.
+#   p_git_work_tree=path/to/git-work-tree
+#   u_git_wrapper status
+#
 u_git_wrapper() {
   local cmd=''
   local work_tree="$p_git_work_tree"

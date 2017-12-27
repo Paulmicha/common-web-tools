@@ -12,13 +12,57 @@
 #
 
 ##
-# TODO [wip] Gets current local instance state.
+# Gets current local instance state.
 #
-# Determines if instance was already initialized.
-# TODO evaluate if it's worth to extend (AFAIK currently not).
+# Determines if instance was already initialized, if its services are running...
+# TODO [wip] workaround instance state limitations (e.g. unhandled shutdown).
 #
-# u_instance_state() {
-# }
+# @export INSTANCE_STATE global var.
+#
+# @example
+#   u_instance_get_state
+#   echo "$INSTANCE_STATE" # E.g. prints 'initialized'.
+#
+u_instance_get_state() {
+  local env_instance_state="$INSTANCE_STATE"
+  local local_instance_state="$(u_registry_get_val 'instance_state')"
+
+  if [[ -n "$local_instance_state" ]]; then
+    export INSTANCE_STATE="$local_instance_state"
+  elif [[ -z "$INSTANCE_STATE" ]]; then
+    export INSTANCE_STATE='new'
+  fi
+
+  # Allow custom implementations to react to state getter calls (e.g. to notify
+  # in case of incoherences or errors, and/or to alter its value) ?
+  # TODO [wip] postponed + refacto CWT hooks.
+  # u_hook_app 'get' 'instance_state' '' 'stack'
+}
+
+##
+# Sets current local instance state.
+#
+# TODO [wip] workaround instance state limitations (e.g. unhandled shutdown).
+#
+# @export INSTANCE_STATE global var.
+#
+# @example
+#   u_instance_set_state 'running'
+#   echo "$INSTANCE_STATE" # E.g. prints 'running'.
+#
+u_instance_set_state() {
+  local p_new_state="$1"
+
+  if [[ -n "$p_new_state" ]]; then
+    u_registry_set_val 'instance_state' "$p_new_state"
+    export INSTANCE_STATE="$p_new_state"
+  fi
+
+  # Allow custom implementations to react to state getter calls (e.g. to notify
+  # in case of incoherences or errors) ?
+  # TODO [wip] postponed + refacto CWT hooks.
+  # u_hook_app 'set' 'instance_state' '' 'stack'
+}
 
 ##
 # Separates an env item name from its version number.

@@ -39,6 +39,10 @@ u_hook_namespaced() {
   local p_prefix_suffix_filter="$4"
   local p_namespace="$5"
 
+  # TODO this should discover presets (CWT modules ? name TBD) and unless a
+  # a filter is provided, it should loop through every namespace (while
+  # inheriting "core" CWT subjects + actions + prefix_suffix + variants - E.g.
+  # based on the existence of corresponding dotfiles).
   if [[ -z "$p_namespace" ]]; then
     p_namespace='CWT'
   fi

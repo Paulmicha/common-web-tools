@@ -3,6 +3,9 @@
 ##
 # Local project registry.
 #
+# This script is dynamically loaded.
+# @see cwt/bootstrap.sh
+#
 # Loads the file containing registry Bash utility functions corresponding to
 # this env's reg backend. Allows override from 'cwt/custom' dir.
 #
@@ -34,14 +37,15 @@
 #
 # @see cwt/env/registry_file.sh
 #
-# Usage from project root dir :
-# . cwt/env/registry.sh
-#
 
-# Allow custom override for this script.
-eval `u_autoload_override "$BASH_SOURCE"`
+# TODO evaluate removal of the entire registry feature.
+# See INSTANCE_STATE + related utility functions.
+rb='file'
+if [[ -n "$REG_BACKEND" ]]; then
+  rb="$REG_BACKEND"
+fi
 
 # Load implementation corresponding to the backend type env setting.
-if [[ -f "cwt/env/registry/${REG_BACKEND}.sh" ]]; then
-  . "cwt/env/registry/${REG_BACKEND}.sh"
+if [[ -f "cwt/env/registry/${rb}.sh" ]]; then
+  . "cwt/env/registry/${rb}.sh"
 fi

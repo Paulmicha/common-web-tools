@@ -9,4 +9,10 @@
 #
 
 global DRUPAL_CONFIG_SYNC_DIR "[default]=$APP_GIT_WORK_TREE/config/sync"
+
 global WRITEABLE_DIRS "[append]=$DRUPAL_CONFIG_SYNC_DIR"
+global WRITEABLE_DIRS "[append]=$APP_GIT_WORK_TREE/vendor/composer"
+
+global WRITEABLE_FILES "[append]=$APP_GIT_WORK_TREE/composer.json"
+global WRITEABLE_FILES "[append]=$APP_GIT_WORK_TREE/composer.lock"
+global WRITEABLE_FILES "[append]=$APP_GIT_WORK_TREE/vendor/autoload.php"

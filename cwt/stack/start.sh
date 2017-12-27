@@ -21,6 +21,8 @@ if [[ -f "$script" ]]; then
   . "$script"
 fi
 
+# TODO [wip] workaround instance state limitations (e.g. unhandled shutdown).
+u_instance_set_state 'running'
 
 # Allow custom complements for this script.
 u_autoload_get_complement "$BASH_SOURCE"

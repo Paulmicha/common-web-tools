@@ -15,6 +15,14 @@ if [[ -n "$PROTECTED_FILES" ]]; then
   done
 fi
 
+if [[ -n "$WRITEABLE_FILES" ]]; then
+  for writeable_file in $WRITEABLE_FILES; do
+    if [[ -d "$writeable_file" ]]; then
+      chmod +w "$writeable_file"
+    fi
+  done
+fi
+
 if [[ -n "$WRITEABLE_DIRS" ]]; then
   for writeable_dir in $WRITEABLE_DIRS; do
     if [[ -d "$writeable_dir" ]]; then

@@ -10,6 +10,45 @@
 #
 
 ##
+# Escapes all slashes for use in 'sed' calls.
+#
+# @see u_str_change_line()
+#
+# @example
+#   my_var=$(u_str_sed_escape "A string with commas, and dots... !")
+#   echo "$my_var" # Outputs "A string with commas\, and dots\.\.\. !"
+#
+u_str_sed_escape() {
+  local p_str="$1"
+
+  p_str="${p_str//,/\\,}"
+  p_str="${p_str//\./\\\.}"
+  p_str="${p_str//\*/\\\*}"
+  p_str="${p_str//\//\\\/}"
+
+  echo "$p_str"
+}
+
+##
+# Replaces an entire line in given file.
+#
+# See https://stackoverflow.com/questions/11245144/replace-whole-line-containing-a-string-using-sed
+#
+# @example
+#   u_str_change_line "The existing line matching pattern" "The replacement text" path/to/file.ext
+#
+u_str_change_line() {
+  local p_existing_line_match="$1"
+  local p_replacement="$2"
+  local p_file="$3"
+
+  local new=$(u_str_sed_escape "${p_replacement}")
+
+  sed "/$p_existing_line_match/c $new" -i "$p_file"
+}
+
+
+##
 # Appends a given value to a string only once.
 #
 # @param 1 String : the value to append.

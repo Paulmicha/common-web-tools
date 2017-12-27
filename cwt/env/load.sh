@@ -26,12 +26,6 @@ fi
 # . cwt/env/current/vars.sh 2> /dev/null
 . cwt/env/current/vars.sh
 
-# Load global bash utils.
-. cwt/bootstrap.sh
-
-# TODO evaluate removing 'registry' feature.
-. cwt/env/registry.sh
-
 # Load bash aliases.
 # NB: aliases are not expanded when the shell is not interactive, unless the
 # expand_aliases shell option is set using shopt.
