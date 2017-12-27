@@ -34,7 +34,7 @@ if [[ -z "$once" ]]; then
   done
 
   # TODO [wip] refacto state using functions for namespace support (see below).
-  export STATE='new'
+  export INSTANCE_STATE='new'
 
   # Initializes hooks and lookups (CWT extension mecanisms).
   u_cwt_extend

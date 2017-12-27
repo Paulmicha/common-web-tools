@@ -15,9 +15,10 @@
 #
 
 # Scripts should consider that any STATE value is an error, except for OK_STATES.
-# NB : the STATE global variable is first defined during bootstrap.
+# NB : the INSTANCE_STATE global variable is first defined during bootstrap.
 # @see cwt/bootstrap.sh
 global OK_STATES "[default]='installed initialized running'"
+
 global PROJECT_STACK
 global PROJECT_DOCROOT "[default]=$PWD"
 global APP_DOCROOT "[default]=$PROJECT_DOCROOT/web"

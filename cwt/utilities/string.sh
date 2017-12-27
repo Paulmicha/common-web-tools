@@ -38,20 +38,6 @@ u_string_append_once() {
 }
 
 ##
-# Centralizes arbitrary unique values (e.g. for delimiters, placeholders, etc).
-#
-# @example
-#   unique_delimiter_str="$(u_string_common_val kss-prefix)"
-#   echo "$unique_delimiter_str"
-#
-u_string_common_val() {
-  case "$1" in
-    kss-prefix) echo ":cwt-kssp:" ;;
-    tmp-space-placeholder) echo ":cwt-tsph:" ;;
-  esac
-}
-
-##
 # Replaces all occurences of a substring by another in given string.
 #
 # @example

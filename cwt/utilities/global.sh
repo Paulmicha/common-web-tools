@@ -12,75 +12,6 @@
 #
 
 ##
-# Updates a single global (AFTER stack init).
-#
-# @param 1 String : the global variable name.
-# @param 2 Array : the global declaration(s).
-# @param 3 [optional] String : the settings file path.
-#
-# @prereq cwt/env/write.sh
-# @see global()
-# @see u_fs_update_line()
-#
-# @example
-#   # Single declaration :
-#   u_global_update_var MY_GLOBAL ("my value")
-#
-#   # Multiple declarations :
-#   declare -a declarations
-#   remote_domain='remote.instance.cwt.com'
-#   declarations+=("[append]=$remote_domain [to]=domains")
-#   declarations+=("[append]=dev [to]=$remote_domain|type")
-#   declarations+=("[append]='ssh -p123 username@cwt.com' [to]=$remote_domain|connect")
-#   declarations+=("[append]='/path/to/remote/instance/docroot' [to]=$remote_domain|PROJECT_DOCROOT")
-#   declarations+=("[append]='/path/to/remote/instance/docroot/web' [to]=$remote_domain|APP_DOCROOT")
-#   u_global_update_var REMOTE_INSTANCES declarations
-#
-u_global_update_var() {
-  local p_global="$1"
-  local p_declarations=${2}[@]
-  local p_file_path="$3"
-
-  local settings='cwt/env/current/vars.sh'
-  if [[ -n "$p_file_path" ]]; then
-    settings="$p_file_path"
-  fi
-
-  # We need the destination file to exist before continuing.
-  if [[ ! -f "$settings" ]]; then
-    echo
-    echo "Error in u_global_update_var() - $BASH_SOURCE line $LINENO: no settings found in current instance." >&2
-    echo "Aborting (1)." >&2
-    echo
-    return 1
-  fi
-
-  # Ensure we cannot accidentally inherit declarations from previous operations
-  # in current shell scope.
-  unset GLOBALS
-  declare -A GLOBALS
-  GLOBALS_COUNT=0
-  GLOBALS_UNIQUE_NAMES=()
-  GLOBALS_UNIQUE_KEYS=()
-
-  local declaration
-  for declaration in ${!p_declarations}; do
-    global "$p_global" "$declaration"
-  done
-
-  local new_line
-  if [[ -z "$p_declarations" ]]; then
-    eval "new_line=\"$p_global=''\""
-  else
-    eval "new_line=\"$p_global=\\\"\$$p_global\\\"\""
-  fi
-
-  u_fs_update_line "$p_global=" "$new_line" "$settings"
-
-  # TODO For docker-compose stacks, keep the '.env' file in sync as well.
-}
-
-##
 # Executes given callback function for all env vars discovered so far.
 #
 # @requires the following globals in calling scope (main shell) :
@@ -143,29 +74,6 @@ u_global_assign_value() {
   # List or "pile" of values (space-separated string).
   elif [[ -n "${GLOBALS[$p_var|values]}" ]]; then
     multi_values=$(u_string_trim "${GLOBALS[$p_var|values]}")
-    eval "$p_var='$multi_values'"
-
-  # Implement several entries per global using the 'to' key (contains "subkey").
-  # Syntax : space-separated string using '.' as prefix delimiter, i.e :
-  # MY_VAR='key1.value key2.another_value'
-  # Workaround : values cannot contain spaces, so they are replaced by an
-  #   arbitrary value (unlikely to collide) for backward-conversion during read.
-  # @see u_string_kss_read()
-  elif [[ -n "${GLOBALS[$p_var|tos]}" ]]; then
-    local sub_val
-    local sub_key
-    local sub_keys=$(u_string_trim "${GLOBALS[$p_var|tos]}")
-    local prefix_delimiter="$(u_string_common_val kss-prefix)"
-
-    for sub_key in $sub_keys; do
-      if [[ -n "${GLOBALS[$p_var|$sub_key]}" ]]; then
-        sub_val=$(u_string_trim "${GLOBALS[$p_var|$sub_key]}")
-        sub_val="$(u_str_replace ' ' "$(u_string_common_val tmp-space-placeholder)" "$sub_val")"
-        multi_values+="${sub_key}${prefix_delimiter}${sub_val} "
-      fi
-    done
-
-    multi_values="$(u_string_trim "$multi_values")"
     eval "$p_var='$multi_values'"
 
   # Skippable default value assignment.
