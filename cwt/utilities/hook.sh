@@ -17,50 +17,64 @@
 # Also attempts to call functions matching the corresponding lookup patterns.
 #
 # @requires the following globals in calling scope :
-# - CWT_ACTIONS or ${p_namespace}_ACTIONS
+# - NAMESPACE
+# - CWT_ACTIONS or ${NAMESPACE}_ACTIONS
+# - CWT_SUBJECTS or ${NAMESPACE}_SUBJECTS
+# - CWT_VARIANTS or ${NAMESPACE}_VARIANTS
+# - CWT_PREFIXES or ${NAMESPACE}_PREFIXES
 #
-# @uses the following globals in calling scope if available (optional) :
-# - CWT_SUBJECTS or ${p_namespace}_SUBJECTS (defaults to every subject)
-# - NAMESPACE (defaults to 'CWT')
-# - CWT_VARIANTS or ${p_namespace}_VARIANTS (defaults to empty)
-# - CWT_PREFIXES or ${p_namespace}_PREFIXES (defaults to pre/post by action)
-#
+# @see cwt/bootstrap.sh
 # @see u_cwt_extend()
 #
 # @examples
 #
 #   # 1. When providing a single action :
-#   u_hook_namespaced 'bootstrap'
+#   u_hook_namespaced -a 'bootstrap'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
 #   # - cwt/<CWT_SUBJECTS>/bootstrap.hook.sh
 #   # - cwt/<CWT_SUBJECTS>/<CWT_PREFIXES+sep>bootstrap.hook.sh
 #   # - cwt/<CWT_SUBJECTS>/bootstrap<CWT_VARIANTS+sep>.hook.sh
-#   # - cwt/custom/presets/<CWT_PRESETS+semver>/<CWT_SUBJECTS>/bootstrap.hook.sh
-#   # - cwt/custom/presets/<CWT_PRESETS+semver>/<CWT_SUBJECTS>/<CWT_PREFIXES+sep>bootstrap.hook.sh
-#   # - cwt/custom/presets/<CWT_PRESETS+semver>/<CWT_SUBJECTS>/bootstrap<CWT_VARIANTS+sep>.hook.sh
+#   # - cwt/<CWT_SUBJECTS>/<CWT_PREFIXES+sep>bootstrap<CWT_VARIANTS+sep>.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/<CWT_SUBJECTS>/bootstrap.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/<CWT_SUBJECTS>/<CWT_PREFIXES+sep>bootstrap.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/<CWT_SUBJECTS>/bootstrap<CWT_VARIANTS+sep>.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/<CWT_SUBJECTS>/<CWT_PREFIXES+sep>bootstrap<CWT_VARIANTS+sep>.hook.sh
 #
 #   # 2. When providing an action + a filter by subject :
-#   u_hook_namespaced 'init' 'stack'
+#   u_hook_namespaced -a 'init' -s 'stack'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
 #   # - cwt/stack/init.hook.sh
 #   # - cwt/stack/<CWT_PREFIXES+sep>init.hook.sh
 #   # - cwt/stack/init<CWT_VARIANTS+sep>.hook.sh
-#   # - cwt/custom/presets/<CWT_PRESETS+semver>/stack/init.hook.sh
-#   # - cwt/custom/presets/<CWT_PRESETS+semver>/stack/<CWT_PREFIXES+sep>init.hook.sh
-#   # - cwt/custom/presets/<CWT_PRESETS+semver>/stack/init<CWT_VARIANTS+sep>.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/stack/init.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/stack/<CWT_PREFIXES+sep>init.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/stack/init<CWT_VARIANTS+sep>.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/stack/<CWT_PREFIXES+sep>init<CWT_VARIANTS+sep>.hook.sh
 #
 #   # 3. When providing an action + a filter by several subjects :
-#   u_hook_namespaced 'apply_ownership_and_perms' 'stack app'
+#   u_hook_namespaced -a 'apply_ownership_and_perms' -s 'stack app'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
 #   # See 2. for each subject.
 #
-#   # 4. When providing an action + a filter by 1 or several subjects + a variant(s) filter :
-#   u_hook_namespaced 'provision' 'stack' 'PROVISION_USING HOST_TYPE'
+#   # 4. When providing an action + a filter by 1 or several subjects + 1 or
+#   #   several variants filter :
+#   u_hook_namespaced -a 'provision' -s 'stack' -v 'PROVISION_USING HOST_TYPE'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
-#   # See 3. minus filtered variants.
+#   # See 3. but only with provided variants.
 #
-#   # 5. When providing an action + a filter by 1 or several subjects + a variant(s) filter :
-#   # TODO
+#   # 5. Arguments order may be swapped, but it requires at least either :
+#   #   - 1 action
+#   #   - 1 preset + 1 variant
+#   u_hook_namespaced -p 'nodejs' -v 'INSTANCE_TYPE'
+#   # Yields the following lookup paths (ALL includes found are sourced) :
+#   # - $CWT_CUSTOM_DIR/nodejs<+semver>/<CWT_SUBJECTS>/<CWT_ACTIONS+sep>init<CWT_VARIANTS+sep>.hook.sh
+#
+#   # 6. Prefixes filter :
+#   u_hook_namespaced -a 'bootstrap' -x 'pre'
+#   # Yields the following lookup paths (ALL includes found are sourced) :
+#   # See 1. but only with provided prefixes.
+#
+#   # 7. TODO evaluate removal of NAMESPACE filter.
 #
 u_hook_namespaced() {
   # Mandatory param.

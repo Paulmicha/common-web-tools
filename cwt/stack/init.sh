@@ -63,4 +63,4 @@ u_hook_app 'apply' 'ownership_and_perms' '' 'stack'
 u_autoload_get_complement "$BASH_SOURCE"
 
 # Trigger stack/post-init hook.
-u_hook 'stack' 'init' 'post'
+# u_hook 'stack' 'init' 'post'

@@ -12,6 +12,7 @@
 #   . cwt/bootstrap.sh
 #
 
+# TODO remove this.
 # Advanced usage : allows swapping global namespace at runtime. Used for
 # exporting dynamic global variables names.
 # NB : not every global is namespaced. The hardcoded ones are to be considered
@@ -28,7 +29,7 @@ if [[ -z "$once" ]]; then
 
   # Include required utilities.
   . cwt/utilities/autoload.sh # TODO include once (convenience).
-  for file in $(find cwt/utilities/* -type f -print0 | xargs -0); do
+  for file in $(find cwt/utilities -maxdepth 1 -type f -print0 | xargs -0); do
     . "$file"
     u_autoload_get_complement "$file"
   done
@@ -55,4 +56,7 @@ if [[ -z "$once" ]]; then
 
   # Call any 'bootstrap' hooks.
   u_hook 'cwt' 'bootstrap'
+
+  # TODO [wip] Refacto hooks to follow u_cwt_extend().
+  # u_hook_app 'bash' 'alias'
 fi
