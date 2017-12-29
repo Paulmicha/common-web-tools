@@ -3,8 +3,6 @@
 ##
 # Hooks-related utility functions.
 #
-# TODO [wip] refacto using u_cwt_extend().
-#
 # This file is dynamically loaded.
 # @see cwt/bootstrap.sh
 #
@@ -20,8 +18,9 @@
 # - NAMESPACE
 # - CWT_ACTIONS or ${NAMESPACE}_ACTIONS
 # - CWT_SUBJECTS or ${NAMESPACE}_SUBJECTS
-# - CWT_VARIANTS or ${NAMESPACE}_VARIANTS
 # - CWT_PREFIXES or ${NAMESPACE}_PREFIXES
+# - CWT_VARIANTS or ${NAMESPACE}_VARIANTS
+# - CWT_PRESETS or ${NAMESPACE}_PRESETS
 #
 # @see cwt/bootstrap.sh
 # @see u_cwt_extend()
@@ -29,98 +28,146 @@
 # @examples
 #
 #   # 1. When providing a single action :
-#   u_hook_namespaced -a 'bootstrap'
+#   hook -a 'bootstrap'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
 #   # - cwt/<CWT_SUBJECTS>/bootstrap.hook.sh
 #   # - cwt/<CWT_SUBJECTS>/<CWT_PREFIXES+sep>bootstrap.hook.sh
-#   # - cwt/<CWT_SUBJECTS>/bootstrap<CWT_VARIANTS+sep>.hook.sh
-#   # - cwt/<CWT_SUBJECTS>/<CWT_PREFIXES+sep>bootstrap<CWT_VARIANTS+sep>.hook.sh
+#   # - cwt/<CWT_SUBJECTS>/bootstrap<sep+CWT_VARIANTS>.hook.sh
+#   # - cwt/<CWT_SUBJECTS>/<CWT_PREFIXES+sep>bootstrap<sep+CWT_VARIANTS>.hook.sh
 #   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/<CWT_SUBJECTS>/bootstrap.hook.sh
 #   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/<CWT_SUBJECTS>/<CWT_PREFIXES+sep>bootstrap.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/<CWT_SUBJECTS>/bootstrap<CWT_VARIANTS+sep>.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/<CWT_SUBJECTS>/<CWT_PREFIXES+sep>bootstrap<CWT_VARIANTS+sep>.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/<CWT_SUBJECTS>/bootstrap<sep+CWT_VARIANTS>.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/<CWT_SUBJECTS>/<CWT_PREFIXES+sep>bootstrap<sep+CWT_VARIANTS>.hook.sh
 #
 #   # 2. When providing an action + a filter by subject :
-#   u_hook_namespaced -a 'init' -s 'stack'
+#   hook -a 'init' -s 'stack'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
 #   # - cwt/stack/init.hook.sh
 #   # - cwt/stack/<CWT_PREFIXES+sep>init.hook.sh
-#   # - cwt/stack/init<CWT_VARIANTS+sep>.hook.sh
+#   # - cwt/stack/init<sep+CWT_VARIANTS>.hook.sh
 #   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/stack/init.hook.sh
 #   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/stack/<CWT_PREFIXES+sep>init.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/stack/init<CWT_VARIANTS+sep>.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/stack/<CWT_PREFIXES+sep>init<CWT_VARIANTS+sep>.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/stack/init<sep+CWT_VARIANTS>.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/stack/<CWT_PREFIXES+sep>init<sep+CWT_VARIANTS>.hook.sh
 #
 #   # 3. When providing an action + a filter by several subjects :
-#   u_hook_namespaced -a 'apply_ownership_and_perms' -s 'stack app'
+#   hook -a 'apply_ownership_and_perms' -s 'stack app'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
 #   # See 2. for each subject.
 #
 #   # 4. When providing an action + a filter by 1 or several subjects + 1 or
 #   #   several variants filter :
-#   u_hook_namespaced -a 'provision' -s 'stack' -v 'PROVISION_USING HOST_TYPE'
+#   hook -a 'provision' -s 'stack' -v 'PROVISION_USING HOST_TYPE'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
 #   # See 3. but only with provided variants.
 #
 #   # 5. Arguments order may be swapped, but it requires at least either :
 #   #   - 1 action
 #   #   - 1 preset + 1 variant
-#   u_hook_namespaced -p 'nodejs' -v 'INSTANCE_TYPE'
+#   hook -p 'nodejs' -v 'INSTANCE_TYPE'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
-#   # - $CWT_CUSTOM_DIR/nodejs<+semver>/<CWT_SUBJECTS>/<CWT_ACTIONS+sep>init<CWT_VARIANTS+sep>.hook.sh
+#   # - $CWT_CUSTOM_DIR/nodejs<+semver>/<CWT_SUBJECTS>/<CWT_PREFIXES+sep><CWT_ACTIONS+sep>init<sep+CWT_VARIANTS>.hook.sh
 #
 #   # 6. Prefixes filter :
-#   u_hook_namespaced -a 'bootstrap' -x 'pre'
+#   hook -a 'bootstrap' -x 'pre'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
 #   # See 1. but only with provided prefixes.
 #
 #   # 7. TODO evaluate removal of NAMESPACE filter.
 #
-u_hook_namespaced() {
-  # Mandatory param.
-  local p_actions_filter="$1"
-  # Optional params.
-  local p_subjects_filter="$2"
-  local p_variants_filter="$3"
-  local p_prefix_suffix_filter="$4"
-  local p_namespace="$5"
+# We exceptionally name that function without following the usual convention.
+#
+hook() {
+  local p_actions_filter
+  local p_subjects_filter
+  local p_prefixes_filter
+  local p_variants_filter
+  local p_presets_filter
+  local p_namespace_filter
+  local p_debug
 
-  # TODO this should discover presets (CWT modules ? name TBD) and unless a
-  # a filter is provided, it should loop through every namespace (while
-  # inheriting "core" CWT subjects + actions + prefix_suffix + variants - E.g.
-  # based on the existence of corresponding dotfiles).
-  if [[ -z "$p_namespace" ]]; then
-    p_namespace='CWT'
-  fi
+  # Parse current function arguments.
+  # See https://stackoverflow.com/a/31443098
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      # Format : 1 dash + arg 'name' + space + value.
+      -a) p_actions_filter="$2"; shift 2;;
+      -s) p_subjects_filter="$2"; shift 2;;
+      -x) p_prefixes_filter="$2"; shift 2;;
+      -v) p_variants_filter="$2"; shift 2;;
+      -p) p_presets_filter="$2"; shift 2;;
+      -n) p_namespace_filter="$2"; shift 2;;
+      # Flag (arg without any value).
+      -d) p_debug=1; shift 1;;
+      # Warn for unhandled arguments.
+      -*) echo "Error in $BASH_SOURCE line $LINENO: unknown option: $1" >&2; return;;
+      *) echo "Notice in $BASH_SOURCE line $LINENO: unsupported unnamed argument: $1" >&2; shift 1;;
+    esac
+  done
 
-  eval "local subjects=\"\$${p_namespace}_SUBJECTS\""
-  eval "local actions=\"\$${p_namespace}_ACTIONS\""
-  eval "local variants=\"\$${p_namespace}_VARIANTS\""
-  eval "local prefix_suffix=\"\$${p_namespace}_PREFIXES\""
-
-  if [[ -z "$subjects" ]]; then
+  # Enforce minimum conditions for triggering hook (see 5 in function docblock).
+  if [[ (-z "$p_actions_filter") && (-z "$p_presets_filter") && (-z "$p_variants_filter") ]]; then
+    echo
+    echo "Error in $BASH_SOURCE line $LINENO: cannot trigger hook without either 1 action filter (or 1 preset + 1 variant)." >&2
+    echo "-> Aborting."
+    echo
     return 1
   fi
-  if [[ -z "$actions" ]]; then
+
+  local subjects="$CWT_SUBJECTS"
+  local actions="$CWT_ACTIONS"
+  local variants="$CWT_VARIANTS"
+  local presets="$CWT_PRESETS"
+  local prefixes="$CWT_PREFIXES"
+
+  local presets_dir="$CWT_CUSTOM_DIR"
+
+  # Allow using only a particular namespace (see the '-n' argument).
+  if [[ -n "$p_namespace_filter" ]]; then
+    local nf
+    for nf in $p_namespace_filter; do
+      eval "subjects=\" \$${nf}_SUBJECTS\""
+      eval "actions=\" \$${nf}_ACTIONS\""
+      eval "variants=\" \$${nf}_VARIANTS\""
+      eval "presets=\" \$${nf}_PRESETS\"" # TODO evaluate removing "presets of presets".
+      eval "prefixes=\" \$${nf}_PREFIXES\""
+    done
+
+  # By default, any preset can append its own "primitives".
+  # @see u_cwt_extend()
+  elif [[ -n "$presets" ]]; then
+    local na
+    local preset
+
+    for preset in $presets; do
+      na=$(tr '[a-z]' '[A-Z]' <<< "$preset")
+
+      eval "subjects+=\" \$${na}_SUBJECTS\""
+      eval "actions+=\" \$${na}_ACTIONS\""
+      eval "variants+=\" \$${na}_VARIANTS\""
+      eval "presets+=\" \$${na}_PRESETS\"" # TODO evaluate removing "presets of presets".
+      eval "prefixes+=\" \$${na}_PREFIXES\""
+    done
+  fi
+
+  # Triggering a hook requires subjects and actions.
+  if [[ -z "$subjects" ]]; then
+    echo
+    echo "Error in $BASH_SOURCE line $LINENO: cannot trigger hook without any subjects." >&2
+    echo "-> Aborting."
+    echo
     return 2
   fi
-
-  if [[ (-z "$p_subjects_filter") || ("$p_subjects_filter" == '*') ]]; then
-    p_subjects_filter="$subjects"
+  if [[ -z "$actions" ]]; then
+    echo
+    echo "Error in $BASH_SOURCE line $LINENO: cannot trigger hook without any actions." >&2
+    echo "-> Aborting."
+    echo
+    return 3
   fi
-  if [[ (-z "$p_actions_filter") || ("$p_actions_filter" == '*') ]]; then
-    p_actions_filter="$actions"
-  fi
 
-  # cwt/custom/presets/contenta/1/init.hook.sh
-  # cwt/custom/presets/contenta/1/init.docker-compose.hook.sh
-  # cwt/custom/presets/contenta/1/stack_init.hook.sh
-  # cwt/custom/presets/contenta/1/stack_init.docker-compose.hook.sh
-
-  # cwt/custom/presets/contenta/1/post_init.hook.sh
-  # cwt/custom/presets/contenta/1/post_init.docker-compose.hook.sh
-  # cwt/custom/presets/contenta/1/stack_post_init.hook.sh
-  # cwt/custom/presets/contenta/1/stack_post_init.docker-compose.hook.sh
+  # TODO build lookup paths.
+  # TODO build matching function names to call ?
 }
 
 
