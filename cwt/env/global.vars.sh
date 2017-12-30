@@ -22,7 +22,7 @@ global OK_STATES "[default]='installed initialized running'"
 # When this file is processed, it means "stack init" is run -> INSTANCE_STATE is
 # then set by default to 'initialized'.
 # TODO [wip] workaround instance state limitations (e.g. unhandled shutdown).
-global INSTANCE_STATE "[default]=initialized"
+global DEFAULT_STATE "[default]=initialized"
 
 global PROJECT_STACK
 global PROJECT_DOCROOT "[default]=$PWD"

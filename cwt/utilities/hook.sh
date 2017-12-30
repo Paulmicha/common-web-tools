@@ -134,16 +134,13 @@ hook() {
   # Allow using only a particular preset (see the '-p' argument).
   if [[ -n "$p_preset_filter" ]]; then
     for preset in $p_preset_filter; do
-      na=$(tr '[a-z]' '[A-Z]' <<< "$preset")
       uppercase="$preset"
       u_str_uppercase
-
       eval "subjects=\" \$${uppercase}_SUBJECTS\""
       eval "actions=\" \$${uppercase}_ACTIONS\""
       eval "variants=\" \$${uppercase}_VARIANTS\""
       eval "presets=\" \$${uppercase}_PRESETS\"" # TODO evaluate removing "presets of presets".
       eval "prefixes=\" \$${uppercase}_PREFIXES\""
-
       # Override base path for lookups.
       base_paths=("$presets_dir/$preset")
     done
@@ -151,18 +148,14 @@ hook() {
   # By default, any preset can append its own "primitives".
   # @see u_cwt_extend()
   elif [[ -n "$presets" ]]; then
-
     for preset in $presets; do
-      na=$(tr '[a-z]' '[A-Z]' <<< "$preset")
       uppercase="$preset"
       u_str_uppercase
-
       eval "subjects+=\" \$${uppercase}_SUBJECTS\""
       eval "actions+=\" \$${uppercase}_ACTIONS\""
       eval "variants+=\" \$${uppercase}_VARIANTS\""
       eval "presets+=\" \$${uppercase}_PRESETS\"" # TODO evaluate removing "presets of presets".
       eval "prefixes+=\" \$${uppercase}_PREFIXES\""
-
       # Every preset defines an additional base path for lookups.
       base_paths+=("$presets_dir/$preset")
     done
@@ -184,11 +177,23 @@ hook() {
     return 3
   fi
 
+  # Apply filters.
+  local filters='actions subjects prefixes variants'
+  local f
+  local f_arg
+
+  for f in $filters; do
+    eval "f_arg=\"\$p_${f}_filter\""
+    # case "$f_arg" in
+    #   *)
+    #   ;;
+    # esac
+  done
+
   # Build lookup paths.
   local lookup_paths=()
   local p
   local bp
-  local inc
   local lookup_subject
   local lookup_preset
 
@@ -203,17 +208,17 @@ hook() {
     fi
   done
 
-  # local lookup_action
-  # local inc=''
-  # for hook_script in "${lookup_paths[@]}"; do
-  #   if [[ -f "$hook_script" ]]; then
-  #     eval $(u_autoload_override "$hook_script" 'continue')
-  #     . "$hook_script"
-  #   fi
-  #   u_autoload_get_complement "$hook_script"
-  # done
-
-  # TODO build matching function names to call ?
+  # Source each file include with overrides and complements extension mecanisms.
+  # @see cwt/utilities/autoload.sh
+  local inc
+  for inc in "${lookup_paths[@]}"; do
+    if [[ -f "$inc" ]]; then
+      eval $(u_autoload_override "$inc" 'continue')
+      . "$inc"
+    fi
+    u_autoload_get_complement "$inc"
+    # TODO build matching function names to call ?
+  done
 }
 
 ##

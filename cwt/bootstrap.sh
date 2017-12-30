@@ -54,9 +54,15 @@ if [[ -z "$once" ]]; then
     done
   fi
 
-  # Call any 'bootstrap' hooks.
-  u_hook 'cwt' 'bootstrap'
-
+  # Load bash aliases.
+  # NB: aliases are not expanded when the shell is not interactive, unless the
+  # expand_aliases shell option is set using shopt.
+  # See https://unix.stackexchange.com/a/1498
+  shopt -s expand_aliases
   # TODO [wip] Refacto hooks to follow u_cwt_extend().
-  # u_hook_app 'bash' 'alias'
+  u_hook_app 'bash' 'alias'
+
+  # Call any 'bootstrap' hooks.
+  # TODO [wip] Refacto hooks to follow u_cwt_extend().
+  u_hook 'cwt' 'bootstrap'
 fi

@@ -8,7 +8,9 @@
 #
 
 ##
-# Initializes hooks and lookups (CWT extension mecanisms).
+# Initializes primitives (fundamental values for CWT extension mecanisms).
+#
+# TODO evaluate merging base 'path' and 'namespace' options.
 #
 # This process uses dotfiles similar to .gitignore (e.g. cwt/.cwt_subjects) :
 # they control which files are included (sourced) during "bootstrap" depending
@@ -38,19 +40,22 @@
 #
 #   - 2.1 actions : provide list of all *.sh files in 'cwt/stack' by default (no
 #     extension - values are only the 'name' of the file, see Conventions doc).
-#     The dotfiles '.cwt_actions' and '.cwt_actions.append' have the same role
+#     The dotfiles '.cwt_actions' and '.cwt_actions_append' have the same role
 #     as the 'subjects' ones described in 1 but must be placed inside 'cwt/stack'.
-#     NB : the term 'actions' is the first declared in the default
-#     cwt/.cwt_extensions file. If a preset provides another term, the mecanism
-#     is the same - it will impact the generation of lookup paths.
 #
-#   - 2.2 prefix_suffix : 'pre' + 'post' are provided by default for all actions.
-#     The previous naming + dotfile pattern applies (see 2.1).
+#   - 2.2 prefixes : 'pre' + 'post' are provided by default for all actions.
+#     The previous dotfile pattern applies (see 2.1).
 #
 #   - 2.3 variants : declare how to look for files to include in hooks (events)
-#     PER ACTION (by subject). They define which global variables are used
-#     (and how - e.g. separator, position) in lookup paths PER ACTION.
-#     The previous naming + dotfile pattern applies (see 2.1).
+#     PER ACTION (by subject and/or preset). They define which global variables
+#     are used during lookup paths generation process, and which separator is
+#     used for concatenation.
+#     By default, all actions are allocated the following variants :
+#     - PROVISION_USING
+#     - INSTANCE_TYPE
+#     - HOST_TYPE
+#     The previous naming + dotfile pattern applies (see 2.1), with an
+#     additional one for altering defaults : '.cwt_variants_alter'.
 #
 # 3. This only applies AFTER stack init has been run once if the global env var
 #   CWT_CUSTOM_DIR was assigned a different value than 'cwt/custom'.
@@ -68,23 +73,31 @@ u_cwt_extend() {
   fi
 
   if [[ -z "$p_namespace" ]]; then
-    p_namespace=$(tr '[a-z]' '[A-Z]' <<< ${p_path##*/})
+    uppercase="${p_path##*/}"
+    u_str_uppercase
+    p_namespace="$uppercase"
   fi
 
-  # Multiple extensions pattern : export as "namespace"-prefixed globals.
-  local ext
-  local extensions="SUBJECTS ACTIONS PREFIXES VARIANTS"
-  for ext in $extensions; do
-    eval "export ${p_namespace}_${ext}"
+  local primitives="SUBJECTS ACTIONS PREFIXES VARIANTS PRESETS"
+  local prim
+  local uppercase
+
+  for prim in $primitives; do
+    eval "export ${p_namespace}_${prim}"
   done
 
-  local subject=''
-  local subjects_list=''
-  local uppercase=''
+  # By default, subjects are the list of depth 1 folders in given path.
+  local subject
+  local subjects_list
+  local subjects_ignore
 
   subjects_list="$(u_cwt_read 'subjects' "$p_path")"
-
   if [[ -z "$subjects_list" ]]; then
+    subjects_list=$(u_fs_dir_list "$p_path")
+  fi
+
+  subjects_ignore="$(u_cwt_read 'subjects_ignore' "$p_path")"
+  if [[ -z "$subjects_ignore" ]]; then
     subjects_list=$(u_fs_dir_list "$p_path")
   fi
 
@@ -155,24 +168,42 @@ u_cwt_extend() {
       done
     fi
 
-    # The 'INC' extensions are a simple list of files to be sourced in
-    # cwt/bootstrap.sh scope directly (as it contains bash functions).
-    # -> no need to use "kss" string storage.
+    # The 'INC' values are a simple list of files to be sourced in
+    # cwt/bootstrap.sh scope directly. They are meant to contain bash functions.
     inc="$p_path/$subject/${subject}.inc.sh"
     if [[ -f "$inc" ]]; then
       eval "${p_namespace}_INC+=\"$inc \""
     fi
 
-    # For all the other cases : files contents must be read to add values to
-    # the corresponding CWT globals.
-    extensions="prefixes variants"
-    for ext in $extensions; do
-      # These are similar to .gitignore files : they whitelist CWT extensions.
-      file="$p_path/$subject/.${subject}_${ext}"
+    # The remaining primitives share the same processing.
+    eval "${p_namespace}_PREFIXES=\"pre post\""
+    eval "${p_namespace}_VARIANTS=\"PROVISION_USING INSTANCE_TYPE HOST_TYPE\""
+    primitives="prefixes variants"
+
+    for prim in $primitives; do
+      uppercase="$prim"
+      u_str_uppercase
+
+      # Look for the dotfile that will override all default values.
+      file="$p_path/$subject/.${subject}_${prim}"
 
       if [[ -f "$file" ]]; then
         file_contents=$(< "$file")
-        uppercase=$(tr '[a-z]' '[A-Z]' <<< "$ext")
+
+        if [[ -n "$file_contents" ]]; then
+          added_val=''
+
+          for added_val in $file_contents; do
+            eval "${p_namespace}_${uppercase}+=\"${subject}:$added_val \""
+          done
+        fi
+      fi
+
+      # Look for the dotfile that provides additional values.
+      file="$p_path/$subject/.${subject}_${prim}_append"
+
+      if [[ -f "$file" ]]; then
+        file_contents=$(< "$file")
 
         if [[ -n "$file_contents" ]]; then
           added_val=''
@@ -230,29 +261,30 @@ u_cwt_presets() {
 }
 
 ##
-# Returns contents of dotfiles similar to ".gitignore" files.
+# Returns primitive values for given path.
 #
-# @param 1 String dotfile name suffix - e.g. to produce ".cwt_${p_suffix}".
+# @param 1 String which primitive values to get.
 # @param 2 [optional] String relative path (defaults to 'cwt' = CWT "core").
 #
-# These files contain a list of words without any special characters nor spaces.
-#
-# Determines dynamic includes lookup paths using file naming conventions used to
-# export "namespaced" globals.
+# Dotfiles MUST contain a list of words without any special characters nor
+# spaces. The values provided will determine dynamic includes lookup paths :
 # @see u_cwt_extend()
 #
 # @example
-#   subjects="$(u_cwt_read subjects 'path/to/relative/dir')"
+#   subjects="$(u_cwt_read subjects_ignore)"
+#   echo "$subjects" # Yields 'utilities'
+#
+#   # Default path 'cwt' can be modified by providing the 2nd argument :
+#   subjects="$(u_cwt_read subjects_ignore 'path/to/relative/dir')"
 #   echo "$subjects"
-#   # Yields for ex. "app db env git provision remote stack test instance"
 #
 u_cwt_read() {
   local p_suffix="$1"
   local p_path="$2"
 
-  local uppercase=$(tr '[a-z]' '[A-Z]' <<< $p_suffix)
+  local uppercase="$p_suffix"
+  u_str_uppercase
 
-  local ext
   local dotfile="$p_path/.cwt_${p_suffix}"
   local file_contents
 
