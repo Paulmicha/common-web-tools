@@ -13,10 +13,10 @@
 # Initializes primitives (fundamental values for CWT extension mecanisms).
 #
 # TODO evaluate merging base 'path' and 'namespace' options.
+# TODO implement local instance's CWT_STATE (e.g. installed, initialized, running).
 #
 # This process uses dotfiles similar to .gitignore (e.g. cwt/.cwt_subjects) :
-# they control which files are included (sourced) during "bootstrap" depending
-# on current local instance's CWT_STATE (e.g. installed, initialized, running).
+# they control which files are included (sourced) during "bootstrap".
 #
 # @param 1 [optional] String relative path (defaults to 'cwt' = CWT "core").
 #   Provides a preset folder without trailing slash.
@@ -30,6 +30,7 @@
 # @export CWT_PREFIXES (See 2.2)
 # @export CWT_VARIANTS (See 2.3)
 # @export CWT_PRESETS (See 3)
+# @export CWT_INC (See 4)
 #
 # 1. By default, contains the list of depth 1 folders names in ./cwt.
 #   If the dotfile '.cwt_subjects' is present in current level, it overrides
@@ -63,6 +64,10 @@
 #   CWT_CUSTOM_DIR was assigned a different value than 'cwt/custom'.
 #   It contains a list of folders containing the exact same structure as 'cwt'.
 #   Every extension mecanism explained in 1 & 2 above applies to each preset.
+#
+# 4. The 'CWT_INC' values are a simple list of files to be sourced in
+#   cwt/bootstrap.sh scope directly. They are meant to contain bash functions
+#   organized by subject.
 #
 # @see "conventions" + "extensibility" documentation.
 #
@@ -99,131 +104,52 @@ u_cwt_extend() {
   u_cwt_primitive_values 'subjects' "$p_path"
   local subjects_list="$primitive_values"
 
-  # echo
-  # echo "  subjects_list = $subjects_list"
-  # echo
-
-  # Agregate actions + generic includes (by subject).
+  # Agregate remaining primitives.
+  local inc
   local action
   local actions_list
-  local inc
-  for subject in $subjects_list; do
-    eval "${p_namespace}_SUBJECTS+=\"$subject \""
-    inc=''
-    action=''
-    primitive_values=''
-    u_cwt_primitive_values 'actions' "$p_path/$subject"
-    actions_list="$primitive_values"
-
-    # TODO [wip] refacto in progress.
-  done
-
-
-  local file
-  local file_list
-  local file_wodots
-  local diff
-  local file_contents
-  local added_val
+  local prefix
+  local prefixes_list
+  local variant
+  local variants_list
 
   for subject in $subjects_list; do
 
-    # Ignore dirnames starting with '.'.
-    if [[ "${subject:0:1}" == '.' ]]; then
-      continue
-    fi
-
-    # Start "group" with subject = the containing folder.
+    # Build up exported subjects list.
     eval "${p_namespace}_SUBJECTS+=\"$subject \""
 
-    # Ignore subjects that do NOT have a dedicated folder (e.g. meant for
-    # function-based hooks only).
-    if [[ ! -d "$p_path/$subject" ]]; then
-      continue
-    fi
-
-    action=''
-    actions_list=''
-    inc=''
-    file=''
-    file_list=''
-    file_wodots=''
-    diff=0
-
-    # It's possible to provide a dotfile bypassing entirely the default file
-    # enumeration process below.
-    actions_list="$(u_cwt_primitive_values 'actions' "$p_path/$subject")"
-
-    if [[ -n "$actions_list" ]]; then
-      for action in $actions_list; do
-        eval "${p_namespace}_ACTIONS+=\"${subject}:$action \""
-      done
-
-    # Default actions are all *.sh files NOT using multiple extension pattern in
-    # that dir (also excludes "dotfiles" - file names starting with '.').
-    else
-      file_list=$(u_fs_file_list "$p_path/$subject")
-      for file in $file_list; do
-        # Ignore dotfiles.
-        if [[ "${file:0:1}" == '.' ]]; then
-          continue
-        fi
-        # Cut off *.sh extension.
-        file="${file%%.sh}"
-        # Skip filenames using mutliple extension.
-        file_wodots="${file//\.}"
-        if (( ${#file} - ${#file_wodots} > 0 )); then
-          continue
-        fi
-        eval "${p_namespace}_ACTIONS+=\"${subject}:$file \""
-      done
-    fi
-
-    # The 'INC' values are a simple list of files to be sourced in
-    # cwt/bootstrap.sh scope directly. They are meant to contain bash functions.
+    # Build up exported generic includes list (by subject).
     inc="$p_path/$subject/${subject}.inc.sh"
     if [[ -f "$inc" ]]; then
       eval "${p_namespace}_INC+=\"$inc \""
     fi
 
-    # The remaining primitives share the same processing.
-    eval "${p_namespace}_PREFIXES=\"pre post\""
-    eval "${p_namespace}_VARIANTS=\"PROVISION_USING INSTANCE_TYPE HOST_TYPE\""
-    primitives="prefixes variants"
+    primitive_values=''
+    u_cwt_primitive_values 'actions' "$p_path/$subject"
+    actions_list="$primitive_values"
 
-    for prim in $primitives; do
-      uppercase="$prim"
-      u_str_uppercase
+    for action in $actions_list; do
 
-      # Look for the dotfile that will override all default values.
-      file="$p_path/$subject/.${subject}_${prim}"
+      # Build up exported actions list (by subject).
+      eval "${p_namespace}_ACTIONS+=\"${subject}:$action \""
 
-      if [[ -f "$file" ]]; then
-        file_contents=$(< "$file")
+      # Build up exported prefixes (by subject AND by action).
+      # TODO : progressively fallback unless explicitly specified ?
+      primitive_values=''
+      u_cwt_primitive_values 'prefixes' "$p_path/$subject"
+      prefixes_list="$primitive_values"
+      for prefix in $prefixes_list; do
+        eval "${p_namespace}_PREFIXES+=\"${subject}:$action:$prefix \""
+      done
 
-        if [[ -n "$file_contents" ]]; then
-          added_val=''
-
-          for added_val in $file_contents; do
-            eval "${p_namespace}_${uppercase}+=\"${subject}:$added_val \""
-          done
-        fi
-      fi
-
-      # Look for the dotfile that provides additional values.
-      file="$p_path/$subject/.${subject}_${prim}_append"
-
-      if [[ -f "$file" ]]; then
-        file_contents=$(< "$file")
-
-        if [[ -n "$file_contents" ]]; then
-          added_val=''
-
-          for added_val in $file_contents; do
-            eval "${p_namespace}_${uppercase}+=\"${subject}:$added_val \""
-          done
-        fi
-      fi
+      # Build up exported variants (by subject AND by action).
+      # TODO : progressively fallback unless explicitly specified ?
+      primitive_values=''
+      u_cwt_primitive_values 'variants' "$p_path/$subject"
+      variants_list="$primitive_values"
+      for variant in $variants_list; do
+        eval "${p_namespace}_VARIANTS+=\"${subject}:$action:$variant \""
+      done
     done
   done
 
