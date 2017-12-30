@@ -3,7 +3,7 @@
 ##
 # CWT core utility functions.
 #
-# TODO refacto 'stack' into 2 different subjects : 'instance' + 'services'.
+# TODO refacto 'stack' into 2 different subjects : 'instance' + 'service'.
 #
 # This file is dynamically loaded.
 # @see cwt/bootstrap.sh
@@ -15,22 +15,25 @@
 # TODO evaluate merging base 'path' and 'namespace' options.
 # TODO implement local instance's CWT_STATE (e.g. installed, initialized, running).
 #
-# This process uses dotfiles similar to .gitignore (e.g. cwt/.cwt_subjects) :
-# they control which files are included (sourced) during "bootstrap".
-#
 # @param 1 [optional] String relative path (defaults to 'cwt' = CWT "core").
 #   Provides a preset folder without trailing slash.
 # @param 2 [optional] String globals "namespace" (defaults to the uppercase name
 #   of the folder passed as 1st arg).
 #
-# Exports "namespaced" globals prefixed by 'CWT' or optional 2nd argument.
-# E.g. given global NAMESPACE='CWT' :
+# Exports the following "namespaced" global variables, effectively initializing
+# all primitives required by hooks - e.g. given p_namespace='CWT' (default value
+# of 2nd argument) :
 # @export CWT_SUBJECTS (See 1)
 # @export CWT_ACTIONS (See 2.1)
 # @export CWT_PREFIXES (See 2.2)
 # @export CWT_VARIANTS (See 2.3)
 # @export CWT_PRESETS (See 3)
 # @export CWT_INC (See 4)
+#
+# @see hook()
+#
+# This process uses dotfiles similar to .gitignore (e.g. cwt/.cwt_subjects_ignore).
+# they control hooks lookup paths generation. See explanations below.
 #
 # 1. By default, contains the list of depth 1 folders names in ./cwt.
 #   If the dotfile '.cwt_subjects' is present in current level, it overrides
@@ -54,7 +57,7 @@
 #     PER ACTION (by subject and/or preset). They define which global variables
 #     are used during lookup paths generation process, and which separator is
 #     used for concatenation.
-#     By default, all actions are allocated the following variants :
+#     By default, all actions are assigned the following variants :
 #     - PROVISION_USING
 #     - INSTANCE_TYPE
 #     - HOST_TYPE

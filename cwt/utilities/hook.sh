@@ -30,6 +30,10 @@
 # - CWT_VARIANTS or ${NAMESPACE}_VARIANTS
 # - CWT_PRESETS or ${NAMESPACE}_PRESETS
 #
+# NB : the default separator used to concatenate lookup parts in file names is
+# the underscore '_'.
+# Dashes '-' are reserved for folder names and to separate "semver" suffixes.
+#
 # @examples
 #
 #   # 1. When providing a single action :
@@ -179,15 +183,42 @@ hook() {
 
   # Apply filters.
   local filters='actions subjects prefixes variants'
+  local values
   local f
   local f_arg
+  local v
+  local v_part
+  local v_parts_arr
 
   for f in $filters; do
+
     eval "f_arg=\"\$p_${f}_filter\""
-    # case "$f_arg" in
-    #   *)
-    #   ;;
-    # esac
+    if [[ -z "$f_arg" ]]; then
+      continue
+    fi
+
+    eval "values=\"\$$f\""
+
+    echo
+    echo "filter $f :"
+
+    for v in $values; do
+
+      echo " - value = $v"
+
+      u_str_split1 v_parts_arr "$v" ':'
+      for v_part in "${v_parts_arr[@]}"; do
+
+        echo "    -- part = $v_part"
+
+      done
+
+      # case "$f_arg" in
+      #   actions)
+      #   ;;
+      # esac
+
+    done
   done
 
   # Build lookup paths.
