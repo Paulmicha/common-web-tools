@@ -10,6 +10,40 @@
 #
 
 ##
+# Transforms an existing variable named $lowercase in calling scope to lowercase.
+#
+# @requires Bash 4+ (MacOS needs manual update).
+# See https://stackoverflow.com/questions/2264428/converting-string-to-lower-case-in-bash
+#
+# @example
+#   lowercase='MY_STRING'
+#   u_str_lowercase
+#   echo "$lowercase" # Outputs 'my_string'
+#
+u_str_lowercase() {
+  # [opti] avoid subshell for performance reasons.
+  # lowercase=$(tr '[:lower:]' '[:upper:]' <<< "$lowercase")
+  lowercase="${lowercase,,}"
+}
+
+##
+# Transforms an existing variable named $uppercase in calling scope to uppercase.
+#
+# @requires Bash 4+ (MacOS needs manual update).
+# See https://stackoverflow.com/questions/2264428/converting-string-to-lower-case-in-bash
+#
+# @example
+#   uppercase='my_string'
+#   u_str_uppercase
+#   echo "$uppercase" # Outputs 'MY_STRING'
+#
+u_str_uppercase() {
+  # [opti] avoid subshell for performance reasons.
+  # uppercase=$(tr '[:upper:]' '[:lower:]' <<< "$uppercase")
+  uppercase="${uppercase^^}"
+}
+
+##
 # Escapes all slashes for use in 'sed' calls.
 #
 # @see u_str_change_line()

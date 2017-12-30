@@ -10,20 +10,25 @@
 #
 
 ##
-# Sources includes by namespace, subject, action, variant, and prefix/suffix.
+# Triggers an "event" optionally filtered by "primitives".
 #
+# Primitives are fundamental values dynamically generated during bootstrap :
+# @see cwt/bootstrap.sh
+# @see u_cwt_extend()
+#
+# Calling this function will source all file includes matched by subject,
+# action, prefix, variant, and preset. Every preset defines a base path from
+# which additional lookup paths are derived.
 # Also attempts to call functions matching the corresponding lookup patterns.
 #
-# @requires the following globals in calling scope :
+# @requires the following global variables in calling scope :
 # - NAMESPACE
+# - CWT_CUSTOM_DIR
 # - CWT_ACTIONS or ${NAMESPACE}_ACTIONS
 # - CWT_SUBJECTS or ${NAMESPACE}_SUBJECTS
 # - CWT_PREFIXES or ${NAMESPACE}_PREFIXES
 # - CWT_VARIANTS or ${NAMESPACE}_VARIANTS
 # - CWT_PRESETS or ${NAMESPACE}_PRESETS
-#
-# @see cwt/bootstrap.sh
-# @see u_cwt_extend()
 #
 # @examples
 #
@@ -83,7 +88,7 @@ hook() {
   local p_prefixes_filter
   local p_variants_filter
   local p_presets_filter
-  local p_namespace_filter
+  # local p_namespace_filter # [wip] evaluate merging namespace and preset for current purpose.
   local p_debug
 
   # Parse current function arguments.
@@ -96,7 +101,7 @@ hook() {
       -x) p_prefixes_filter="$2"; shift 2;;
       -v) p_variants_filter="$2"; shift 2;;
       -p) p_presets_filter="$2"; shift 2;;
-      -n) p_namespace_filter="$2"; shift 2;;
+      # -n) p_namespace_filter="$2"; shift 2;; # [wip] evaluate merging namespace and preset for current purpose.
       # Flag (arg without any value).
       -d) p_debug=1; shift 1;;
       # Warn for unhandled arguments.
@@ -120,33 +125,46 @@ hook() {
   local presets="$CWT_PRESETS"
   local prefixes="$CWT_PREFIXES"
 
+  local base_paths=("cwt")
   local presets_dir="$CWT_CUSTOM_DIR"
+  local preset
+  local lowercase
+  local uppercase
 
-  # Allow using only a particular namespace (see the '-n' argument).
-  if [[ -n "$p_namespace_filter" ]]; then
-    local nf
-    for nf in $p_namespace_filter; do
-      eval "subjects=\" \$${nf}_SUBJECTS\""
-      eval "actions=\" \$${nf}_ACTIONS\""
-      eval "variants=\" \$${nf}_VARIANTS\""
-      eval "presets=\" \$${nf}_PRESETS\"" # TODO evaluate removing "presets of presets".
-      eval "prefixes=\" \$${nf}_PREFIXES\""
+  # Allow using only a particular preset (see the '-p' argument).
+  if [[ -n "$p_preset_filter" ]]; then
+    for preset in $p_preset_filter; do
+      na=$(tr '[a-z]' '[A-Z]' <<< "$preset")
+      uppercase="$preset"
+      u_str_uppercase
+
+      eval "subjects=\" \$${uppercase}_SUBJECTS\""
+      eval "actions=\" \$${uppercase}_ACTIONS\""
+      eval "variants=\" \$${uppercase}_VARIANTS\""
+      eval "presets=\" \$${uppercase}_PRESETS\"" # TODO evaluate removing "presets of presets".
+      eval "prefixes=\" \$${uppercase}_PREFIXES\""
+
+      # Override base path for lookups.
+      base_paths=("$presets_dir/$preset")
     done
 
   # By default, any preset can append its own "primitives".
   # @see u_cwt_extend()
   elif [[ -n "$presets" ]]; then
-    local na
-    local preset
 
     for preset in $presets; do
       na=$(tr '[a-z]' '[A-Z]' <<< "$preset")
+      uppercase="$preset"
+      u_str_uppercase
 
-      eval "subjects+=\" \$${na}_SUBJECTS\""
-      eval "actions+=\" \$${na}_ACTIONS\""
-      eval "variants+=\" \$${na}_VARIANTS\""
-      eval "presets+=\" \$${na}_PRESETS\"" # TODO evaluate removing "presets of presets".
-      eval "prefixes+=\" \$${na}_PREFIXES\""
+      eval "subjects+=\" \$${uppercase}_SUBJECTS\""
+      eval "actions+=\" \$${uppercase}_ACTIONS\""
+      eval "variants+=\" \$${uppercase}_VARIANTS\""
+      eval "presets+=\" \$${uppercase}_PRESETS\"" # TODO evaluate removing "presets of presets".
+      eval "prefixes+=\" \$${uppercase}_PREFIXES\""
+
+      # Every preset defines an additional base path for lookups.
+      base_paths+=("$presets_dir/$preset")
     done
   fi
 
@@ -166,8 +184,83 @@ hook() {
     return 3
   fi
 
-  # TODO build lookup paths.
+  # Build lookup paths.
+  local lookup_paths=()
+  local p
+  local bp
+  local inc
+  local lookup_subject
+  local lookup_preset
+
+  for bp in "${base_paths[@]}"; do
+    for lookup_subject in $subjects; do
+      u_hook_build_lookup_by_subject "$bp/$lookup_subject"
+    done
+    if [[ -n "$presets" ]]; then
+      for lookup_preset in $presets; do
+        u_hook_build_lookup_by_preset "$bp"
+      done
+    fi
+  done
+
+  # local lookup_action
+  # local inc=''
+  # for hook_script in "${lookup_paths[@]}"; do
+  #   if [[ -f "$hook_script" ]]; then
+  #     eval $(u_autoload_override "$hook_script" 'continue')
+  #     . "$hook_script"
+  #   fi
+  #   u_autoload_get_complement "$hook_script"
+  # done
+
   # TODO build matching function names to call ?
+}
+
+##
+# TODO [wip] Adds lookup paths by subject.
+#
+# @requires the following vars in calling scope :
+# - $lookup_paths
+# - $actions
+#
+# @uses the following optional vars in calling scope if available :
+# - $prefixes
+# - $variants
+#
+# @see hook()
+#
+u_hook_build_lookup_by_subject() {
+  local p_path="$1"
+
+  # lookup_paths+=("$p_path/${p_subject}/${p_event}.hook.sh")
+  # u_autoload_add_lookup_level "$p_path/${p_subject}/" "${p_event}.hook.sh" "$PROVISION_USING" lookup_paths '' '/'
+
+  # lookup_paths+=("$p_path/${p_subject}_${p_event}.hook.sh")
+  # u_autoload_add_lookup_level "$p_path/${p_subject}_${p_event}." "hook.sh" "$PROVISION_USING" lookup_paths
+}
+
+##
+# TODO [wip] Adds lookup paths by preset.
+#
+# @requires the following vars in calling scope :
+# - $lookup_paths
+# - $actions
+# - $subjects
+#
+# @uses the following optional vars in calling scope if available :
+# - $prefixes
+# - $variants
+#
+# @see hook()
+#
+u_hook_build_lookup_by_preset() {
+  local p_path="$1"
+
+  # lookup_paths+=("$p_path/${p_subject}/${p_event}.hook.sh")
+  # u_autoload_add_lookup_level "$p_path/${p_subject}/" "${p_event}.hook.sh" "$PROVISION_USING" lookup_paths '' '/'
+
+  # lookup_paths+=("$p_path/${p_subject}_${p_event}.hook.sh")
+  # u_autoload_add_lookup_level "$p_path/${p_subject}_${p_event}." "hook.sh" "$PROVISION_USING" lookup_paths
 }
 
 
