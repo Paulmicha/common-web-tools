@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
 ##
-# CWT internals related utility functions.
+# CWT core utility functions.
+#
+# TODO refacto 'stack' into 2 different subjects : 'instance' + 'services'.
 #
 # This file is dynamically loaded.
 # @see cwt/bootstrap.sh
@@ -28,7 +30,7 @@
 # @export CWT_VARIANTS (See 2.3)
 # @export CWT_PRESETS (See 3)
 #
-# 1. By default, contains the list of depth 1 folders names in ./cwt (w/o slashes).
+# 1. By default, contains the list of depth 1 folders names in ./cwt.
 #   If the dotfile '.cwt_subjects' is present in current level, it overrides
 #   the entire list and may introduce values that are not folders (see below).
 #   If the dotfile '.cwt_subjects_append' exists, its values are added.
@@ -54,8 +56,7 @@
 #     - PROVISION_USING
 #     - INSTANCE_TYPE
 #     - HOST_TYPE
-#     The previous naming + dotfile pattern applies (see 2.1), with an
-#     additional one for altering defaults : '.cwt_variants_alter'.
+#     The previous naming + dotfile pattern applies (see 2.1).
 #
 # 3. This only applies AFTER stack init has been run once if the global env var
 #   CWT_CUSTOM_DIR was assigned a different value than 'cwt/custom'.
@@ -87,19 +88,8 @@ u_cwt_extend() {
   done
 
   # By default, subjects are the list of depth 1 folders in given path.
-  local subject
   local subjects_list
-  local subjects_ignore
-
-  subjects_list="$(u_cwt_read 'subjects' "$p_path")"
-  if [[ -z "$subjects_list" ]]; then
-    subjects_list=$(u_fs_dir_list "$p_path")
-  fi
-
-  subjects_ignore="$(u_cwt_read 'subjects_ignore' "$p_path")"
-  if [[ -z "$subjects_ignore" ]]; then
-    subjects_list=$(u_fs_dir_list "$p_path")
-  fi
+  subjects_list="$(u_cwt_primitive_values 'subjects' "$p_path")"
 
   # echo
   # echo "  subjects_list = $subjects_list"
@@ -141,7 +131,7 @@ u_cwt_extend() {
 
     # It's possible to provide a dotfile bypassing entirely the default file
     # enumeration process below.
-    actions_list="$(u_cwt_read 'actions' "$p_path/$subject")"
+    actions_list="$(u_cwt_primitive_values 'actions' "$p_path/$subject")"
 
     if [[ -n "$actions_list" ]]; then
       for action in $actions_list; do
@@ -263,6 +253,8 @@ u_cwt_presets() {
 ##
 # Returns primitive values for given path.
 #
+# TODO [wip] document 3rd arg.
+#
 # @param 1 String which primitive values to get.
 # @param 2 [optional] String relative path (defaults to 'cwt' = CWT "core").
 #
@@ -271,40 +263,100 @@ u_cwt_presets() {
 # @see u_cwt_extend()
 #
 # @example
-#   subjects="$(u_cwt_read subjects_ignore)"
-#   echo "$subjects" # Yields 'utilities'
+#   subjects="$(u_cwt_primitive_values subjects)"
+#   echo "$subjects" # Yields 'app cron db env git provision remote stack test'
 #
 #   # Default path 'cwt' can be modified by providing the 2nd argument :
-#   subjects="$(u_cwt_read subjects_ignore 'path/to/relative/dir')"
+#   subjects="$(u_cwt_primitive_values subjects 'path/to/relative/dir')"
 #   echo "$subjects"
 #
-u_cwt_read() {
-  local p_suffix="$1"
+u_cwt_primitive_values() {
+  local p_primitive="$1"
   local p_path="$2"
+  local p_subject="$3"
 
-  local uppercase="$p_suffix"
-  u_str_uppercase
-
-  local dotfile="$p_path/.cwt_${p_suffix}"
-  local file_contents
-
-  # Allow overrides.
-  local override_file=''
-  eval $(u_autoload_override "$dotfile" '' 'override_file="$override"')
-  if [[ -n "$override_file" ]]; then
-    cat "$override_file"
-    return 0
+  if [[ -z "$p_path" ]]; then
+    p_path='cwt'
   fi
 
-  # Allow complements.
-  local complement_filepath=$(u_autoload_get_complement "$dotfile" 'get_complement_filepath')
-  if [[ -n "$complement_filepath" ]]; then
-    cat "$complement_filepath"
-  fi
+  local primitive_values
+  local dotfile
+  local dotfile_contents
 
-  # Finally, output the normal "$p_path/.cwt_${p_suffix}" file contents (if it
-  # exists).
+  # Provide hardcoded default values.
+  case "$p_primitive" in
+    prefixes) primitive_values='pre post' ;;
+    variants) primitive_values='PROVISION_USING INSTANCE_TYPE HOST_TYPE' ;;
+  esac
+
+  # Look for the dotfile that will override all default values.
+  dotfile="$p_path/.cwt_${p_primitive}"
   if [[ -f "$dotfile" ]]; then
-    cat "$dotfile"
+    dotfile_contents=$(< "$dotfile")
+    if [[ -n "$dotfile_contents" ]]; then
+      primitive_values="$dotfile_contents"
+    fi
+
+  # Provide dynamic default values.
+  else
+    case "$p_primitive" in
+      subjects)
+        primitive_values=$(u_fs_dir_list "$p_path")
+      ;;
+      actions)
+        primitive_values=$(u_fs_file_list "$p_path/$p_subject")
+      ;;
+    esac
   fi
+
+  # Look for the dotfile that provides additional values.
+  dotfile="$p_path/.cwt_${p_primitive}_append"
+  if [[ -f "$dotfile" ]]; then
+    dotfile_contents=$(< "$dotfile")
+    if [[ -n "$dotfile_contents" ]]; then
+      local added_val
+      for added_val in $dotfile_contents; do
+        primitive_values+="$added_val "
+      done
+    fi
+  fi
+
+  # TODO [wip] Look for the dotfile that removes values to ignore.
+  dotfile="$p_path/.cwt_${p_primitive}_ignore"
+
+  # primitive_values="$(u_cwt_primitive_values "$p_primitive" "$p_path")"
+  # if [[ -z "$primitive_values" ]]; then
+  #   primitive_values=$(u_fs_dir_list "$p_path")
+  # fi
+
+  # ignore="$(u_cwt_primitive_values "${p_primitive}_ignore" "$p_path")"
+  # if [[ -z "$ignore" ]]; then
+  #   # TODO
+  # fi
+
+  # local uppercase="$p_primitive"
+  # u_str_uppercase
+
+  # local dotfile="$p_path/.cwt_${p_primitive}"
+  # local file_contents
+
+  # # Allow overrides.
+  # local override_file=''
+  # eval $(u_autoload_override "$dotfile" '' 'override_file="$override"')
+  # if [[ -n "$override_file" ]]; then
+  #   cat "$override_file"
+  #   return 0
+  # fi
+
+  # # Allow complements.
+  # local complement_filepath=$(u_autoload_get_complement "$dotfile" 'get_complement_filepath')
+  # if [[ -n "$complement_filepath" ]]; then
+  #   cat "$complement_filepath"
+  # fi
+
+  # # Finally, output the normal "$p_path/.cwt_${p_primitive}" file contents (if it
+  # # exists).
+  # if [[ -f "$dotfile" ]]; then
+  #   cat "$dotfile"
+  # fi
 }
