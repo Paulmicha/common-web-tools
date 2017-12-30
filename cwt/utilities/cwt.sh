@@ -18,7 +18,8 @@
 # they control which files are included (sourced) during "bootstrap" depending
 # on current local instance's CWT_STATE (e.g. installed, initialized, running).
 #
-# @param 1 [optional] String relative path (defaults to './cwt' = CWT "core").
+# @param 1 [optional] String relative path (defaults to 'cwt' = CWT "core").
+#   Provides a preset folder without trailing slash.
 # @param 2 [optional] String globals "namespace" (defaults to the uppercase name
 #   of the folder passed as 1st arg).
 #
@@ -73,31 +74,51 @@ u_cwt_extend() {
     p_path='cwt'
   fi
 
+  # Namespace defaults to the "$p_path" folder name (uppercase).
+  local uppercase
   if [[ -z "$p_namespace" ]]; then
     uppercase="${p_path##*/}"
     u_str_uppercase
     p_namespace="$uppercase"
   fi
 
-  local primitives="SUBJECTS ACTIONS PREFIXES VARIANTS PRESETS"
+  # Export initial global variables for every primitive + always reinit as empty
+  # strings on every call to u_cwt_extend().
+  local primitives='SUBJECTS ACTIONS PREFIXES VARIANTS PRESETS'
   local prim
-  local uppercase
-
   for prim in $primitives; do
-    eval "export ${p_namespace}_${prim}"
+    eval "export ${p_namespace}_${prim}=''"
   done
 
-  # By default, subjects are the list of depth 1 folders in given path.
-  local subjects_list
-  subjects_list="$(u_cwt_primitive_values 'subjects' "$p_path")"
+  # "Reusable" local var name.
+  # @see u_cwt_primitive_values()
+  local primitive_values
+
+  # Agregate subjects.
+  primitive_values=''
+  u_cwt_primitive_values 'subjects' "$p_path"
+  local subjects_list="$primitive_values"
 
   # echo
   # echo "  subjects_list = $subjects_list"
   # echo
 
+  # Agregate actions + generic includes (by subject).
   local action
   local actions_list
   local inc
+  for subject in $subjects_list; do
+    eval "${p_namespace}_SUBJECTS+=\"$subject \""
+    inc=''
+    action=''
+    primitive_values=''
+    u_cwt_primitive_values 'actions' "$p_path/$subject"
+    actions_list="$primitive_values"
+
+    # TODO [wip] refacto in progress.
+  done
+
+
   local file
   local file_list
   local file_wodots
@@ -207,8 +228,7 @@ u_cwt_extend() {
   done
 
   # If presets are detected, loop through each of them to aggregate namespaced
-  # primitives.
-  # Restrict this to CWT namespace only.
+  # primitives + restrict this to CWT namespace only.
   if [[ "$p_namespace" == 'CWT' ]]; then
     export CWT_PRESETS
     u_cwt_presets
@@ -251,35 +271,38 @@ u_cwt_presets() {
 }
 
 ##
-# Returns primitive values for given path.
+# Provides primitive values for given path.
 #
-# TODO [wip] document 3rd arg.
+# @requires local var $primitive_values in calling scope.
+# This function modifies an existing variable for performance reasons (in order
+# to avoid using a subshell).
 #
-# @param 1 String which primitive values to get.
+# @param 1 String which primitive values to get (lowercase).
 # @param 2 [optional] String relative path (defaults to 'cwt' = CWT "core").
+#   Provides a preset folder without trailing slash.
 #
 # Dotfiles MUST contain a list of words without any special characters nor
 # spaces. The values provided will determine dynamic includes lookup paths :
 # @see u_cwt_extend()
 #
 # @example
-#   subjects="$(u_cwt_primitive_values subjects)"
-#   echo "$subjects" # Yields 'app cron db env git provision remote stack test'
+#   primitive_values=''
+#   u_cwt_primitive_values 'subjects'
+#   echo "$primitive_values" # Yields 'app cron db env git provision remote stack test'
 #
 #   # Default path 'cwt' can be modified by providing the 2nd argument :
-#   subjects="$(u_cwt_primitive_values subjects 'path/to/relative/dir')"
-#   echo "$subjects"
+#   primitive_values=''
+#   u_cwt_primitive_values 'actions' 'path/to/preset/folder'
+#   echo "$primitive_values"
 #
 u_cwt_primitive_values() {
   local p_primitive="$1"
   local p_path="$2"
-  local p_subject="$3"
 
   if [[ -z "$p_path" ]]; then
     p_path='cwt'
   fi
 
-  local primitive_values
   local dotfile
   local dotfile_contents
 
@@ -288,6 +311,19 @@ u_cwt_primitive_values() {
     prefixes) primitive_values='pre post' ;;
     variants) primitive_values='PROVISION_USING INSTANCE_TYPE HOST_TYPE' ;;
   esac
+
+  # Look for the dotfile that provides explictly ignored values.
+  local ignored_values=()
+  local ignored_val
+  dotfile="$p_path/.cwt_${p_primitive}_ignore"
+  if [[ -f "$dotfile" ]]; then
+    dotfile_contents=$(< "$dotfile")
+    if [[ -n "$dotfile_contents" ]]; then
+      for ignored_val in $dotfile_contents; do
+        ignored_values+=("$ignored_val")
+      done
+    fi
+  fi
 
   # Look for the dotfile that will override all default values.
   dotfile="$p_path/.cwt_${p_primitive}"
@@ -299,64 +335,55 @@ u_cwt_primitive_values() {
 
   # Provide dynamic default values.
   else
+    local dyn_values
     case "$p_primitive" in
       subjects)
-        primitive_values=$(u_fs_dir_list "$p_path")
+        dyn_values=$(u_fs_dir_list "$p_path")
       ;;
       actions)
-        primitive_values=$(u_fs_file_list "$p_path/$p_subject")
+        dyn_values=$(u_fs_file_list "$p_path")
       ;;
     esac
+
+    # Filter out invalid values.
+    # TODO should we forbid / sanitize unexpected characters (space, *, etc.) ?
+    local v
+    local v_wodots
+    for v in $dyn_values; do
+
+      # Always ignore values starting with a dot.
+      if [[ "${v:0:1}" == '.' ]]; then
+        continue
+      fi
+
+      # Leave out any value explicitly ignored via dotfile.
+      if u_in_array "$v" ignored_values; then
+        continue
+      fi
+
+      # Actions need to remove *.sh extension + ignore files using any double
+      # extension pattern.
+      if [[ "$p_primitive" == 'actions' ]]; then
+        v="${v%%.sh}"
+        v_wodots="${v//\.}"
+        if (( ${#v} - ${#v_wodots} > 0 )); then
+          continue
+        fi
+      fi
+
+      primitive_values+=" $v "
+    done
   fi
 
-  # Look for the dotfile that provides additional values.
+  # Look for the dotfile that provides additional values + add them if it exists.
   dotfile="$p_path/.cwt_${p_primitive}_append"
   if [[ -f "$dotfile" ]]; then
     dotfile_contents=$(< "$dotfile")
     if [[ -n "$dotfile_contents" ]]; then
       local added_val
       for added_val in $dotfile_contents; do
-        primitive_values+="$added_val "
+        primitive_values+=" $added_val "
       done
     fi
   fi
-
-  # TODO [wip] Look for the dotfile that removes values to ignore.
-  dotfile="$p_path/.cwt_${p_primitive}_ignore"
-
-  # primitive_values="$(u_cwt_primitive_values "$p_primitive" "$p_path")"
-  # if [[ -z "$primitive_values" ]]; then
-  #   primitive_values=$(u_fs_dir_list "$p_path")
-  # fi
-
-  # ignore="$(u_cwt_primitive_values "${p_primitive}_ignore" "$p_path")"
-  # if [[ -z "$ignore" ]]; then
-  #   # TODO
-  # fi
-
-  # local uppercase="$p_primitive"
-  # u_str_uppercase
-
-  # local dotfile="$p_path/.cwt_${p_primitive}"
-  # local file_contents
-
-  # # Allow overrides.
-  # local override_file=''
-  # eval $(u_autoload_override "$dotfile" '' 'override_file="$override"')
-  # if [[ -n "$override_file" ]]; then
-  #   cat "$override_file"
-  #   return 0
-  # fi
-
-  # # Allow complements.
-  # local complement_filepath=$(u_autoload_get_complement "$dotfile" 'get_complement_filepath')
-  # if [[ -n "$complement_filepath" ]]; then
-  #   cat "$complement_filepath"
-  # fi
-
-  # # Finally, output the normal "$p_path/.cwt_${p_primitive}" file contents (if it
-  # # exists).
-  # if [[ -f "$dotfile" ]]; then
-  #   cat "$dotfile"
-  # fi
 }
