@@ -134,7 +134,7 @@ u_cwt_extend() {
     for action in $actions_list; do
 
       # Build up exported actions list (by subject).
-      eval "${p_namespace}_ACTIONS+=\"${subject}:$action \""
+      eval "${p_namespace}_ACTIONS+=\"${subject}/$action \""
 
       # Build up exported prefixes (by subject AND by action).
       # TODO : progressively fallback unless explicitly specified ?
@@ -142,7 +142,8 @@ u_cwt_extend() {
       u_cwt_primitive_values 'prefixes' "$p_path/$subject"
       prefixes_list="$primitive_values"
       for prefix in $prefixes_list; do
-        eval "${p_namespace}_PREFIXES+=\"${subject}:$action:$prefix \""
+        eval "${p_namespace}_PREFIXES+=\"${subject}/$action/$prefix \""
+        # eval "${p_namespace}_PREFIXES+=\"${subject}/${prefix}_$action \""
       done
 
       # Build up exported variants (by subject AND by action).
@@ -151,7 +152,7 @@ u_cwt_extend() {
       u_cwt_primitive_values 'variants' "$p_path/$subject"
       variants_list="$primitive_values"
       for variant in $variants_list; do
-        eval "${p_namespace}_VARIANTS+=\"${subject}:$action:$variant \""
+        eval "${p_namespace}_VARIANTS+=\"${subject}/$action/$variant \""
       done
     done
   done

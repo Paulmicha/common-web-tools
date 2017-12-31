@@ -182,26 +182,9 @@ hook() {
   fi
 
   # Apply filters.
-  # TODO [wip] simplify filters.
-
-  # local subjects_matched
-  # local actions_matched
-  # local variants_matched
-  # local prefixes_matched
-
-  # local subjects_pos=0
-  # local actions_pos=1
-  # local variants_pos=2
-  # local prefixes_pos=2
-
   local filters='subjects actions prefixes variants' # TODO check order impact.
-  # local values
-  # local pos
   local f
   local f_arg
-  # local v
-  # local v_part
-  # local v_parts_arr
   local s
   local a
   local arg_val
@@ -212,8 +195,6 @@ hook() {
     if [[ -z "$f_arg" ]]; then
       continue
     fi
-
-    # eval "$f=\"$f_arg\""
 
     eval "$f=''"
 
@@ -226,7 +207,7 @@ hook() {
       actions)
         for arg_val in $f_arg; do
           for s in $subjects; do
-            eval "$f+=\" $s:$f_arg \""
+            eval "$f+=\" $s/$f_arg \""
           done
         done
       ;;
@@ -234,42 +215,13 @@ hook() {
         for arg_val in $f_arg; do
           for s in $subjects; do
             for a in $actions; do
-              eval "$f+=\" $s:$a:$f_arg \""
+              eval "$f+=\" $s/$a/$f_arg \""
             done
           done
         done
       ;;
     esac
-
-
-    # eval "values=\"\$$f\""
-    # eval "pos=\"\$${f}_pos\""
-
-    # # echo
-    # # echo "filter $f :"
-
-    # for v in $values; do
-
-    #   # echo " - value = $v"
-
-    #   # NB we rely on the invariability of the "positions" of primitives' values
-    #   # - e.g. subjects MUST always be 1st, actions MUST always be 2nd, etc.
-    #   u_str_split1 v_parts_arr "$v" ':'
-    #   v_part="${v_parts_arr[$pos]}"
-    #   echo "    -- part = $v_part"
-
-    #   # for v_part in "${v_parts_arr[@]}"; do
-    #   #   echo "    -- part = $v_part"
-    #   # done
-
-    #   eval "${f}_matched+=\"\$$v\""
-    # done
   done
-
-  # Apply potentially filtered values above.
-  # for f in $filters; do
-  #   eval "$f=\"\$${f}_matched\""
-  # done
 
   # Build lookup paths.
   local lookup_paths=()
@@ -283,13 +235,11 @@ hook() {
   done
 
   if [[ -n "$presets" ]]; then
-    # for bp in "${base_paths[@]}"; do
     for p in $presets; do
       for lookup_preset in $presets; do
         u_hook_build_lookup_by_preset "$p"
       done
     done
-    # done
   fi
 
   # Debug.
@@ -330,70 +280,94 @@ hook() {
 u_hook_build_lookup_by_subject() {
   local p_subject="$1"
 
-  local bp
-  local p
+  # echo
+  # echo "build $p_subject"
 
+  local bp
+
+  local a_path
+  local a_parts_arr
   local a
+
+  local x_prim
+  local x_parts_arr
   local x
+  local x_fallback
+
+  local v_prim
+  local v_parts_arr
   local v
   local v_val
-
-  # echo "actions = $actions"
-  # echo
-
-  # echo "prefixes = $prefixes"
-  # echo
+  local v_flag
+  local v_fallback
+  local v_fallback_vars='PROVISION_USING INSTANCE_TYPE HOST_TYPE'
 
   for bp in "${base_paths[@]}"; do
-    p="$bp/$p_subject"
-
-    for a in $actions; do
+    for a_path in $actions; do
 
       # Ignore actions not "belonging" to current subject.
-      if [[ "$a" != "$p_subject:"* ]]; then
-        continue
-      fi
+      case "$a_path" in "$p_subject"*)
+        lookup_paths+=("$bp/${a_path}.hook.sh")
 
-      # Remove prefix.
-      a="${a//$p_subject:/''}"
+        u_str_split1 a_parts_arr "$a_path" '/'
+        a="${a_parts_arr[1]}"
 
-      # echo "a = $a"
-      # echo
+        # "prefixes" and "variants" primitives are special : unless nothing
+        # explicitly alters them (by subject + by action), hardcoded fallback
+        # values should be used to generate new lookup paths.
+        # NB we rely on the invariability of the "positions" of primitives'
+        # values - e.g. subjects MUST always be 1st, actions MUST always be
+        # 2nd, and prefixes + variants MUST always come last.
+        # @see u_cwt_extend()
+        x_fallback=1
+        v_fallback=1
 
-      lookup_paths+=("$p/${a}.hook.sh")
+        for x_prim in $prefixes; do
+          case "$x_prim" in "$a_path"*)
+            x_fallback=0
+            # echo "  a_path = $a_path"
+            # echo "           $x_prim"
+            u_str_split1 x_parts_arr "$x_prim" '/'
+            x="${x_parts_arr[2]}"
+            lookup_paths+=("$bp/$p_subject/${x}_${a}.hook.sh")
+          esac
+        done
 
+        for v_prim in $variants; do
+          case "$v_prim" in "$a_path"*)
+            v_fallback=0
+            u_str_split1 v_parts_arr "$v_prim" '/'
+            v="${v_parts_arr[2]}"
+            eval "v_val=\"\$$v\""
+            u_autoload_add_lookup_level "$bp/$p_subject/" "${a}.hook.sh" "$v_val" lookup_paths '' '/'
+            u_autoload_add_lookup_level "$bp/$p_subject/${a}." "hook.sh" "$v_val" lookup_paths
+          esac
+        done
 
-      for x in $prefixes; do
-
-        echo "x = $x"
-        echo
-
-        # Ignore prefixes not "belonging" to current subject + action.
-        if [[ "$x" != "$p_subject:$a:"* ]]; then
-          continue
+        # If nothing specific was found by now, fallback to dynamic lookup
+        # generation for prefixes and variants.
+        if [[ $x_fallback == 1 ]]; then
+          lookup_paths+=("$bp/$p_subject/pre_${a}.hook.sh")
+          lookup_paths+=("$bp/$p_subject/post_${a}.hook.sh")
         fi
-        # Remove prefix.
-        x="${x//$p_subject:$a:/''}"
+        if [[ $v_fallback == 1 ]]; then
+          for v in $v_fallback_vars; do
+            eval "v_val=\"\$$v\""
+            u_autoload_add_lookup_level "$bp/$p_subject/" "${a}.hook.sh" "$v_val" lookup_paths '' '/'
+            u_autoload_add_lookup_level "$bp/$p_subject/${a}." "hook.sh" "$v_val" lookup_paths
+          done
+        fi
 
-        echo "x2 = $x"
-        echo
-
-        lookup_paths+=("$p/${x}_${a}.hook.sh")
-      done
-
-      # for v in $variants; do
-      #   eval "v_val=\"\$$v\""
-      #   u_autoload_add_lookup_level "$p/" "${a}.hook.sh" "$v_val" lookup_paths '' '/'
-      #   u_autoload_add_lookup_level "$p/${a}." "hook.sh" "$v_val" lookup_paths
-      # done
-
-      # for x in $prefixes; do
-      #   for v in $variants; do
-      #     eval "v_val=\"\$$v\""
-      #     u_autoload_add_lookup_level "$p/" "${x}_${a}.hook.sh" "$v_val" lookup_paths '' '/'
-      #     u_autoload_add_lookup_level "$p/${x}_${a}." "hook.sh" "$v_val" lookup_paths
-      #   done
-      # done
+        # TODO evol implement prefix + variant ?
+        # e.g. pre_bootstrap.docker-compose.hook.sh
+        # for x in $prefixes; do
+        #   for v in $variants; do
+        #     eval "v_val=\"\$$v\""
+        #     u_autoload_add_lookup_level "$p/" "${x}_${a}.hook.sh" "$v_val" lookup_paths '' '/'
+        #     u_autoload_add_lookup_level "$p/${x}_${a}." "hook.sh" "$v_val" lookup_paths
+        #   done
+        # done
+      esac
     done
   done
 }
