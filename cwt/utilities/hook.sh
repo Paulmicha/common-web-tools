@@ -182,13 +182,29 @@ hook() {
   fi
 
   # Apply filters.
-  local filters='actions subjects prefixes variants'
-  local values
+  # TODO [wip] simplify filters.
+
+  # local subjects_matched
+  # local actions_matched
+  # local variants_matched
+  # local prefixes_matched
+
+  # local subjects_pos=0
+  # local actions_pos=1
+  # local variants_pos=2
+  # local prefixes_pos=2
+
+  local filters='subjects actions prefixes variants' # TODO check order impact.
+  # local values
+  # local pos
   local f
   local f_arg
-  local v
-  local v_part
-  local v_parts_arr
+  # local v
+  # local v_part
+  # local v_parts_arr
+  local s
+  local a
+  local arg_val
 
   for f in $filters; do
 
@@ -197,29 +213,63 @@ hook() {
       continue
     fi
 
-    eval "values=\"\$$f\""
+    # eval "$f=\"$f_arg\""
 
-    echo
-    echo "filter $f :"
+    eval "$f=''"
 
-    for v in $values; do
+    case "$f" in
+      subjects)
+        for arg_val in $f_arg; do
+          eval "$f+=\" $f_arg \""
+        done
+      ;;
+      actions)
+        for arg_val in $f_arg; do
+          for s in $subjects; do
+            eval "$f+=\" $s:$f_arg \""
+          done
+        done
+      ;;
+      prefixes|variants)
+        for arg_val in $f_arg; do
+          for s in $subjects; do
+            for a in $actions; do
+              eval "$f+=\" $s:$a:$f_arg \""
+            done
+          done
+        done
+      ;;
+    esac
 
-      echo " - value = $v"
 
-      u_str_split1 v_parts_arr "$v" ':'
-      for v_part in "${v_parts_arr[@]}"; do
+    # eval "values=\"\$$f\""
+    # eval "pos=\"\$${f}_pos\""
 
-        echo "    -- part = $v_part"
+    # # echo
+    # # echo "filter $f :"
 
-      done
+    # for v in $values; do
 
-      # case "$f_arg" in
-      #   actions)
-      #   ;;
-      # esac
+    #   # echo " - value = $v"
 
-    done
+    #   # NB we rely on the invariability of the "positions" of primitives' values
+    #   # - e.g. subjects MUST always be 1st, actions MUST always be 2nd, etc.
+    #   u_str_split1 v_parts_arr "$v" ':'
+    #   v_part="${v_parts_arr[$pos]}"
+    #   echo "    -- part = $v_part"
+
+    #   # for v_part in "${v_parts_arr[@]}"; do
+    #   #   echo "    -- part = $v_part"
+    #   # done
+
+    #   eval "${f}_matched+=\"\$$v\""
+    # done
   done
+
+  # Apply potentially filtered values above.
+  # for f in $filters; do
+  #   eval "$f=\"\$${f}_matched\""
+  # done
 
   # Build lookup paths.
   local lookup_paths=()
@@ -228,18 +278,26 @@ hook() {
   local lookup_subject
   local lookup_preset
 
-  for bp in "${base_paths[@]}"; do
-    for lookup_subject in $subjects; do
-      u_hook_build_lookup_by_subject "$bp/$lookup_subject"
-    done
-    if [[ -n "$presets" ]]; then
-      for lookup_preset in $presets; do
-        u_hook_build_lookup_by_preset "$bp"
-      done
-    fi
+  for lookup_subject in $subjects; do
+    u_hook_build_lookup_by_subject "$lookup_subject"
   done
 
-  # Source each file include with overrides and complements extension mecanisms.
+  if [[ -n "$presets" ]]; then
+    # for bp in "${base_paths[@]}"; do
+    for p in $presets; do
+      for lookup_preset in $presets; do
+        u_hook_build_lookup_by_preset "$p"
+      done
+    done
+    # done
+  fi
+
+  # Debug.
+  if [[ $p_debug == 1 ]]; then
+    u_autoload_print_lookup_paths lookup_paths "hook -a '$p_actions_filter' -s '$p_subjects_filter' -x '$p_prefixes_filter' -v '$p_variants_filter' -p '$p_presets_filter'"
+  fi
+
+  # Source each file include (with optional override mecanism).
   # @see cwt/utilities/autoload.sh
   local inc
   for inc in "${lookup_paths[@]}"; do
@@ -247,7 +305,6 @@ hook() {
       eval $(u_autoload_override "$inc" 'continue')
       . "$inc"
     fi
-    u_autoload_get_complement "$inc"
     # TODO build matching function names to call ?
   done
 }
@@ -255,8 +312,13 @@ hook() {
 ##
 # TODO [wip] Adds lookup paths by subject.
 #
+# TODO we *could* have every subject implement every other subjects' hooks,
+# if we wanted to. E.g. env/app_bootstrap.hook.sh, etc.
+#
 # @requires the following vars in calling scope :
+# - $base_paths
 # - $lookup_paths
+# - $filters
 # - $actions
 #
 # @uses the following optional vars in calling scope if available :
@@ -266,13 +328,74 @@ hook() {
 # @see hook()
 #
 u_hook_build_lookup_by_subject() {
-  local p_path="$1"
+  local p_subject="$1"
 
-  # lookup_paths+=("$p_path/${p_subject}/${p_event}.hook.sh")
-  # u_autoload_add_lookup_level "$p_path/${p_subject}/" "${p_event}.hook.sh" "$PROVISION_USING" lookup_paths '' '/'
+  local bp
+  local p
 
-  # lookup_paths+=("$p_path/${p_subject}_${p_event}.hook.sh")
-  # u_autoload_add_lookup_level "$p_path/${p_subject}_${p_event}." "hook.sh" "$PROVISION_USING" lookup_paths
+  local a
+  local x
+  local v
+  local v_val
+
+  # echo "actions = $actions"
+  # echo
+
+  # echo "prefixes = $prefixes"
+  # echo
+
+  for bp in "${base_paths[@]}"; do
+    p="$bp/$p_subject"
+
+    for a in $actions; do
+
+      # Ignore actions not "belonging" to current subject.
+      if [[ "$a" != "$p_subject:"* ]]; then
+        continue
+      fi
+
+      # Remove prefix.
+      a="${a//$p_subject:/''}"
+
+      # echo "a = $a"
+      # echo
+
+      lookup_paths+=("$p/${a}.hook.sh")
+
+
+      for x in $prefixes; do
+
+        echo "x = $x"
+        echo
+
+        # Ignore prefixes not "belonging" to current subject + action.
+        if [[ "$x" != "$p_subject:$a:"* ]]; then
+          continue
+        fi
+        # Remove prefix.
+        x="${x//$p_subject:$a:/''}"
+
+        echo "x2 = $x"
+        echo
+
+        lookup_paths+=("$p/${x}_${a}.hook.sh")
+      done
+
+      # for v in $variants; do
+      #   eval "v_val=\"\$$v\""
+      #   u_autoload_add_lookup_level "$p/" "${a}.hook.sh" "$v_val" lookup_paths '' '/'
+      #   u_autoload_add_lookup_level "$p/${a}." "hook.sh" "$v_val" lookup_paths
+      # done
+
+      # for x in $prefixes; do
+      #   for v in $variants; do
+      #     eval "v_val=\"\$$v\""
+      #     u_autoload_add_lookup_level "$p/" "${x}_${a}.hook.sh" "$v_val" lookup_paths '' '/'
+      #     u_autoload_add_lookup_level "$p/${x}_${a}." "hook.sh" "$v_val" lookup_paths
+      #   done
+      # done
+    done
+  done
 }
 
 ##
@@ -280,6 +403,7 @@ u_hook_build_lookup_by_subject() {
 #
 # @requires the following vars in calling scope :
 # - $lookup_paths
+# - $filters
 # - $actions
 # - $subjects
 #
@@ -291,6 +415,8 @@ u_hook_build_lookup_by_subject() {
 #
 u_hook_build_lookup_by_preset() {
   local p_path="$1"
+
+  echo "  u_hook_build_lookup_by_preset $@"
 
   # lookup_paths+=("$p_path/${p_subject}/${p_event}.hook.sh")
   # u_autoload_add_lookup_level "$p_path/${p_subject}/" "${p_event}.hook.sh" "$PROVISION_USING" lookup_paths '' '/'

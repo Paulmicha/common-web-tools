@@ -1,15 +1,6 @@
 #!/usr/bin/env bats
 
-setup() {
-  . cwt/bootstrap.sh
-}
-
-@test "1. Single action hook" {
-  # result="$(hook -a 'bootstrap')"
-  # [ -n "$result" ]
-  run hook -a 'bootstrap'
-  my_var="$CWT_INC"
-  # result="test"
-  # [ -n "$result" ]
-  [ -n "$my_var" ]
+@test "Single action hook" {
+  exit_code="$(cwt/test/cwt/hook.sh 'Single action hook')"
+  [ -e $exit_code ]
 }
