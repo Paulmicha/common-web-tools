@@ -4,7 +4,10 @@
 # [wip] Run tests.
 #
 # Usage :
-# $ . cwt/test/run.sh
+# $ cwt/test/run.sh
 #
 
-# TODO
+# [wip] debug.
+for file in $(find cwt/test/cwt -maxdepth 1 -type f -print0 | xargs -0); do
+  bats "$file"
+done

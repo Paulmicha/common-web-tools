@@ -140,11 +140,11 @@ hook() {
     for preset in $p_preset_filter; do
       uppercase="$preset"
       u_str_uppercase
-      eval "subjects=\" \$${uppercase}_SUBJECTS\""
-      eval "actions=\" \$${uppercase}_ACTIONS\""
-      eval "variants=\" \$${uppercase}_VARIANTS\""
-      eval "presets=\" \$${uppercase}_PRESETS\"" # TODO evaluate removing "presets of presets".
-      eval "prefixes=\" \$${uppercase}_PREFIXES\""
+      eval "subjects=\"\$${uppercase}_SUBJECTS\""
+      eval "actions=\"\$${uppercase}_ACTIONS\""
+      eval "variants=\"\$${uppercase}_VARIANTS\""
+      eval "presets=\"\$${uppercase}_PRESETS\"" # TODO evaluate removing "presets of presets".
+      eval "prefixes=\"\$${uppercase}_PREFIXES\""
       # Override base path for lookups.
       base_paths=("$presets_dir/$preset")
     done
