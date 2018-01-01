@@ -11,5 +11,7 @@
 
 . cwt/bootstrap.sh
 
+echo "CWT_INC = $CWT_INC" >&2
+
 # TODO [wip] debug OK.
 # exit 1

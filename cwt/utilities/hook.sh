@@ -293,6 +293,7 @@ u_hook_build_lookup_by_subject() {
   local x_parts_arr
   local x
   local x_fallback
+  local x_fallback_values='pre post'
 
   local v_prim
   local v_parts_arr
@@ -300,7 +301,7 @@ u_hook_build_lookup_by_subject() {
   local v_val
   local v_flag
   local v_fallback
-  local v_fallback_vars='PROVISION_USING INSTANCE_TYPE HOST_TYPE'
+  local v_fallback_values='PROVISION_USING INSTANCE_TYPE HOST_TYPE'
 
   for bp in "${base_paths[@]}"; do
     for a_path in $actions; do
@@ -351,7 +352,7 @@ u_hook_build_lookup_by_subject() {
           lookup_paths+=("$bp/$p_subject/post_${a}.hook.sh")
         fi
         if [[ $v_fallback == 1 ]]; then
-          for v in $v_fallback_vars; do
+          for v in $v_fallback_values; do
             eval "v_val=\"\$$v\""
             u_autoload_add_lookup_level "$bp/$p_subject/" "${a}.hook.sh" "$v_val" lookup_paths '' '/'
             u_autoload_add_lookup_level "$bp/$p_subject/${a}." "hook.sh" "$v_val" lookup_paths

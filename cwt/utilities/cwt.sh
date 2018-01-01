@@ -139,17 +139,16 @@ u_cwt_extend() {
       # Build up exported prefixes (by subject AND by action).
       # TODO : progressively fallback unless explicitly specified ?
       primitive_values=''
-      u_cwt_primitive_values 'prefixes' "$p_path/$subject"
+      u_cwt_primitive_values 'prefixes' "$p_path/$subject" "$action"
       prefixes_list="$primitive_values"
       for prefix in $prefixes_list; do
         eval "${p_namespace}_PREFIXES+=\"${subject}/$action/$prefix \""
-        # eval "${p_namespace}_PREFIXES+=\"${subject}/${prefix}_$action \""
       done
 
       # Build up exported variants (by subject AND by action).
       # TODO : progressively fallback unless explicitly specified ?
       primitive_values=''
-      u_cwt_primitive_values 'variants' "$p_path/$subject"
+      u_cwt_primitive_values 'variants' "$p_path/$subject" "$action"
       variants_list="$primitive_values"
       for variant in $variants_list; do
         eval "${p_namespace}_VARIANTS+=\"${subject}/$action/$variant \""
@@ -210,6 +209,7 @@ u_cwt_presets() {
 # @param 1 String which primitive values to get (lowercase).
 # @param 2 [optional] String relative path (defaults to 'cwt' = CWT "core").
 #   Provides a preset folder without trailing slash.
+# @param 3 [optional] String an 'action' value.
 #
 # Dotfiles MUST contain a list of words without any special characters nor
 # spaces. The values provided will determine dynamic includes lookup paths :
@@ -228,6 +228,7 @@ u_cwt_presets() {
 u_cwt_primitive_values() {
   local p_primitive="$1"
   local p_path="$2"
+  local p_action="$3"
 
   if [[ -z "$p_path" ]]; then
     p_path='cwt'
@@ -236,35 +237,48 @@ u_cwt_primitive_values() {
   local dotfile
   local dotfile_contents
 
-  # Provide hardcoded default values.
-  case "$p_primitive" in
-    prefixes) primitive_values='pre post' ;;
-    variants) primitive_values='PROVISION_USING INSTANCE_TYPE HOST_TYPE' ;;
-  esac
+  # For prefixes and variants primitives, hardcoded default values are used
+  # during the generation of lookup paths unless specific dotfiles per action
+  # exist. This extra dotfile (per action) does not cancel out the base dotfile
+  # (per subject) - its values are simply added if both exist.
+  local dn
+  local dotfile_names='cwt'
+  # case "$p_primitive" in variants|prefixes)
+  if [[ -n "$p_action" ]]; then
+    dotfile_names+=" cwt_$p_action"
+  fi
+  # esac
 
   # Look for the dotfile that provides explictly ignored values.
   local ignored_values=()
   local ignored_val
-  dotfile="$p_path/.cwt_${p_primitive}_ignore"
-  if [[ -f "$dotfile" ]]; then
-    dotfile_contents=$(< "$dotfile")
-    if [[ -n "$dotfile_contents" ]]; then
-      for ignored_val in $dotfile_contents; do
-        ignored_values+=("$ignored_val")
-      done
+  for dn in $dotfile_names; do
+    dotfile="$p_path/.${dn}_${p_primitive}_ignore"
+    if [[ -f "$dotfile" ]]; then
+      dotfile_contents=$(< "$dotfile")
+      if [[ -n "$dotfile_contents" ]]; then
+        for ignored_val in $dotfile_contents; do
+          ignored_values+=("$ignored_val")
+        done
+      fi
     fi
-  fi
+  done
 
   # Look for the dotfile that will override all default values.
-  dotfile="$p_path/.cwt_${p_primitive}"
-  if [[ -f "$dotfile" ]]; then
-    dotfile_contents=$(< "$dotfile")
-    if [[ -n "$dotfile_contents" ]]; then
-      primitive_values="$dotfile_contents"
+  local proceed=1
+  for dn in $dotfile_names; do
+    dotfile="$p_path/.${dn}_${p_primitive}"
+    if [[ -f "$dotfile" ]]; then
+      proceed=0
+      dotfile_contents=$(< "$dotfile")
+      if [[ -n "$dotfile_contents" ]]; then
+        primitive_values="$dotfile_contents"
+      fi
     fi
+  done
 
   # Provide dynamic default values.
-  else
+  if [[ $proceed == 1 ]]; then
     local dyn_values
     case "$p_primitive" in
       subjects)
@@ -306,14 +320,16 @@ u_cwt_primitive_values() {
   fi
 
   # Look for the dotfile that provides additional values + add them if it exists.
-  dotfile="$p_path/.cwt_${p_primitive}_append"
-  if [[ -f "$dotfile" ]]; then
-    dotfile_contents=$(< "$dotfile")
-    if [[ -n "$dotfile_contents" ]]; then
-      local added_val
-      for added_val in $dotfile_contents; do
-        primitive_values+=" $added_val "
-      done
+  for dn in $dotfile_names; do
+    dotfile="$p_path/.${dn}_${p_primitive}_append"
+    if [[ -f "$dotfile" ]]; then
+      dotfile_contents=$(< "$dotfile")
+      if [[ -n "$dotfile_contents" ]]; then
+        local added_val
+        for added_val in $dotfile_contents; do
+          primitive_values+=" $added_val "
+        done
+      fi
     fi
-  fi
+  done
 }
