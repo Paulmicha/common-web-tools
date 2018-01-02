@@ -18,7 +18,7 @@
 #
 # Calling this function will source all file includes matched by subject,
 # action, prefix, variant, and preset. Every preset defines a base path from
-# which additional lookup paths are derived.
+# which additional lookup paths are derived + a corresponding namespace.
 # Also attempts to call functions matching the corresponding lookup patterns.
 #
 # @requires the following global variables in calling scope :
@@ -30,9 +30,11 @@
 # - CWT_VARIANTS or ${NAMESPACE}_VARIANTS
 # - CWT_PRESETS or ${NAMESPACE}_PRESETS
 #
-# NB : the default separator used to concatenate lookup parts in file names is
-# the underscore '_'.
+# NB : the default separator used to concatenate parts in file names is
+# the underscore '_', except for variants which use dot '.'.
 # Dashes '-' are reserved for folder names and to separate "semver" suffixes.
+# Semver suffixes can be used in preset folder names and variant values.
+# TODO evaluate separators customization.
 #
 # @examples
 #
@@ -118,7 +120,7 @@ hook() {
   if [[ (-z "$p_actions_filter") && (-z "$p_presets_filter") && (-z "$p_variants_filter") ]]; then
     echo
     echo "Error in $BASH_SOURCE line $LINENO: cannot trigger hook without either 1 action filter (or 1 preset + 1 variant)." >&2
-    echo "-> Aborting."
+    echo "-> Aborting." >&2
     echo
     return 1
   fi
@@ -169,14 +171,14 @@ hook() {
   if [[ -z "$subjects" ]]; then
     echo
     echo "Error in $BASH_SOURCE line $LINENO: cannot trigger hook without any subjects." >&2
-    echo "-> Aborting."
+    echo "-> Aborting." >&2
     echo
     return 2
   fi
   if [[ -z "$actions" ]]; then
     echo
     echo "Error in $BASH_SOURCE line $LINENO: cannot trigger hook without any actions." >&2
-    echo "-> Aborting."
+    echo "-> Aborting." >&2
     echo
     return 3
   fi
@@ -257,7 +259,7 @@ hook() {
 }
 
 ##
-# TODO [wip] Adds lookup paths by subject.
+# Adds lookup paths by subject.
 #
 # TODO we *could* have every subject implement every other subjects' hooks,
 # if we wanted to. E.g. env/app_bootstrap.hook.sh, etc.
@@ -337,7 +339,7 @@ u_hook_build_lookup_by_subject() {
             u_str_split1 v_parts_arr "$v_prim" '/'
             v="${v_parts_arr[2]}"
             eval "v_val=\"\$$v_prim\""
-            u_autoload_add_lookup_level "$bp/$p_subject/" "${a}.hook.sh" "$v_val" lookup_paths '' '/'
+            # u_autoload_add_lookup_level "$bp/$p_subject/" "${a}.hook.sh" "$v_val" lookup_paths '' '/'
             u_autoload_add_lookup_level "$bp/$p_subject/${a}." "hook.sh" "$v_val" lookup_paths
             v_values+="$v_val "
           esac
@@ -354,18 +356,17 @@ u_hook_build_lookup_by_subject() {
         if [[ $v_fallback == 1 ]]; then
           for v in $v_fallback_values; do
             eval "v_val=\"\$$v\""
-            u_autoload_add_lookup_level "$bp/$p_subject/" "${a}.hook.sh" "$v_val" lookup_paths '' '/'
+            # u_autoload_add_lookup_level "$bp/$p_subject/" "${a}.hook.sh" "$v_val" lookup_paths '' '/'
             u_autoload_add_lookup_level "$bp/$p_subject/${a}." "hook.sh" "$v_val" lookup_paths
             v_values+="$v_val "
           done
         fi
 
-        # Implement prefix + variant lookup paths.
-        # e.g. pre_bootstrap.docker-compose.hook.sh
+        # Implement prefix + variant lookup paths e.g. :
+        # pre_bootstrap.docker-compose.hook.sh
         for x in $x_values; do
           for v_val in $v_values; do
-            u_autoload_add_lookup_level "$p/" "${x}_${a}.hook.sh" "$v_val" lookup_paths '' '/'
-            u_autoload_add_lookup_level "$p/${x}_${a}." "hook.sh" "$v_val" lookup_paths
+            u_autoload_add_lookup_level "$bp/$p_subject/${x}_${a}." "hook.sh" "$v_val" lookup_paths
           done
         done
       esac
