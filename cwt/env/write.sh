@@ -23,19 +23,19 @@ elif [[ $P_VERBOSE == 1 ]]; then
 fi
 
 # And make sure that we have a file path to write to.
-if [[ -z "$CURRENT_ENV_SETTINGS_FILE" ]]; then
+if [[ -z "$GLOBALS_FILEPATH" ]]; then
   echo
-  echo "Error in $BASH_SOURCE line $LINENO: \$CURRENT_ENV_SETTINGS_FILE is empty."
+  echo "Error in $BASH_SOURCE line $LINENO: \$GLOBALS_FILEPATH is empty."
   echo "Aborting (2)."
   echo
   return 2
 else
   echo
-  echo "Writing settings in $CURRENT_ENV_SETTINGS_FILE ..."
+  echo "Writing settings in $GLOBALS_FILEPATH ..."
 fi
 
 # Confirm overwriting existing settings if the file already exists.
-if [[ ($P_YES == 0) && (-f "$CURRENT_ENV_SETTINGS_FILE") ]]; then
+if [[ ($P_YES == 0) && (-f "$GLOBALS_FILEPATH") ]]; then
   echo
   while true; do
     read -p "Override existing settings ? (y/n) : " yn
@@ -48,7 +48,7 @@ if [[ ($P_YES == 0) && (-f "$CURRENT_ENV_SETTINGS_FILE") ]]; then
 fi
 
 # (Re)init destination file (make empty).
-cat > "$CURRENT_ENV_SETTINGS_FILE" <<'EOF'
+cat > "$GLOBALS_FILEPATH" <<'EOF'
 #!/usr/bin/env bash
 
 ##
@@ -74,11 +74,11 @@ for global_name in ${GLOBALS['.sorting']}; do
   global_name="${evn_arr[1]}"
 
   # [wip] TODO evaluate not requiring readonly globals.
-  # eval "[[ -z \"\$$global_name\" ]] && echo \"readonly $global_name\"=\'\' >> \"$CURRENT_ENV_SETTINGS_FILE\""
-  # eval "[[ -n \"\$$global_name\" ]] && echo \"readonly $global_name=\\\"\$$global_name\\\"\" >> \"$CURRENT_ENV_SETTINGS_FILE\""
-  eval "[[ -z \"\$$global_name\" ]] && echo \"export $global_name\"=\'\' >> \"$CURRENT_ENV_SETTINGS_FILE\""
-  eval "[[ -n \"\$$global_name\" ]] && echo \"export $global_name=\\\"\$$global_name\\\"\" >> \"$CURRENT_ENV_SETTINGS_FILE\""
+  # eval "[[ -z \"\$$global_name\" ]] && echo \"readonly $global_name\"=\'\' >> \"$GLOBALS_FILEPATH\""
+  # eval "[[ -n \"\$$global_name\" ]] && echo \"readonly $global_name=\\\"\$$global_name\\\"\" >> \"$GLOBALS_FILEPATH\""
+  eval "[[ -z \"\$$global_name\" ]] && echo \"export $global_name\"=\'\' >> \"$GLOBALS_FILEPATH\""
+  eval "[[ -n \"\$$global_name\" ]] && echo \"export $global_name=\\\"\$$global_name\\\"\" >> \"$GLOBALS_FILEPATH\""
 done
 
-echo "Writing settings in $CURRENT_ENV_SETTINGS_FILE : done."
+echo "Writing settings in $GLOBALS_FILEPATH : done."
 echo

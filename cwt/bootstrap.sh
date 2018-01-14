@@ -22,10 +22,10 @@ if [[ -z "$NAMESPACE" ]]; then
   export NAMESPACE='CWT'
 fi
 
-# Makes sure bootstrap runs once per namespace.
-eval "once=\$${NAMESPACE}_BS_FLAG"
+# Makes sure bootstrap runs once per namespace in current shell scope.
+eval "once=\$${NAMESPACE}_bs_flag"
 if [[ -z "$once" ]]; then
-  eval "export ${NAMESPACE}_BS_FLAG=1"
+  eval "${NAMESPACE}_bs_flag=1"
 
   # Include required utilities.
   . cwt/utilities/autoload.sh # TODO include once (convenience).
@@ -35,7 +35,7 @@ if [[ -z "$once" ]]; then
   done
 
   # If stack init was run at least once, automatically load global env vars.
-  if [[ -f "cwt/env/current/vars.sh" ]]; then
+  if [[ -f "cwt/env/current/global.vars.sh" ]]; then
     . cwt/env/load.sh
   fi
 

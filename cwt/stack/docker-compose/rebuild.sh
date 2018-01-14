@@ -12,8 +12,8 @@
 eval `u_autoload_override "$BASH_SOURCE"`
 
 
-echo "Restart docker service..."
-service docker restart
+# echo "Restart docker service..."
+# service docker restart
 
 echo "Run docker-compose build..."
 docker-compose build

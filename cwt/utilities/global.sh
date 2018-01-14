@@ -60,6 +60,7 @@ u_global_assign_value() {
   local multi_values=''
 
   eval "export $p_var"
+  eval "unset $p_var"
 
   eval "local arg_val=\$P_${p_var}"
   local default_val="${GLOBALS[$p_var|default]}"
@@ -316,8 +317,8 @@ u_global_debug() {
 #
 # @example
 #   u_global_get_includes_lookup_paths 'drupal-7--p-opigno,solr,memcached' 'docker-compose-3'
-#   for env_model in "${GLOBALS_INCLUDES_PATHS[@]}"; do
-#     echo "$env_model"
+#   for vars_file in "${GLOBALS_INCLUDES_PATHS[@]}"; do
+#     echo "$vars_file"
 #   done
 #
 u_global_get_includes_lookup_paths() {

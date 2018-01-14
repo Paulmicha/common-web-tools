@@ -12,7 +12,7 @@
 #
 
 # TODO [wip] handle differences like php-fpm / apache.
-CHMOD_W_FILES='0660'
+CHMOD_W_FILES='0770'
 CHMOD_W_DIRS='1771'
 CHMOD_NW_FILES='0750'
 CHMOD_NW_DIRS='0750'

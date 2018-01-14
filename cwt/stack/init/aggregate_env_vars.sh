@@ -18,9 +18,9 @@ if [[ $P_VERBOSE == 1 ]]; then
   u_autoload_print_lookup_paths GLOBALS_INCLUDES_PATHS "Env includes"
 fi
 
-for env_model in "${GLOBALS_INCLUDES_PATHS[@]}"; do
-  if [[ -f "$env_model" ]]; then
-    . "$env_model"
+for vars_file in "${GLOBALS_INCLUDES_PATHS[@]}"; do
+  if [[ -f "$vars_file" ]]; then
+    . "$vars_file"
   fi
-  u_autoload_get_complement "$env_model"
+  u_autoload_get_complement "$vars_file"
 done
