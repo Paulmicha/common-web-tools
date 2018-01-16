@@ -47,30 +47,37 @@
 #
 #   - 2.1 actions : provide list of all *.sh files in 'cwt/stack' by default (no
 #     extension - values are only the 'name' of the file, see Conventions doc).
-#     The dotfiles '.cwt_actions' and '.cwt_actions_append' have the same role
-#     as the 'subjects' ones described in 1 but must be placed inside 'cwt/stack'.
+#     The dotfiles '.cwt_actions', '.cwt_actions_append' and '.cwt_actions_ignore'
+#     have the same role as the 'subjects' ones described in 1 but must be placed
+#     inside 'cwt/stack'.
 #
 #   - 2.2 prefixes : 'pre' + 'post' are provided by default for all actions.
-#     The previous dotfile pattern applies (see 2.1).
+#     The previous dotfile pattern applies (see 2.1) + additional dotfiles can
+#     alter the default prefixes *per action* by using the following convention,
+#     e.g. given action = 'init' : '.cwt_init_prefixes',
+#     '.cwt_init_prefixes_append' and '.cwt_init_prefixes_ignore'.
+#     @see u_hook_build_lookup_by_subject()
 #
 #   - 2.3 variants : declare how to look for files to include in hooks (events)
-#     PER ACTION (by subject and/or preset). They define which global variables
-#     are used during lookup paths generation process, and which separator is
-#     used for concatenation.
+#     per action (by subject and/or preset). They define which global variables
+#     are used during lookup paths generation process.
 #     By default, all actions are assigned the following variants :
 #     - PROVISION_USING
 #     - INSTANCE_TYPE
-#     - HOST_TYPE
-#     The previous naming + dotfile pattern applies (see 2.1).
+#     The previous naming + dotfile pattern applies (see 2.2),
+#     e.g. given action = 'init' : '.cwt_init_variants',
+#     '.cwt_init_variants_append' and '.cwt_init_variants_ignore'.
+#     @see u_hook_build_lookup_by_subject()
 #
 # 3. This only applies AFTER stack init has been run once if the global env var
 #   CWT_CUSTOM_DIR was assigned a different value than 'cwt/custom'.
 #   It contains a list of folders containing the exact same structure as 'cwt'.
 #   Every extension mecanism explained in 1 & 2 above applies to each preset.
+#   NB : folder names can only contain A-Z a-z 0-9 dots . underscores _ dashes -
 #
 # 4. The 'CWT_INC' values are a simple list of files to be sourced in
 #   cwt/bootstrap.sh scope directly. They are meant to contain bash functions
-#   organized by subject.
+#   organized by subject. E.g. given subject = git : "$p_path/git/git.inc.sh".
 #
 # @see "conventions" + "extensibility" documentation.
 #
@@ -88,6 +95,8 @@ u_cwt_extend() {
     uppercase="${p_path##*/}"
     u_str_uppercase
     p_namespace="$uppercase"
+    p_namespace="${p_namespace//\./_}"
+    p_namespace="${p_namespace//-/_}"
   fi
 
   # Export initial global variables for every primitive + always reinit as empty
@@ -137,7 +146,6 @@ u_cwt_extend() {
       eval "${p_namespace}_ACTIONS+=\"${subject}/$action \""
 
       # Build up exported prefixes (by subject AND by action).
-      # TODO : progressively fallback unless explicitly specified ?
       primitive_values=''
       u_cwt_primitive_values 'prefixes' "$p_path/$subject" "$action"
       prefixes_list="$primitive_values"
@@ -146,7 +154,6 @@ u_cwt_extend() {
       done
 
       # Build up exported variants (by subject AND by action).
-      # TODO : progressively fallback unless explicitly specified ?
       primitive_values=''
       u_cwt_primitive_values 'variants' "$p_path/$subject" "$action"
       variants_list="$primitive_values"
@@ -171,9 +178,9 @@ u_cwt_extend() {
 # @see u_cwt_extend()
 #
 u_cwt_presets() {
-  local presets_dir="cwt/custom"
+  local presets_dir="cwt/custom/presets"
   if [[ -n "$CWT_CUSTOM_DIR" ]]; then
-    presets_dir="$CWT_CUSTOM_DIR"
+    presets_dir="$CWT_CUSTOM_DIR/presets"
   fi
 
   local preset
@@ -183,12 +190,6 @@ u_cwt_presets() {
 
     # Ignore dirnames starting with '.'.
     if [[ "${preset:0:1}" == '.' ]]; then
-      continue
-    fi
-
-    # Ignore reserved dirnames 'complements' and 'overrides'.
-    # @see cwt/custom/README.md
-    if [[ ("$preset" == 'complements') || ("$preset" == 'overrides') ]]; then
       continue
     fi
 

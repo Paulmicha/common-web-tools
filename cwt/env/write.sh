@@ -72,12 +72,8 @@ EOF
 for global_name in ${GLOBALS['.sorting']}; do
   u_str_split1 evn_arr $global_name '|'
   global_name="${evn_arr[1]}"
-
-  # [wip] TODO evaluate not requiring readonly globals.
-  # eval "[[ -z \"\$$global_name\" ]] && echo \"readonly $global_name\"=\'\' >> \"$GLOBALS_FILEPATH\""
-  # eval "[[ -n \"\$$global_name\" ]] && echo \"readonly $global_name=\\\"\$$global_name\\\"\" >> \"$GLOBALS_FILEPATH\""
-  eval "[[ -z \"\$$global_name\" ]] && echo \"export $global_name\"=\'\' >> \"$GLOBALS_FILEPATH\""
-  eval "[[ -n \"\$$global_name\" ]] && echo \"export $global_name=\\\"\$$global_name\\\"\" >> \"$GLOBALS_FILEPATH\""
+  eval "[[ -z \"\$$global_name\" ]] && echo \"readonly $global_name\"=\'\' >> \"$GLOBALS_FILEPATH\""
+  eval "[[ -n \"\$$global_name\" ]] && echo \"readonly $global_name=\\\"\$$global_name\\\"\" >> \"$GLOBALS_FILEPATH\""
 done
 
 echo "Writing settings in $GLOBALS_FILEPATH : done."

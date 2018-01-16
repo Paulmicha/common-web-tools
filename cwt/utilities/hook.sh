@@ -132,7 +132,7 @@ hook() {
   local prefixes="$CWT_PREFIXES"
 
   local base_paths=("cwt")
-  local presets_dir="$CWT_CUSTOM_DIR"
+  local presets_dir="$CWT_CUSTOM_DIR/presets"
   local preset
   local lowercase
   local uppercase
@@ -142,6 +142,8 @@ hook() {
     for preset in $p_preset_filter; do
       uppercase="$preset"
       u_str_uppercase
+      uppercase="${uppercase//\./_}"
+      uppercase="${uppercase//-/_}"
       eval "subjects=\"\$${uppercase}_SUBJECTS\""
       eval "actions=\"\$${uppercase}_ACTIONS\""
       eval "variants=\"\$${uppercase}_VARIANTS\""
@@ -157,6 +159,8 @@ hook() {
     for preset in $presets; do
       uppercase="$preset"
       u_str_uppercase
+      uppercase="${uppercase//\./_}"
+      uppercase="${uppercase//-/_}"
       eval "subjects+=\" \$${uppercase}_SUBJECTS\""
       eval "actions+=\" \$${uppercase}_ACTIONS\""
       eval "variants+=\" \$${uppercase}_VARIANTS\""
@@ -184,7 +188,7 @@ hook() {
   fi
 
   # Apply filters.
-  local filters='subjects actions prefixes variants' # TODO check order impact.
+  local filters='subjects actions prefixes variants' # TODO check order is respected.
   local f
   local f_arg
   local s
@@ -227,19 +231,11 @@ hook() {
 
   # Build lookup paths.
   local lookup_paths=()
-  local bp
   local lookup_subject
-  local lookup_preset
 
   for lookup_subject in $subjects; do
     u_hook_build_lookup_by_subject "$lookup_subject"
   done
-
-  if [[ -n "$presets" ]]; then
-    for lookup_preset in $presets; do
-      u_hook_build_lookup_by_preset "$p"
-    done
-  fi
 
   # Debug.
   if [[ $p_debug == 1 ]]; then
