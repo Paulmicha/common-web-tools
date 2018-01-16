@@ -146,14 +146,15 @@ hook() {
       uppercase="${uppercase//-/_}"
       eval "subjects=\"\$${uppercase}_SUBJECTS\""
       eval "actions=\"\$${uppercase}_ACTIONS\""
-      eval "variants=\"\$${uppercase}_VARIANTS\""
-      eval "presets=\"\$${uppercase}_PRESETS\"" # TODO evaluate removing "presets of presets".
       eval "prefixes=\"\$${uppercase}_PREFIXES\""
+      eval "variants=\"\$${uppercase}_VARIANTS\""
       # Override base path for lookups.
       base_paths=("$presets_dir/$preset")
     done
 
   # By default, any preset can append its own "primitives".
+  # NB : this process will create duplicates e.g. when preset has identical
+  # subject(s) than cwt core. They are dealt with below.
   # @see u_cwt_extend()
   elif [[ -n "$presets" ]]; then
     for preset in $presets; do
@@ -163,9 +164,8 @@ hook() {
       uppercase="${uppercase//-/_}"
       eval "subjects+=\" \$${uppercase}_SUBJECTS\""
       eval "actions+=\" \$${uppercase}_ACTIONS\""
-      eval "variants+=\" \$${uppercase}_VARIANTS\""
-      eval "presets+=\" \$${uppercase}_PRESETS\"" # TODO evaluate removing "presets of presets".
       eval "prefixes+=\" \$${uppercase}_PREFIXES\""
+      eval "variants+=\" \$${uppercase}_VARIANTS\""
       # Every preset defines an additional base path for lookups.
       base_paths+=("$presets_dir/$preset")
     done
@@ -194,8 +194,19 @@ hook() {
   local s
   local a
   local arg_val
+  local dedup
+  local dedup_val
+  local dedup_arr
 
   for f in $filters; do
+
+    # Use the same loop to remove potential duplicate values (cf. presets above).
+    eval "dedup=\"\$$f\""
+    dedup_arr=()
+    for dedup_val in $dedup; do
+      u_array_add_once "$dedup_val" dedup_arr
+    done
+    eval "$f=\"${dedup_arr[@]}\""
 
     eval "f_arg=\"\$p_${f}_filter\""
     if [[ -z "$f_arg" ]]; then
@@ -320,7 +331,7 @@ u_hook_build_lookup_by_subject() {
         v_fallback=1
 
         for x_prim in $prefixes; do
-          case "$x_prim" in "$a_path"*)
+          case "$x_prim" in "$bp/$a_path"*)
             x_fallback=0
             u_str_split1 x_parts_arr "$x_prim" '/'
             x="${x_parts_arr[2]}"
@@ -330,7 +341,7 @@ u_hook_build_lookup_by_subject() {
         done
 
         for v_prim in $variants; do
-          case "$v_prim" in "$a_path"*)
+          case "$v_prim" in "$bp/$a_path"*)
             v_fallback=0
             u_str_split1 v_parts_arr "$v_prim" '/'
             v="${v_parts_arr[2]}"
