@@ -133,7 +133,9 @@ u_cwt_extend() {
     # Build up exported generic includes list (by subject).
     inc="$p_path/$subject/${subject}.inc.sh"
     if [[ -f "$inc" ]]; then
-      eval "${p_namespace}_INC+=\"$inc \""
+      # NB : this must not be namespaced, otherwise presets' includes wouldn't
+      # be loaded during bootstrap.
+      CWT_INC+="$inc "
     fi
 
     primitive_values=''
@@ -182,22 +184,23 @@ u_cwt_presets() {
   if [[ -n "$CWT_CUSTOM_DIR" ]]; then
     presets_dir="$CWT_CUSTOM_DIR/presets"
   fi
+  if [[ -d "$presets_dir" ]]; then
+    local preset
+    local presets_list=$(u_fs_dir_list "$presets_dir")
 
-  local preset
-  local presets_list=$(u_fs_dir_list "$presets_dir")
+    for preset in $presets_list; do
 
-  for preset in $presets_list; do
+      # Ignore dirnames starting with '.'.
+      if [[ "${preset:0:1}" == '.' ]]; then
+        continue
+      fi
 
-    # Ignore dirnames starting with '.'.
-    if [[ "${preset:0:1}" == '.' ]]; then
-      continue
-    fi
+      eval "CWT_PRESETS+=\"$preset \""
 
-    eval "CWT_PRESETS+=\"$preset \""
-
-    # Aggregate namespaced primitives for every preset.
-    u_cwt_extend "$presets_dir/$preset"
-  done
+      # Aggregate namespaced primitives for every preset.
+      u_cwt_extend "$presets_dir/$preset"
+    done
+  fi
 }
 
 ##
