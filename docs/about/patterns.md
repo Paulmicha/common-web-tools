@@ -47,7 +47,7 @@ This pattern should not prevent CWT to co-exist alongside [existing tools](https
 
 The general principle is : *file structure* should indicate `subject` + `intent`.
 
-Folders are used to imbricate tasks by subject first, then action and/or fact(s) and/or preset(s) and/or [semver convention](https://semver.org/) are used to name files where appropriate. See [instance init](https://paulmicha.github.io/common-web-tools/usage/instance-init.html) and [alter / extend](https://paulmicha.github.io/common-web-tools/about/alter-extend.html).
+Folders are used to imbricate tasks by subject first, then action and/or fact(s) and/or extension(s) and/or [semver convention](https://semver.org/) are used to name files where appropriate. See [instance init](https://paulmicha.github.io/common-web-tools/usage/instance-init.html) and [alter / extend](https://paulmicha.github.io/common-web-tools/about/alter-extend.html).
 
 Given CWT's minimalist ambition, dir/file naming could be just a principle not strictly followed.
 

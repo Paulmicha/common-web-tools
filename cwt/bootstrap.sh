@@ -5,7 +5,7 @@
 #
 # Loads includes containing bash functions along with readonly global vars if
 # available, initializes "primitives" for hooks and lookups (CWT extension
-# mecanisms), and call 'bootstrap' hook used to load bash aliases.
+# mecanisms), and call 'bootstrap' hook (i.e. to load bash aliases).
 #
 # @example
 #   . cwt/bootstrap.sh
@@ -24,8 +24,8 @@ if [[ -z "$cwt_bs_flag" ]]; then
   . "cwt/utilities/hook.sh"
   . "cwt/utilities/host.sh"
   . "cwt/utilities/instance.sh"
-  . "cwt/utilities/once.sh" # TODO evaluate removal / make opt-in.
-  . "cwt/utilities/registry.sh" # TODO evaluate removal / make opt-in.
+  . "cwt/utilities/once.sh" # TODO remove or make opt-in.
+  . "cwt/utilities/registry.sh" # TODO remove or make opt-in.
   . "cwt/utilities/string.sh"
 
   # If stack init was run at least once, automatically load global env vars.

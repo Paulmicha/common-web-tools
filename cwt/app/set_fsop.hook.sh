@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
 ##
-# Implements u_hook_app 'apply' 'ownership_and_perms'.
+# Implements hook -a 'set_fsop' -s 'app stack'.
 #
-# TODO document this.
 # This file is dynamically included when the "hook" is triggered.
 #
 

@@ -309,7 +309,7 @@ u_global_debug() {
 # - $APP
 # - $APP_VERSION
 # - $STACK_SERVICES
-# - $STACK_PRESETS
+# - $STACK_SERVICES
 # - $PROVISION_USING
 #
 # @see u_stack_get_specs()
@@ -384,16 +384,16 @@ u_global_get_includes_lookup_paths() {
   local sp_type
   local sp_types='provision app custom'
 
-  for stack_preset in "${STACK_PRESETS[@]}"; do
-    u_instance_item_split_version sp_arr "$stack_preset"
+  for stack_extension in "${STACK_SERVICES[@]}"; do
+    u_instance_item_split_version sp_arr "$stack_extension"
     if [[ -n "${sp_arr[1]}" ]]; then
       for sp_type in $sp_types; do
-        u_global_get_includes_lookup_version "cwt/$sp_type/presets/${sp_arr[0]}" "${sp_arr[1]}" true
+        u_global_get_includes_lookup_version "cwt/$sp_type/extensions/${sp_arr[0]}" "${sp_arr[1]}" true
       done
     else
       for sp_type in $sp_types; do
-        u_array_add_once "cwt/$sp_type/presets/${stack_preset}/vars.sh" GLOBALS_INCLUDES_PATHS
-        u_autoload_add_lookup_level "cwt/$sp_type/presets/${stack_preset}/" 'vars.sh' "$PROVISION_USING" GLOBALS_INCLUDES_PATHS
+        u_array_add_once "cwt/$sp_type/extensions/${stack_extension}/vars.sh" GLOBALS_INCLUDES_PATHS
+        u_autoload_add_lookup_level "cwt/$sp_type/extensions/${stack_extension}/" 'vars.sh' "$PROVISION_USING" GLOBALS_INCLUDES_PATHS
       done
     fi
   done

@@ -3,6 +3,8 @@
 ##
 # Stack-related utility functions.
 #
+# TODO refacto dependencies using services.
+#
 # This file is dynamically loaded.
 # @see cwt/bootstrap.sh
 #
@@ -140,6 +142,8 @@ u_stack_get_part() {
 }
 
 ##
+# TODO remove or make opt-in (refacto using services).
+#
 # Loads dependency declarations and aggregates results in $STACK_SERVICES.
 #
 # Dependencies specify all services (or softwares) required to run the current

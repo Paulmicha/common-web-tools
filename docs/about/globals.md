@@ -110,18 +110,18 @@ cwt/provision/mariadb/vars.sh
 cwt/provision/mariadb/docker-compose.vars.sh
 cwt/provision/mariadb/10/vars.sh
 cwt/provision/mariadb/10/docker-compose.vars.sh
-cwt/provision/presets/contenta/vars.sh
-cwt/provision/presets/contenta/docker-compose.vars.sh
-cwt/provision/presets/contenta/1/vars.sh
-cwt/provision/presets/contenta/1/docker-compose.vars.sh
-cwt/app/presets/contenta/vars.sh
-cwt/app/presets/contenta/docker-compose.vars.sh
-cwt/app/presets/contenta/1/vars.sh
-cwt/app/presets/contenta/1/docker-compose.vars.sh
-cwt/custom/presets/contenta/vars.sh
-cwt/custom/presets/contenta/docker-compose.vars.sh
-cwt/custom/presets/contenta/1/vars.sh
-cwt/custom/presets/contenta/1/docker-compose.vars.sh
+cwt/provision/extensions/contenta/vars.sh
+cwt/provision/extensions/contenta/docker-compose.vars.sh
+cwt/provision/extensions/contenta/1/vars.sh
+cwt/provision/extensions/contenta/1/docker-compose.vars.sh
+cwt/app/extensions/contenta/vars.sh
+cwt/app/extensions/contenta/docker-compose.vars.sh
+cwt/app/extensions/contenta/1/vars.sh
+cwt/app/extensions/contenta/1/docker-compose.vars.sh
+cwt/custom/extensions/contenta/vars.sh
+cwt/custom/extensions/contenta/docker-compose.vars.sh
+cwt/custom/extensions/contenta/1/vars.sh
+cwt/custom/extensions/contenta/1/docker-compose.vars.sh
 cwt/app/drupal/env.vars.sh
 cwt/app/drupal/env.docker-compose.vars.sh
 ```
@@ -146,7 +146,7 @@ TODO
 
 TODO
 
-### Lookup paths related to "preset" variants
+### Lookup paths related to "extension" variants
 
 TODO
 
@@ -158,7 +158,7 @@ TODO
 SECRETS_BACKEND=ansible_vault
 SECRETS_BACKEND=hashicorp_vault
 
-# Implement automated tests / Visual Regression Testing (as presets ?) - ex:
+# Implement automated tests / Visual Regression Testing (as extensions ?) - ex:
 APP_TESTS_PRESET=behat
 APP_TESTS_PRESET=gatling
 

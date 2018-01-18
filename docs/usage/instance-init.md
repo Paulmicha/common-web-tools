@@ -35,7 +35,7 @@ The `$PROJECT_STACK` variable is the main source used to determine all the possi
 - version numbers are extracted after the last `-` and may use dots to indicate minor and/or patch versions
 - variants are indicated after the "name" part of any declaration (project stack, software, etc.) by using 2 dashes `--`
 - multiple values are separated using a single comma `,`
-- presets are special variants meant to provide a group of tools, and are declared using the prefix `p-`
+- extensions are special variants meant to provide a group of tools, and are declared using the prefix `p-`
 
 Note that there can be **no space** between these characters for a single declaration.
 

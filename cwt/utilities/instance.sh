@@ -24,7 +24,6 @@
 #   echo "$INSTANCE_STATE" # E.g. prints 'initialized'.
 #
 u_instance_get_state() {
-  local env_instance_state="$INSTANCE_STATE"
   local local_instance_state="$(u_registry_get_val 'instance_state')"
 
   if [[ -n "$local_instance_state" ]]; then

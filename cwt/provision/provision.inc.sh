@@ -92,7 +92,7 @@ u_provisioning_includes_get_lookup_paths() {
   u_autoload_add_lookup_level "provision/" "${INSTANCE_TYPE}.dist.yml" "$PROVISION_USING" PROV_INCLUDES_LOOKUP_PATHS "$HOST_OS"
   u_autoload_add_lookup_level "provision/" "${INSTANCE_TYPE}.${HOST_TYPE}_host.dist.yml" "$PROVISION_USING" PROV_INCLUDES_LOOKUP_PATHS "$HOST_OS"
 
-  # TODO presets lookups.
+  # TODO extensions lookups.
 }
 
 ##

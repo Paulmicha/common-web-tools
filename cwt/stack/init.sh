@@ -61,8 +61,8 @@ GLOBALS_UNIQUE_KEYS=()
 # Write env vars in current instance's git-ignored settings file.
 . cwt/env/write.sh
 
-# Apply correct ownership and permissions.
-u_hook_app 'apply' 'ownership_and_perms' '' 'stack'
+# (Re)set file system ownership and permissions.
+hook -a 'set_fsop' -s 'app stack'
 
 # Allow custom complements for this script.
 # TODO evaluate removal of the 'complement' customization method.

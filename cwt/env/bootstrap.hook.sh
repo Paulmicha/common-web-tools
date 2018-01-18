@@ -7,4 +7,4 @@
 #
 
 # TODO [wip] debug.
-echo "($BASH_SOURCE loaded by hook -a '$p_actions_filter' -s '$p_subjects_filter' -x '$p_prefixes_filter' -v '$p_variants_filter' -p '$p_presets_filter')"
+echo "($BASH_SOURCE loaded by hook -a '$p_actions_filter' -s '$p_subjects_filter' -x '$p_prefixes_filter' -v '$p_variants_filter' -p '$p_extensions_filter')"

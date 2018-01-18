@@ -14,11 +14,13 @@
 # @see cwt/stack/init/get_args.sh
 #
 
+# TODO remove or make opt-in.
 # Scripts should consider that any STATE value is an error, except for OK_STATES.
 # NB : the INSTANCE_STATE global variable is first defined during bootstrap.
 # @see cwt/bootstrap.sh
 global OK_STATES "[default]='installed initialized running'"
 
+# TODO remove or make opt-in.
 # When this file is processed, it means "stack init" is run -> INSTANCE_STATE is
 # then set by default to 'initialized'.
 # TODO [wip] workaround instance state limitations (e.g. unhandled shutdown).
@@ -48,12 +50,12 @@ global HOST_OS "[default]='$(u_host_get_os)'"
 global PROVISION_USING "[default]=docker-compose"
 global DEPLOY_USING "[default]=git"
 
-# TODO evaluate removal of "registry" feature.
+# TODO remove or make opt-in.
 global REG_BACKEND "[default]=file"
 # TODO else consider using a separate store for secrets, see cwt/env/README.md.
 # global SECRETS_BACKEND
 
-# This path indicates where presets, overrides and complements are to be found.
+# This path indicates where extensions, overrides and complements are to be found.
 # That folder should contain current project's private (or "vendor") includes
 # used to generate lookup paths in hooks (events), overrides and/or complements.
 global CWT_CUSTOM_DIR "[default]=cwt/custom"
