@@ -24,3 +24,20 @@ for vars_file in "${GLOBALS_INCLUDES_PATHS[@]}"; do
   fi
   u_autoload_get_complement "$vars_file"
 done
+
+# Allow extra env vars file at the root of custom dir, *after* dynamic lookups.
+if [[ -f "$CWT_CUSTOM_DIR/global.vars.sh" ]]; then
+  . "$CWT_CUSTOM_DIR/global.vars.sh"
+fi
+
+# Support deferred value assignation.
+# @see global()
+if [[ "${GLOBALS['.defer-max']}" -gt '0' ]]; then
+  i=0
+  max="${GLOBALS['.defer-max']}"
+  for (( i=1; i<=$max; i++ )); do
+    for global_name in ${GLOBALS[".defer-$i"]}; do
+      u_global_assign_value "$global_name"
+    done
+  done
+fi

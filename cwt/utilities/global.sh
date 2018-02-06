@@ -98,9 +98,13 @@ u_global_assign_value() {
   # Once prompt has been made, prevent repeated calls for this var (recursion).
   # @see cwt/stack/init/aggregate_env_vars.sh
   # Except for 'append' vars (multiple values must pile-up on each call).
-  if [[ ("${GLOBALS[$p_var|no_prompt]}" != 1) && (-z "$multi_values") ]]; then
-    GLOBALS[$p_var|no_prompt]=1
-    GLOBALS[$p_var|value]=$(eval "echo \"\$$p_var\"")
+  # TODO [wip] confirm workaround edge case (multiple declarations must override
+  # previous default value).
+  if [[ $P_YES == 0 ]]; then
+    if [[ ("${GLOBALS[$p_var|no_prompt]}" != 1) && (-z "$multi_values") ]]; then
+      GLOBALS[$p_var|no_prompt]=1
+      GLOBALS[$p_var|value]=$(eval "echo \"\$$p_var\"")
+    fi
   fi
 }
 
@@ -171,6 +175,8 @@ global() {
   local p_values="$2"
   local p_prevent_export="$3"
 
+  local index='0'
+
   if [[ -n "$p_values" ]]; then
 
     # If the value does not begin with '[', assume the var non-configurable.
@@ -189,6 +195,11 @@ global() {
         u_array_add_once "$key" GLOBALS_UNIQUE_KEYS
 
         case "$key" in
+
+          # Controls the order of assignment. Higher values defer later.
+          index)
+            index="${declaration_arr[$key]}"
+          ;;
 
           # Handles conditional declarations. Prevents declaring the variable
           # altogether if the depending variable's value does not match the one
@@ -254,7 +265,28 @@ global() {
 
     # This will be used to sort the array when complete.
     # See https://stackoverflow.com/a/39543809
-    GLOBALS['.sorting']+=" ${GLOBALS_COUNT}|${p_var_name} "
+    GLOBALS[".sorting"]+=" ${GLOBALS_COUNT}|${p_var_name} "
+  fi
+
+  # Provide control over value assignation order. Higher = later.
+  if [[ "$index" -gt "${GLOBALS['.defer-max']}" ]]; then
+    GLOBALS[".defer-max"]="$index"
+  fi
+
+  # Always defer global var declaration weighting more than 0 (default).
+  # NB : the 1st declaration of multiple 'append' global() calls for the same
+  # variable determines the index for all subsequent calls.
+  if [[ "$index" -gt '0' ]]; then
+    p_prevent_export='1'
+    if ! u_in_array $p_var_name GLOBALS_DEFERRED; then
+      GLOBALS_DEFERRED+=($p_var_name)
+    fi
+  # When previous declaration asked for deferred assignation, respect it even
+  # in subsequent declarations not specifying an index.
+  # TODO when the 1st declaration does not trigger deferred assignation and
+  # subsequent calls do, workaround : "unexport" ?
+  elif u_in_array $p_var_name GLOBALS_DEFERRED; then
+    p_prevent_export='1'
   fi
 
   # Immediately attempt to export that variable unless explicitly prevented.
@@ -262,6 +294,15 @@ global() {
   # need to adapt/react to each other).
   if [[ -z "$p_prevent_export" ]]; then
     u_global_assign_value "$p_var_name"
+
+  # When global var declaration is deferred, append to 1 list per index.
+  # @see cwt/stack/init/aggregate_env_vars.sh
+  elif [[ "$index" -gt '0' ]]; then
+    # We only need 1 assignation -> skip if already in list.
+    case "${GLOBALS[.defer-$index]}" in
+      *"${p_var_name}"*) return ;;
+    esac
+    GLOBALS[".defer-$index"]+=" ${p_var_name} "
   fi
 }
 
@@ -309,7 +350,7 @@ u_global_debug() {
 # - $APP
 # - $APP_VERSION
 # - $STACK_SERVICES
-# - $STACK_SERVICES
+# - $STACK_PRESETS
 # - $PROVISION_USING
 #
 # @see u_stack_get_specs()
@@ -384,16 +425,16 @@ u_global_get_includes_lookup_paths() {
   local sp_type
   local sp_types='provision app custom'
 
-  for stack_extension in "${STACK_SERVICES[@]}"; do
-    u_instance_item_split_version sp_arr "$stack_extension"
+  for stack_preset in "${STACK_PRESETS[@]}"; do
+    u_instance_item_split_version sp_arr "$stack_preset"
     if [[ -n "${sp_arr[1]}" ]]; then
       for sp_type in $sp_types; do
-        u_global_get_includes_lookup_version "cwt/$sp_type/extensions/${sp_arr[0]}" "${sp_arr[1]}" true
+        u_global_get_includes_lookup_version "cwt/$sp_type/presets/${sp_arr[0]}" "${sp_arr[1]}" true
       done
     else
       for sp_type in $sp_types; do
-        u_array_add_once "cwt/$sp_type/extensions/${stack_extension}/vars.sh" GLOBALS_INCLUDES_PATHS
-        u_autoload_add_lookup_level "cwt/$sp_type/extensions/${stack_extension}/" 'vars.sh' "$PROVISION_USING" GLOBALS_INCLUDES_PATHS
+        u_array_add_once "cwt/$sp_type/presets/${stack_preset}/vars.sh" GLOBALS_INCLUDES_PATHS
+        u_autoload_add_lookup_level "cwt/$sp_type/presets/${stack_preset}/" 'vars.sh' "$PROVISION_USING" GLOBALS_INCLUDES_PATHS
       done
     fi
   done
