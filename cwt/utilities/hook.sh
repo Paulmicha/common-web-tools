@@ -12,6 +12,9 @@
 ##
 # Triggers an "event" optionally filtered by "primitives".
 #
+# TODO abandon default variants + presets (always require explicit args).
+# TODO update examples in this function docblock + update documentation.
+#
 # Primitives are fundamental values dynamically generated during bootstrap :
 # @see cwt/bootstrap.sh
 # @see u_cwt_extend()
