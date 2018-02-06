@@ -14,5 +14,6 @@
 #
 
 alias composer="docker-compose exec --user 82 php composer"
+alias composersu="docker-compose exec --user php composer"
 alias drush="docker-compose exec --user 82 php drush --root=/var/www/html/web"
 alias drupal="docker-compose exec --user 82 php ./vendor/drupal/console/bin/drupal --root=/var/www/html/web"
