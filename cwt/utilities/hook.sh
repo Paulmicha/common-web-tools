@@ -25,13 +25,18 @@
 # Also attempts to call functions matching the corresponding lookup patterns.
 #
 # @requires the following global variables in calling scope :
-# - NAMESPACE
 # - CWT_CUSTOM_DIR
-# - CWT_ACTIONS or ${NAMESPACE}_ACTIONS
-# - CWT_SUBJECTS or ${NAMESPACE}_SUBJECTS
-# - CWT_PREFIXES or ${NAMESPACE}_PREFIXES
-# - CWT_VARIANTS or ${NAMESPACE}_VARIANTS
-# - CWT_EXTENSIONS or ${NAMESPACE}_EXTENSIONS
+# - CWT_ACTIONS
+# - CWT_SUBJECTS
+# - CWT_PREFIXES
+# - CWT_VARIANTS
+# - CWT_EXTENSIONS
+#
+# @uses the following global variables in calling scope if they exist :
+# - ${EXTENSION_NAMESPACE}_ACTIONS
+# - ${EXTENSION_NAMESPACE}_SUBJECTS
+# - ${EXTENSION_NAMESPACE}_PREFIXES
+# - ${EXTENSION_NAMESPACE}_VARIANTS
 #
 # NB : the default separator used to concatenate parts in file names is
 # the underscore '_', except for variants which use dot '.'.
@@ -87,8 +92,6 @@
 #   # Yields the following lookup paths (ALL includes found are sourced) :
 #   # See 1. but only with provided prefixes.
 #
-#   # 7. TODO evaluate removal of NAMESPACE filter.
-#
 # We exceptionally name that function without following the usual convention.
 #
 hook() {
@@ -97,7 +100,6 @@ hook() {
   local p_prefixes_filter
   local p_variants_filter
   local p_extensions_filter
-  # local p_namespace_filter # [wip] evaluate merging namespace and extension for current purpose.
   local p_debug
 
   # Parse current function arguments.
@@ -110,7 +112,6 @@ hook() {
       -x) p_prefixes_filter="$2"; shift 2;;
       -v) p_variants_filter="$2"; shift 2;;
       -p) p_extensions_filter="$2"; shift 2;;
-      # -n) p_namespace_filter="$2"; shift 2;; # [wip] evaluate merging namespace and extension for current purpose.
       # Flag (arg without any value).
       -d) p_debug=1; shift 1;;
       # Warn for unhandled arguments.
@@ -176,17 +177,17 @@ hook() {
 
   # Triggering a hook requires subjects and actions.
   if [[ -z "$subjects" ]]; then
-    echo
+    echo >&2
     echo "Error in $BASH_SOURCE line $LINENO: cannot trigger hook without any subjects." >&2
     echo "-> Aborting." >&2
-    echo
+    echo >&2
     return 2
   fi
   if [[ -z "$actions" ]]; then
-    echo
+    echo >&2
     echo "Error in $BASH_SOURCE line $LINENO: cannot trigger hook without any actions." >&2
     echo "-> Aborting." >&2
-    echo
+    echo >&2
     return 3
   fi
 
@@ -265,13 +266,14 @@ hook() {
       . "$inc"
     fi
     # TODO build matching function names to call ?
+    # echo "  hook lookup = $inc"
   done
 }
 
 ##
 # Adds lookup paths by subject.
 #
-# TODO we *could* have every subject implement every other subjects' hooks,
+# EVOL we *could* have every subject implement every other subjects' hooks,
 # if we wanted to. E.g. env/app_bootstrap.hook.sh, etc.
 #
 # @requires the following vars in calling scope :

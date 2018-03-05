@@ -7,4 +7,4 @@
 #
 
 # TODO [wip] debug.
-echo "$BASH_SOURCE is loaded."
+# echo "$BASH_SOURCE is loaded."

@@ -5,7 +5,7 @@
 #
 # TODO refacto 'stack' into 2 different subjects : 'instance' + 'service'.
 #
-# This file is dynamically loaded.
+# This file is sourced during core CWT bootstrap.
 # @see cwt/bootstrap.sh
 #
 

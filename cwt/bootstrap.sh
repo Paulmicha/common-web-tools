@@ -12,10 +12,10 @@
 #
 
 # Make sure bootstrap runs only once in current shell scope.
-if [[ -z "$cwt_bs_flag" ]]; then
-  cwt_bs_flag=1
+if [[ -z "$CWT_BS_FLAG" ]]; then
+  CWT_BS_FLAG=1
 
-  # Include "core" utilities.
+  # Include CWT core utilities.
   . "cwt/utilities/array.sh"
   . "cwt/utilities/autoload.sh"
   . "cwt/utilities/cwt.sh"
