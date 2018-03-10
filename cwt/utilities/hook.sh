@@ -262,7 +262,11 @@ hook() {
   local inc
   for inc in "${lookup_paths[@]}"; do
     if [[ -f "$inc" ]]; then
-      eval $(u_autoload_override "$inc" 'continue')
+      u_autoload_override "$inc" 'continue'
+      eval "$inc_override_evaled_code"
+      if [[ $dry_run_hook == 1 ]]; then
+        continue
+      fi
       . "$inc"
     fi
     # TODO build matching function names to call ?
