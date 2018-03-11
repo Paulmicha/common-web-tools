@@ -42,7 +42,12 @@ if [[ -z "$CWT_BS_FLAG" ]]; then
   # Load additional includes (including extensions').
   if [[ -n "$CWT_INC" ]]; then
     for file in $CWT_INC; do
+      # Any additional include may be overridden.
+      u_autoload_override "$file" 'continue'
+      eval "$inc_override_evaled_code"
+
       . "$file"
+
       # Any additional include may be altered using the 'complement' pattern.
       u_autoload_get_complement "$file"
     done

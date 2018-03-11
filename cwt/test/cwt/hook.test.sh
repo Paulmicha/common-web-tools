@@ -17,10 +17,13 @@
 ##
 # Single arg hook : action.
 #
+# Must trigger lookups
+#
 test_cwt_hook_single_action() {
-  local dry_run_hook=1
-  hook -a 'install'
-  assertFalse 'Global CWT_INC is empty (bootstrap test failed)' "[ -e \"$CWT_INC\" ]"
+  local inc_dry_run_files_list=''
+  hook -a 'bootstrap' -t -d
+  echo "inc_dry_run_files_list = $inc_dry_run_files_list"
+  # assertFalse 'Global CWT_INC is empty (bootstrap test failed)' "[ -e $CWT_INC ]"
 }
 
 # Load and run shUnit2.

@@ -101,6 +101,7 @@ hook() {
   local p_variants_filter
   local p_extensions_filter
   local p_debug
+  local p_dry_run
 
   # Parse current function arguments.
   # See https://stackoverflow.com/a/31443098
@@ -114,6 +115,7 @@ hook() {
       -p) p_extensions_filter="$2"; shift 2;;
       # Flag (arg without any value).
       -d) p_debug=1; shift 1;;
+      -t) p_dry_run=1; shift 1;;
       # Warn for unhandled arguments.
       -*) echo "Error in $BASH_SOURCE line $LINENO: unknown option: $1" >&2; return;;
       *) echo "Notice in $BASH_SOURCE line $LINENO: unsupported unnamed argument: $1" >&2; shift 1;;
@@ -262,13 +264,20 @@ hook() {
   local inc
   for inc in "${lookup_paths[@]}"; do
     if [[ -f "$inc" ]]; then
-      u_autoload_override "$inc" 'continue'
-      eval "$inc_override_evaled_code"
-      if [[ $dry_run_hook == 1 ]]; then
+
+      # Note : for tests, the "dry run" option prevents "override" alterations.
+      # @see cwt/test/cwt/hook.test.sh
+      if [[ $p_dry_run == 1 ]]; then
+        inc_dry_run_files_list+="$inc "
         continue
       fi
+
+      u_autoload_override "$inc" 'continue'
+      eval "$inc_override_evaled_code"
+
       . "$inc"
     fi
+
     # TODO build matching function names to call ?
     # echo "  hook lookup = $inc"
   done
@@ -305,8 +314,9 @@ u_hook_build_lookup_by_subject() {
   local x_parts_arr
   local x
   local x_values
-  local x_fallback
-  local x_fallback_values='pre post'
+  # TODO (WIP) evaluate removal (see comment below).
+  # local x_fallback
+  # local x_fallback_values='pre post'
 
   local v_prim
   local v_parts_arr
@@ -314,8 +324,9 @@ u_hook_build_lookup_by_subject() {
   local v_values
   local v_val
   local v_flag
-  local v_fallback
-  local v_fallback_values='PROVISION_USING INSTANCE_TYPE'
+  # TODO (WIP) evaluate removal (see comment below).
+  # local v_fallback
+  # local v_fallback_values='PROVISION_USING INSTANCE_TYPE'
 
   for bp in "${base_paths[@]}"; do
     for a_path in $actions; do
@@ -336,12 +347,15 @@ u_hook_build_lookup_by_subject() {
         # 2nd, and prefixes + variants MUST always come last.
         # @see u_cwt_extend()
         # TODO see if we can process dotfiles only once here (all at once).
-        x_fallback=1
-        v_fallback=1
+        # TODO (WIP) evaluate removal - i.e. require every call to explicitly
+        # specify if it's justified to look for certain variants or prefixes by
+        # using corresponding arguments in hook().
+        # x_fallback=1
+        # v_fallback=1
 
         for x_prim in $prefixes; do
           case "$x_prim" in "$bp/$a_path"*)
-            x_fallback=0
+            # x_fallback=0
             u_str_split1 x_parts_arr "$x_prim" '/'
             x="${x_parts_arr[2]}"
             lookup_paths+=("$bp/$p_subject/${x}_${a}.hook.sh")
@@ -351,7 +365,7 @@ u_hook_build_lookup_by_subject() {
 
         for v_prim in $variants; do
           case "$v_prim" in "$bp/$a_path"*)
-            v_fallback=0
+            # v_fallback=0
             u_str_split1 v_parts_arr "$v_prim" '/'
             v="${v_parts_arr[2]}"
             eval "v_val=\"\$$v_prim\""
@@ -363,20 +377,23 @@ u_hook_build_lookup_by_subject() {
 
         # If nothing specific was found by now, fallback to dynamic lookup
         # generation for prefixes and variants.
-        if [[ $x_fallback == 1 ]]; then
-          for x in $x_fallback_values; do
-            lookup_paths+=("$bp/$p_subject/${x}_${a}.hook.sh")
-            x_values+="$x "
-          done
-        fi
-        if [[ $v_fallback == 1 ]]; then
-          for v in $v_fallback_values; do
-            eval "v_val=\"\$$v\""
-            # u_autoload_add_lookup_level "$bp/$p_subject/" "${a}.hook.sh" "$v_val" lookup_paths '' '/'
-            u_autoload_add_lookup_level "$bp/$p_subject/${a}." "hook.sh" "$v_val" lookup_paths
-            v_values+="$v_val "
-          done
-        fi
+        # TODO : WIP removal evaluation - i.e. require every call to explicitly
+        # specify if it's justified to look for certain variants or prefixes by
+        # using corresponding arguments in hook().
+        # if [[ $x_fallback == 1 ]]; then
+        #   for x in $x_fallback_values; do
+        #     lookup_paths+=("$bp/$p_subject/${x}_${a}.hook.sh")
+        #     x_values+="$x "
+        #   done
+        # fi
+        # if [[ $v_fallback == 1 ]]; then
+        #   for v in $v_fallback_values; do
+        #     eval "v_val=\"\$$v\""
+        #     # u_autoload_add_lookup_level "$bp/$p_subject/" "${a}.hook.sh" "$v_val" lookup_paths '' '/'
+        #     u_autoload_add_lookup_level "$bp/$p_subject/${a}." "hook.sh" "$v_val" lookup_paths
+        #     v_values+="$v_val "
+        #   done
+        # fi
 
         # Implement prefix + variant lookup paths e.g. :
         # pre_bootstrap.docker-compose.hook.sh
