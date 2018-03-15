@@ -10,10 +10,12 @@
 #
 
 ##
-# Triggers an "event" optionally filtered by "primitives".
+# Triggers an "event" optionally filtered by primitives.
 #
-# TODO abandon default variants + presets (always require explicit args).
-# TODO update examples in this function docblock + update documentation.
+# In order to "listen" to events, some specific file(s) must use the exact path
+# and name corresponding to its arguments. For a detailed list of expected
+# output given various inputs :
+# @see cwt/test/cwt/hook.test.sh
 #
 # Primitives are fundamental values dynamically generated during bootstrap :
 # @see cwt/bootstrap.sh
@@ -21,28 +23,43 @@
 #
 # Calling this function will source all file includes matched by subject,
 # action, prefix, variant, and extension. Every extension defines a base path from
-# which additional lookup paths are derived + a corresponding namespace.
-# Also attempts to call functions matching the corresponding lookup patterns.
+# which additional lookup paths are derived (as well as a corresponding namespace
+# for glabals containing their primitives).
+#
+# If this function gets called without any 'variant' filter(s), it will
+# automatically look for suggestions using the following fallback values :
+# - PROVISION_USING
+# - INSTANCE_TYPE
+#
+# Variants are combinatory. Each variant value must be an existing glabal var
+# which will generate the following lookup paths given the call :
+# $ hook -a 'my_action' -s 'my_subject' -v 'PROVISION_USING INSTANCE_TYPE'
+# + the values PROVISION_USING='docker-compose-2.3' and INSTANCE_TYPE='dev' :
+# - cwt/my_subject/my_action.hook.sh
+# - cwt/my_subject/my_action.docker-compose.hook.sh
+# - cwt/my_subject/my_action.docker-compose-2.3.hook.sh
+# - cwt/my_subject/my_action.dev.hook.sh
+# - cwt/my_subject/my_action.docker-compose.dev.hook.sh
+# - cwt/my_subject/my_action.docker-compose-2.3.dev.hook.sh
 #
 # @requires the following global variables in calling scope :
 # - CWT_CUSTOM_DIR
 # - CWT_ACTIONS
 # - CWT_SUBJECTS
-# - CWT_PREFIXES
-# - CWT_VARIANTS
 # - CWT_EXTENSIONS
 #
 # @uses the following global variables in calling scope if they exist :
 # - ${EXTENSION_NAMESPACE}_ACTIONS
 # - ${EXTENSION_NAMESPACE}_SUBJECTS
-# - ${EXTENSION_NAMESPACE}_PREFIXES
-# - ${EXTENSION_NAMESPACE}_VARIANTS
 #
 # NB : the default separator used to concatenate parts in file names is
 # the underscore '_', except for variants which use dot '.'.
 # Dashes '-' are reserved for folder names and to separate "semver" suffixes.
 # Semver suffixes can be used in extension folder names and variant values.
-# TODO evaluate separators customization.
+#
+# Also note that each argument accepts several values by using a space to
+# separate them. E.g. :
+# $ hook -a 'start' -s 'stack service instance app'
 #
 # @examples
 #
@@ -50,45 +67,33 @@
 #   hook -a 'bootstrap'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
 #   # - cwt/<CWT_SUBJECTS>/bootstrap.hook.sh
-#   # - cwt/<CWT_SUBJECTS>/<CWT_PREFIXES+sep>bootstrap.hook.sh
-#   # - cwt/<CWT_SUBJECTS>/bootstrap<sep+CWT_VARIANTS>.hook.sh
-#   # - cwt/<CWT_SUBJECTS>/<CWT_PREFIXES+sep>bootstrap<sep+CWT_VARIANTS>.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS+semver>/<CWT_SUBJECTS>/bootstrap.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS+semver>/<CWT_SUBJECTS>/<CWT_PREFIXES+sep>bootstrap.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS+semver>/<CWT_SUBJECTS>/bootstrap<sep+CWT_VARIANTS>.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS+semver>/<CWT_SUBJECTS>/<CWT_PREFIXES+sep>bootstrap<sep+CWT_VARIANTS>.hook.sh
+#   # - cwt/<CWT_SUBJECTS>/bootstrap<.VARIANTS+semver>.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS+semver>/<EXT_SUBJECTS>/bootstrap.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS+semver>/<EXT_SUBJECTS>/bootstrap<.VARIANTS+semver>.hook.sh
 #
 #   # 2. When providing an action + a filter by subject :
 #   hook -a 'init' -s 'stack'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
 #   # - cwt/stack/init.hook.sh
-#   # - cwt/stack/<CWT_PREFIXES+sep>init.hook.sh
-#   # - cwt/stack/init<sep+CWT_VARIANTS>.hook.sh
+#   # - cwt/stack/init<.VARIANTS+semver>.hook.sh
 #   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS+semver>/stack/init.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS+semver>/stack/<CWT_PREFIXES+sep>init.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS+semver>/stack/init<sep+CWT_VARIANTS>.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS+semver>/stack/<CWT_PREFIXES+sep>init<sep+CWT_VARIANTS>.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS+semver>/stack/init<.VARIANTS+semver>.hook.sh
 #
-#   # 3. When providing an action + a filter by several subjects :
-#   hook -a 'apply_ownership_and_perms' -s 'stack app'
-#   # Yields the following lookup paths (ALL includes found are sourced) :
-#   # See 2. for each subject.
-#
-#   # 4. When providing an action + a filter by 1 or several subjects + 1 or
+#   # 3. When providing an action + a filter by 1 or several subjects + 1 or
 #   #   several variants filter :
-#   hook -a 'provision' -s 'stack' -v 'PROVISION_USING HOST_TYPE'
+#   hook -a 'init' -s 'stack' -v 'HOST_TYPE'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
 #   # See 3. but only with provided variants.
 #
-#   # 5. Arguments order may be swapped, but it requires at least either :
+#   # 4. Arguments order may be swapped, but it requires at least either :
 #   #   - 1 action
 #   #   - 1 extension + 1 variant
-#   hook -p 'nodejs' -v 'INSTANCE_TYPE'
+#   hook -e 'nodejs' -v 'INSTANCE_TYPE'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
-#   # - $CWT_CUSTOM_DIR/nodejs<+semver>/<CWT_SUBJECTS>/<CWT_PREFIXES+sep><CWT_ACTIONS+sep>init<sep+CWT_VARIANTS>.hook.sh
+#   # - $CWT_CUSTOM_DIR/extensions/nodejs<+semver>/<EXT_SUBJECTS>/<SUBJECT_ACTIONS><.INSTANCE_TYPE>.hook.sh
 #
-#   # 6. Prefixes filter :
-#   hook -a 'bootstrap' -x 'pre'
+#   # 5. Prefixes filter :
+#   hook -a 'bootstrap' -p 'pre'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
 #   # See 1. but only with provided prefixes.
 #
@@ -110,9 +115,9 @@ hook() {
       # Format : 1 dash + arg 'name' + space + value.
       -a) p_actions_filter="$2"; shift 2;;
       -s) p_subjects_filter="$2"; shift 2;;
-      -x) p_prefixes_filter="$2"; shift 2;;
+      -p) p_prefixes_filter="$2"; shift 2;;
       -v) p_variants_filter="$2"; shift 2;;
-      -p) p_extensions_filter="$2"; shift 2;;
+      -e) p_extensions_filter="$2"; shift 2;;
       # Flag (arg without any value).
       -d) p_debug=1; shift 1;;
       -t) p_dry_run=1; shift 1;;
@@ -123,7 +128,7 @@ hook() {
   done
 
   # Enforce minimum conditions for triggering hook (see 5 in function docblock).
-  if [[ (-z "$p_actions_filter") && (-z "$p_extensions_filter") && (-z "$p_variants_filter") ]]; then
+  if [[ -z "$p_actions_filter" ]] && [[ -z "$p_extensions_filter" ]] && [[ -z "$p_variants_filter" ]]; then
     echo
     echo "Error in $BASH_SOURCE line $LINENO: cannot trigger hook without either 1 action filter (or 1 extension + 1 variant)." >&2
     echo "-> Aborting." >&2
@@ -133,9 +138,9 @@ hook() {
 
   local subjects="$CWT_SUBJECTS"
   local actions="$CWT_ACTIONS"
-  local variants="$CWT_VARIANTS"
   local extensions="$CWT_EXTENSIONS"
-  local prefixes="$CWT_PREFIXES"
+  local variants=""
+  local prefixes=""
 
   local base_paths=("cwt")
   local extensions_dir="$CWT_CUSTOM_DIR/extensions"
@@ -152,8 +157,6 @@ hook() {
       uppercase="${uppercase//-/_}"
       eval "subjects=\"\$${uppercase}_SUBJECTS\""
       eval "actions=\"\$${uppercase}_ACTIONS\""
-      eval "prefixes=\"\$${uppercase}_PREFIXES\""
-      eval "variants=\"\$${uppercase}_VARIANTS\""
       # Override base path for lookups.
       base_paths=("$extensions_dir/$extension")
     done
@@ -170,8 +173,6 @@ hook() {
       uppercase="${uppercase//-/_}"
       eval "subjects+=\" \$${uppercase}_SUBJECTS\""
       eval "actions+=\" \$${uppercase}_ACTIONS\""
-      eval "prefixes+=\" \$${uppercase}_PREFIXES\""
-      eval "variants+=\" \$${uppercase}_VARIANTS\""
       # Every extension defines an additional base path for lookups.
       base_paths+=("$extensions_dir/$extension")
     done
@@ -194,7 +195,7 @@ hook() {
   fi
 
   # Apply filters.
-  local filters='subjects actions prefixes variants' # TODO check order is respected.
+  local filters='subjects actions prefixes variants'
   local f
   local f_arg
   local s
@@ -277,9 +278,6 @@ hook() {
 
       . "$inc"
     fi
-
-    # TODO build matching function names to call ?
-    # echo "  hook lookup = $inc"
   done
 }
 
@@ -314,9 +312,6 @@ u_hook_build_lookup_by_subject() {
   local x_parts_arr
   local x
   local x_values
-  # TODO (WIP) evaluate removal (see comment below).
-  # local x_fallback
-  # local x_fallback_values='pre post'
 
   local v_prim
   local v_parts_arr
@@ -324,9 +319,11 @@ u_hook_build_lookup_by_subject() {
   local v_values
   local v_val
   local v_flag
-  # TODO (WIP) evaluate removal (see comment below).
-  # local v_fallback
+  local v_fallback
+  # local v_fallback_values='PROVISION_USING INSTANCE_TYPE HOST_TYPE'
   # local v_fallback_values='PROVISION_USING INSTANCE_TYPE'
+  # local v_fallback_values='INSTANCE_TYPE HOST_TYPE'
+  local v_fallback_values='INSTANCE_TYPE'
 
   for bp in "${base_paths[@]}"; do
     for a_path in $actions; do
@@ -346,16 +343,10 @@ u_hook_build_lookup_by_subject() {
         # values - e.g. subjects MUST always be 1st, actions MUST always be
         # 2nd, and prefixes + variants MUST always come last.
         # @see u_cwt_extend()
-        # TODO see if we can process dotfiles only once here (all at once).
-        # TODO (WIP) evaluate removal - i.e. require every call to explicitly
-        # specify if it's justified to look for certain variants or prefixes by
-        # using corresponding arguments in hook().
-        # x_fallback=1
-        # v_fallback=1
+        v_fallback=1
 
         for x_prim in $prefixes; do
           case "$x_prim" in "$bp/$a_path"*)
-            # x_fallback=0
             u_str_split1 x_parts_arr "$x_prim" '/'
             x="${x_parts_arr[2]}"
             lookup_paths+=("$bp/$p_subject/${x}_${a}.hook.sh")
@@ -365,7 +356,7 @@ u_hook_build_lookup_by_subject() {
 
         for v_prim in $variants; do
           case "$v_prim" in "$bp/$a_path"*)
-            # v_fallback=0
+            v_fallback=0
             u_str_split1 v_parts_arr "$v_prim" '/'
             v="${v_parts_arr[2]}"
             eval "v_val=\"\$$v_prim\""
@@ -376,30 +367,43 @@ u_hook_build_lookup_by_subject() {
         done
 
         # If nothing specific was found by now, fallback to dynamic lookup
-        # generation for prefixes and variants.
-        # TODO : WIP removal evaluation - i.e. require every call to explicitly
+        # generation for variants.
         # specify if it's justified to look for certain variants or prefixes by
         # using corresponding arguments in hook().
-        # if [[ $x_fallback == 1 ]]; then
-        #   for x in $x_fallback_values; do
-        #     lookup_paths+=("$bp/$p_subject/${x}_${a}.hook.sh")
-        #     x_values+="$x "
-        #   done
-        # fi
-        # if [[ $v_fallback == 1 ]]; then
-        #   for v in $v_fallback_values; do
-        #     eval "v_val=\"\$$v\""
-        #     # u_autoload_add_lookup_level "$bp/$p_subject/" "${a}.hook.sh" "$v_val" lookup_paths '' '/'
-        #     u_autoload_add_lookup_level "$bp/$p_subject/${a}." "hook.sh" "$v_val" lookup_paths
-        #     v_values+="$v_val "
-        #   done
-        # fi
+        if [[ $v_fallback -eq 1 ]]; then
+          for v in $v_fallback_values; do
+            eval "v_val=\"\$$v\""
+            # u_autoload_add_lookup_level "$bp/$p_subject/" "${a}.hook.sh" "$v_val" lookup_paths '' '/'
+            u_autoload_add_lookup_level "$bp/$p_subject/${a}." "hook.sh" "$v_val" lookup_paths
+            v_values+="$v_val "
+          done
+        fi
 
-        # Implement prefix + variant lookup paths e.g. :
+        # Implement combinatory variant lookup paths, e.g. :
+        # bootstrap.docker-compose.dev.hook.sh
+        local combi_v_val
+        for v_val in $v_values; do
+          for combi_v_val in $v_values; do
+            if [[ "$combi_v_val" != "$v_val" ]]; then
+              u_autoload_add_lookup_level "$bp/$p_subject/${a}.${v_val}." "hook.sh" "$combi_v_val" lookup_paths
+            fi
+          done
+        done
+
+        # Implement prefix + variant lookup paths, e.g. :
         # pre_bootstrap.docker-compose.hook.sh
         for x in $x_values; do
           for v_val in $v_values; do
             u_autoload_add_lookup_level "$bp/$p_subject/${x}_${a}." "hook.sh" "$v_val" lookup_paths
+
+            # Implement combinatory variant lookup paths by prefix, e.g. :
+            # pre_bootstrap.docker-compose.dev.hook.sh
+            # TODO make opt-in or remove ? #YAGNI
+            for combi_v_val in $v_values; do
+              if [[ "$combi_v_val" != "$v_val" ]]; then
+                u_autoload_add_lookup_level "$bp/$p_subject/${a}.${v_val}." "hook.sh" "$combi_v_val" lookup_paths
+              fi
+            done
           done
         done
       esac

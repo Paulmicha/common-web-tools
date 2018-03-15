@@ -76,7 +76,7 @@ u_cwt_extend() {
 
   # Export initial global variables for every primitive + always reinit as empty
   # strings on every call to u_cwt_extend().
-  local primitives='SUBJECTS ACTIONS PREFIXES VARIANTS EXTENSIONS'
+  local primitives='SUBJECTS ACTIONS EXTENSIONS'
   local prim
   for prim in $primitives; do
     eval "export ${p_namespace}_${prim}=''"
@@ -95,10 +95,6 @@ u_cwt_extend() {
   local inc
   local action
   local actions_list
-  local prefix
-  local prefixes_list
-  local variant
-  local variants_list
 
   for subject in $subjects_list; do
 
@@ -118,25 +114,8 @@ u_cwt_extend() {
     actions_list="$primitive_values"
 
     for action in $actions_list; do
-
       # Build up exported actions list (by subject).
       eval "${p_namespace}_ACTIONS+=\"${subject}/$action \""
-
-      # Build up exported prefixes (by subject AND by action).
-      primitive_values=''
-      u_cwt_primitive_values 'prefixes' "$p_path/$subject" "$action"
-      prefixes_list="$primitive_values"
-      for prefix in $prefixes_list; do
-        eval "${p_namespace}_PREFIXES+=\"${subject}/$action/$prefix \""
-      done
-
-      # Build up exported variants (by subject AND by action).
-      primitive_values=''
-      u_cwt_primitive_values 'variants' "$p_path/$subject" "$action"
-      variants_list="$primitive_values"
-      for variant in $variants_list; do
-        eval "${p_namespace}_VARIANTS+=\"${subject}/$action/$variant \""
-      done
     done
   done
 
@@ -155,15 +134,11 @@ u_cwt_extend() {
 # @see u_cwt_extend()
 #
 u_cwt_extensions() {
-  local extensions_dir="cwt/custom/extensions"
-  if [[ -n "$CWT_CUSTOM_DIR" ]]; then
-    extensions_dir="$CWT_CUSTOM_DIR/extensions"
-  fi
+  u_cwt_get_extensions_dir
   if [[ -d "$extensions_dir" ]]; then
     local extension
-    local extensions_list=$(u_fs_dir_list "$extensions_dir")
-
-    for extension in $extensions_list; do
+    u_fs_dir_list "$extensions_dir"
+    for extension in $dir_list; do
 
       # Ignore dirnames starting with '.'.
       if [[ "${extension:0:1}" == '.' ]]; then
@@ -175,6 +150,12 @@ u_cwt_extensions() {
       # Aggregate namespaced primitives for every extension.
       u_cwt_extend "$extensions_dir/$extension"
     done
+  # Fail if extensions dir does not exist.
+  # else
+  #   echo >&2
+  #   echo "Error (1) in $BASH_SOURCE line $LINENO: CWT extensions dir does not exist." >&2
+  #   echo >&2
+  #   exit 1
   fi
 }
 
@@ -313,4 +294,23 @@ u_cwt_primitive_values() {
       fi
     fi
   done
+}
+
+##
+# Gets CWT extensions base path.
+#
+# NB : for performance reasons (to avoid using a subshell), this function
+# writes its result to a variable subject to collision in calling scope.
+#
+# @var extensions_dir
+#
+# @example
+#   u_cwt_get_extensions_dir
+#   echo "$extensions_dir"
+#
+u_cwt_get_extensions_dir() {
+  extensions_dir="cwt/custom/extensions"
+  if [[ -n "$CWT_CUSTOM_DIR" ]]; then
+    extensions_dir="$CWT_CUSTOM_DIR/extensions"
+  fi
 }
