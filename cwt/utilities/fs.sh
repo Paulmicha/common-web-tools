@@ -77,20 +77,36 @@ u_fs_write_once() {
 }
 
 ##
-# Gets a list of folder by path and maxdepth.
+# Lists folders (shorter naming choice : we use 'dir' for directories).
+#
+# NB : for performance reasons (to avoid using a subshell), this function
+# writes its result to a variable subject to collision in calling scope.
+#
+# @var dir_list
 #
 # @param 1 [optional] String base path (defaults to '.').
-# @param 2 [optional] Integer max depth (defaults to 1).
+# @param 2 [optional] String dir name filter pattern (defaults to none / not filtering).
+# @param 3 [optional] Integer max depth (defaults to 1).
 #
 # @example
-#   dir_list=$(u_fs_dir_list)
+#   # List all dirs in current folder.
+#   u_fs_dir_list
+#   echo "$dir_list"
+#
+#   # List '*.sh' dirs in current folder.
+#   u_fs_dir_list . '*.sh'
+#   echo "$dir_list"
+#
+#   # List all dirs in the "/path/to/dir" folder up to 3 levels deep.
+#   u_fs_dir_list /path/to/dir '' 3
 #   echo "$dir_list"
 #
 u_fs_dir_list() {
   local p_path="$1"
-  local p_maxdepth="$2"
+  local p_filter_pattern="$2"
+  local p_maxdepth=$3
 
-  local dir_list=''
+  dir_list=''
 
   if [[ -z "$p_path" ]]; then
     p_path='.'
@@ -100,28 +116,85 @@ u_fs_dir_list() {
     p_maxdepth=1
   fi
 
-  dir_list="$(find $p_path -maxdepth $p_maxdepth -type d -printf '%P\n')"
+  local i
 
-  echo "$dir_list"
+  # If we need to look for dirs in deeper levels, use 'find' (subshell).
+  # TODO remove depth argument and make a separate function ? #YAGNI
+  if [[ $p_maxdepth -gt 1 ]]; then
+    if [[ -z "$p_filter_pattern" ]]; then
+      dir_list="$(find "$p_path" -maxdepth "$p_maxdepth" -type d -printf '%P\n')"
+    else
+      dir_list="$(find "$p_path" -maxdepth "$p_maxdepth" -type d -name "$p_filter_pattern" -printf '%P\n')"
+    fi
+
+  # Otherwise, just use the less expensive bash loop.
+  else
+    if [[ "$p_path" != '.' ]]; then
+      pushd "$p_path" >/dev/null
+    fi
+
+    # The default globbing in bash does not include dirnames starting with a .
+    shopt -s dotglob
+
+    if [[ -z "$p_filter_pattern" ]]; then
+      for i in * ; do
+        if [ -d "$i" ]; then
+          dir_list+="${i}
+"
+        fi
+      done
+    else
+      for i in * ; do
+        if [ -d "$i" ]; then
+          case "$i" in
+            $p_filter_pattern)
+              dir_list+="${i}
+"
+            ;;
+          esac
+        fi
+      done
+    fi
+
+    if [[ "$p_path" != '.' ]]; then
+      popd >/dev/null
+    fi
+
+    shopt -u dotglob
+  fi
 }
 
 ##
 # Gets a list of files in given folder.
 #
+# NB : for performance reasons (to avoid using a subshell), this function
+# writes its result to a variable subject to collision in calling scope.
+#
+# @var file_list
+#
 # @param 1 [optional] String base path (defaults to '.').
-# @param 2 [optional] Integer max depth (defaults to 1).
-# @param 3 [optional] name matching pattern (defaults to '*.sh').
+# @param 2 [optional] String file name filter pattern (defaults to '*' / not filtering).
+# @param 3 [optional] Integer max depth (defaults to 1).
 #
 # @example
-#   file_list=$(u_fs_file_list)
+#   # List all files in current folder.
+#   u_fs_file_list
+#   echo "$file_list"
+#
+#   # List '*.sh' files in current folder.
+#   u_fs_file_list . '*.sh'
+#   echo "$file_list"
+#
+#   # List all files in the "/path/to/dir" folder up to 3 levels deep.
+#   u_fs_file_list /path/to/dir '' 3
 #   echo "$file_list"
 #
 u_fs_file_list() {
   local p_path="$1"
-  local p_maxdepth="$2"
-  local p_match_pattern="$3"
+  local p_filter_pattern="$2"
+  local p_maxdepth=$3
 
-  local file_list=''
+  file_list=''
 
   if [[ -z "$p_path" ]]; then
     p_path='.'
@@ -131,13 +204,52 @@ u_fs_file_list() {
     p_maxdepth=1
   fi
 
-  if [[ -z "$p_match_pattern" ]]; then
-    p_match_pattern='*.sh'
+  local i
+
+  # If we need to look for files in deeper levels, use 'find' (subshell).
+  # TODO remove depth argument and make a separate function ? #YAGNI
+  if [[ $p_maxdepth -gt 1 ]]; then
+    if [[ -z "$p_filter_pattern" ]]; then
+      file_list="$(find "$p_path" -maxdepth "$p_maxdepth" -type f -printf '%P\n')"
+    else
+      file_list="$(find "$p_path" -maxdepth "$p_maxdepth" -type f -name "$p_filter_pattern" -printf '%P\n')"
+    fi
+
+  # Otherwise, just use the less expensive bash loop.
+  else
+    if [[ "$p_path" != '.' ]]; then
+      pushd "$p_path" >/dev/null
+    fi
+
+    # The default globbing in bash does not include filenames starting with a .
+    shopt -s dotglob
+
+    if [[ -z "$p_filter_pattern" ]]; then
+      for i in * ; do
+        if [ -f "$i" ]; then
+          file_list+="${i}
+"
+        fi
+      done
+    else
+      for i in * ; do
+        if [ -f "$i" ]; then
+          case "$i" in
+            $p_filter_pattern)
+              file_list+="${i}
+"
+            ;;
+          esac
+        fi
+      done
+    fi
+
+    if [[ "$p_path" != '.' ]]; then
+      popd >/dev/null
+    fi
+
+    shopt -u dotglob
   fi
-
-  file_list="$(find "$p_path" -maxdepth "$p_maxdepth" -type f -name "$p_match_pattern" -printf '%P\n')"
-
-  echo "$file_list"
 }
 
 ##

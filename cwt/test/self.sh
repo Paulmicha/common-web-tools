@@ -13,9 +13,9 @@
 
 . cwt/bootstrap.sh
 
-cwt_tests=$(u_fs_file_list cwt/test/cwt 1 '*.test.sh')
+u_fs_file_list cwt/test/cwt '*.test.sh'
 
-for test_script in $cwt_tests; do
+for test_script in $file_list; do
   echo "Executing CWT core $test_script ..."
   cwt/test/cwt/$test_script
   echo "Executing CWT core $test_script : done."

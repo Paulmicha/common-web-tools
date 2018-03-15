@@ -23,7 +23,6 @@ if [[ -z "$CWT_BS_FLAG" ]]; then
   . cwt/utilities/global.sh
   . cwt/utilities/hook.sh
   . cwt/utilities/host.sh
-  . cwt/utilities/instance.sh
   . cwt/utilities/once.sh # TODO remove or make opt-in.
   . cwt/utilities/registry.sh # TODO remove or make opt-in.
   . cwt/utilities/string.sh
