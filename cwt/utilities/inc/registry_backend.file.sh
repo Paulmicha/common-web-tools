@@ -3,7 +3,7 @@
 ##
 # Local file-based registry utility functions.
 #
-# This file is dynamically loaded.
+# This file is sourced during core CWT bootstrap.
 # @see cwt/utilities/registry.sh
 #
 # These utilies allow to store values or secrets for this instance in simple
