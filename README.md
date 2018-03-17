@@ -1,5 +1,7 @@
 # Common Web Tools (CWT)
 
+TODO rewrite README + documentation to match the `develop` branch just merged.
+
 WIP / not ready for use yet (re-organization + evaluation stage, documentation-driven).
 
 **Documentation** : [paulmicha.github.io/common-web-tools](https://paulmicha.github.io/common-web-tools/)
