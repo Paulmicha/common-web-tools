@@ -9,8 +9,8 @@
 # Include globals, aliases, utility functions (CWT).
 . cwt/bootstrap.sh
 
-# TODO [wip] refacto CWT hooks.
-u_hook_app 'apply' 'ownership_and_perms' '' 'stack'
+# (Re)set file system ownership and permissions.
+hook -a 'set_fsop' -s 'app stack'
 
 # Re-add previously staged files in case their permissions have changed.
 staged="$(u_git_get_staged_files "$APP_GIT_WORK_TREE")"

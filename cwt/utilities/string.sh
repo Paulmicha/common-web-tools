@@ -3,11 +3,69 @@
 ##
 # String-related utility functions.
 #
-# This script is dynamically loaded.
+# This file is sourced during core CWT bootstrap.
 # @see cwt/bootstrap.sh
 #
 # Convention : functions names are all prefixed by "u" (for "utility").
 #
+
+##
+# Gets all unique unordered combinations of given string values.
+#
+# See https://codereview.stackexchange.com/questions/7001/generating-all-combinations-of-an-array
+# + https://stackoverflow.com/a/23653825
+#
+# NB : for performance reasons (to avoid using a subshell), this function
+# writes its result to a variable subject to collision in calling scope.
+#
+# @var str_subsequences
+#
+# @param 1 String : space-separated values.
+# @param 2 [optional] String : concatenation separator. Defaults to '' (empty).
+# @param 3 [optional] String : separator between items. Defaults to space.
+#
+# @example
+#   u_str_subsequences "a b c d"
+#   echo "$str_subsequences" # a ab abc abcd abd ac acd ad b bc bcd bd c cd d
+#
+#   # Custom concatenation character.
+#   u_str_subsequences "a b c d" '.'
+#   for i in $str_subsequences; do
+#     echo "$i" # Ex: a.b.c.d
+#   done
+#
+u_str_subsequences() {
+  local p_values="$1"
+  local p_concatenation="$2"
+  local p_separator="$3"
+
+  if [[ -z "$p_separator" ]]; then
+    p_separator=' '
+  fi
+
+  str_subsequences=''
+
+  _u_str_subsequences_inner_recursion() {
+    local p_prefix="$1"
+    local p_inner_values="$2"
+
+    local i
+    local concat="$p_concatenation"
+
+    if [[ -z "$p_prefix" ]]; then
+      concat=""
+    fi
+
+    for i in $p_inner_values; do
+      str_subsequences+="${p_prefix}${concat}${i}${p_separator}"
+      _u_str_subsequences_inner_recursion "${p_prefix}${concat}${i}" "${p_inner_values#*$i}"
+    done
+  }
+
+  _u_str_subsequences_inner_recursion '' "$p_values"
+
+  unset -f _u_str_subsequences_inner_recursion
+}
 
 ##
 # Transforms an existing variable named $lowercase in calling scope to lowercase.

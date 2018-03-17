@@ -3,88 +3,112 @@
 ##
 # Hooks-related utility functions.
 #
-# This file is dynamically loaded.
+# This file is sourced during core CWT bootstrap.
 # @see cwt/bootstrap.sh
 #
 # Convention : functions names are all prefixed by "u" (for "utility").
 #
 
 ##
-# Triggers an "event" optionally filtered by "primitives".
+# Triggers an "event" optionally filtered by primitives.
+#
+# Arguments are all optional, but this function requires at least either
+# 1 action (-a) OR 1 extension (-e). See explanations below.
+#
+# In order to "listen" to events, some specific file(s) must use the exact path
+# and name corresponding to its arguments. For a detailed list of expected
+# output given various inputs :
+# @see cwt/test/cwt/hook.test.sh
 #
 # Primitives are fundamental values dynamically generated during bootstrap :
 # @see cwt/bootstrap.sh
 # @see u_cwt_extend()
 #
 # Calling this function will source all file includes matched by subject,
-# action, prefix, variant, and preset. Every preset defines a base path from
-# which additional lookup paths are derived + a corresponding namespace.
-# Also attempts to call functions matching the corresponding lookup patterns.
+# action, prefix, variant, and extension. Every extension defines a base path from
+# which additional lookup paths are derived (as well as a corresponding namespace
+# for glabals containing their primitives).
+#
+# Important notes about the 'variants' (-v) argument :
+# If this function gets called without any 'variant' filter(s), it will
+# automatically look for suggestions using INSTANCE_TYPE.
+# Variants are combinatory. Each variant value must be an existing glabal var
+# which will generate the following lookup paths given the call :
+# $ hook -a 'my_action' -s 'my_subject' -v 'PROVISION_USING INSTANCE_TYPE'
+# + the values PROVISION_USING='docker-compose' and INSTANCE_TYPE='dev' :
+# - cwt/my_subject/my_action.hook.sh
+# - cwt/my_subject/my_action.docker-compose.hook.sh
+# - cwt/my_subject/my_action.dev.hook.sh
+# - cwt/my_subject/my_action.docker-compose.dev.hook.sh
 #
 # @requires the following global variables in calling scope :
-# - NAMESPACE
 # - CWT_CUSTOM_DIR
-# - CWT_ACTIONS or ${NAMESPACE}_ACTIONS
-# - CWT_SUBJECTS or ${NAMESPACE}_SUBJECTS
-# - CWT_PREFIXES or ${NAMESPACE}_PREFIXES
-# - CWT_VARIANTS or ${NAMESPACE}_VARIANTS
-# - CWT_PRESETS or ${NAMESPACE}_PRESETS
+# - CWT_ACTIONS
+# - CWT_SUBJECTS
+# - CWT_EXTENSIONS
+#
+# @uses the following global variables in calling scope if they exist :
+# - ${EXTENSION_NAMESPACE}_ACTIONS
+# - ${EXTENSION_NAMESPACE}_SUBJECTS
 #
 # NB : the default separator used to concatenate parts in file names is
 # the underscore '_', except for variants which use dot '.'.
 # Dashes '-' are reserved for folder names and to separate "semver" suffixes.
-# Semver suffixes can be used in preset folder names and variant values.
-# TODO evaluate separators customization.
+# Semver suffixes can be used in extension folder names and variant values.
+#
+# Also note that each argument accepts several values by using a space to
+# separate them. E.g. :
+# $ hook -a 'start' -s 'stack service instance app'
 #
 # @examples
 #
 #   # 1. When providing a single action :
 #   hook -a 'bootstrap'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
+#   # (given INSTANCE_TYPE='prod')
 #   # - cwt/<CWT_SUBJECTS>/bootstrap.hook.sh
-#   # - cwt/<CWT_SUBJECTS>/<CWT_PREFIXES+sep>bootstrap.hook.sh
-#   # - cwt/<CWT_SUBJECTS>/bootstrap<sep+CWT_VARIANTS>.hook.sh
-#   # - cwt/<CWT_SUBJECTS>/<CWT_PREFIXES+sep>bootstrap<sep+CWT_VARIANTS>.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/<CWT_SUBJECTS>/bootstrap.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/<CWT_SUBJECTS>/<CWT_PREFIXES+sep>bootstrap.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/<CWT_SUBJECTS>/bootstrap<sep+CWT_VARIANTS>.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/<CWT_SUBJECTS>/<CWT_PREFIXES+sep>bootstrap<sep+CWT_VARIANTS>.hook.sh
+#   # - cwt/<CWT_SUBJECTS>/bootstrap.prod.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/bootstrap.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/bootstrap.prod.hook.sh
 #
 #   # 2. When providing an action + a filter by subject :
 #   hook -a 'init' -s 'stack'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
+#   # (given INSTANCE_TYPE='prod')
 #   # - cwt/stack/init.hook.sh
-#   # - cwt/stack/<CWT_PREFIXES+sep>init.hook.sh
-#   # - cwt/stack/init<sep+CWT_VARIANTS>.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/stack/init.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/stack/<CWT_PREFIXES+sep>init.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/stack/init<sep+CWT_VARIANTS>.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_PRESETS+semver>/stack/<CWT_PREFIXES+sep>init<sep+CWT_VARIANTS>.hook.sh
+#   # - cwt/stack/init.prod.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/stack/init.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/stack/init.prod.hook.sh
 #
-#   # 3. When providing an action + a filter by several subjects :
-#   hook -a 'apply_ownership_and_perms' -s 'stack app'
-#   # Yields the following lookup paths (ALL includes found are sourced) :
-#   # See 2. for each subject.
-#
-#   # 4. When providing an action + a filter by 1 or several subjects + 1 or
+#   # 3. When providing an action + a filter by 1 or several subjects + 1 or
 #   #   several variants filter :
-#   hook -a 'provision' -s 'stack' -v 'PROVISION_USING HOST_TYPE'
+#   hook -a 'init' -s 'stack' -v 'INSTANCE_TYPE HOST_TYPE'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
-#   # See 3. but only with provided variants.
+#   # (given INSTANCE_TYPE='dev' and HOST_TYPE='local')
+#   # - cwt/stack/init.hook.sh
+#   # - cwt/stack/init.dev.hook.sh
+#   # - cwt/stack/init.local.hook.sh
+#   # - cwt/stack/init.dev.local.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/stack/init.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/stack/init.dev.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/stack/init.local.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/stack/init.dev.local.hook.sh
 #
-#   # 5. Arguments order may be swapped, but it requires at least either :
-#   #   - 1 action
-#   #   - 1 preset + 1 variant
-#   hook -p 'nodejs' -v 'INSTANCE_TYPE'
+#   # 4. Extensions filter :
+#   hook -e 'nodejs'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
-#   # - $CWT_CUSTOM_DIR/nodejs<+semver>/<CWT_SUBJECTS>/<CWT_PREFIXES+sep><CWT_ACTIONS+sep>init<sep+CWT_VARIANTS>.hook.sh
+#   # (given INSTANCE_TYPE='prod')
+#   # - $CWT_CUSTOM_DIR/extensions/nodejs/<EXT_SUBJECTS>/<SUBJECT_ACTIONS>.prod.hook.sh
 #
-#   # 6. Prefixes filter :
-#   hook -a 'bootstrap' -x 'pre'
+#   # 5. Prefixes filter are exclusive by default, which means pure actions are
+#   #   not included. Ex :
+#   hook -a 'bootstrap' -p 'pre'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
-#   # See 1. but only with provided prefixes.
-#
-#   # 7. TODO evaluate removal of NAMESPACE filter.
+#   # (given INSTANCE_TYPE='prod')
+#   # - cwt/<CWT_SUBJECTS>/pre_bootstrap.hook.sh
+#   # - cwt/<CWT_SUBJECTS>/pre_bootstrap.prod.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/pre_bootstrap.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/pre_bootstrap.prod.hook.sh
 #
 # We exceptionally name that function without following the usual convention.
 #
@@ -93,9 +117,9 @@ hook() {
   local p_subjects_filter
   local p_prefixes_filter
   local p_variants_filter
-  local p_presets_filter
-  # local p_namespace_filter # [wip] evaluate merging namespace and preset for current purpose.
+  local p_extensions_filter
   local p_debug
+  local p_dry_run
 
   # Parse current function arguments.
   # See https://stackoverflow.com/a/31443098
@@ -104,12 +128,12 @@ hook() {
       # Format : 1 dash + arg 'name' + space + value.
       -a) p_actions_filter="$2"; shift 2;;
       -s) p_subjects_filter="$2"; shift 2;;
-      -x) p_prefixes_filter="$2"; shift 2;;
+      -p) p_prefixes_filter="$2"; shift 2;;
       -v) p_variants_filter="$2"; shift 2;;
-      -p) p_presets_filter="$2"; shift 2;;
-      # -n) p_namespace_filter="$2"; shift 2;; # [wip] evaluate merging namespace and preset for current purpose.
+      -e) p_extensions_filter="$2"; shift 2;;
       # Flag (arg without any value).
       -d) p_debug=1; shift 1;;
+      -t) p_dry_run=1; shift 1;;
       # Warn for unhandled arguments.
       -*) echo "Error in $BASH_SOURCE line $LINENO: unknown option: $1" >&2; return;;
       *) echo "Notice in $BASH_SOURCE line $LINENO: unsupported unnamed argument: $1" >&2; shift 1;;
@@ -117,9 +141,9 @@ hook() {
   done
 
   # Enforce minimum conditions for triggering hook (see 5 in function docblock).
-  if [[ (-z "$p_actions_filter") && (-z "$p_presets_filter") && (-z "$p_variants_filter") ]]; then
+  if [[ -z "$p_actions_filter" ]] && [[ -z "$p_extensions_filter" ]] && [[ -z "$p_variants_filter" ]]; then
     echo
-    echo "Error in $BASH_SOURCE line $LINENO: cannot trigger hook without either 1 action filter (or 1 preset + 1 variant)." >&2
+    echo "Error in $BASH_SOURCE line $LINENO: cannot trigger hook without either 1 action filter (or 1 extension + 1 variant)." >&2
     echo "-> Aborting." >&2
     echo
     return 1
@@ -127,68 +151,75 @@ hook() {
 
   local subjects="$CWT_SUBJECTS"
   local actions="$CWT_ACTIONS"
-  local variants="$CWT_VARIANTS"
-  local presets="$CWT_PRESETS"
-  local prefixes="$CWT_PREFIXES"
+  local extensions="$CWT_EXTENSIONS"
+  local variants=""
+  local prefixes=""
 
   local base_paths=("cwt")
-  local presets_dir="$CWT_CUSTOM_DIR/presets"
-  local preset
+  local extensions_dir="$CWT_CUSTOM_DIR/extensions"
+  local extension
   local lowercase
   local uppercase
 
-  # Allow using only a particular preset (see the '-p' argument).
-  if [[ -n "$p_preset_filter" ]]; then
-    for preset in $p_preset_filter; do
-      uppercase="$preset"
+  # Allow using only a particular extension (see the '-p' argument).
+  if [[ -n "$p_extensions_filter" ]]; then
+    for extension in $p_extensions_filter; do
+      uppercase="$extension"
       u_str_uppercase
       uppercase="${uppercase//\./_}"
       uppercase="${uppercase//-/_}"
       eval "subjects=\"\$${uppercase}_SUBJECTS\""
       eval "actions=\"\$${uppercase}_ACTIONS\""
-      eval "prefixes=\"\$${uppercase}_PREFIXES\""
-      eval "variants=\"\$${uppercase}_VARIANTS\""
       # Override base path for lookups.
-      base_paths=("$presets_dir/$preset")
+      base_paths=("$extensions_dir/$extension")
     done
 
-  # By default, any preset can append its own "primitives".
-  # NB : this process will create duplicates e.g. when preset has identical
+  # By default, any extension can append its own "primitives".
+  # NB : this process will create duplicates e.g. when extension has identical
   # subject(s) than cwt core. They are dealt with below.
   # @see u_cwt_extend()
-  elif [[ -n "$presets" ]]; then
-    for preset in $presets; do
-      uppercase="$preset"
+  elif [[ -n "$extensions" ]]; then
+    for extension in $extensions; do
+      uppercase="$extension"
       u_str_uppercase
       uppercase="${uppercase//\./_}"
       uppercase="${uppercase//-/_}"
       eval "subjects+=\" \$${uppercase}_SUBJECTS\""
       eval "actions+=\" \$${uppercase}_ACTIONS\""
-      eval "prefixes+=\" \$${uppercase}_PREFIXES\""
-      eval "variants+=\" \$${uppercase}_VARIANTS\""
-      # Every preset defines an additional base path for lookups.
-      base_paths+=("$presets_dir/$preset")
+      # Every extension defines an additional base path for lookups.
+      base_paths+=("$extensions_dir/$extension")
     done
   fi
 
   # Triggering a hook requires subjects and actions.
   if [[ -z "$subjects" ]]; then
-    echo
+    echo >&2
     echo "Error in $BASH_SOURCE line $LINENO: cannot trigger hook without any subjects." >&2
     echo "-> Aborting." >&2
-    echo
+    echo >&2
     return 2
   fi
   if [[ -z "$actions" ]]; then
-    echo
+    echo >&2
     echo "Error in $BASH_SOURCE line $LINENO: cannot trigger hook without any actions." >&2
     echo "-> Aborting." >&2
-    echo
+    echo >&2
     return 3
   fi
 
+  # exclusives allows restriction by primitive. By default, when a prefix
+  # is used, it becomes exclusive unless overridden using the '-o' arg.
+  # Update : #YAGNI -> simple flag for prefixes (see after filters part below).
+  # if [[ -n "$p_exclusive_filter" ]]; then
+  #   for exclusive in $p_exclusives_filter; do
+  #     exclusives+="$exclusive "
+  #   done
+  # else
+  #   exclusives="prefix"
+  # fi
+
   # Apply filters.
-  local filters='subjects actions prefixes variants' # TODO check order is respected.
+  local filters='subjects actions prefixes variants'
   local f
   local f_arg
   local s
@@ -200,7 +231,7 @@ hook() {
 
   for f in $filters; do
 
-    # Use the same loop to remove potential duplicate values (cf. presets above).
+    # Use the same loop to remove potential duplicate values (cf. extensions above).
     eval "dedup=\"\$$f\""
     dedup_arr=()
     for dedup_val in $dedup; do
@@ -218,23 +249,24 @@ hook() {
     case "$f" in
       subjects)
         for arg_val in $f_arg; do
-          eval "$f+=\" $f_arg \""
+          eval "$f+=\"$arg_val \""
         done
       ;;
       actions)
         for arg_val in $f_arg; do
           for s in $subjects; do
-            eval "$f+=\" $s/$f_arg \""
+            eval "$f+=\"$s/$arg_val \""
           done
         done
       ;;
       prefixes|variants)
+        # for arg_val in $f_arg; do
+        #   for a in $actions; do
+        #     eval "$f+=\"$a/$arg_val \""
+        #   done
+        # done
         for arg_val in $f_arg; do
-          for s in $subjects; do
-            for a in $actions; do
-              eval "$f+=\" $s/$a/$f_arg \""
-            done
-          done
+          eval "$f+=\"$arg_val \""
         done
       ;;
     esac
@@ -250,7 +282,7 @@ hook() {
 
   # Debug.
   if [[ $p_debug == 1 ]]; then
-    u_autoload_print_lookup_paths lookup_paths "hook -a '$p_actions_filter' -s '$p_subjects_filter' -x '$p_prefixes_filter' -v '$p_variants_filter' -p '$p_presets_filter'"
+    u_autoload_print_lookup_paths lookup_paths "hook -a '$p_actions_filter' -s '$p_subjects_filter' -p '$p_prefixes_filter' -v '$p_variants_filter' -e '$p_extensions_filter'"
   fi
 
   # Source each file include (with optional override mecanism).
@@ -258,18 +290,28 @@ hook() {
   local inc
   for inc in "${lookup_paths[@]}"; do
     if [[ -f "$inc" ]]; then
-      eval $(u_autoload_override "$inc" 'continue')
+
+      # Note : for tests, the "dry run" option prevents "override" alterations.
+      # @see cwt/test/cwt/hook.test.sh
+      if [[ $p_dry_run == 1 ]]; then
+        inc_dry_run_files_list+="$inc "
+        continue
+      fi
+
+      u_autoload_override "$inc" 'continue'
+      eval "$inc_override_evaled_code"
+
       . "$inc"
     fi
-    # TODO build matching function names to call ?
   done
 }
 
 ##
-# Adds lookup paths by subject.
+# Adds hook lookup paths by subject.
 #
-# TODO we *could* have every subject implement every other subjects' hooks,
-# if we wanted to. E.g. env/app_bootstrap.hook.sh, etc.
+# Side note : we could have every subject implement every other subjects' hooks,
+# if we wanted to. E.g. env/app_bootstrap.hook.sh, etc. - but #YAGNI (mentionned
+# here for potential future re-evaluation).
 #
 # @requires the following vars in calling scope :
 # - $base_paths
@@ -280,8 +322,10 @@ hook() {
 # @uses the following optional vars in calling scope if available :
 # - $prefixes
 # - $variants
+# - $p_prefixes_filter
 #
 # @see hook()
+# @see u_autoload_add_lookup_level()
 #
 u_hook_build_lookup_by_subject() {
   local p_subject="$1"
@@ -294,10 +338,8 @@ u_hook_build_lookup_by_subject() {
 
   local x_prim
   local x_parts_arr
-  local x
+  local x_val
   local x_values
-  local x_fallback
-  local x_fallback_values='pre post'
 
   local v_prim
   local v_parts_arr
@@ -306,530 +348,80 @@ u_hook_build_lookup_by_subject() {
   local v_val
   local v_flag
   local v_fallback
-  local v_fallback_values='PROVISION_USING INSTANCE_TYPE'
+
+  # These comments illustrate possible changes for default variants (left here
+  # intentionally for potential future re-evaluation).
+  # local v_fallback_values='PROVISION_USING INSTANCE_TYPE HOST_TYPE'
+  # local v_fallback_values='PROVISION_USING INSTANCE_TYPE'
+  # local v_fallback_values='INSTANCE_TYPE HOST_TYPE'
+  local v_fallback_values='INSTANCE_TYPE'
 
   for bp in "${base_paths[@]}"; do
     for a_path in $actions; do
 
       # Ignore actions not "belonging" to current subject.
       case "$a_path" in "$p_subject"*)
-        lookup_paths+=("$bp/${a_path}.hook.sh")
+
+        # First, add "pure" actions suggestions - unless excluded (see prefixes).
+        if [[ -e "$p_prefixes_filter" ]]; then
+          lookup_paths+=("$bp/${a_path}.hook.sh")
+        fi
 
         u_str_split1 a_parts_arr "$a_path" '/'
         a="${a_parts_arr[1]}"
 
-        # "prefixes" and "variants" primitives are special : unless nothing
-        # explicitly alters them (see dotfiles by subject + by action in
-        # cwt/utilities/cwt.sh), hardcoded fallback values are used to generate
-        # new lookup paths automatically.
-        # NB : we rely on the invariability of the "positions" of primitives'
-        # values - e.g. subjects MUST always be 1st, actions MUST always be
-        # 2nd, and prefixes + variants MUST always come last.
-        # @see u_cwt_extend()
-        # TODO see if we can process dotfiles only once here (all at once).
-        x_fallback=1
-        v_fallback=1
-
-        for x_prim in $prefixes; do
-          case "$x_prim" in "$bp/$a_path"*)
-            x_fallback=0
-            u_str_split1 x_parts_arr "$x_prim" '/'
-            x="${x_parts_arr[2]}"
-            lookup_paths+=("$bp/$p_subject/${x}_${a}.hook.sh")
-            x_values+="$x "
-          esac
+        # Then add "prefixed" actions suggestions.
+        for x_val in $prefixes; do
+          lookup_paths+=("$bp/$p_subject/${x_val}_${a}.hook.sh")
         done
 
+        # Finally, add the variants suggestions.
+        # The "variants" primitive has overridable fallback value(s) used to
+        # generate extra lookup paths by default (v_fallback_values).
+        # @see u_cwt_extend()
+        v_fallback=1
+
         for v_prim in $variants; do
-          case "$v_prim" in "$bp/$a_path"*)
-            v_fallback=0
-            u_str_split1 v_parts_arr "$v_prim" '/'
-            v="${v_parts_arr[2]}"
-            eval "v_val=\"\$$v_prim\""
-            # u_autoload_add_lookup_level "$bp/$p_subject/" "${a}.hook.sh" "$v_val" lookup_paths '' '/'
-            u_autoload_add_lookup_level "$bp/$p_subject/${a}." "hook.sh" "$v_val" lookup_paths
+          v_fallback=0
+          eval "v_val=\"\$$v_prim\""
+          if [[ "$v_values" != *"$v_val"* ]]; then
             v_values+="$v_val "
-          esac
+          fi
         done
 
         # If nothing specific was found by now, fallback to dynamic lookup
-        # generation for prefixes and variants.
-        if [[ $x_fallback == 1 ]]; then
-          for x in $x_fallback_values; do
-            lookup_paths+=("$bp/$p_subject/${x}_${a}.hook.sh")
-            x_values+="$x "
-          done
-        fi
-        if [[ $v_fallback == 1 ]]; then
+        # generation for variants.
+        # specify if it's justified to look for certain variants or prefixes by
+        # using corresponding arguments in hook().
+        if [[ $v_fallback -eq 1 ]]; then
           for v in $v_fallback_values; do
             eval "v_val=\"\$$v\""
-            # u_autoload_add_lookup_level "$bp/$p_subject/" "${a}.hook.sh" "$v_val" lookup_paths '' '/'
-            u_autoload_add_lookup_level "$bp/$p_subject/${a}." "hook.sh" "$v_val" lookup_paths
-            v_values+="$v_val "
+            if [[ "$v_values" != *"$v_val"* ]]; then
+              v_values+="$v_val "
+            fi
           done
         fi
 
-        # Implement prefix + variant lookup paths e.g. :
+        # Now that we fetched variants actual values, add them as as suggestions
+        # unless excluded (see prefixes). These are combinatory, e.g. :
+        # - init.dev.local.hook.sh
+        # - bootstrap.docker-compose.dev.hook.sh
+        # - bootstrap.docker-compose.prod.remote.hook.sh
+        u_str_subsequences "$v_values" '.'
+        if [[ -e "$p_prefixes_filter" ]]; then
+          for v_val in $str_subsequences; do
+            u_autoload_add_lookup_level "$bp/$p_subject/${a}." "hook.sh" "$v_val" lookup_paths
+          done
+        fi
+
+        # Implement prefix + variant lookup paths, e.g. :
         # pre_bootstrap.docker-compose.hook.sh
-        for x in $x_values; do
-          for v_val in $v_values; do
-            u_autoload_add_lookup_level "$bp/$p_subject/${x}_${a}." "hook.sh" "$v_val" lookup_paths
+        for x_val in $prefixes; do
+          for v_val in $str_subsequences; do
+            u_autoload_add_lookup_level "$bp/$p_subject/${x_val}_${a}." "hook.sh" "$v_val" lookup_paths
           done
         done
       esac
     done
-  done
-}
-
-##
-# TODO [wip] Adds lookup paths by preset.
-#
-# @requires the following vars in calling scope :
-# - $lookup_paths
-# - $filters
-# - $actions
-# - $subjects
-#
-# @uses the following optional vars in calling scope if available :
-# - $prefixes
-# - $variants
-#
-# @see hook()
-#
-u_hook_build_lookup_by_preset() {
-  local p_path="$1"
-
-  echo "  u_hook_build_lookup_by_preset $@"
-
-  # lookup_paths+=("$p_path/${p_subject}/${p_event}.hook.sh")
-  # u_autoload_add_lookup_level "$p_path/${p_subject}/" "${p_event}.hook.sh" "$PROVISION_USING" lookup_paths '' '/'
-
-  # lookup_paths+=("$p_path/${p_subject}_${p_event}.hook.sh")
-  # u_autoload_add_lookup_level "$p_path/${p_subject}_${p_event}." "hook.sh" "$PROVISION_USING" lookup_paths
-}
-
-
-##
-# Sources scripts for specific app.
-#
-# @requires the following global in calling scope :
-# - $PROJECT_STACK
-# - $PROVISION_USING
-#
-# @param 1 String : prefix for hook files lookups.
-# @param 2 String : suffix for hook files lookups.
-# @param 3 [optional] String : additional variant for hook files lookups.
-# @param 4 [optional] String : additional "base" lookups.
-#
-# @example
-#   PROJECT_STACK='drupal-8.4--p-contenta-1,redis,solr'
-#   PROVISION_USING='docker-compose'
-#
-#   u_hook_app 'apply' 'ownership_and_perms'
-#
-#   # Yields the following lookup paths :
-#     cwt/app/drupal/apply/ownership_and_perms.hook.sh
-#     cwt/app/drupal/apply/docker-compose/ownership_and_perms.hook.sh
-#     cwt/app/drupal/apply_ownership_and_perms.hook.sh
-#     cwt/app/drupal/apply_ownership_and_perms.docker-compose.hook.sh
-#     cwt/app/drupal/8/apply/ownership_and_perms.hook.sh
-#     cwt/app/drupal/8/apply/docker-compose/ownership_and_perms.hook.sh
-#     cwt/app/drupal/8/apply_ownership_and_perms.hook.sh
-#     cwt/app/drupal/8/apply_ownership_and_perms.docker-compose.hook.sh
-#     cwt/app/drupal/8/4/apply/ownership_and_perms.hook.sh
-#     cwt/app/drupal/8/4/apply/docker-compose/ownership_and_perms.hook.sh
-#     cwt/app/drupal/8/4/apply_ownership_and_perms.hook.sh
-#     cwt/app/drupal/8/4/apply_ownership_and_perms.docker-compose.hook.sh
-#     cwt/app/drupal/presets/contenta/apply/ownership_and_perms.hook.sh
-#     cwt/app/drupal/presets/contenta/apply/docker-compose/ownership_and_perms.hook.sh
-#     cwt/app/drupal/presets/contenta/apply_ownership_and_perms.hook.sh
-#     cwt/app/drupal/presets/contenta/apply_ownership_and_perms.docker-compose.hook.sh
-#     cwt/app/drupal/presets/contenta/1/apply/ownership_and_perms.hook.sh
-#     cwt/app/drupal/presets/contenta/1/apply/docker-compose/ownership_and_perms.hook.sh
-#     cwt/app/drupal/presets/contenta/1/apply_ownership_and_perms.hook.sh
-#     cwt/app/drupal/presets/contenta/1/apply_ownership_and_perms.docker-compose.hook.sh
-#     cwt/app/drupal/8/presets/contenta/apply/ownership_and_perms.hook.sh
-#     cwt/app/drupal/8/presets/contenta/apply/docker-compose/ownership_and_perms.hook.sh
-#     cwt/app/drupal/8/presets/contenta/apply_ownership_and_perms.hook.sh
-#     cwt/app/drupal/8/presets/contenta/apply_ownership_and_perms.docker-compose.hook.sh
-#     cwt/app/drupal/8/presets/contenta/1/apply/ownership_and_perms.hook.sh
-#     cwt/app/drupal/8/presets/contenta/1/apply/docker-compose/ownership_and_perms.hook.sh
-#     cwt/app/drupal/8/presets/contenta/1/apply_ownership_and_perms.hook.sh
-#     cwt/app/drupal/8/presets/contenta/1/apply_ownership_and_perms.docker-compose.hook.sh
-#     cwt/app/drupal/8/4/presets/contenta/apply/ownership_and_perms.hook.sh
-#     cwt/app/drupal/8/4/presets/contenta/apply/docker-compose/ownership_and_perms.hook.sh
-#     cwt/app/drupal/8/4/presets/contenta/apply_ownership_and_perms.hook.sh
-#     cwt/app/drupal/8/4/presets/contenta/apply_ownership_and_perms.docker-compose.hook.sh
-#     cwt/app/drupal/8/4/presets/contenta/1/apply/ownership_and_perms.hook.sh
-#     cwt/app/drupal/8/4/presets/contenta/1/apply/docker-compose/ownership_and_perms.hook.sh
-#     cwt/app/drupal/8/4/presets/contenta/1/apply_ownership_and_perms.hook.sh
-#     cwt/app/drupal/8/4/presets/contenta/1/apply_ownership_and_perms.docker-compose.hook.sh
-#     cwt/custom/presets/contenta/apply/ownership_and_perms.hook.sh
-#     cwt/custom/presets/contenta/apply/docker-compose/ownership_and_perms.hook.sh
-#     cwt/custom/presets/contenta/apply_ownership_and_perms.hook.sh
-#     cwt/custom/presets/contenta/apply_ownership_and_perms.docker-compose.hook.sh
-#     cwt/custom/presets/contenta/1/apply/ownership_and_perms.hook.sh
-#     cwt/custom/presets/contenta/1/apply/docker-compose/ownership_and_perms.hook.sh
-#     cwt/custom/presets/contenta/1/apply_ownership_and_perms.hook.sh
-#     cwt/custom/presets/contenta/1/apply_ownership_and_perms.docker-compose.hook.sh
-#
-u_hook_app() {
-  if [[ -z "$APP" ]]; then
-    u_stack_get_specs "$PROJECT_STACK"
-  fi
-
-  local lookup_subjects="app app/$APP $CWT_CUSTOM_DIR"
-  if [[ -n "$4" ]]; then
-    lookup_subjects+=" $4"
-  fi
-
-  # Also match app version specific scripts.
-  if [[ -n "$APP_VERSION" ]]; then
-    local app_v=''
-    local app_version_arr=()
-    local app_path="app/$APP"
-    u_str_split1 app_version_arr "$APP_VERSION" '.'
-
-    for app_v in "${app_version_arr[@]}"; do
-      app_path+="/$app_v"
-      lookup_subjects+=" $app_path"
-    done
-  fi
-
-  u_hook "$1" "$2" "$3" "$lookup_subjects"
-}
-
-##
-# Sources scripts matching specific path & filename by subject + event (phase).
-#
-# @requires the following global in calling scope :
-# - $PROJECT_STACK
-# - $PROVISION_USING
-#
-# @param 1 String : the "subject" (app, env, git, provision, remote, stack).
-# @param 2 String : the event name.
-# @param 3 [optional] String : the event "phase".
-# @param 4 [optional] String : subjects lookup (base paths).
-#
-# @example 1 : event only
-#
-#   PROJECT_STACK='drupal-8.4--p-contenta-1,redis,solr'
-#   PROVISION_USING='docker-compose'
-#   u_hook 'stack' 'setup'
-#
-#   # Yields the following lookup paths :
-#     cwt/app/stack/setup.hook.sh
-#     cwt/app/stack/docker-compose/setup.hook.sh
-#     cwt/app/stack_setup.hook.sh
-#     cwt/app/stack_setup.docker-compose.hook.sh
-#     cwt/env/stack/setup.hook.sh
-#     cwt/env/stack/docker-compose/setup.hook.sh
-#     cwt/env/stack_setup.hook.sh
-#     cwt/env/stack_setup.docker-compose.hook.sh
-#     cwt/git/stack/setup.hook.sh
-#     cwt/git/stack/docker-compose/setup.hook.sh
-#     cwt/git/stack_setup.hook.sh
-#     cwt/git/stack_setup.docker-compose.hook.sh
-#     cwt/provision/stack/setup.hook.sh
-#     cwt/provision/stack/docker-compose/setup.hook.sh
-#     cwt/provision/stack_setup.hook.sh
-#     cwt/provision/stack_setup.docker-compose.hook.sh
-#     cwt/remote/stack/setup.hook.sh
-#     cwt/remote/stack/docker-compose/setup.hook.sh
-#     cwt/remote/stack_setup.hook.sh
-#     cwt/remote/stack_setup.docker-compose.hook.sh
-#     cwt/stack/docker-compose/setup.hook.sh
-#     cwt/stack/docker-compose.setup.hook.sh
-#     cwt/app/presets/contenta/stack/setup.hook.sh
-#     cwt/app/presets/contenta/stack/docker-compose/setup.hook.sh
-#     cwt/app/presets/contenta/stack_setup.hook.sh
-#     cwt/app/presets/contenta/stack_setup.docker-compose.hook.sh
-#     cwt/app/presets/contenta/1/stack/setup.hook.sh
-#     cwt/app/presets/contenta/1/stack/docker-compose/setup.hook.sh
-#     cwt/app/presets/contenta/1/stack_setup.hook.sh
-#     cwt/app/presets/contenta/1/stack_setup.docker-compose.hook.sh
-#     cwt/env/presets/contenta/stack/setup.hook.sh
-#     cwt/env/presets/contenta/stack/docker-compose/setup.hook.sh
-#     cwt/env/presets/contenta/stack_setup.hook.sh
-#     cwt/env/presets/contenta/stack_setup.docker-compose.hook.sh
-#     cwt/env/presets/contenta/1/stack/setup.hook.sh
-#     cwt/env/presets/contenta/1/stack/docker-compose/setup.hook.sh
-#     cwt/env/presets/contenta/1/stack_setup.hook.sh
-#     cwt/env/presets/contenta/1/stack_setup.docker-compose.hook.sh
-#     cwt/git/presets/contenta/stack/setup.hook.sh
-#     cwt/git/presets/contenta/stack/docker-compose/setup.hook.sh
-#     cwt/git/presets/contenta/stack_setup.hook.sh
-#     cwt/git/presets/contenta/stack_setup.docker-compose.hook.sh
-#     cwt/git/presets/contenta/1/stack/setup.hook.sh
-#     cwt/git/presets/contenta/1/stack/docker-compose/setup.hook.sh
-#     cwt/git/presets/contenta/1/stack_setup.hook.sh
-#     cwt/git/presets/contenta/1/stack_setup.docker-compose.hook.sh
-#     cwt/provision/presets/contenta/stack/setup.hook.sh
-#     cwt/provision/presets/contenta/stack/docker-compose/setup.hook.sh
-#     cwt/provision/presets/contenta/stack_setup.hook.sh
-#     cwt/provision/presets/contenta/stack_setup.docker-compose.hook.sh
-#     cwt/provision/presets/contenta/1/stack/setup.hook.sh
-#     cwt/provision/presets/contenta/1/stack/docker-compose/setup.hook.sh
-#     cwt/provision/presets/contenta/1/stack_setup.hook.sh
-#     cwt/provision/presets/contenta/1/stack_setup.docker-compose.hook.sh
-#     cwt/remote/presets/contenta/stack/setup.hook.sh
-#     cwt/remote/presets/contenta/stack/docker-compose/setup.hook.sh
-#     cwt/remote/presets/contenta/stack_setup.hook.sh
-#     cwt/remote/presets/contenta/stack_setup.docker-compose.hook.sh
-#     cwt/remote/presets/contenta/1/stack/setup.hook.sh
-#     cwt/remote/presets/contenta/1/stack/docker-compose/setup.hook.sh
-#     cwt/remote/presets/contenta/1/stack_setup.hook.sh
-#     cwt/remote/presets/contenta/1/stack_setup.docker-compose.hook.sh
-#     cwt/stack/presets/contenta/stack/setup.hook.sh
-#     cwt/stack/presets/contenta/stack/docker-compose/setup.hook.sh
-#     cwt/stack/presets/contenta/stack_setup.hook.sh
-#     cwt/stack/presets/contenta/stack_setup.docker-compose.hook.sh
-#     cwt/stack/presets/contenta/1/stack/setup.hook.sh
-#     cwt/stack/presets/contenta/1/stack/docker-compose/setup.hook.sh
-#     cwt/stack/presets/contenta/1/stack_setup.hook.sh
-#     cwt/stack/presets/contenta/1/stack_setup.docker-compose.hook.sh
-#     cwt/custom/presets/contenta/stack/setup.hook.sh
-#     cwt/custom/presets/contenta/stack/docker-compose/setup.hook.sh
-#     cwt/custom/presets/contenta/stack_setup.hook.sh
-#     cwt/custom/presets/contenta/stack_setup.docker-compose.hook.sh
-#     cwt/custom/presets/contenta/1/stack/setup.hook.sh
-#     cwt/custom/presets/contenta/1/stack/docker-compose/setup.hook.sh
-#     cwt/custom/presets/contenta/1/stack_setup.hook.sh
-#     cwt/custom/presets/contenta/1/stack_setup.docker-compose.hook.sh
-#
-#
-# @example 2 : event + phase
-#
-#   PROJECT_STACK='drupal-8.4--p-contenta-1,redis,solr'
-#   PROVISION_USING='docker-compose'
-#   u_hook 'stack' 'init' 'post'
-#
-#   # Yields the following lookup paths :
-#     cwt/app/stack/post_init.hook.sh
-#     cwt/app/stack/docker-compose/post_init.hook.sh
-#     cwt/app/stack_post_init.hook.sh
-#     cwt/app/stack_post_init.docker-compose.hook.sh
-#     cwt/env/stack/post_init.hook.sh
-#     cwt/env/stack/docker-compose/post_init.hook.sh
-#     cwt/env/stack_post_init.hook.sh
-#     cwt/env/stack_post_init.docker-compose.hook.sh
-#     cwt/git/stack/post_init.hook.sh
-#     cwt/git/stack/docker-compose/post_init.hook.sh
-#     cwt/git/stack_post_init.hook.sh
-#     cwt/git/stack_post_init.docker-compose.hook.sh
-#     cwt/provision/stack/post_init.hook.sh
-#     cwt/provision/stack/docker-compose/post_init.hook.sh
-#     cwt/provision/stack_post_init.hook.sh
-#     cwt/provision/stack_post_init.docker-compose.hook.sh
-#     cwt/remote/stack/post_init.hook.sh
-#     cwt/remote/stack/docker-compose/post_init.hook.sh
-#     cwt/remote/stack_post_init.hook.sh
-#     cwt/remote/stack_post_init.docker-compose.hook.sh
-#     cwt/stack/docker-compose.post_init.hook.sh
-#     cwt/stack/docker-compose/post_init.hook.sh
-#     cwt/app/presets/contenta/stack/post_init.hook.sh
-#     cwt/app/presets/contenta/stack/docker-compose/post_init.hook.sh
-#     cwt/app/presets/contenta/stack_post_init.hook.sh
-#     cwt/app/presets/contenta/stack_post_init.docker-compose.hook.sh
-#     cwt/app/presets/contenta/1/stack/post_init.hook.sh
-#     cwt/app/presets/contenta/1/stack/docker-compose/post_init.hook.sh
-#     cwt/app/presets/contenta/1/stack_post_init.hook.sh
-#     cwt/app/presets/contenta/1/stack_post_init.docker-compose.hook.sh
-#     cwt/env/presets/contenta/stack/post_init.hook.sh
-#     cwt/env/presets/contenta/stack/docker-compose/post_init.hook.sh
-#     cwt/env/presets/contenta/stack_post_init.hook.sh
-#     cwt/env/presets/contenta/stack_post_init.docker-compose.hook.sh
-#     cwt/env/presets/contenta/1/stack/post_init.hook.sh
-#     cwt/env/presets/contenta/1/stack/docker-compose/post_init.hook.sh
-#     cwt/env/presets/contenta/1/stack_post_init.hook.sh
-#     cwt/env/presets/contenta/1/stack_post_init.docker-compose.hook.sh
-#     cwt/git/presets/contenta/stack/post_init.hook.sh
-#     cwt/git/presets/contenta/stack/docker-compose/post_init.hook.sh
-#     cwt/git/presets/contenta/stack_post_init.hook.sh
-#     cwt/git/presets/contenta/stack_post_init.docker-compose.hook.sh
-#     cwt/git/presets/contenta/1/stack/post_init.hook.sh
-#     cwt/git/presets/contenta/1/stack/docker-compose/post_init.hook.sh
-#     cwt/git/presets/contenta/1/stack_post_init.hook.sh
-#     cwt/git/presets/contenta/1/stack_post_init.docker-compose.hook.sh
-#     cwt/provision/presets/contenta/stack/post_init.hook.sh
-#     cwt/provision/presets/contenta/stack/docker-compose/post_init.hook.sh
-#     cwt/provision/presets/contenta/stack_post_init.hook.sh
-#     cwt/provision/presets/contenta/stack_post_init.docker-compose.hook.sh
-#     cwt/provision/presets/contenta/1/stack/post_init.hook.sh
-#     cwt/provision/presets/contenta/1/stack/docker-compose/post_init.hook.sh
-#     cwt/provision/presets/contenta/1/stack_post_init.hook.sh
-#     cwt/provision/presets/contenta/1/stack_post_init.docker-compose.hook.sh
-#     cwt/remote/presets/contenta/stack/post_init.hook.sh
-#     cwt/remote/presets/contenta/stack/docker-compose/post_init.hook.sh
-#     cwt/remote/presets/contenta/stack_post_init.hook.sh
-#     cwt/remote/presets/contenta/stack_post_init.docker-compose.hook.sh
-#     cwt/remote/presets/contenta/1/stack/post_init.hook.sh
-#     cwt/remote/presets/contenta/1/stack/docker-compose/post_init.hook.sh
-#     cwt/remote/presets/contenta/1/stack_post_init.hook.sh
-#     cwt/remote/presets/contenta/1/stack_post_init.docker-compose.hook.sh
-#     cwt/stack/presets/contenta/stack/post_init.hook.sh
-#     cwt/stack/presets/contenta/stack/docker-compose/post_init.hook.sh
-#     cwt/stack/presets/contenta/stack_post_init.hook.sh
-#     cwt/stack/presets/contenta/stack_post_init.docker-compose.hook.sh
-#     cwt/stack/presets/contenta/1/stack/post_init.hook.sh
-#     cwt/stack/presets/contenta/1/stack/docker-compose/post_init.hook.sh
-#     cwt/stack/presets/contenta/1/stack_post_init.hook.sh
-#     cwt/stack/presets/contenta/1/stack_post_init.docker-compose.hook.sh
-#     cwt/custom/presets/contenta/stack/post_init.hook.sh
-#     cwt/custom/presets/contenta/stack/docker-compose/post_init.hook.sh
-#     cwt/custom/presets/contenta/stack_post_init.hook.sh
-#     cwt/custom/presets/contenta/stack_post_init.docker-compose.hook.sh
-#     cwt/custom/presets/contenta/1/stack/post_init.hook.sh
-#     cwt/custom/presets/contenta/1/stack/docker-compose/post_init.hook.sh
-#     cwt/custom/presets/contenta/1/stack_post_init.hook.sh
-#     cwt/custom/presets/contenta/1/stack_post_init.docker-compose.hook.sh
-#
-u_hook() {
-  local p_subject="$1"
-  local p_event="$2"
-  local p_phase="$3"
-  local p_lookup_subjects="$4"
-
-  local lookup_paths=()
-  local lookup_subject=''
-  local lookup_subjects='app env git provision remote stack'
-  if [[ -n "$p_lookup_subjects" ]]; then
-    lookup_subjects="$p_lookup_subjects"
-  fi
-
-  local stack_preset=''
-  local sp_arr=()
-  local sp_v=''
-  local sp_path=''
-  u_stack_get_presets "$PROJECT_STACK"
-
-  # When hook is event only.
-  if [[ -z "$p_phase" ]]; then
-    for lookup_subject in $lookup_subjects; do
-      if [[ "$lookup_subject" != "$p_subject" ]]; then
-        u_hook_add_e_lookup_variants "cwt/$lookup_subject"
-      else
-        u_autoload_add_lookup_level "cwt/${p_subject}/" "${p_event}.hook.sh" "$PROVISION_USING" lookup_paths '' '/'
-        u_autoload_add_lookup_level "cwt/${p_subject}/" "${p_event}.hook.sh" "$PROVISION_USING" lookup_paths
-      fi
-    done
-
-    u_hook_add_presets_lookup_variants 'event_only'
-
-  # When hook is event + phase.
-  else
-    for lookup_subject in $lookup_subjects; do
-
-      if [[ "$lookup_subject" != "$p_subject" ]]; then
-        u_hook_add_ep_lookup_variants "cwt/$lookup_subject"
-      else
-        u_autoload_add_lookup_level "cwt/${p_subject}/" "${p_phase}_${p_event}.hook.sh" "$PROVISION_USING" lookup_paths
-        u_autoload_add_lookup_level "cwt/${p_subject}/" "${p_phase}_${p_event}.hook.sh" "$PROVISION_USING" lookup_paths '' '/'
-      fi
-    done
-
-    u_hook_add_presets_lookup_variants 'event_phase'
-  fi
-
-  # Debug.
-  if [[ $P_VERBOSE == 1 ]]; then
-    u_autoload_print_lookup_paths lookup_paths "u_hook $p_subject $p_event $p_phase $p_lookup_subjects"
-  fi
-
-  local hook_script=''
-  for hook_script in "${lookup_paths[@]}"; do
-    if [[ -f "$hook_script" ]]; then
-      eval $(u_autoload_override "$hook_script" 'continue')
-      . "$hook_script"
-    fi
-    u_autoload_get_complement "$hook_script"
-  done
-}
-
-##
-# Adds event-only hook lookups variants.
-#
-# (internal lookups helper)
-#
-u_hook_add_e_lookup_variants() {
-  local p_path="$1"
-
-  lookup_paths+=("$p_path/${p_subject}/${p_event}.hook.sh")
-  u_autoload_add_lookup_level "$p_path/${p_subject}/" "${p_event}.hook.sh" "$PROVISION_USING" lookup_paths '' '/'
-
-  lookup_paths+=("$p_path/${p_subject}_${p_event}.hook.sh")
-  u_autoload_add_lookup_level "$p_path/${p_subject}_${p_event}." "hook.sh" "$PROVISION_USING" lookup_paths
-}
-
-##
-# Adds event + phase hook lookups variants.
-#
-# (internal lookups helper)
-#
-u_hook_add_ep_lookup_variants() {
-  local p_path="$1"
-
-  lookup_paths+=("$p_path/${p_subject}/${p_phase}_${p_event}.hook.sh")
-  u_autoload_add_lookup_level "$p_path/${p_subject}/" "${p_phase}_${p_event}.hook.sh" "$PROVISION_USING" lookup_paths '' '/'
-
-  lookup_paths+=("$p_path/${p_subject}_${p_phase}_${p_event}.hook.sh")
-  u_autoload_add_lookup_level "$p_path/${p_subject}_${p_phase}_${p_event}." "hook.sh" "$PROVISION_USING" lookup_paths
-}
-
-##
-# Adds presets-related hook lookups variants.
-#
-# (internal lookups helper)
-#
-u_hook_add_presets_lookup_variants() {
-  local p_type="$1"
-
-  for stack_preset in "${STACK_PRESETS[@]}"; do
-    u_instance_item_split_version sp_arr "$stack_preset"
-
-    if [[ -n "${sp_arr[1]}" ]]; then
-      for lookup_subject in $lookup_subjects; do
-        sp_path="cwt/${lookup_subject}/presets"
-        for sp_v in "${sp_arr[@]}"; do
-          sp_path+="/$sp_v"
-          case "$p_type" in
-            event_only)
-              u_hook_add_e_lookup_variants "$sp_path" ;;
-            event_phase)
-              u_hook_add_ep_lookup_variants "$sp_path" ;;
-          esac
-        done
-      done
-
-      sp_path="$(u_autoload_get_custom_dir)/presets"
-      for sp_v in "${sp_arr[@]}"; do
-        sp_path+="/$sp_v"
-        case "$p_type" in
-          event_only)
-            u_hook_add_e_lookup_variants "$sp_path" ;;
-          event_phase)
-            u_hook_add_ep_lookup_variants "$sp_path" ;;
-        esac
-      done
-
-    else
-      for lookup_subject in $lookup_subjects; do
-        sp_path="cwt/${lookup_subject}/presets/$stack_preset"
-        case "$p_type" in
-          event_only)
-            u_hook_add_e_lookup_variants "$sp_path" ;;
-          event_phase)
-            u_hook_add_ep_lookup_variants "$sp_path" ;;
-        esac
-      done
-
-      sp_path="$(u_autoload_get_custom_dir)/presets/$stack_preset"
-      case "$p_type" in
-        event_only)
-          u_hook_add_e_lookup_variants "$sp_path" ;;
-        event_phase)
-          u_hook_add_ep_lookup_variants "$sp_path" ;;
-      esac
-    fi
   done
 }

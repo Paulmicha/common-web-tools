@@ -3,7 +3,7 @@
 ##
 # Local file-based registry utility functions.
 #
-# This file is dynamically loaded.
+# This file is sourced during core CWT bootstrap.
 # @see cwt/utilities/registry.sh
 #
 # These utilies allow to store values or secrets for this instance in simple
@@ -58,7 +58,7 @@ u_registry_set_val() {
 # @param 2 String [optional] : the namespace to use for this registry entry.
 #   Can be 'host' or any string. Default: $INSTANCE_DOMAIN.
 #
-# @see u_check_once() in cwt/env/registry/file.sh
+# @see u_check_once()
 #
 u_file_registry_get_path() {
   local p_key="$1"

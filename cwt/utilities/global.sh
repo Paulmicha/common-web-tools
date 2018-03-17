@@ -5,7 +5,7 @@
 #
 # See cwt/env/README.md
 #
-# This file is dynamically loaded.
+# This file is sourced during core CWT bootstrap.
 # @see cwt/bootstrap.sh
 #
 # Convention : functions names are all prefixed by "u" (for "utility").
@@ -98,9 +98,13 @@ u_global_assign_value() {
   # Once prompt has been made, prevent repeated calls for this var (recursion).
   # @see cwt/stack/init/aggregate_env_vars.sh
   # Except for 'append' vars (multiple values must pile-up on each call).
-  if [[ ("${GLOBALS[$p_var|no_prompt]}" != 1) && (-z "$multi_values") ]]; then
-    GLOBALS[$p_var|no_prompt]=1
-    GLOBALS[$p_var|value]=$(eval "echo \"\$$p_var\"")
+  # TODO [wip] confirm workaround edge case (multiple declarations must override
+  # previous default value).
+  if [[ $P_YES == 0 ]]; then
+    if [[ ("${GLOBALS[$p_var|no_prompt]}" != 1) && (-z "$multi_values") ]]; then
+      GLOBALS[$p_var|no_prompt]=1
+      GLOBALS[$p_var|value]=$(eval "echo \"\$$p_var\"")
+    fi
   fi
 }
 
@@ -171,6 +175,8 @@ global() {
   local p_values="$2"
   local p_prevent_export="$3"
 
+  local index='0'
+
   if [[ -n "$p_values" ]]; then
 
     # If the value does not begin with '[', assume the var non-configurable.
@@ -189,6 +195,11 @@ global() {
         u_array_add_once "$key" GLOBALS_UNIQUE_KEYS
 
         case "$key" in
+
+          # Controls the order of assignment. Higher values defer later.
+          index)
+            index="${declaration_arr[$key]}"
+          ;;
 
           # Handles conditional declarations. Prevents declaring the variable
           # altogether if the depending variable's value does not match the one
@@ -254,7 +265,28 @@ global() {
 
     # This will be used to sort the array when complete.
     # See https://stackoverflow.com/a/39543809
-    GLOBALS['.sorting']+=" ${GLOBALS_COUNT}|${p_var_name} "
+    GLOBALS[".sorting"]+=" ${GLOBALS_COUNT}|${p_var_name} "
+  fi
+
+  # Provide control over value assignation order. Higher = later.
+  if [[ "$index" -gt "${GLOBALS['.defer-max']}" ]]; then
+    GLOBALS[".defer-max"]="$index"
+  fi
+
+  # Always defer global var declaration weighting more than 0 (default).
+  # NB : the 1st declaration of multiple 'append' global() calls for the same
+  # variable determines the index for all subsequent calls.
+  if [[ "$index" -gt '0' ]]; then
+    p_prevent_export='1'
+    if ! u_in_array $p_var_name GLOBALS_DEFERRED; then
+      GLOBALS_DEFERRED+=($p_var_name)
+    fi
+  # When previous declaration asked for deferred assignation, respect it even
+  # in subsequent declarations not specifying an index.
+  # TODO when the 1st declaration does not trigger deferred assignation and
+  # subsequent calls do, workaround : "unexport" ?
+  elif u_in_array $p_var_name GLOBALS_DEFERRED; then
+    p_prevent_export='1'
   fi
 
   # Immediately attempt to export that variable unless explicitly prevented.
@@ -262,6 +294,15 @@ global() {
   # need to adapt/react to each other).
   if [[ -z "$p_prevent_export" ]]; then
     u_global_assign_value "$p_var_name"
+
+  # When global var declaration is deferred, append to 1 list per index.
+  # @see cwt/stack/init/aggregate_env_vars.sh
+  elif [[ "$index" -gt '0' ]]; then
+    # We only need 1 assignation -> skip if already in list.
+    case "${GLOBALS[.defer-$index]}" in
+      *"${p_var_name}"*) return ;;
+    esac
+    GLOBALS[".defer-$index"]+=" ${p_var_name} "
   fi
 }
 

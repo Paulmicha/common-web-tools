@@ -3,17 +3,21 @@
 ##
 # App instance installation.
 #
+# This script is a generic example of a common app action.
+#
+# The predefined hook call below represents an operation meant to setup the
+# application if it requires e.g. a database to be initialiazed, an initial DB
+# dump to be imported, etc.
+#
 # @prereq stack services must be running (stack/start).
 #
-# Usage from project root dir :
-# $ . cwt/app/install.sh
+# @example
+#   cwt/app/install.sh
 #
 
-. cwt/env/load.sh
+. cwt/bootstrap.sh
 
-# TODO make hooks work for single arg.
-# P_VERBOSE=1
-u_hook_app 'install' 'local'
+hook -a 'install' -s 'app'
 
 # Allow custom complements for this script.
 u_autoload_get_complement "$BASH_SOURCE"

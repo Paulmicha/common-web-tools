@@ -3,15 +3,11 @@
 ##
 # Git local config setup.
 #
-# @see env/.git.env.dist
-#
-# Usage from project root dir :
-# $ . cwt/git/apply_config.sh
+# @example
+#   cwt/git/apply_config.sh
 #
 
-# Allow custom override for this script.
-eval `u_autoload_override "$BASH_SOURCE"`
-
+# TODO refacto by implementing another hook, e.g. post stack init.
 u_git_apply_config "$APP_GIT_WORK_TREE"
 
 # Allow custom complements for this script.

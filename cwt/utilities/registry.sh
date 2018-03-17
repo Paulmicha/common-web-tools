@@ -3,7 +3,7 @@
 ##
 # Local project registry.
 #
-# This script is dynamically loaded.
+# This file is sourced during core CWT bootstrap.
 # @see cwt/bootstrap.sh
 #
 # Loads the file containing registry Bash utility functions corresponding to

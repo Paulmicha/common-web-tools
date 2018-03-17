@@ -9,8 +9,8 @@
 #
 
 # Allow custom override for this script.
-eval `u_autoload_override "$BASH_SOURCE"`
-
+u_autoload_override "$BASH_SOURCE"
+eval "$inc_override_evaled_code"
 
 # echo "Restart docker service..."
 # service docker restart

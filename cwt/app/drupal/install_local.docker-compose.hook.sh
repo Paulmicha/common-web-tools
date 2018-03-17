@@ -46,7 +46,7 @@ $settings['hash_salt'] = '__replace_this_hash_salt_value__';
 
 $settings['file_public_path'] = '__replace_this_file_public_path_value__';
 $settings['file_private_path'] = '__replace_this_file_private_path_value__';
-$config['system.file']['path']['temporary'] = '__replace_this_system.file|path|temporary_value__';
+$config['system.file']['path']['temporary'] = '__replace_this_system_file_path_temporary_value__';
 
 EOF
 
@@ -55,9 +55,9 @@ EOF
 if [[ -f "$DRUPAL_LOCAL_SETTINGS" ]]; then
 
   hash_salt=$(u_random_str)
-  sed -e "s,__replace_this_file_public_path_value__,$hash_salt,g" -i "$DRUPAL_LOCAL_SETTINGS"
+  sed -e "s,__replace_this_hash_salt_value__,$hash_salt,g" -i "$DRUPAL_LOCAL_SETTINGS"
 
-  sed -e "s,__replace_this_hash_salt_value__,$DRUPAL_FILES_DIR,g" -i "$DRUPAL_LOCAL_SETTINGS"
-  sed -e "s,__replace_this_file_private_path_value__,$DRUPAL_PRIVATE_DIR,g" -i "$DRUPAL_LOCAL_SETTINGS"
-  sed -e "s,__replace_this_system\.file\|path\|temporary_value__,$DRUPAL_TMP_DIR,g" -i "$DRUPAL_LOCAL_SETTINGS"
+  sed -e "s,__replace_this_file_public_path_value__,$DRUPAL_FILES_DIR_C,g" -i "$DRUPAL_LOCAL_SETTINGS"
+  sed -e "s,__replace_this_file_private_path_value__,$DRUPAL_PRIVATE_DIR_C,g" -i "$DRUPAL_LOCAL_SETTINGS"
+  sed -e "s,__replace_this_system_file_path_temporary_value__,$DRUPAL_TMP_DIR_C,g" -i "$DRUPAL_LOCAL_SETTINGS"
 fi

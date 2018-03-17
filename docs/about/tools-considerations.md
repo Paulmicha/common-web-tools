@@ -19,9 +19,9 @@ Being just "glue", CWT does not attempt to compete with existing tools (or workf
 
 ## Stacks
 
-- [lando/lando](https://github.com/lando/lando) #local #stack #presets #docker-compose
-- [wodby/docker4drupal](https://github.com/wodby/docker4drupal) #local #stack #presets #docker-compose
-- [geerlingguy/drupal-vm](https://github.com/geerlingguy/drupal-vm/tree/master/provisioning) #local #stack #presets #ansible
+- [lando/lando](https://github.com/lando/lando) #local #stack #extensions #docker-compose
+- [wodby/docker4drupal](https://github.com/wodby/docker4drupal) #local #stack #extensions #docker-compose
+- [geerlingguy/drupal-vm](https://github.com/geerlingguy/drupal-vm/tree/master/provisioning) #local #stack #extensions #ansible
 - [dokku/dokku](https://github.com/dokku/dokku) #PaaS #cli #heroku-buildpacks
 - [Haufe-Lexware/wicked.haufe.io](https://github.com/Haufe-Lexware/wicked.haufe.io) #PaaS #modular #microservices
 

@@ -42,6 +42,10 @@
 /cwt/custom/complements/*
 !/cwt/custom/complements/README.md
 
+# TODO make final decision about extensions folder location.
+# TODO (wip) keep third-party code in this repo for now (until "incubation" of a few examples is done).
+!/cwt/custom/extensions
+
 # DB dumps.
 /dumps/*
 !/dumps/README.md
@@ -50,3 +54,5 @@
 docker-runtime
 .idea
 *.sql
+.DS_Store
+._*
