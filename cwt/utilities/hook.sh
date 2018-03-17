@@ -27,9 +27,7 @@
 # for glabals containing their primitives).
 #
 # If this function gets called without any 'variant' filter(s), it will
-# automatically look for suggestions using the following fallback values :
-# - PROVISION_USING
-# - INSTANCE_TYPE
+# automatically look for suggestions using INSTANCE_TYPE.
 #
 # Variants are combinatory. Each variant value must be an existing glabal var
 # which will generate the following lookup paths given the call :
@@ -61,41 +59,57 @@
 # separate them. E.g. :
 # $ hook -a 'start' -s 'stack service instance app'
 #
+# Finally, arguments order may be swapped but hook() requires at least either :
+# 1 action OR 1 extension + 1 variant.
+#
 # @examples
 #
 #   # 1. When providing a single action :
 #   hook -a 'bootstrap'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
+#   # (given INSTANCE_TYPE='prod')
 #   # - cwt/<CWT_SUBJECTS>/bootstrap.hook.sh
-#   # - cwt/<CWT_SUBJECTS>/bootstrap<.VARIANTS+semver>.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS+semver>/<EXT_SUBJECTS>/bootstrap.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS+semver>/<EXT_SUBJECTS>/bootstrap<.VARIANTS+semver>.hook.sh
+#   # - cwt/<CWT_SUBJECTS>/bootstrap.prod.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/bootstrap.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/bootstrap.prod.hook.sh
 #
 #   # 2. When providing an action + a filter by subject :
 #   hook -a 'init' -s 'stack'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
+#   # (given INSTANCE_TYPE='prod')
 #   # - cwt/stack/init.hook.sh
-#   # - cwt/stack/init<.VARIANTS+semver>.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS+semver>/stack/init.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS+semver>/stack/init<.VARIANTS+semver>.hook.sh
+#   # - cwt/stack/init.prod.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/stack/init.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/stack/init.prod.hook.sh
 #
 #   # 3. When providing an action + a filter by 1 or several subjects + 1 or
 #   #   several variants filter :
-#   hook -a 'init' -s 'stack' -v 'HOST_TYPE'
+#   hook -a 'init' -s 'stack' -v 'INSTANCE_TYPE HOST_TYPE'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
-#   # See 3. but only with provided variants.
+#   # (given INSTANCE_TYPE='dev' and HOST_TYPE='local')
+#   # - cwt/stack/init.hook.sh
+#   # - cwt/stack/init.dev.hook.sh
+#   # - cwt/stack/init.local.hook.sh
+#   # - cwt/stack/init.dev.local.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/stack/init.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/stack/init.dev.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/stack/init.local.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/stack/init.dev.local.hook.sh
 #
-#   # 4. Arguments order may be swapped, but it requires at least either :
-#   #   - 1 action
-#   #   - 1 extension + 1 variant
+#   # 4. Extensions filter :
 #   hook -e 'nodejs' -v 'INSTANCE_TYPE'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
-#   # - $CWT_CUSTOM_DIR/extensions/nodejs<+semver>/<EXT_SUBJECTS>/<SUBJECT_ACTIONS><.INSTANCE_TYPE>.hook.sh
+#   # (given INSTANCE_TYPE='prod')
+#   # - $CWT_CUSTOM_DIR/extensions/nodejs/<EXT_SUBJECTS>/<SUBJECT_ACTIONS>.prod.hook.sh
 #
 #   # 5. Prefixes filter :
 #   hook -a 'bootstrap' -p 'pre'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
-#   # See 1. but only with provided prefixes.
+#   # (given INSTANCE_TYPE='prod')
+#   # - cwt/<CWT_SUBJECTS>/pre_bootstrap.hook.sh
+#   # - cwt/<CWT_SUBJECTS>/pre_bootstrap<.VARIANTS+semver>.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/pre_bootstrap.hook.sh
+#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/pre_bootstrap<.VARIANTS+semver>.hook.sh
 #
 # We exceptionally name that function without following the usual convention.
 #
@@ -225,23 +239,24 @@ hook() {
     case "$f" in
       subjects)
         for arg_val in $f_arg; do
-          eval "$f+=\" $f_arg \""
+          eval "$f+=\"$arg_val \""
         done
       ;;
       actions)
         for arg_val in $f_arg; do
           for s in $subjects; do
-            eval "$f+=\" $s/$f_arg \""
+            eval "$f+=\"$s/$arg_val \""
           done
         done
       ;;
       prefixes|variants)
+        # for arg_val in $f_arg; do
+        #   for a in $actions; do
+        #     eval "$f+=\"$a/$arg_val \""
+        #   done
+        # done
         for arg_val in $f_arg; do
-          for s in $subjects; do
-            for a in $actions; do
-              eval "$f+=\" $s/$a/$f_arg \""
-            done
-          done
+          eval "$f+=\"$arg_val \""
         done
       ;;
     esac
@@ -320,6 +335,7 @@ u_hook_build_lookup_by_subject() {
   local v_val
   local v_flag
   local v_fallback
+  # These comments illustrate possible changes for default variants :
   # local v_fallback_values='PROVISION_USING INSTANCE_TYPE HOST_TYPE'
   # local v_fallback_values='PROVISION_USING INSTANCE_TYPE'
   # local v_fallback_values='INSTANCE_TYPE HOST_TYPE'
@@ -335,18 +351,8 @@ u_hook_build_lookup_by_subject() {
         u_str_split1 a_parts_arr "$a_path" '/'
         a="${a_parts_arr[1]}"
 
-        # "prefixes" and "variants" primitives are special : unless nothing
-        # explicitly alters them (see dotfiles by subject + by action in
-        # cwt/utilities/cwt.sh), hardcoded fallback values are used to generate
-        # new lookup paths automatically.
-        # NB : we rely on the invariability of the "positions" of primitives'
-        # values - e.g. subjects MUST always be 1st, actions MUST always be
-        # 2nd, and prefixes + variants MUST always come last.
-        # @see u_cwt_extend()
-        v_fallback=1
-
         for x_prim in $prefixes; do
-          case "$x_prim" in "$bp/$a_path"*)
+          case "$x_prim" in "$a_path"*)
             u_str_split1 x_parts_arr "$x_prim" '/'
             x="${x_parts_arr[2]}"
             lookup_paths+=("$bp/$p_subject/${x}_${a}.hook.sh")
@@ -354,16 +360,26 @@ u_hook_build_lookup_by_subject() {
           esac
         done
 
+        # The "variants" primitive has hardcoded fallback values used to
+        # generate extra lookup paths by default (v_fallback_values).
+        # NB : we rely on the invariability of the "positions" of primitives'
+        # values - e.g. subjects MUST always be 1st, actions MUST always be
+        # 2nd, and prefixes + variants MUST always come last.
+        # @see u_cwt_extend()
+        v_fallback=1
+
         for v_prim in $variants; do
-          case "$v_prim" in "$bp/$a_path"*)
+          # case "$v_prim" in "$a_path"*)
             v_fallback=0
-            u_str_split1 v_parts_arr "$v_prim" '/'
-            v="${v_parts_arr[2]}"
+            # v_prim="${v_prim##*/}"
             eval "v_val=\"\$$v_prim\""
             # u_autoload_add_lookup_level "$bp/$p_subject/" "${a}.hook.sh" "$v_val" lookup_paths '' '/'
             u_autoload_add_lookup_level "$bp/$p_subject/${a}." "hook.sh" "$v_val" lookup_paths
-            v_values+="$v_val "
-          esac
+            # v_values+="$v_val "
+            if [[ "$v_values" != *"$v_val"* ]]; then
+              v_values+="$v_val "
+            fi
+          # esac
         done
 
         # If nothing specific was found by now, fallback to dynamic lookup
@@ -375,19 +391,21 @@ u_hook_build_lookup_by_subject() {
             eval "v_val=\"\$$v\""
             # u_autoload_add_lookup_level "$bp/$p_subject/" "${a}.hook.sh" "$v_val" lookup_paths '' '/'
             u_autoload_add_lookup_level "$bp/$p_subject/${a}." "hook.sh" "$v_val" lookup_paths
-            v_values+="$v_val "
+            # v_values+="$v_val "
+            if [[ "$v_values" != *"$v_val"* ]]; then
+              v_values+="$v_val "
+            fi
           done
         fi
 
         # Implement combinatory variant lookup paths, e.g. :
-        # bootstrap.docker-compose.dev.hook.sh
-        local combi_v_val
-        for v_val in $v_values; do
-          for combi_v_val in $v_values; do
-            if [[ "$combi_v_val" != "$v_val" ]]; then
-              u_autoload_add_lookup_level "$bp/$p_subject/${a}.${v_val}." "hook.sh" "$combi_v_val" lookup_paths
-            fi
-          done
+        # - init.dev.local.hook.sh
+        # - bootstrap.docker-compose.dev.hook.sh
+        # - bootstrap.docker-compose.prod.remote.hook.sh
+        u_str_subsequences "$v_values" '.'
+
+        for v_val in $str_subsequences; do
+          u_autoload_add_lookup_level "$bp/$p_subject/${a}." "hook.sh" "$v_val" lookup_paths
         done
 
         # Implement prefix + variant lookup paths, e.g. :
@@ -401,7 +419,7 @@ u_hook_build_lookup_by_subject() {
             # TODO make opt-in or remove ? #YAGNI
             for combi_v_val in $v_values; do
               if [[ "$combi_v_val" != "$v_val" ]]; then
-                u_autoload_add_lookup_level "$bp/$p_subject/${a}.${v_val}." "hook.sh" "$combi_v_val" lookup_paths
+                u_autoload_add_lookup_level "$bp/$p_subject/${x}_${a}.${v_val}." "hook.sh" "$combi_v_val" lookup_paths
               fi
             done
           done

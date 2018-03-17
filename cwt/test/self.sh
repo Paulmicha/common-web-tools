@@ -22,7 +22,7 @@ for test_script in $file_list; do
   # See https://github.com/kward/shunit2
   cwt/test/cwt/$test_script
 
-  # Do not carry on if a test failed in curren test case.
+  # Do not carry on if a test failed in current test case.
   if [[ $? -ne 0 ]]; then
     echo >&2
     echo "The test case '$test_script' did not pass" >&2
