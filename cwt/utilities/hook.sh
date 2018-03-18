@@ -247,7 +247,7 @@ hook() {
     eval "$f=''"
 
     case "$f" in
-      subjects)
+      subjects|prefixes|variants)
         for arg_val in $f_arg; do
           eval "$f+=\"$arg_val \""
         done
@@ -259,18 +259,20 @@ hook() {
           done
         done
       ;;
-      prefixes|variants)
-        # for arg_val in $f_arg; do
-        #   for a in $actions; do
-        #     eval "$f+=\"$a/$arg_val \""
-        #   done
-        # done
-        for arg_val in $f_arg; do
-          eval "$f+=\"$arg_val \""
-        done
-      ;;
     esac
   done
+
+  # Debug.
+  # if [[ $p_debug == 1 ]]; then
+  #   echo
+  #   echo "debug hook call :"
+  #   echo "  $(declare -p base_paths)"
+  #   echo "  subjects = '$subjects'"
+  #   echo "  actions = '$actions'"
+  #   echo "  extensions = '$extensions'"
+  #   echo "  variants = '$variants'"
+  #   echo "  prefixes = '$prefixes'"
+  # fi
 
   # Build lookup paths.
   local lookup_paths=()
@@ -363,7 +365,7 @@ u_hook_build_lookup_by_subject() {
       case "$a_path" in "$p_subject"*)
 
         # First, add "pure" actions suggestions - unless excluded (see prefixes).
-        if [[ -e "$p_prefixes_filter" ]]; then
+        if [[ -z "$p_prefixes_filter" ]]; then
           lookup_paths+=("$bp/${a_path}.hook.sh")
         fi
 
@@ -391,8 +393,6 @@ u_hook_build_lookup_by_subject() {
 
         # If nothing specific was found by now, fallback to dynamic lookup
         # generation for variants.
-        # specify if it's justified to look for certain variants or prefixes by
-        # using corresponding arguments in hook().
         if [[ $v_fallback -eq 1 ]]; then
           for v in $v_fallback_values; do
             eval "v_val=\"\$$v\""
@@ -408,7 +408,7 @@ u_hook_build_lookup_by_subject() {
         # - bootstrap.docker-compose.dev.hook.sh
         # - bootstrap.docker-compose.prod.remote.hook.sh
         u_str_subsequences "$v_values" '.'
-        if [[ -e "$p_prefixes_filter" ]]; then
+        if [[ -z "$p_prefixes_filter" ]]; then
           for v_val in $str_subsequences; do
             u_autoload_add_lookup_level "$bp/$p_subject/${a}." "hook.sh" "$v_val" lookup_paths
           done
