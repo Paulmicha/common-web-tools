@@ -95,7 +95,7 @@ _cwt_hook_test_assertion_helper() {
   local fail_reason
   case $flag in
     1) fail_reason='missing matching lookup paths' ;;
-    2) fail_reason='too many matching lookup paths' ;;
+    2) fail_reason='too many matching lookup paths found' ;;
     *) fail_reason='unexpected error' ;;
   esac
 
@@ -103,40 +103,77 @@ _cwt_hook_test_assertion_helper() {
 }
 
 ##
+# Custom hook exepected result comparator helper.
+#
+# Writes result in the following variable in calling scope :
+# @var flag
+#
+# @requires the following vars in calling scope :
+# - exact_list
+# - exact_count
+# - inc_dry_run_files_list
+#
+_cwt_hook_compare_exepected_result_helper() {
+  local i
+  local j
+  local is_found
+
+  local exact_count=0
+  for i in $exact_list; do
+    ((++exact_count))
+  done
+
+  local count_found=0
+  for j in $inc_dry_run_files_list; do
+    ((++count_found))
+  done
+
+  flag=0
+
+  for i in $exact_list; do
+    is_found=0
+
+    for j in $inc_dry_run_files_list; do
+      if [[ "$i" == "$j" ]]; then
+        is_found=1
+        break
+      fi
+    done
+
+    if [[ $is_found -eq 0 ]]; then
+      flag=1
+      break
+    fi
+  done
+
+  if [[ $flag -eq 0 ]] && [[ $count_found -ne $exact_count ]]; then
+    flag=2
+  fi
+}
+
+##
 # Will single action hooks load every matching files and none other ?
 #
 test_cwt_hook_single_action() {
   local inc_dry_run_files_list=''
-  local flag=1
-  local i
+  local exact_list="cwt/app/nftcwthhnc_dry_run.hook.sh
+$extensions_dir/nftcwthdehnc/app/nftcwthhnc_dry_run.hook.sh
+cwt/cron/nftcwthhnc_dry_run.hook.sh
+cwt/db/nftcwthhnc_dry_run.hook.sh
+cwt/env/nftcwthhnc_dry_run.hook.sh
+cwt/git/nftcwthhnc_dry_run.hook.sh
+cwt/instance/nftcwthhnc_dry_run.hook.sh
+cwt/remote/nftcwthhnc_dry_run.hook.sh
+$extensions_dir/nftcwthdehnc/remote/nftcwthhnc_dry_run.hook.sh
+cwt/service/nftcwthhnc_dry_run.hook.sh
+cwt/stack/nftcwthhnc_dry_run.hook.sh
+$extensions_dir/nftcwthdehnc/stack/nftcwthhnc_dry_run.hook.sh
+$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
+"
 
   hook -a 'nftcwthhnc_dry_run' -t
 
-  for i in $inc_dry_run_files_list; do
-    case "$i" in
-      # All these matches must be found.
-      'cwt/app/nftcwthhnc_dry_run.hook.sh' | \
-      "$extensions_dir/nftcwthdehnc/app/nftcwthhnc_dry_run.hook.sh" | \
-      'cwt/cron/nftcwthhnc_dry_run.hook.sh' | \
-      'cwt/db/nftcwthhnc_dry_run.hook.sh' | \
-      'cwt/env/nftcwthhnc_dry_run.hook.sh' | \
-      'cwt/git/nftcwthhnc_dry_run.hook.sh' | \
-      'cwt/instance/nftcwthhnc_dry_run.hook.sh' | \
-      'cwt/remote/nftcwthhnc_dry_run.hook.sh' | \
-      "$extensions_dir/nftcwthdehnc/remote/nftcwthhnc_dry_run.hook.sh" | \
-      'cwt/service/nftcwthhnc_dry_run.hook.sh' | \
-      'cwt/stack/nftcwthhnc_dry_run.hook.sh' | \
-      "$extensions_dir/nftcwthdehnc/stack/nftcwthhnc_dry_run.hook.sh" | \
-      "$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh")
-        flag=0
-      ;;
-      # None other must match.
-      *)
-        flag=2
-      ;;
-    esac
-  done
-
+  _cwt_hook_compare_exepected_result_helper
   _cwt_hook_test_assertion_helper "Single action hook test failed." $flag
 }
 
@@ -145,22 +182,11 @@ test_cwt_hook_single_action() {
 #
 test_cwt_hook_subject_filter() {
   local inc_dry_run_files_list=''
-  local flag=0
-  local i
+  local exact_list="$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh"
 
   hook -a 'nftcwthhnc_dry_run' -s 'test' -t
 
-  for i in $inc_dry_run_files_list; do
-    case "$i" in
-      "$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh")
-        flag=0
-      ;;
-      *)
-        flag=2
-      ;;
-    esac
-  done
-
+  _cwt_hook_compare_exepected_result_helper
   _cwt_hook_test_assertion_helper "Subject filter hook test failed." $flag
 }
 
@@ -169,23 +195,13 @@ test_cwt_hook_subject_filter() {
 #
 test_cwt_hook_combinatory_variants() {
   local inc_dry_run_files_list=''
-  local flag=0
-  local i
+  local exact_list="$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
+$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$HOST_TYPE.hook.sh
+"
 
   hook -a 'nftcwthhnc_dry_run' -s 'test' -v 'INSTANCE_TYPE HOST_TYPE' -t
 
-  for i in $inc_dry_run_files_list; do
-    case "$i" in
-      "$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh" | \
-      "$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$HOST_TYPE.hook.sh")
-        flag=0
-      ;;
-      *)
-        flag=2
-      ;;
-    esac
-  done
-
+  _cwt_hook_compare_exepected_result_helper
   _cwt_hook_test_assertion_helper "Combinatory variants filter hook test failed." $flag
 }
 

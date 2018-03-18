@@ -296,7 +296,8 @@ hook() {
       # Note : for tests, the "dry run" option prevents "override" alterations.
       # @see cwt/test/cwt/hook.test.sh
       if [[ $p_dry_run == 1 ]]; then
-        inc_dry_run_files_list+="$inc "
+        inc_dry_run_files_list+="$inc
+"
         continue
       fi
 
