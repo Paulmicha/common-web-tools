@@ -380,7 +380,6 @@ u_hook_build_lookup_by_subject() {
         # Finally, add the variants suggestions.
         # The "variants" primitive has overridable fallback value(s) used to
         # generate extra lookup paths by default (v_fallback_values).
-        # @see u_cwt_extend()
         v_fallback=1
 
         for v_prim in $variants; do
