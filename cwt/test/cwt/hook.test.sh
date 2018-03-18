@@ -77,6 +77,14 @@ oneTimeSetUp() {
   fi
   touch "$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh"
   touch "$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$HOST_TYPE.hook.sh"
+  touch "$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.$HOST_TYPE.hook.sh"
+
+  # Prefix tests.
+  touch "$extensions_dir/nftcwthdehnc/test/pre_nftcwthhnc_dry_run.hook.sh"
+  touch "$extensions_dir/nftcwthdehnc/test/post_nftcwthhnc_dry_run.hook.sh"
+  touch "$extensions_dir/nftcwthdehnc/test/post_nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh"
+  touch "$extensions_dir/nftcwthdehnc/test/post_nftcwthhnc_dry_run.$HOST_TYPE.hook.sh"
+  touch "$extensions_dir/nftcwthdehnc/test/undo_nftcwthhnc_dry_run.$INSTANCE_TYPE.$HOST_TYPE.hook.sh"
 
   # Forces detection of our newly created temporary extension.
   u_cwt_extend
@@ -103,24 +111,23 @@ _cwt_hook_test_assertion_helper() {
 }
 
 ##
-# Custom hook exepected result comparator helper.
+# Custom hook expected result comparator helper.
 #
 # Writes result in the following variable in calling scope :
 # @var flag
 #
 # @requires the following vars in calling scope :
-# - exact_list
-# - exact_count
 # - inc_dry_run_files_list
+# - expected_list
 #
-_cwt_hook_compare_exepected_result_helper() {
+_cwt_hook_compare_expected_result_helper() {
   local i
   local j
   local is_found
 
-  local exact_count=0
-  for i in $exact_list; do
-    ((++exact_count))
+  local expected_count=0
+  for i in $expected_list; do
+    ((++expected_count))
   done
 
   local count_found=0
@@ -130,7 +137,7 @@ _cwt_hook_compare_exepected_result_helper() {
 
   flag=0
 
-  for i in $exact_list; do
+  for i in $expected_list; do
     is_found=0
 
     for j in $inc_dry_run_files_list; do
@@ -146,7 +153,7 @@ _cwt_hook_compare_exepected_result_helper() {
     fi
   done
 
-  if [[ $flag -eq 0 ]] && [[ $count_found -ne $exact_count ]]; then
+  if [[ $flag -eq 0 ]] && [[ $count_found -ne $expected_count ]]; then
     flag=2
   fi
 }
@@ -156,7 +163,7 @@ _cwt_hook_compare_exepected_result_helper() {
 #
 test_cwt_hook_single_action() {
   local inc_dry_run_files_list=''
-  local exact_list="cwt/app/nftcwthhnc_dry_run.hook.sh
+  local expected_list="cwt/app/nftcwthhnc_dry_run.hook.sh
 $extensions_dir/nftcwthdehnc/app/nftcwthhnc_dry_run.hook.sh
 cwt/cron/nftcwthhnc_dry_run.hook.sh
 cwt/db/nftcwthhnc_dry_run.hook.sh
@@ -173,36 +180,78 @@ $extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
 
   hook -a 'nftcwthhnc_dry_run' -t
 
-  _cwt_hook_compare_exepected_result_helper
+  _cwt_hook_compare_expected_result_helper
   _cwt_hook_test_assertion_helper "Single action hook test failed." $flag
 }
 
 ##
-# Do subject filter work ?
+# Does subject filter work ?
 #
-test_cwt_hook_subject_filter() {
+test_cwt_hook_subject() {
   local inc_dry_run_files_list=''
-  local exact_list="$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh"
+  local expected_list="$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh"
 
   hook -a 'nftcwthhnc_dry_run' -s 'test' -t
 
-  _cwt_hook_compare_exepected_result_helper
+  _cwt_hook_compare_expected_result_helper
   _cwt_hook_test_assertion_helper "Subject filter hook test failed." $flag
 }
 
 ##
-# Do combinatory variants filter work ?
+# Does combinatory variants filter work ?
 #
 test_cwt_hook_combinatory_variants() {
   local inc_dry_run_files_list=''
-  local exact_list="$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
+  local expected_list="$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
 $extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$HOST_TYPE.hook.sh
+$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.$HOST_TYPE.hook.sh
 "
 
   hook -a 'nftcwthhnc_dry_run' -s 'test' -v 'INSTANCE_TYPE HOST_TYPE' -t
 
-  _cwt_hook_compare_exepected_result_helper
+  _cwt_hook_compare_expected_result_helper
   _cwt_hook_test_assertion_helper "Combinatory variants filter hook test failed." $flag
+}
+
+##
+# Does prefix filter work ?
+#
+test_cwt_hook_prefix() {
+  local inc_dry_run_files_list=''
+  local expected_list="$extensions_dir/nftcwthdehnc/test/pre_nftcwthhnc_dry_run.hook.sh"
+
+  hook -a 'nftcwthhnc_dry_run' -p 'pre' -t
+
+  _cwt_hook_compare_expected_result_helper
+  _cwt_hook_test_assertion_helper "Prefix filter hook test failed." $flag
+}
+
+##
+# Does prefix filter work with default variants ?
+#
+test_cwt_hook_prefix_variants() {
+  local inc_dry_run_files_list=''
+  local expected_list="$extensions_dir/nftcwthdehnc/test/post_nftcwthhnc_dry_run.hook.sh
+$extensions_dir/nftcwthdehnc/test/post_nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
+"
+
+  hook -a 'nftcwthhnc_dry_run' -s 'test' -p 'post' -t
+
+  _cwt_hook_compare_expected_result_helper
+  _cwt_hook_test_assertion_helper "Prefix + variants filter hook test failed." $flag
+}
+
+##
+# Does prefix filter work with combinatory variants ?
+#
+test_cwt_hook_prefix_combinatory_variants() {
+  local inc_dry_run_files_list=''
+  local expected_list="$extensions_dir/nftcwthdehnc/test/undo_nftcwthhnc_dry_run.$INSTANCE_TYPE.$HOST_TYPE.hook.sh"
+
+  hook -a 'nftcwthhnc_dry_run' -s 'test' -v 'INSTANCE_TYPE HOST_TYPE' -p 'undo' -t
+
+  _cwt_hook_compare_expected_result_helper
+  _cwt_hook_test_assertion_helper "Prefix + combinatory variants filter hook test failed." $flag
 }
 
 ##
