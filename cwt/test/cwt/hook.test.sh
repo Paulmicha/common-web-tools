@@ -54,15 +54,19 @@ oneTimeSetUp() {
 
   mkdir "$extensions_dir/nftcwthdehnc/stack"
   mkdir "$extensions_dir/nftcwthdehnc/remote"
+  mkdir "$extensions_dir/nftcwthdehnc/test"
 
+  # Empty files are enough to trigger positive detection during CWT primitives
+  # values aggregation during bootstrap and during hook lookup paths generation.
+  # @see u_cwt_extend()
+  # @see hook()
   touch "$extensions_dir/nftcwthdehnc/app/nftcwthhnc_dry_run.hook.sh"
   touch "$extensions_dir/nftcwthdehnc/stack/nftcwthhnc_dry_run.hook.sh"
   touch "$extensions_dir/nftcwthdehnc/remote/nftcwthhnc_dry_run.hook.sh"
+  touch "$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.sh"
 
   # Forces detection of our newly created temporary extension.
   u_cwt_extend
-
-  echo "  CWT_EXTENSIONS = '$CWT_EXTENSIONS'"
 }
 
 ##
@@ -70,13 +74,36 @@ oneTimeSetUp() {
 #
 test_cwt_hook_single_action() {
   local inc_dry_run_files_list=''
-
-  echo "  CWT_EXTENSIONS = '$CWT_EXTENSIONS'"
+  local flag=0
+  local i
 
   hook -a 'nftcwthhnc_dry_run' -t
-  echo "inc_dry_run_files_list = $inc_dry_run_files_list"
 
-  assertTrue 'Global CWT_INC is empty (bootstrap test failed)' "[ -ne $CWT_INC ]"
+  # All these matches must be found.
+  for i in $inc_dry_run_files_list; do
+    case "$i" in
+      'cwt/app/nftcwthhnc_dry_run.hook.sh' | \
+      "$extensions_dir/nftcwthdehnc/app/nftcwthhnc_dry_run.hook.sh" | \
+      'cwt/cron/nftcwthhnc_dry_run.hook.sh' | \
+      'cwt/db/nftcwthhnc_dry_run.hook.sh' | \
+      'cwt/env/nftcwthhnc_dry_run.hook.sh' | \
+      'cwt/git/nftcwthhnc_dry_run.hook.sh' | \
+      'cwt/instance/nftcwthhnc_dry_run.hook.sh' | \
+      'cwt/remote/nftcwthhnc_dry_run.hook.sh' | \
+      "$extensions_dir/nftcwthdehnc/remote/nftcwthhnc_dry_run.hook.sh" | \
+      'cwt/service/nftcwthhnc_dry_run.hook.sh' | \
+      'cwt/stack/nftcwthhnc_dry_run.hook.sh' | \
+      "$extensions_dir/nftcwthdehnc/stack/nftcwthhnc_dry_run.hook.sh")
+        flag=1
+      ;;
+    esac
+  done
+
+  # None of these matches must be found.
+  # TODO debug (wip).
+  # echo "inc_dry_run_files_list = $inc_dry_run_files_list"
+
+  assertTrue 'Single action hook test failed (missing matches)' "[ $flag -ne 0 ]"
 }
 
 ##
