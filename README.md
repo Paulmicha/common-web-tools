@@ -142,14 +142,7 @@ See section *Frequent tasks (howtos / FAQ)* for details.
 
 ## Alter / Extend CWT
 
-There a different ways to alter or extend CWT. They usually consist in providing your own bash files in `CWT_CUSTOM_DIR` following the conventions listed below.
-
-It relies on [a minimalist "autoload" pattern](https://paulmicha.github.io/common-web-tools/about/patterns.html) (see **caveats** and **ways to mitigate** in documentation).
-
-Notable alteration/extension entry points :
-
-- `cwt/bash_utils.sh`
-- `cwt/stack/init.sh`
+Altering or extending CWT happens in `cwt/custom` by default, but this path may be overridden using the `CWT_CUSTOM_DIR` global.
 
 ### Overrides and Complements
 
@@ -170,11 +163,7 @@ for file in $CWT_INC; do
 done
 ```
 
-### Extensions
-
-TODO
-
-### Hooks
+### Extensions and hooks
 
 TODO
 
