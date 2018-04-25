@@ -3,8 +3,6 @@
 ##
 # GLobals-related utility functions.
 #
-# See cwt/env/README.md
-#
 # This file is sourced during core CWT bootstrap.
 # @see cwt/bootstrap.sh
 #
@@ -12,13 +10,162 @@
 #
 
 ##
+# Aggregates all discoverable env vars.
+#
+# This process consists in :
+# - including any existing matching includes
+# - exporting each variable defined in them as global
+# - assigning their value - either by terminal prompt, or a default values if
+#   no matching argument is found
+#
+# @example
+#   u_global_aggregate
+#
+u_global_aggregate() {
+  # Mandatory param (no default fallback provided).
+  export P_PROJECT_STACK
+
+  # Default values :
+  # @see cwt/env/vars.sh
+  export P_PROJECT_DOCROOT
+  export P_APP_DOCROOT
+  export P_APP_GIT_ORIGIN
+  export P_APP_GIT_WORK_TREE
+  export P_INSTANCE_TYPE
+  export P_INSTANCE_DOMAIN
+
+  # Optional remote host(s).
+  export P_REMOTE_INSTANCES
+  export P_REMOTE_INSTANCES_CMDS
+  export P_REMOTE_INSTANCES_TYPES
+
+  # Configurable CWT internals.
+  export P_HOST_TYPE
+  export P_PROVISION_USING
+  export P_DEPLOY_USING
+  export P_CWT_MODE
+  export P_CWT_CUSTOM_DIR
+
+  export P_YES
+  export P_VERBOSE
+
+  # Make sure any previously set globals cannot interfere by resetting them.
+  unset P_PROJECT_STACK
+
+  unset P_PROJECT_DOCROOT
+  unset P_APP_DOCROOT
+  unset P_APP_GIT_ORIGIN
+  unset P_APP_GIT_WORK_TREE
+  unset P_INSTANCE_TYPE
+  unset P_INSTANCE_DOMAIN
+
+  unset P_REMOTE_INSTANCES
+  unset P_REMOTE_INSTANCES_CMDS
+  unset P_REMOTE_INSTANCES_TYPES
+
+  unset P_HOST_TYPE
+  unset P_PROVISION_USING
+  unset P_DEPLOY_USING
+  unset P_CWT_MODE
+  unset P_CWT_CUSTOM_DIR
+
+  P_YES=0
+  P_VERBOSE=0
+
+  # TODO temporary syntax before trying github.com/matejak/argbash.
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      -s) P_PROJECT_STACK="$2"; shift 2;;
+
+      -o) P_PROJECT_DOCROOT="$2"; shift 2;;
+      -a) P_APP_DOCROOT="$2"; shift 2;;
+      -g) P_APP_GIT_ORIGIN="$2"; shift 2;;
+      -i) P_APP_GIT_WORK_TREE="$2"; shift 2;;
+      -t) P_INSTANCE_TYPE="$2"; shift 2;;
+      -d) P_INSTANCE_DOMAIN="$2"; shift 2;;
+
+      -r) P_REMOTE_INSTANCES="$2"; shift 2;;
+      -u) P_REMOTE_INSTANCES_CMDS="$2"; shift 2;;
+      -q) P_REMOTE_INSTANCES_TYPES="$2"; shift 2;;
+
+      -h) P_HOST_TYPE="$2"; shift 2;;
+      -p) P_PROVISION_USING="$2"; shift 2;;
+      -e) P_DEPLOY_USING="$2"; shift 2;;
+      -m) P_CWT_MODE="$2"; shift 2;;
+      -c) P_CWT_CUSTOM_DIR="$2"; shift 2;;
+
+      -y) P_YES=1; shift 1;;
+      -v) P_VERBOSE=1; shift 1;;
+
+      -*) echo "Error in $BASH_SOURCE line $LINENO: unknown option: $1" >&2; return;;
+      *) echo "Notice in $BASH_SOURCE line $LINENO: unsupported unnamed argument: $1" >&2; shift 1;;
+    esac
+  done
+
+  export GLOBALS
+  export GLOBALS_COUNT
+  export GLOBALS_UNIQUE_NAMES
+  export GLOBALS_UNIQUE_KEYS
+
+  export PROJECT_STACK="$P_PROJECT_STACK"
+  export PROVISION_USING="$P_PROVISION_USING"
+  export CWT_CUSTOM_DIR="$P_CWT_CUSTOM_DIR"
+  export GLOBALS_FILEPATH='cwt/env/current/global.vars.sh'
+
+  if [[ (-z "$PROJECT_STACK") && ($P_YES == 0) ]]; then
+    read -p "Enter PROJECT_STACK value : " PROJECT_STACK
+  fi
+
+  if [[ -z "$PROJECT_STACK" ]]; then
+    echo >&2
+    echo "Error in $BASH_SOURCE line $LINENO: cannot carry on without a value for \$PROJECT_STACK." >&2
+    echo "Aborting (1)." >&2
+    return 1
+  fi
+
+  # Remove previously generated globals to avoid any interference.
+  if [[ -f "$GLOBALS_FILEPATH" ]]; then
+    rm "$GLOBALS_FILEPATH"
+  fi
+
+  # Load CWT includes.
+  . cwt/bootstrap.sh
+
+  # (Re)start dependencies and env vars aggregation.
+  unset GLOBALS
+  declare -A GLOBALS
+  GLOBALS_COUNT=0
+  GLOBALS_UNIQUE_NAMES=()
+  GLOBALS_UNIQUE_KEYS=()
+
+  # Get CWT globals required for aggregating dependencies and env vars.
+  . cwt/env/global.vars.sh
+
+  # Aggregate dependencies and env vars.
+  . cwt/stack/init/aggregate_deps.sh
+  . cwt/stack/init/aggregate_env_vars.sh
+
+  # Write env vars in current instance's git-ignored settings file.
+  . cwt/env/write.sh
+
+  # (Re)set file system ownership and permissions.
+  hook -a 'set_fsop' -s 'app stack service'
+
+  # Allow custom complements for this script.
+  u_autoload_get_complement "$BASH_SOURCE"
+
+  # Trigger stack/post-init hook.
+  u_hook 'stack' 'init' 'post'
+}
+
+##
 # Executes given callback function for all env vars discovered so far.
 #
-# @requires the following globals in calling scope (main shell) :
+# @requires the following globals in calling scope :
 # - $GLOBALS
 # - $GLOBALS_UNIQUE_NAMES
 #
-# @see cwt/stack/init/aggregate_env_vars.sh
+# @see u_global_aggregate()
 #
 # @example
 #   u_global_foreach u_global_assign_value
