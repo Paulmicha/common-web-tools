@@ -10,6 +10,8 @@
 #
 
 ##
+# TODO [wip] undone - refacto of cwt/stack/init.sh in progress.
+#
 # Aggregates all discoverable env vars.
 #
 # This process consists in :

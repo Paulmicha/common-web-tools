@@ -8,15 +8,30 @@
 #
 
 ##
-# Downloads a file or dir to given remote.
+# Downloads a file or dir from given remote.
+#
+# Important notes:
+#   - when providing relative paths, the reference is PROJECT_DOCROOT (locally)
+#     and REMOTE_INSTANCE_PROJECT_DOCROOT (remotely)
+#   - any additional arguments are passed on to the 'scp' command
+#
+# See https://gist.github.com/dehamzah/ac216f38319d34444487f6375359ad29
 #
 # @example
-#   u_remote_download 'my_short_id' /path/to/ /opt/my.project/file.ext
+#   # Download a single file.
+#   u_remote_download 'my_short_id' /remote/file.ext /local/dir/
+#   u_remote_download 'my_short_id' /remote/file.ext /local/dir/renamed-file.ext
+#
+#   # Download a single file using relative paths.
+#   u_remote_download 'my_short_id' remote-file.ext local-file.ext
+#
+#   # Download an entire dir (recursively).
+#   u_remote_download 'my_short_id' /remote/dir /local/dir -r
 #
 u_remote_download() {
   local p_id="$1"
-  local p_local_path="$2"
-  local p_remote_path="$3"
+  local p_remote_path="$2"
+  local p_local_path="$3"
   shift 3
 
   u_remote_instance_load "$p_id"
@@ -27,6 +42,14 @@ u_remote_download() {
     echo "-> Aborting (1)." >&2
     echo >&2
     return 1
+  fi
+
+  # Handle relative paths.
+  if [[ "${p_local_path:0:1}" != '/' ]]; then
+    p_local_path="$PROJECT_DOCROOT/$p_local_path"
+  fi
+  if [[ "${p_remote_path:0:1}" != '/' ]]; then
+    p_remote_path="$REMOTE_INSTANCE_PROJECT_DOCROOT/$p_remote_path"
   fi
 
   scp "${REMOTE_USER}@${REMOTE_INSTANCE_HOST}:$p_remote_path" "$p_local_path" $@
@@ -44,8 +67,23 @@ u_remote_download() {
 ##
 # Uploads a file or dir to given remote dir (include last slash) or filepath.
 #
+# Important notes:
+#   - when providing relative paths, the reference is PROJECT_DOCROOT (locally)
+#     and REMOTE_INSTANCE_PROJECT_DOCROOT (remotely)
+#   - any additional arguments are passed on to the 'scp' command
+#
+# See https://gist.github.com/dehamzah/ac216f38319d34444487f6375359ad29
+#
 # @example
-#   u_remote_upload 'my_short_id' /path/to/file.ext /opt/my.project/
+#   # Upload a single file.
+#   u_remote_upload 'my_short_id' /local/path/to/file.ext /remote/dir/
+#   u_remote_upload 'my_short_id' /local/path/to/file.ext /remote/dir/new-file-name.ext
+#
+#   # Upload a single file using relative paths.
+#   u_remote_download 'my_short_id' local-file.ext remote-file.ext
+#
+#   # Upload an entire dir (recursively).
+#   u_remote_upload 'my_short_id' /local/dir /remote/dir -r
 #
 u_remote_upload() {
   local p_id="$1"
@@ -61,6 +99,14 @@ u_remote_upload() {
     echo "-> Aborting (1)." >&2
     echo >&2
     return 1
+  fi
+
+  # Handle relative paths.
+  if [[ "${p_local_path:0:1}" != '/' ]]; then
+    p_local_path="$PROJECT_DOCROOT/$p_local_path"
+  fi
+  if [[ "${p_remote_path:0:1}" != '/' ]]; then
+    p_remote_path="$REMOTE_INSTANCE_PROJECT_DOCROOT/$p_remote_path"
   fi
 
   scp "$p_local_path" "${REMOTE_USER}@${REMOTE_INSTANCE_HOST}:${p_remote_path}" $@
@@ -230,15 +276,19 @@ u_remote_script_wrapper() {
 ##
 # Adds a remote instance.
 #
-# TODO prevent for instances where HOST_TYPE != 'local' ?
-#
 # @param 1 String : remote instance's id (short name, no space, _a-zA-Z0-9 only).
 # @param 2 String : remote instance's host domain.
 # @param 3 String : remote instance's type (dev, production, etc).
-# @param 4 String : remote instance's host connection command.
+# @param 4 String : remote SSH user.
 # @param 5 String : remote instance's PROJECT_DOCROOT value.
 # @param 6 [optional] String : remote instance's APP_DOCROOT value. Defaults to:
 #   "$p_project_docroot/web"
+# @param 7 [optional] Number : SSH port. Defaults to: not specified.
+# @param 8 [optional] String : raw command used to connect (including args).
+#   Defaults to: 'ssh username@example.com' (or 'ssh -p123 username@example.com'
+#   if param 7 is specified).
+#
+# TODO convert to named args.
 #
 # @example
 #   # Basic example with only mandatory params :
@@ -246,16 +296,18 @@ u_remote_script_wrapper() {
 #     'my_short_id' \
 #     'remote.instance.example.com' \
 #     'dev' \
-#     'ssh -p123 username@example.com' \
+#     'username' \
 #     '/path/to/remote/instance/docroot'
 #
 u_remote_instance_add() {
   local p_id="$1"
   local p_host="$2"
   local p_type="$3"
-  local p_connect_cmd="$4"
+  local p_ssh_user="$4"
   local p_project_docroot="$5"
   local p_app_docroot="$6"
+  local p_ssh_port="$7"
+  local p_connect_cmd="$8"
 
   if [[ -z "$p_app_docroot" ]]; then
     p_app_docroot="$p_project_docroot/web"
@@ -277,6 +329,14 @@ u_remote_instance_add() {
     done
   fi
 
+  local connection_cmd="$p_connect_cmd"
+  if [[ -z "$p_connect_cmd" ]]; then
+    connection_cmd="ssh ${p_ssh_user}@${p_host}"
+    if [[ -n "$p_ssh_port" ]]; then
+      connection_cmd="ssh -p${p_ssh_port} ${p_ssh_user}@${p_host}"
+    fi
+  fi
+
   # (Re)init destination file (make empty).
   cat > "$conf" <<'EOF'
 #!/usr/bin/env bash
@@ -290,15 +350,22 @@ u_remote_instance_add() {
 
 EOF
 
-  # TODO remove dead code.
-  # p_connect_cmd="$(printf "%s" "$p_connect_cmd" | base64)"
-
   printf "%s" "export REMOTE_INSTANCE_ID='$p_id'" >> "$conf"
+  echo '' >> "$conf"
   printf "%s" "export REMOTE_INSTANCE_HOST='$p_host'" >> "$conf"
+  echo '' >> "$conf"
   printf "%s" "export REMOTE_INSTANCE_TYPE='$p_type'" >> "$conf"
-  printf "%s" "export REMOTE_INSTANCE_CONNECT_CMD='$p_connect_cmd'" >> "$conf"
+  echo '' >> "$conf"
+  printf "%s" "export REMOTE_INSTANCE_SSH_USER='$p_ssh_user'" >> "$conf"
+  echo '' >> "$conf"
+  printf "%s" "export REMOTE_INSTANCE_SSH_PORT='$p_ssh_port'" >> "$conf"
+  echo '' >> "$conf"
+  printf "%s" "export REMOTE_INSTANCE_CONNECT_CMD='$connection_cmd'" >> "$conf"
+  echo '' >> "$conf"
   printf "%s" "export REMOTE_INSTANCE_PROJECT_DOCROOT='$p_project_docroot'" >> "$conf"
+  echo '' >> "$conf"
   printf "%s" "export REMOTE_INSTANCE_APP_DOCROOT='$p_app_docroot'" >> "$conf"
+  echo '' >> "$conf"
 }
 
 ##
