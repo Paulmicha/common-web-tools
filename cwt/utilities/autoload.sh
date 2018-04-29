@@ -10,32 +10,12 @@
 #
 
 ##
-# [wip] TODO Autoloads all matching includes.
-#
-u_autoload_all_includes() {
-  echo "debug u_autoload_all_includes() : $@"
-
-  # [wip] TODO valuate using u_hook() to either produce filepath lookups OR dynamic function names ?
-  # examples :
-  # u_hook 'file-lookup' "$@"
-  # u_hook 'function' "$@"
-}
-
-##
-# [wip] TODO Autoloads the most "specific" include only.
-#
-u_autoload_most_specific_include() {
-  echo "debug u_autoload_most_specific_include() : $@"
-}
-
-##
 # Adds n+1 lookup paths in same dir, with or without version suffix.
 #
 # Allows specific overrides without adding extra depth in dir structure.
 #
 # @see u_stack_deps_get_lookup_paths()
 # @see u_global_get_includes_lookup_paths()
-# @see cwt/stack/init/aggregate_env_vars.sh
 #
 # @example
 #   u_autoload_add_lookup_level "cwt/app/$APP/" 'dependencies.sh' "$PROVISION_USING" DEPS_LOOKUP_PATHS

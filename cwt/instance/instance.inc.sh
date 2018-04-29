@@ -12,55 +12,139 @@
 #
 
 ##
-# Gets current local instance state.
+# Instance initialization process ("instance init").
 #
-# Determines if instance was already initialized, if its services are running...
-# TODO [wip] workaround instance state limitations (e.g. unhandled shutdown).
-#
-# @export INSTANCE_STATE global var.
-#
-# @example
-#   u_instance_get_state
-#   echo "$INSTANCE_STATE" # E.g. prints 'initialized'.
-#
-u_instance_get_state() {
-  local local_instance_state="$(u_registry_get_val 'instance_state')"
-
-  if [[ -n "$local_instance_state" ]]; then
-    export INSTANCE_STATE="$local_instance_state"
-  elif [[ -z "$INSTANCE_STATE" ]]; then
-    export INSTANCE_STATE='new'
-  fi
-
-  # Allow custom implementations to react to state getter calls (e.g. to notify
-  # in case of incoherences or errors, and/or to alter its value) ?
-  # TODO [wip] postponed + refacto CWT hooks.
-  # u_hook_app 'get' 'instance_state' '' 'stack'
-}
-
-##
-# Sets current local instance state.
-#
-# TODO [wip] workaround instance state limitations (e.g. unhandled shutdown).
-#
-# @export INSTANCE_STATE global var.
+# @exports GLOBALS
+# @exports GLOBALS_COUNT
+# @exports GLOBALS_UNIQUE_NAMES
+# @exports GLOBALS_UNIQUE_KEYS
+# @exports PROJECT_STACK
+# @exports PROVISION_USING
+# @exports CWT_CUSTOM_DIR
+# @exports GLOBALS_FILEPATH
 #
 # @example
-#   u_instance_set_state 'running'
-#   echo "$INSTANCE_STATE" # E.g. prints 'running'.
+#   # TODO [wip] provide detailed examples.
+#   u_instance_init
 #
-u_instance_set_state() {
-  local p_new_state="$1"
+u_instance_init() {
+  # Mandatory param (no default fallback provided).
+  local p_project_stack=''
 
-  if [[ -n "$p_new_state" ]]; then
-    u_registry_set_val 'instance_state' "$p_new_state"
-    export INSTANCE_STATE="$p_new_state"
+  # Default values :
+  # @see cwt/env/global.vars.sh
+  local p_project_docroot=''
+  local p_app_docroot=''
+  local p_app_git_origin=''
+  local p_app_git_work_tree=''
+  local p_instance_type=''
+  local p_instance_domain=''
+
+  # Optional remote host(s).
+  local p_remote_instances=''
+  local p_remote_instances_cmds=''
+  local p_remote_instances_types=''
+
+  # Configurable CWT internals.
+  local p_host_type=''
+  local p_provision_using=''
+  local p_deploy_using=''
+  local p_cwt_mode=''
+  local p_cwt_custom_dir=''
+
+  local p_yes=0
+  local p_verbose=0
+
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      -s) p_project_stack="$2"; shift 2;;
+
+      -o) p_project_docroot="$2"; shift 2;;
+      -a) p_app_docroot="$2"; shift 2;;
+      -g) p_app_git_origin="$2"; shift 2;;
+      -i) p_app_git_work_tree="$2"; shift 2;;
+      -t) p_instance_type="$2"; shift 2;;
+      -d) p_instance_domain="$2"; shift 2;;
+
+      -r) p_remote_instances="$2"; shift 2;;
+      -u) p_remote_instances_cmds="$2"; shift 2;;
+      -q) p_remote_instances_types="$2"; shift 2;;
+
+      -h) p_host_type="$2"; shift 2;;
+      -p) p_provision_using="$2"; shift 2;;
+      -e) p_deploy_using="$2"; shift 2;;
+      -m) p_cwt_mode="$2"; shift 2;;
+      -c) p_cwt_custom_dir="$2"; shift 2;;
+
+      -y) p_yes=1; shift 1;;
+      -v) p_verbose=1; shift 1;;
+
+      -*) echo "Error in $BASH_SOURCE line $LINENO: unknown option: $1" >&2; return;;
+      *) echo "Notice in $BASH_SOURCE line $LINENO: unsupported unnamed argument: $1" >&2; shift 1;;
+    esac
+  done
+
+  # Trigger pre-init (optional) extra processes.
+  hook -a 'init' -p 'pre'
+
+  export GLOBALS
+  export GLOBALS_COUNT
+  export GLOBALS_UNIQUE_NAMES
+  export GLOBALS_UNIQUE_KEYS
+
+  export PROJECT_STACK="$p_project_stack"
+  export PROVISION_USING="$p_provision_using"
+  export CWT_CUSTOM_DIR="$p_cwt_custom_dir"
+  export GLOBALS_FILEPATH='cwt/env/current/global.vars.sh'
+
+  if [-z "$PROJECT_STACK"] && [$p_yes -eq 0]; then
+    read -p "Enter PROJECT_STACK value : " PROJECT_STACK
   fi
 
-  # Allow custom implementations to react to state getter calls (e.g. to notify
-  # in case of incoherences or errors) ?
-  # TODO [wip] postponed + refacto CWT hooks.
-  # u_hook_app 'set' 'instance_state' '' 'stack'
+  if [[ -z "$PROJECT_STACK" ]]; then
+    echo >&2
+    echo "Error in $BASH_SOURCE line $LINENO: cannot carry on without a value for \$PROJECT_STACK." >&2
+    echo "Aborting (1)." >&2
+    return 1
+  fi
+
+  # Remove previously generated globals to avoid any interference.
+  if [[ -f "$GLOBALS_FILEPATH" ]]; then
+    rm "$GLOBALS_FILEPATH"
+  fi
+
+  # (Re)start dependencies and env vars aggregation.
+  unset GLOBALS
+  declare -A GLOBALS
+  GLOBALS_COUNT=0
+  GLOBALS_UNIQUE_NAMES=()
+  GLOBALS_UNIQUE_KEYS=()
+
+  # Load default CWT 'core' globals.
+  # These contain paths required for aggregating env vars and services.
+  . cwt/env/global.vars.sh
+
+  # Discover and aggregate stack services required by this instance.
+  export DEPS_LOOKUP_PATHS
+  u_stack_get_specs "$PROJECT_STACK"
+  if [[ $p_verbose == 1 ]]; then
+    u_autoload_print_lookup_paths DEPS_LOOKUP_PATHS "Stack dependencies"
+  fi
+
+  # Aggregate en vars for this instance. Needs to run after services discovery
+  # and write env vars in current instance's git-ignored settings file.
+  u_global_aggregate
+  u_global_write
+
+  # Make sure every writeable folders potentially git-ignored gets created
+  # before attempting to (re)set their permissions (see below).
+  hook -a 'ensure_dirs_exist' -s 'app'
+
+  # (Re)set file system ownership and permissions.
+  hook -a 'set_fsop' -s 'app stack service'
+
+  # Trigger post-init (optional) extra processes.
+  hook -a 'init' -p 'post'
 }
 
 ##
