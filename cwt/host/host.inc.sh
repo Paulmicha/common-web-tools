@@ -10,43 +10,44 @@
 #
 
 ##
-# Installs all services required to run the current project instance.
+# Adds (once) a cronjob on local host.
 #
-# @param 1 [optional] String : host to provision (defaults to local host).
+# @requires the 'crontab' software.
+# See https://stackoverflow.com/a/17975418
 #
-# @requires cwt/stack/init.sh (must have already been run at least once).
-# @requires the following globals in calling scope :
-# - $PROJECT_STACK
-# - $PROVISION_USING
-# - $HOST_OS
-# - $HOST_TYPE
-# - $INSTANCE_TYPE
+# @param 1 String the shell command to run.
+# @param 2 [optional] String crontab time - defaults to "every 30 minutes" which
+#   is noted like : */30 * * * *
 #
-# @see u_provisioning_preprocess()
-# @see u_stack_add_service()
+# Quick crontab syntax notes :
 #
-u_host_provision() {
-  local p_host="$1"
-  local stack_service
-  local ss_version_arr
+#   * * * * *
+#   | | | | |
+#   | | | | +----- day of week (0 - 6) (Sunday=0)
+#   | | | +------- month (1 - 12)
+#   | | +--------- day of month (1 - 31)
+#   | +----------- hour (0 - 23)
+#   +------------- min (0 - 59)
+#
+# Numbers like 10 mean "at the 10th ..." (depending on position above).
+# Fractions like "0/5" mean "every 5 ..." (depending on position above).
+#
+# @example
+#   # Run drupal cron task every 20 minutes :
+#   u_host_cron_add "drush --root=$APP_DOCROOT cron" "*/20 * * * *"
+#
+u_host_cron_add() {
+  local p_cmd="$1"
+  local p_freq="$2"
 
-  u_stack_get_specs "$PROJECT_STACK"
-  u_provisioning_preprocess
+  if [[ -z "$p_freq" ]]; then
+    p_freq="*/30 * * * *"
+  fi
 
-  for stack_service in "${STACK_SERVICES[@]}"; do
-    u_instance_item_split_version ss_version_arr "$stack_service"
+  local cronjob="$p_freq $p_cmd"
 
-    # TODO remote host install.
-    if [[ -n "${ss_version_arr[1]}" ]]; then
-      u_stack_add_service "${ss_version_arr[0]}" "${ss_version_arr[1]}"
-    else
-      u_stack_add_service "$stack_service"
-    fi
-  done
-
-  # TODO postprocess could implement complements ? Hook-like additions ?
-  # e.g. cron tasks, vhosts, https certificates, etc.
-  # u_provisioning_postprocess
+  # See https://stackoverflow.com/a/17975418
+  ( crontab -l | grep -v -F "$p_cmd" ; echo "$cronjob" ) | crontab -
 }
 
 ##
@@ -54,7 +55,7 @@ u_host_provision() {
 #
 # See https://stackoverflow.com/a/25851186
 #
-u_get_localhost_ip() {
+u_host_ip() {
   # Note : 'ip' command does not work on "Git bash" for Windows (but it works
   # on Windows 10 using "Bash on Ubuntu on Windows").
   # Yields bash: ip: command not found.
@@ -64,11 +65,11 @@ u_get_localhost_ip() {
 ##
 # Returns host OS and its version.
 #
-# TODO Mac OS support.
+# TODO [evol] Mac OS support ?
 #
 # See https://unix.stackexchange.com/a/6348
 #
-u_host_get_os() {
+u_host_os() {
   local os=''
   local version=''
 

@@ -1,16 +1,14 @@
 #!/usr/bin/env bash
 
 ##
+# Implements hook -a 'install' -s 'app'.
+#
 # Write local settings.
+# TODO [wip] refacto in progress.
 #
-# Usage from project root dir :
-# $ . cwt/app/drupal/7/write_settings.sh
-#
-
-. cwt/env/load.sh
 
 # Drupal settings.
-cat > web/sites/default/settings.local.php <<'EOF'
+cat > "$DRUPAL_LOCAL_SETTINGS" <<'EOF'
 <?php
 
 /**

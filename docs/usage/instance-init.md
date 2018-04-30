@@ -63,15 +63,15 @@ Files declaring dependencies are named `*dependencies.sh`, and use the following
 
 ```sh
 # Add a software dependency.
-require 'php'
+use 'php'
 
 # Version number is optional.
-require 'php-7'
-require 'php-5.6'
+use 'php-7'
+use 'php-5.6'
 
 # Use the '..' prefix to specify a list of mutually exclusive alternatives.
-require '..db'
-require '..webserver'
+use '..db'
+use '..webserver'
 
 # Each list of alternatives is a simple comma-separated string.
 alternatives['..db']='mariadb-10,mysql-5,postgresql-10'

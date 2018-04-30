@@ -23,7 +23,7 @@ global MY_VAR_NAME2 "[default]=test" # 2.
 global PROJECT_DOCROOT "[default]=$PWD"
 
 # Subshell can be used (callback must echo result).
-global HOST_OS "[default]='$(u_host_get_os)'"
+global HOST_OS "[default]='$(u_host_os)'"
 
 # Variable substitution (requires that the other var be already declared).
 global APP_DOCROOT "[default]=\$PROJECT_DOCROOT/web"

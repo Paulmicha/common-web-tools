@@ -27,7 +27,7 @@ global PROJECT_STACK
 global PROJECT_DOCROOT "[default]=$PWD"
 global APP_DOCROOT "[default]=$PROJECT_DOCROOT/web"
 global INSTANCE_TYPE "[default]=dev"
-global INSTANCE_DOMAIN "[default]='$(u_get_instance_domain)'"
+global INSTANCE_DOMAIN "[default]='$(u_instance_domain)'"
 global INSTANCE_ALIAS
 
 # This allows supporting multi-repo projects, i.e. 1 repo for the app + 1 for
@@ -43,7 +43,7 @@ global APP_GIT_WORK_TREE "[if-CWT_MODE]=separate [default]=$APP_DOCROOT"
 # and/or complements.
 # @see cwt/custom/README.md
 global HOST_TYPE "[default]=local"
-global HOST_OS "[default]='$(u_host_get_os)'"
+global HOST_OS "[default]='$(u_host_os)'"
 global PROVISION_USING "[default]=docker-compose"
 global DEPLOY_USING "[default]=git"
 

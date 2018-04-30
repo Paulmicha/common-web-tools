@@ -295,6 +295,9 @@ hook() {
 
       # Note : for tests, the "dry run" option prevents "override" alterations.
       # @see cwt/test/cwt/hook.test.sh
+      # This is also used for operations using the same lookup mechanism. These
+      # then transform the generated file paths, e.g. using string replacements.
+      # @see u_stack_deps_get_lookup_paths()
       if [[ $p_dry_run == 1 ]]; then
         inc_dry_run_files_list+="$inc
 "

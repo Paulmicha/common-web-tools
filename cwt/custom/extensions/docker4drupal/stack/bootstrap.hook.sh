@@ -1,16 +1,12 @@
 #!/usr/bin/env bash
 
 ##
-# Implements u_hook_app 'bash' 'alias'.
+# Implements hook -a 'bootstrap'.
 #
-# [wip] TODO avoid hardcoded service names ("services configurability" currently
-# missing in CWT) and root paths (Docker volume relative - e.g. :
-# /var/www/html/web).
-#
-# Drupal console note :
-# See https://github.com/hechoendrupal/drupal-console/issues/2515
+# Declares bash aliases for project stacks using docker4drupal.
 #
 # This file is dynamically included when the "hook" is triggered.
+# @see cwt/bootstrap.sh
 #
 
 alias composer="docker-compose exec --user 82 php composer"

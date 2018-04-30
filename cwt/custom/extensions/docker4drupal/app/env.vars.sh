@@ -10,7 +10,6 @@
 
 # TODO find a way to handle relative path inside containers.
 # -> Meanwhile, store both separately (host path + container path).
-# global DRUPAL_CONFIG_SYNC_DIR "[default]=$APP_GIT_WORK_TREE/config/sync"
 
 global DRUPAL_FILES_DIR "[default]=$APP_DOCROOT/sites/default/files"
 global DRUPAL_FILES_DIR_C "[default]=sites/default/files"

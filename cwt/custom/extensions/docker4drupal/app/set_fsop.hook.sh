@@ -4,14 +4,9 @@
 # Implements hook -a 'set_fsop' -s 'app stack'.
 #
 # This file is dynamically included when the "hook" is triggered.
-#
-# TODO this assumes ownership_and_perms settings for any drupal app provisioned
-# with docker-compose, and should be overridden if necessary.
-# @see u_autoload_override()
-# @see u_hook()
+# @see cwt/instance/instance.inc.sh
 #
 
-# TODO [wip] handle differences like php-fpm / apache.
 CHMOD_W_FILES='0770'
 CHMOD_W_DIRS='1771'
 CHMOD_NW_FILES='0750'

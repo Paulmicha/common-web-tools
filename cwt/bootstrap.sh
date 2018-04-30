@@ -12,7 +12,7 @@
 #
 
 # Make sure bootstrap runs only once in current shell scope.
-if [[ $CWT_BS_FLAG -ne 1 ]]; then
+if [ $CWT_BS_FLAG -ne 1 ]; then
   CWT_BS_FLAG=1
 
   # Include CWT core utilities.
@@ -22,7 +22,6 @@ if [[ $CWT_BS_FLAG -ne 1 ]]; then
   . cwt/utilities/fs.sh
   . cwt/utilities/global.sh
   . cwt/utilities/hook.sh
-  . cwt/utilities/host.sh
   . cwt/utilities/once.sh # TODO remove or make opt-in.
   . cwt/utilities/registry.sh # TODO remove or make opt-in.
   . cwt/utilities/string.sh
@@ -30,8 +29,8 @@ if [[ $CWT_BS_FLAG -ne 1 ]]; then
   # If stack init was run at least once, automatically load global env vars.
   # NB : this must happen before u_cwt_extend() gets called because it uses the
   # customizable global var CWT_CUSTOM_DIR to populate primitive values.
-  if [[ -f "cwt/env/current/global.vars.sh" ]]; then
-    . cwt/env/load.sh
+  if [ -f "cwt/env/current/global.vars.sh" ]; then
+    . cwt/env/current/global.vars.sh
   fi
 
   # Initializes "primitives" for hooks and lookups (CWT extension mecanisms).

@@ -3,8 +3,6 @@
 ##
 # Instance-related utility functions.
 #
-# See cwt/env/README.md
-#
 # This file is dynamically loaded.
 # @see cwt/bootstrap.sh
 #
@@ -97,7 +95,7 @@ u_instance_init() {
   export CWT_CUSTOM_DIR="$p_cwt_custom_dir"
   export GLOBALS_FILEPATH='cwt/env/current/global.vars.sh'
 
-  if [-z "$PROJECT_STACK"] && [$p_yes -eq 0]; then
+  if [ -z "$PROJECT_STACK" ] && [ $p_yes -eq 0 ]; then
     read -p "Enter PROJECT_STACK value : " PROJECT_STACK
   fi
 
@@ -141,7 +139,7 @@ u_instance_init() {
   hook -a 'ensure_dirs_exist' -s 'app'
 
   # (Re)set file system ownership and permissions.
-  hook -a 'set_fsop' -s 'app stack service'
+  hook -a 'set_fsop' -s 'app stack'
 
   # Trigger post-init (optional) extra processes.
   hook -a 'init' -p 'post'
@@ -178,11 +176,11 @@ u_instance_item_split_version() {
 
   local name_part="${p_str%-*}"
 
-  if [[ -n "$name_part" ]]; then
+  if [ -n "$name_part" ]; then
     eval "${p_var_name}+=(\"$name_part\")"
   fi
 
-  if [[ (-n "$version_part") && ("$version_part" != "$name_part") ]]; then
+  if [ -n "$version_part" ] && [ "$version_part" != "$name_part" ]; then
     eval "${p_var_name}+=(\"$version_part\")"
   fi
 }
@@ -199,10 +197,10 @@ u_instance_item_split_version() {
 # The generated domain uses 'io' TLD in order to avoid trigger searches from
 # some browsers address bars (like Chrome's).
 #
-u_get_instance_domain() {
-  local lh="$(u_get_localhost_ip)"
+u_instance_domain() {
+  local lh="$(u_host_ip)"
 
-  if [[ -z "$lh" ]]; then
+  if [ -z "$lh" ]; then
     lh='local'
   fi
 
