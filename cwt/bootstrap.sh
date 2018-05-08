@@ -12,7 +12,7 @@
 #
 
 # Make sure bootstrap runs only once in current shell scope.
-if [ $CWT_BS_FLAG -ne 1 ]; then
+if [[ $CWT_BS_FLAG -ne 1 ]]; then
   CWT_BS_FLAG=1
 
   # Include CWT core utilities.

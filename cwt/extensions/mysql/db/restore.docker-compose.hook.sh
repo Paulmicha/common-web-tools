@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 ##
-# Implements hook -s 'db' -a 'restore'.
+# Implements hook -s 'db' -a 'restore' -v 'PROVISION_USING'.
 #
 # This file is dynamically included when the "hook" is triggered.
 #
-# @requires cwt/db/_dump_vars.shared.sh
+# @requires cwt/extensions/mysql/db/_dump_vars.shared.sh
 # @requires the following additional globals in calling scope :
 # - DB_DUMP_BASE_PATH
 # - DB_DUMP_CONTAINER_BASE_PATH
@@ -13,7 +13,7 @@
 #
 
 dump_op='restore'
-. cwt/db/_dump_vars.shared.sh
+. cwt/extensions/mysql/db/_dump_vars.shared.sh
 
 # Default file to restore is "the last one" unless provided via a preset variable.
 dump_path="$DB_DUMP_BASE_PATH/$DUMP_FILE_LAST"

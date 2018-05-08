@@ -10,7 +10,8 @@
 # @requires global $INSTANCE_DOMAIN in scope.
 #
 # Usage :
-# $ . cwt/db/get_credentials.sh
+# $ . cwt/extensions/mysql/db/get_credentials.sh
 #
 
-u_db_get_credentials
+# TODO [wip] refacto in progress.
+# u_db_get_credentials

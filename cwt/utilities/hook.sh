@@ -118,8 +118,8 @@ hook() {
   local p_prefixes_filter
   local p_variants_filter
   local p_extensions_filter
-  local p_debug
-  local p_dry_run
+  local p_debug=0
+  local p_dry_run=0
 
   # Parse current function arguments.
   # See https://stackoverflow.com/a/31443098
@@ -141,7 +141,7 @@ hook() {
   done
 
   # Enforce minimum conditions for triggering hook (see 5 in function docblock).
-  if [[ -z "$p_actions_filter" ]] && [[ -z "$p_extensions_filter" ]] && [[ -z "$p_variants_filter" ]]; then
+  if [ -z "$p_actions_filter" ] && [ -z "$p_extensions_filter" ] && [ -z "$p_variants_filter" ]; then
     echo
     echo "Error in $BASH_SOURCE line $LINENO: cannot trigger hook without either 1 action filter (or 1 extension + 1 variant)." >&2
     echo "-> Aborting." >&2
@@ -156,13 +156,12 @@ hook() {
   local prefixes=""
 
   local base_paths=("cwt")
-  local extensions_dir="$PROJECT_SCRIPTS/extensions"
   local extension
   local lowercase
   local uppercase
 
   # Allow using only a particular extension (see the '-p' argument).
-  if [[ -n "$p_extensions_filter" ]]; then
+  if [ -n "$p_extensions_filter" ]; then
     for extension in $p_extensions_filter; do
       uppercase="$extension"
       u_str_uppercase
@@ -171,14 +170,14 @@ hook() {
       eval "subjects=\"\$${uppercase}_SUBJECTS\""
       eval "actions=\"\$${uppercase}_ACTIONS\""
       # Override base path for lookups.
-      base_paths=("$extensions_dir/$extension")
+      base_paths=("cwt/extensions/$extension")
     done
 
   # By default, any extension can append its own "primitives".
   # NB : this process will create duplicates e.g. when extension has identical
   # subject(s) than cwt core. They are dealt with below.
   # @see u_cwt_extend()
-  elif [[ -n "$extensions" ]]; then
+  elif [ -n "$extensions" ]; then
     for extension in $extensions; do
       uppercase="$extension"
       u_str_uppercase
@@ -187,36 +186,25 @@ hook() {
       eval "subjects+=\" \$${uppercase}_SUBJECTS\""
       eval "actions+=\" \$${uppercase}_ACTIONS\""
       # Every extension defines an additional base path for lookups.
-      base_paths+=("$extensions_dir/$extension")
+      base_paths+=("cwt/extensions/$extension")
     done
   fi
 
   # Triggering a hook requires subjects and actions.
-  if [[ -z "$subjects" ]]; then
+  if [ -z "$subjects" ]; then
     echo >&2
     echo "Error in $BASH_SOURCE line $LINENO: cannot trigger hook without any subjects." >&2
     echo "-> Aborting." >&2
     echo >&2
     return 2
   fi
-  if [[ -z "$actions" ]]; then
+  if [ -z "$actions" ]; then
     echo >&2
     echo "Error in $BASH_SOURCE line $LINENO: cannot trigger hook without any actions." >&2
     echo "-> Aborting." >&2
     echo >&2
     return 3
   fi
-
-  # exclusives allows restriction by primitive. By default, when a prefix
-  # is used, it becomes exclusive unless overridden using the '-o' arg.
-  # Update : #YAGNI -> simple flag for prefixes (see after filters part below).
-  # if [[ -n "$p_exclusive_filter" ]]; then
-  #   for exclusive in $p_exclusives_filter; do
-  #     exclusives+="$exclusive "
-  #   done
-  # else
-  #   exclusives="prefix"
-  # fi
 
   # Apply filters.
   local filters='subjects actions prefixes variants'
@@ -240,7 +228,7 @@ hook() {
     eval "$f=\"${dedup_arr[@]}\""
 
     eval "f_arg=\"\$p_${f}_filter\""
-    if [[ -z "$f_arg" ]]; then
+    if [ -z "$f_arg" ]; then
       continue
     fi
 
@@ -263,7 +251,7 @@ hook() {
   done
 
   # Debug.
-  # if [[ $p_debug == 1 ]]; then
+  # if [ $p_debug -eq 1 ]; then
   #   echo
   #   echo "debug hook call :"
   #   echo "  $(declare -p base_paths)"
@@ -283,7 +271,7 @@ hook() {
   done
 
   # Debug.
-  if [[ $p_debug == 1 ]]; then
+  if [ $p_debug -eq 1 ]; then
     u_autoload_print_lookup_paths lookup_paths "hook -a '$p_actions_filter' -s '$p_subjects_filter' -p '$p_prefixes_filter' -v '$p_variants_filter' -e '$p_extensions_filter'"
   fi
 
@@ -291,14 +279,14 @@ hook() {
   # @see cwt/utilities/autoload.sh
   local inc
   for inc in "${lookup_paths[@]}"; do
-    if [[ -f "$inc" ]]; then
+    if [ -f "$inc" ]; then
 
       # Note : for tests, the "dry run" option prevents "override" alterations.
       # @see cwt/test/cwt/hook.test.sh
       # This is also used for operations using the same lookup mechanism. These
       # then transform the generated file paths, e.g. using string replacements.
       # @see u_stack_deps_get_lookup_paths()
-      if [[ $p_dry_run == 1 ]]; then
+      if [ $p_dry_run -eq 1 ]; then
         inc_dry_run_files_list+="$inc
 "
         continue
@@ -362,15 +350,31 @@ u_hook_build_lookup_by_subject() {
   # local v_fallback_values='INSTANCE_TYPE HOST_TYPE'
   local v_fallback_values='INSTANCE_TYPE'
 
+  # By default, this function will produce lookup paths using the default
+  # double-extension pattern "*.hook.sh".
+  local suffix
+  local a_leaf
+  local a_wodots
+
   for bp in "${base_paths[@]}"; do
     for a_path in $actions; do
+
+      # We allow reusing hook() to look for files NOT using the default
+      # double-extension pattern "*.hook.sh". If we find a dot in the action
+      # filter, it triggers bypassing the use of this default suffix.
+      suffix='hook.sh'
+      a_leaf="${a_path##*/}"
+      a_wodots="${a_leaf//\.}"
+      if (( ${#a_leaf} - ${#a_wodots} > 0 )); then
+        suffix=''
+      fi
 
       # Ignore actions not "belonging" to current subject.
       case "$a_path" in "$p_subject"*)
 
         # First, add "pure" actions suggestions - unless excluded (see prefixes).
         if [[ -z "$p_prefixes_filter" ]]; then
-          lookup_paths+=("$bp/${a_path}.hook.sh")
+          lookup_paths+=("$bp/${a_path}.${suffix}")
         fi
 
         u_str_split1 a_parts_arr "$a_path" '/'
@@ -378,7 +382,7 @@ u_hook_build_lookup_by_subject() {
 
         # Then add "prefixed" actions suggestions.
         for x_val in $prefixes; do
-          lookup_paths+=("$bp/$p_subject/${x_val}_${a}.hook.sh")
+          lookup_paths+=("$bp/$p_subject/${x_val}_${a}.${suffix}")
         done
 
         # Finally, add the variants suggestions.
@@ -413,7 +417,7 @@ u_hook_build_lookup_by_subject() {
         u_str_subsequences "$v_values" '.'
         if [[ -z "$p_prefixes_filter" ]]; then
           for v_val in $str_subsequences; do
-            u_autoload_add_lookup_level "$bp/$p_subject/${a}." "hook.sh" "$v_val" lookup_paths
+            u_autoload_add_lookup_level "$bp/$p_subject/${a}." "$suffix" "$v_val" lookup_paths
           done
         fi
 
@@ -421,7 +425,7 @@ u_hook_build_lookup_by_subject() {
         # pre_bootstrap.docker-compose.hook.sh
         for x_val in $prefixes; do
           for v_val in $str_subsequences; do
-            u_autoload_add_lookup_level "$bp/$p_subject/${x_val}_${a}." "hook.sh" "$v_val" lookup_paths
+            u_autoload_add_lookup_level "$bp/$p_subject/${x_val}_${a}." "$suffix" "$v_val" lookup_paths
           done
         done
       esac

@@ -82,30 +82,88 @@ EOF
 ##
 # Aggregates global env vars for this instance.
 #
-# This process consists in :
-# - including any files named global.vars.sh in extensions, services, custom dir.
-# - exporting each variable defined in them as global
-# - assigning their value - either by terminal prompt or by assigning default
-#   values if no matching argument is found
+# This produces lookup paths by subject, action, and extensions.
 #
 # @see u_instance_init()
 #
+# @example
+#   u_global_aggregate
+#   # May trigger the following lookup paths (depending if optional extensions
+#   # are present in current project instance) :
+#   # - cwt/app/global.vars.sh
+#   # - cwt/extensions/docker4drupal/app/global.vars.sh
+#   # - cwt/extensions/docker-compose/app/global.vars.sh
+#   # - cwt/extensions/mysql/app/global.vars.sh
+#   # - cwt/extensions/global.vars.sh
+#   # - cwt/extensions/docker4drupal/extensions/global.vars.sh
+#   # - cwt/extensions/docker-compose/extensions/global.vars.sh
+#   # - cwt/extensions/mysql/extensions/global.vars.sh
+#   # - cwt/git/global.vars.sh
+#   # - cwt/extensions/docker4drupal/git/global.vars.sh
+#   # - cwt/extensions/docker-compose/git/global.vars.sh
+#   # - cwt/extensions/mysql/git/global.vars.sh
+#   # - cwt/host/global.vars.sh
+#   # - cwt/extensions/docker4drupal/host/global.vars.sh
+#   # - cwt/extensions/docker-compose/host/global.vars.sh
+#   # - cwt/extensions/mysql/host/global.vars.sh
+#   # - cwt/instance/global.vars.sh
+#   # - cwt/extensions/docker4drupal/instance/global.vars.sh
+#   # - cwt/extensions/docker-compose/instance/global.vars.sh
+#   # - cwt/extensions/mysql/instance/global.vars.sh
+#   # - cwt/remote/global.vars.sh
+#   # - cwt/extensions/docker4drupal/remote/global.vars.sh
+#   # - cwt/extensions/docker-compose/remote/global.vars.sh
+#   # - cwt/extensions/mysql/remote/global.vars.sh
+#   # - cwt/stack/global.vars.sh
+#   # - cwt/extensions/docker4drupal/stack/global.vars.sh
+#   # - cwt/extensions/docker-compose/stack/global.vars.sh
+#   # - cwt/extensions/mysql/stack/global.vars.sh
+#   # - cwt/drush/global.vars.sh
+#   # - cwt/extensions/docker4drupal/drush/global.vars.sh
+#   # - cwt/extensions/docker-compose/drush/global.vars.sh
+#   # - cwt/extensions/mysql/drush/global.vars.sh
+#   # - cwt/test/global.vars.sh
+#   # - cwt/extensions/docker4drupal/test/global.vars.sh
+#   # - cwt/extensions/docker-compose/test/global.vars.sh
+#   # - cwt/extensions/mysql/test/global.vars.sh
+#   # - cwt/db/global.vars.sh
+#   # - cwt/extensions/docker4drupal/db/global.vars.sh
+#   # - cwt/extensions/docker-compose/db/global.vars.sh
+#   # - cwt/extensions/mysql/db/global.vars.sh
+#   # - cwt/extensions/mysql/global.vars.sh
+#   # - cwt/extensions/docker4drupal/global.vars.sh
+#   # - cwt/extensions/docker-compose/global.vars.sh
+#   # - scripts/global.vars.sh
+#
 u_global_aggregate() {
-  u_global_get_includes_lookup_paths
+  local f
+  local inc_dry_run_files_list
 
-  if [[ $P_VERBOSE == 1 ]]; then
-    u_autoload_print_lookup_paths GLOBALS_INCLUDES_PATHS "Env includes"
-  fi
+  # TODO find a better workaround : we're using an empty global variable to
+  # avoid the default variants lookups in hook().
+  # @see u_hook_build_lookup_by_subject()
+  _NO_VARIANTS=''
+  hook -a 'global.vars.sh' -v '_NO_VARIANTS' -t
 
-  for vars_file in "${GLOBALS_INCLUDES_PATHS[@]}"; do
-    if [[ -f "$vars_file" ]]; then
-      . "$vars_file"
+  for f in $inc_dry_run_files_list; do
+    if [[ "$f" != 'cwt/env/global.vars.sh' ]]; then
+      . "$f"
     fi
-    u_autoload_get_complement "$vars_file"
   done
 
-  # Allow extra env vars file at the root of custom dir, *after* dynamic lookups.
-  if [[ -f "$PROJECT_SCRIPTS/global.vars.sh" ]]; then
+  # Allow extra lookup paths at the root of extensions.
+  if [ -n "$CWT_EXTENSIONS" ]; then
+    local extension
+    for extension in $CWT_EXTENSIONS; do
+      if [ -f "$extension/global.vars.sh" ]; then
+        . "$extension/global.vars.sh"
+      fi
+    done
+  fi
+
+  # Allow extra lookup path at the root of project's scripts, *after* all
+  # dynamic lookups above.
+  if [ -f "$PROJECT_SCRIPTS/global.vars.sh" ]; then
     . "$PROJECT_SCRIPTS/global.vars.sh"
   fi
 
@@ -447,150 +505,4 @@ u_global_debug() {
     done
   done
   echo
-}
-
-##
-# Gets env settings includes lookup paths.
-#
-# @param 1 [optional] String :
-#   $PROJECT_STACK override (should exist in calling scope).
-# @param 2 [optional] String :
-#   $PROVISION_USING override (should exist in calling scope).
-#
-# @requires the following globals in calling scope :
-# - $APP
-# - $APP_VERSION
-# - $STACK_SERVICES
-# - $STACK_PRESETS
-# - $PROVISION_USING
-#
-# @see u_stack_get_specs()
-# @see cwt/stack/init/aggregate_env_vars.sh
-#
-# @example
-#   u_global_get_includes_lookup_paths 'drupal-7--p-opigno,solr,memcached' 'docker-compose-3'
-#   for vars_file in "${GLOBALS_INCLUDES_PATHS[@]}"; do
-#     echo "$vars_file"
-#   done
-#
-u_global_get_includes_lookup_paths() {
-  local p_project_stack="$1"
-  local p_provision_using="$2"
-
-  export GLOBALS_INCLUDES_PATHS
-
-  local stack
-  if [[ -n "$p_project_stack" ]]; then
-    stack="$p_project_stack"
-  else
-    stack="$PROJECT_STACK"
-  fi
-
-  local provisioning
-  if [[ -n "$p_provision_using" ]]; then
-    provisioning="$p_provision_using"
-  else
-    provisioning="$PROVISION_USING"
-  fi
-
-  GLOBALS_INCLUDES_PATHS=()
-
-  if [[ -n "$APP_VERSION" ]]; then
-    local app_v
-    local app_path=''
-    local app_version_arr=()
-    u_str_split1 app_version_arr "$APP_VERSION" '.'
-  fi
-
-  # Provisioning-related includes.
-  local p
-  local p_arr=()
-  u_instance_item_split_version p_arr "$PROVISION_USING"
-  if [[ -n "${p_arr[1]}" ]]; then
-    local p_v
-    local p_path="cwt/provision/${p_arr[0]}"
-    local p_version_arr=()
-    u_array_add_once "$p_path/vars.sh" GLOBALS_INCLUDES_PATHS
-    u_str_split1 p_version_arr "${p_arr[1]}" '.'
-    for p_v in "${p_version_arr[@]}"; do
-      p_path+="/$p_v"
-      u_array_add_once "$p_path/vars.sh" GLOBALS_INCLUDES_PATHS
-    done
-  else
-    u_array_add_once "cwt/provision/${PROVISION_USING}/vars.sh" GLOBALS_INCLUDES_PATHS
-  fi
-
-  local ss_arr=()
-  for stack_service in "${STACK_SERVICES[@]}"; do
-    u_instance_item_split_version ss_arr "$stack_service"
-    if [[ -n "${ss_arr[1]}" ]]; then
-      u_global_get_includes_lookup_version "cwt/provision/${ss_arr[0]}" "${ss_arr[1]}" true
-    else
-      u_array_add_once "cwt/provision/${stack_service}/vars.sh" GLOBALS_INCLUDES_PATHS
-      u_autoload_add_lookup_level "cwt/provision/${stack_service}/" 'vars.sh' "$PROVISION_USING" GLOBALS_INCLUDES_PATHS
-    fi
-  done
-
-  # Presets-related includes.
-  local sp_arr=()
-  local sp_type
-  local sp_types='provision app custom'
-
-  for stack_preset in "${STACK_PRESETS[@]}"; do
-    u_instance_item_split_version sp_arr "$stack_preset"
-    if [[ -n "${sp_arr[1]}" ]]; then
-      for sp_type in $sp_types; do
-        u_global_get_includes_lookup_version "cwt/$sp_type/presets/${sp_arr[0]}" "${sp_arr[1]}" true
-      done
-    else
-      for sp_type in $sp_types; do
-        u_array_add_once "cwt/$sp_type/presets/${stack_preset}/vars.sh" GLOBALS_INCLUDES_PATHS
-        u_autoload_add_lookup_level "cwt/$sp_type/presets/${stack_preset}/" 'vars.sh' "$PROVISION_USING" GLOBALS_INCLUDES_PATHS
-      done
-    fi
-  done
-
-  # App-related includes.
-  u_array_add_once "cwt/app/${APP}/env.vars.sh" GLOBALS_INCLUDES_PATHS
-  u_autoload_add_lookup_level "cwt/app/${APP}/env." 'vars.sh' "$PROVISION_USING" GLOBALS_INCLUDES_PATHS
-
-  if [[ -n "$APP_VERSION" ]]; then
-    app_path="cwt/app/$APP"
-    for app_v in "${app_version_arr[@]}"; do
-      app_path+="/$app_v"
-      u_array_add_once "$app_path/env.vars.sh" GLOBALS_INCLUDES_PATHS
-      u_autoload_add_lookup_level "$app_path/env." 'vars.sh' "$PROVISION_USING" GLOBALS_INCLUDES_PATHS
-    done
-  fi
-}
-
-##
-# Appends version number lookups.
-#
-# @see u_global_get_includes_lookup_paths()
-#
-u_global_get_includes_lookup_version() {
-  local p_prefix="$1"
-  local p_version="$2"
-  local p_prepend_raw="$3"
-
-  local v
-  local path="$p_prefix"
-  local version_arr=()
-
-  if [[ "$p_prepend_raw" == true ]]; then
-    u_array_add_once "$path/vars.sh" GLOBALS_INCLUDES_PATHS
-    u_autoload_add_lookup_level "$path/" 'vars.sh' "$PROVISION_USING" GLOBALS_INCLUDES_PATHS
-  fi
-
-  u_str_split1 version_arr "$p_version" '.'
-  for v in "${version_arr[@]}"; do
-    path+="/$v"
-
-    if [[ "$p_prepend_raw" == true ]]; then
-      u_array_add_once "$path/vars.sh" GLOBALS_INCLUDES_PATHS
-    fi
-
-    u_autoload_add_lookup_level "$path/" 'vars.sh' "$PROVISION_USING" GLOBALS_INCLUDES_PATHS
-  done
 }

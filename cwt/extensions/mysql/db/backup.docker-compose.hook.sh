@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 
 ##
-# Implements hook -s 'db' -a 'backup'.
+# Implements hook -s 'db' -a 'backup' -v 'PROVISION_USING'.
 #
 # This file is dynamically included when the "hook" is triggered.
 #
-# @requires cwt/db/_dump_vars.shared.sh
+# @requires cwt/extensions/mysql/db/_dump_vars.shared.sh
 #
 # This script uses the following optional variable, if defined in calling scope :
 # - DB_DUMP_NO_DATA_TABLES
 #
 
 dump_op='backup'
-. cwt/db/_dump_vars.shared.sh
+. cwt/extensions/mysql/db/_dump_vars.shared.sh
 
 # Ensures DB dumps dir is writeable.
 chmod +w "$DB_DUMP_BASE_PATH" -R
