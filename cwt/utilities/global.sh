@@ -146,9 +146,7 @@ u_global_aggregate() {
   hook -a 'global.vars.sh' -v '_NO_VARIANTS' -t
 
   for f in $inc_dry_run_files_list; do
-    if [[ "$f" != 'cwt/env/global.vars.sh' ]]; then
-      . "$f"
-    fi
+    . "$f"
   done
 
   # Allow extra lookup paths at the root of extensions.
