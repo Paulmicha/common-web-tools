@@ -1,15 +1,18 @@
 #!/usr/bin/env bash
 
 ##
-# App instance installation.
+# CWT app install action.
 #
-# This script is a generic example of a common app action.
+# This generic implementation is meant to setup the application if it requires
+# e.g. a database to be initialiazed, an initial DB dump to be imported, etc.
 #
-# The predefined hook call below represents an operation meant to setup the
-# application if it requires e.g. a database to be initialiazed, an initial DB
-# dump to be imported, etc.
+# It supports variants by :
+# - PROVISION_USING
+# - INSTANCE_TYPE
+# @see hook()
 #
-# @prereq stack services must be running (stack/start).
+# @prereq stack services must be running (see 'instance start' action).
+# @see cwt/instance/start.sh
 #
 # @example
 #   cwt/app/install.sh
@@ -17,7 +20,4 @@
 
 . cwt/bootstrap.sh
 
-hook -a 'install' -s 'app'
-
-# Allow custom complements for this script.
-u_autoload_get_complement "$BASH_SOURCE"
+hook -a 'install' -s 'app' -v 'PROVISION_USING INSTANCE_TYPE'

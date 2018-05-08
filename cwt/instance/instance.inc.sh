@@ -77,7 +77,7 @@ u_instance_init() {
   done
 
   # Trigger pre-init (optional) extra processes.
-  hook -a 'init' -p 'pre'
+  hook -a 'init' -p 'pre' -v 'PROVISION_USING INSTANCE_TYPE HOST_TYPE'
 
   export GLOBALS
   export GLOBALS_COUNT
@@ -116,8 +116,8 @@ u_instance_init() {
   # (Re)set file system ownership and permissions.
   hook -a 'set_fsop' -s 'app instance'
 
-  # Trigger post-init (optional) extra processes.
-  hook -a 'init' -p 'post'
+  # Trigger instance init (optional) extra processes.
+  hook -a 'init' -v 'PROVISION_USING INSTANCE_TYPE HOST_TYPE'
 }
 
 ##

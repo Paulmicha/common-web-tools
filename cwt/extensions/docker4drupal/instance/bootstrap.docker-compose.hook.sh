@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ##
-# Implements hook -a 'bootstrap'.
+# Implements hook -a 'bootstrap' -v 'PROVISION_USING'.
 #
 # Declares bash aliases for project stacks using docker4drupal.
 #
@@ -10,6 +10,6 @@
 #
 
 alias composer="docker-compose exec --user 82 php composer"
-alias composersu="docker-compose exec --user php composer"
+alias composersu="docker-compose exec php composer"
 alias drush="docker-compose exec --user 82 php drush --root=/var/www/html/web"
 alias drupal="docker-compose exec --user 82 php ./vendor/drupal/console/bin/drupal --root=/var/www/html/web"

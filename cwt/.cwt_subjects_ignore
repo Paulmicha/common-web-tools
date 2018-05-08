@@ -1,4 +1,5 @@
 env
+extensions
 test
 utilities
 vendor

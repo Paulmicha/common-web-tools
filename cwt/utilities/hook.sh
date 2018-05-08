@@ -118,6 +118,7 @@ hook() {
   local p_prefixes_filter
   local p_variants_filter
   local p_extensions_filter
+  local p_custom_filter
   local p_debug=0
   local p_dry_run=0
 
@@ -131,6 +132,7 @@ hook() {
       -p) p_prefixes_filter="$2"; shift 2;;
       -v) p_variants_filter="$2"; shift 2;;
       -e) p_extensions_filter="$2"; shift 2;;
+      -c) p_custom_filter="$2"; shift 2;;
       # Flag (arg without any value).
       -d) p_debug=1; shift 1;;
       -t) p_dry_run=1; shift 1;;
@@ -141,9 +143,9 @@ hook() {
   done
 
   # Enforce minimum conditions for triggering hook (see 5 in function docblock).
-  if [ -z "$p_actions_filter" ] && [ -z "$p_extensions_filter" ] && [ -z "$p_variants_filter" ]; then
+  if [ -z "$p_actions_filter" ] && [ -z "$p_extensions_filter" ] && [ -z "$p_variants_filter" ] && [ -z "$p_custom_filter" ]; then
     echo
-    echo "Error in $BASH_SOURCE line $LINENO: cannot trigger hook without either 1 action filter (or 1 extension + 1 variant)." >&2
+    echo "Error in $BASH_SOURCE line $LINENO: cannot trigger hook without either 1 action or custom filter (or 1 extension + 1 variant)." >&2
     echo "-> Aborting." >&2
     echo
     return 1
@@ -267,7 +269,7 @@ hook() {
   local lookup_subject
 
   for lookup_subject in $subjects; do
-    u_hook_build_lookup_by_subject "$lookup_subject"
+    u_hook_build_lookup_by_subject "$lookup_subject" "$p_custom_filter"
   done
 
   # Debug.
@@ -323,6 +325,7 @@ hook() {
 #
 u_hook_build_lookup_by_subject() {
   local p_subject="$1"
+  local p_suffix_override="$2"
 
   local bp
 
@@ -351,23 +354,15 @@ u_hook_build_lookup_by_subject() {
   local v_fallback_values='INSTANCE_TYPE'
 
   # By default, this function will produce lookup paths using the default
-  # double-extension pattern "*.hook.sh".
-  local suffix
-  local a_leaf
-  local a_wodots
+  # double-extension pattern "*.hook.sh". This can be altered when using the
+  # custom filter argument (-c).
+  local suffix='hook.sh'
+  if [[ -n "$p_suffix_override" ]]; then
+    suffix="$p_suffix_override"
+  fi
 
   for bp in "${base_paths[@]}"; do
     for a_path in $actions; do
-
-      # We allow reusing hook() to look for files NOT using the default
-      # double-extension pattern "*.hook.sh". If we find a dot in the action
-      # filter, it triggers bypassing the use of this default suffix.
-      suffix='hook.sh'
-      a_leaf="${a_path##*/}"
-      a_wodots="${a_leaf//\.}"
-      if (( ${#a_leaf} - ${#a_wodots} > 0 )); then
-        suffix=''
-      fi
 
       # Ignore actions not "belonging" to current subject.
       case "$a_path" in "$p_subject"*)

@@ -88,51 +88,59 @@ EOF
 #
 # @example
 #   u_global_aggregate
+#
 #   # May trigger the following lookup paths (depending if optional extensions
 #   # are present in current project instance) :
+#
 #   # - cwt/app/global.vars.sh
 #   # - cwt/extensions/docker4drupal/app/global.vars.sh
 #   # - cwt/extensions/docker-compose/app/global.vars.sh
 #   # - cwt/extensions/mysql/app/global.vars.sh
-#   # - cwt/extensions/global.vars.sh
-#   # - cwt/extensions/docker4drupal/extensions/global.vars.sh
-#   # - cwt/extensions/docker-compose/extensions/global.vars.sh
-#   # - cwt/extensions/mysql/extensions/global.vars.sh
+#
 #   # - cwt/git/global.vars.sh
 #   # - cwt/extensions/docker4drupal/git/global.vars.sh
 #   # - cwt/extensions/docker-compose/git/global.vars.sh
 #   # - cwt/extensions/mysql/git/global.vars.sh
+#
 #   # - cwt/host/global.vars.sh
 #   # - cwt/extensions/docker4drupal/host/global.vars.sh
 #   # - cwt/extensions/docker-compose/host/global.vars.sh
 #   # - cwt/extensions/mysql/host/global.vars.sh
+#
 #   # - cwt/instance/global.vars.sh
 #   # - cwt/extensions/docker4drupal/instance/global.vars.sh
 #   # - cwt/extensions/docker-compose/instance/global.vars.sh
 #   # - cwt/extensions/mysql/instance/global.vars.sh
+#
 #   # - cwt/remote/global.vars.sh
 #   # - cwt/extensions/docker4drupal/remote/global.vars.sh
 #   # - cwt/extensions/docker-compose/remote/global.vars.sh
 #   # - cwt/extensions/mysql/remote/global.vars.sh
+#
 #   # - cwt/stack/global.vars.sh
 #   # - cwt/extensions/docker4drupal/stack/global.vars.sh
 #   # - cwt/extensions/docker-compose/stack/global.vars.sh
 #   # - cwt/extensions/mysql/stack/global.vars.sh
+#
 #   # - cwt/drush/global.vars.sh
 #   # - cwt/extensions/docker4drupal/drush/global.vars.sh
 #   # - cwt/extensions/docker-compose/drush/global.vars.sh
 #   # - cwt/extensions/mysql/drush/global.vars.sh
+#
 #   # - cwt/test/global.vars.sh
 #   # - cwt/extensions/docker4drupal/test/global.vars.sh
 #   # - cwt/extensions/docker-compose/test/global.vars.sh
 #   # - cwt/extensions/mysql/test/global.vars.sh
+#
 #   # - cwt/db/global.vars.sh
 #   # - cwt/extensions/docker4drupal/db/global.vars.sh
 #   # - cwt/extensions/docker-compose/db/global.vars.sh
 #   # - cwt/extensions/mysql/db/global.vars.sh
+#
 #   # - cwt/extensions/mysql/global.vars.sh
 #   # - cwt/extensions/docker4drupal/global.vars.sh
 #   # - cwt/extensions/docker-compose/global.vars.sh
+#
 #   # - scripts/global.vars.sh
 #
 u_global_aggregate() {
@@ -143,7 +151,8 @@ u_global_aggregate() {
   # avoid the default variants lookups in hook().
   # @see u_hook_build_lookup_by_subject()
   _NO_VARIANTS=''
-  hook -a 'global.vars.sh' -v '_NO_VARIANTS' -t
+  # hook -a 'global.vars.sh' -v '_NO_VARIANTS' -t
+  hook -a 'global' -c 'vars.sh' -v '_NO_VARIANTS' -t
 
   for f in $inc_dry_run_files_list; do
     . "$f"

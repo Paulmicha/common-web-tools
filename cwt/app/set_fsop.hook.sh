@@ -4,7 +4,7 @@
 # Implements hook -a 'set_fsop' -s 'app stack'.
 #
 # This file is dynamically included when the "hook" is triggered.
-# @see cwt/instance/instance.inc.sh
+# @see u_instance_init() in cwt/instance/instance.inc.sh
 #
 
 if [[ -n "$PROTECTED_FILES" ]]; then

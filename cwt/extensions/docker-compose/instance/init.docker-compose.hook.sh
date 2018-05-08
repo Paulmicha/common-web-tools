@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 
 ##
-# Implements stack post init hook.
+# Implements hook -a 'init' -v 'PROVISION_USING INSTANCE_TYPE HOST_TYPE'.
 #
-# This script is automatically sourced by another script.
-# @see cwt/stack/init.sh
-# @see cwt/utilities/hook.sh
+# Reacts to "instance init" for project instances using 'docker-compose' as
+# provisioning method ($PROVISION_USING).
 #
 
 # Write env vars to docker-compose specific ".env" file (in project root dir).
@@ -23,7 +22,7 @@ if [[ -z "$GLOBALS_COUNT" ]]; then
 fi
 
 # Confirm overwriting existing env file if it already exists.
-if [[ ($P_YES == 0) && (-f "$docker_compose_env_file") ]]; then
+if [[ $P_YES -eq 0 ]] && [[ -f "$docker_compose_env_file" ]]; then
   echo
   while true; do
     read -p "Override existing docker-compose env file ? (y/n) : " yn
@@ -39,7 +38,6 @@ fi
 echo -n '' > "$docker_compose_env_file"
 
 # Write every aggregated globals.
-# @see cwt/stack/init/aggregate_env_vars.sh
 for global_name in ${GLOBALS['.sorting']}; do
   u_str_split1 evn_arr $global_name '|'
   global_name="${evn_arr[1]}"
