@@ -42,7 +42,7 @@
 # - cwt/my_subject/my_action.docker-compose.dev.hook.sh
 #
 # @requires the following global variables in calling scope :
-# - CWT_CUSTOM_DIR
+# - PROJECT_SCRIPTS
 # - CWT_ACTIONS
 # - CWT_SUBJECTS
 # - CWT_EXTENSIONS
@@ -68,8 +68,8 @@
 #   # (given INSTANCE_TYPE='prod')
 #   # - cwt/<CWT_SUBJECTS>/bootstrap.hook.sh
 #   # - cwt/<CWT_SUBJECTS>/bootstrap.prod.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/bootstrap.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/bootstrap.prod.hook.sh
+#   # - $PROJECT_SCRIPTS/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/bootstrap.hook.sh
+#   # - $PROJECT_SCRIPTS/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/bootstrap.prod.hook.sh
 #
 #   # 2. When providing an action + a filter by subject :
 #   hook -a 'init' -s 'stack'
@@ -77,8 +77,8 @@
 #   # (given INSTANCE_TYPE='prod')
 #   # - cwt/stack/init.hook.sh
 #   # - cwt/stack/init.prod.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/stack/init.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/stack/init.prod.hook.sh
+#   # - $PROJECT_SCRIPTS/<CWT_EXTENSIONS>/stack/init.hook.sh
+#   # - $PROJECT_SCRIPTS/<CWT_EXTENSIONS>/stack/init.prod.hook.sh
 #
 #   # 3. When providing an action + a filter by 1 or several subjects + 1 or
 #   #   several variants filter :
@@ -89,16 +89,16 @@
 #   # - cwt/stack/init.dev.hook.sh
 #   # - cwt/stack/init.local.hook.sh
 #   # - cwt/stack/init.dev.local.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/stack/init.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/stack/init.dev.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/stack/init.local.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/stack/init.dev.local.hook.sh
+#   # - $PROJECT_SCRIPTS/<CWT_EXTENSIONS>/stack/init.hook.sh
+#   # - $PROJECT_SCRIPTS/<CWT_EXTENSIONS>/stack/init.dev.hook.sh
+#   # - $PROJECT_SCRIPTS/<CWT_EXTENSIONS>/stack/init.local.hook.sh
+#   # - $PROJECT_SCRIPTS/<CWT_EXTENSIONS>/stack/init.dev.local.hook.sh
 #
 #   # 4. Extensions filter :
 #   hook -e 'nodejs'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
 #   # (given INSTANCE_TYPE='prod')
-#   # - $CWT_CUSTOM_DIR/extensions/nodejs/<EXT_SUBJECTS>/<SUBJECT_ACTIONS>.prod.hook.sh
+#   # - $PROJECT_SCRIPTS/extensions/nodejs/<EXT_SUBJECTS>/<SUBJECT_ACTIONS>.prod.hook.sh
 #
 #   # 5. Prefixes filter are exclusive by default, which means pure actions are
 #   #   not included. Ex :
@@ -107,8 +107,8 @@
 #   # (given INSTANCE_TYPE='prod')
 #   # - cwt/<CWT_SUBJECTS>/pre_bootstrap.hook.sh
 #   # - cwt/<CWT_SUBJECTS>/pre_bootstrap.prod.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/pre_bootstrap.hook.sh
-#   # - $CWT_CUSTOM_DIR/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/pre_bootstrap.prod.hook.sh
+#   # - $PROJECT_SCRIPTS/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/pre_bootstrap.hook.sh
+#   # - $PROJECT_SCRIPTS/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/pre_bootstrap.prod.hook.sh
 #
 # We exceptionally name that function without following the usual convention.
 #
@@ -156,7 +156,7 @@ hook() {
   local prefixes=""
 
   local base_paths=("cwt")
-  local extensions_dir="$CWT_CUSTOM_DIR/extensions"
+  local extensions_dir="$PROJECT_SCRIPTS/extensions"
   local extension
   local lowercase
   local uppercase

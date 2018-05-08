@@ -9,10 +9,14 @@
 # @see cwt/instance/instance.inc.sh
 #
 
-required_dirs="$DRUPAL_FILES_DIR $DRUPAL_TMP_DIR $DRUPAL_PRIVATE_DIR $DRUPAL_CONFIG_SYNC_DIR"
+required_dirs="$DRUPAL_FILES_DIR $DRUPAL_TMP_DIR $DRUPAL_PRIVATE_DIR"
+
+if [ $DRUPAL_VERSION -eq 8 ]; then
+  required_dirs+=" $DRUPAL_CONFIG_SYNC_DIR"
+fi
 
 for required_dir in $required_dirs; do
-  echo "Check $required_dir dir exists..."
+  echo "Check $required_dir dir exists ..."
   if [ -n "$required_dir" ] && [ ! -d "$required_dir" ]; then
     echo "Creating missing dir ${required_dir}."
     mkdir -p "$required_dir"

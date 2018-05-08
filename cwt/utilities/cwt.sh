@@ -47,7 +47,7 @@
 #   to each one of these extensions.
 #   Important notes : extensions' folder names can only contain the following
 #   characters : A-Z a-z 0-9 dots . underscores _ dashes -
-#   Also, if the CWT customization dir (CWT_CUSTOM_DIR = 'cwt/custom' by default)
+#   Also, if the CWT customization dir (PROJECT_SCRIPTS = 'cwt/custom' by default)
 #   is altered, extensions can only be detected AFTER stack init has been run once.
 #
 # 4. The 'CWT_INC' values are a simple list of files to be sourced in
@@ -134,23 +134,20 @@ u_cwt_extend() {
 # @see u_cwt_extend()
 #
 u_cwt_extensions() {
-  u_cwt_get_extensions_dir
-  if [[ -d "$extensions_dir" ]]; then
-    local extension
-    u_fs_dir_list "$extensions_dir"
-    for extension in $dir_list; do
+  local extension
+  u_fs_dir_list "cwt/extensions"
+  for extension in $dir_list; do
 
-      # Ignore dirnames starting with '.'.
-      if [[ "${extension:0:1}" == '.' ]]; then
-        continue
-      fi
+    # Ignore dirnames starting with '.'.
+    if [[ "${extension:0:1}" == '.' ]]; then
+      continue
+    fi
 
-      eval "CWT_EXTENSIONS+=\"$extension \""
+    eval "CWT_EXTENSIONS+=\"$extension \""
 
-      # Aggregate namespaced primitives for every extension.
-      u_cwt_extend "$extensions_dir/$extension"
-    done
-  fi
+    # Aggregate namespaced primitives for every extension.
+    u_cwt_extend "cwt/extensions/$extension"
+  done
 }
 
 ##
@@ -288,23 +285,4 @@ u_cwt_primitive_values() {
       fi
     fi
   done
-}
-
-##
-# Gets CWT extensions base path.
-#
-# NB : for performance reasons (to avoid using a subshell), this function
-# writes its result to a variable subject to collision in calling scope.
-#
-# @var extensions_dir
-#
-# @example
-#   u_cwt_get_extensions_dir
-#   echo "$extensions_dir"
-#
-u_cwt_get_extensions_dir() {
-  extensions_dir="cwt/custom/extensions"
-  if [[ -n "$CWT_CUSTOM_DIR" ]]; then
-    extensions_dir="$CWT_CUSTOM_DIR/extensions"
-  fi
 }

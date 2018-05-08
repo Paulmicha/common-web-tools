@@ -16,9 +16,8 @@
 # @exports GLOBALS_COUNT
 # @exports GLOBALS_UNIQUE_NAMES
 # @exports GLOBALS_UNIQUE_KEYS
-# @exports PROJECT_STACK
 # @exports PROVISION_USING
-# @exports CWT_CUSTOM_DIR
+# @exports PROJECT_SCRIPTS
 # @exports GLOBALS_FILEPATH
 #
 # @example
@@ -26,9 +25,6 @@
 #   u_instance_init
 #
 u_instance_init() {
-  # Mandatory param (no default fallback provided).
-  local p_project_stack=''
-
   # Default values :
   # @see cwt/env/global.vars.sh
   local p_project_docroot=''
@@ -55,8 +51,6 @@ u_instance_init() {
 
   while [ "$#" -gt 0 ]; do
     case "$1" in
-      -s) p_project_stack="$2"; shift 2;;
-
       -o) p_project_docroot="$2"; shift 2;;
       -a) p_app_docroot="$2"; shift 2;;
       -g) p_app_git_origin="$2"; shift 2;;
@@ -90,21 +84,9 @@ u_instance_init() {
   export GLOBALS_UNIQUE_NAMES
   export GLOBALS_UNIQUE_KEYS
 
-  export PROJECT_STACK="$p_project_stack"
   export PROVISION_USING="$p_provision_using"
-  export CWT_CUSTOM_DIR="$p_cwt_custom_dir"
+  export PROJECT_SCRIPTS="$p_cwt_custom_dir"
   export GLOBALS_FILEPATH='cwt/env/current/global.vars.sh'
-
-  if [ -z "$PROJECT_STACK" ] && [ $p_yes -eq 0 ]; then
-    read -p "Enter PROJECT_STACK value : " PROJECT_STACK
-  fi
-
-  if [[ -z "$PROJECT_STACK" ]]; then
-    echo >&2
-    echo "Error in $BASH_SOURCE line $LINENO: cannot carry on without a value for \$PROJECT_STACK." >&2
-    echo "Aborting (1)." >&2
-    return 1
-  fi
 
   # Remove previously generated globals to avoid any interference.
   if [[ -f "$GLOBALS_FILEPATH" ]]; then
@@ -122,13 +104,6 @@ u_instance_init() {
   # These contain paths required for aggregating env vars and services.
   . cwt/env/global.vars.sh
 
-  # Discover and aggregate stack services required by this instance.
-  export DEPS_LOOKUP_PATHS
-  u_stack_get_specs "$PROJECT_STACK"
-  if [[ $p_verbose == 1 ]]; then
-    u_autoload_print_lookup_paths DEPS_LOOKUP_PATHS "Stack dependencies"
-  fi
-
   # Aggregate en vars for this instance. Needs to run after services discovery
   # and write env vars in current instance's git-ignored settings file.
   u_global_aggregate
@@ -136,10 +111,10 @@ u_instance_init() {
 
   # Make sure every writeable folders potentially git-ignored gets created
   # before attempting to (re)set their permissions (see below).
-  hook -a 'ensure_dirs_exist' -s 'app'
+  hook -a 'ensure_dirs_exist' -s 'app instance'
 
   # (Re)set file system ownership and permissions.
-  hook -a 'set_fsop' -s 'app stack'
+  hook -a 'set_fsop' -s 'app instance'
 
   # Trigger post-init (optional) extra processes.
   hook -a 'init' -p 'post'

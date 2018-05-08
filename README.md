@@ -121,10 +121,9 @@ See section *Frequent tasks (howtos / FAQ)* for details.
 /path/to/project/           ← Project root dir ($PROJECT_DOCROOT).
   ├── cwt/
   │   ├── app/              ← App init / (re)build / watch.
-  │   ├── cron/             ← Periodical / scheduled actions.
-  │   ├── custom/           ← [configurable] default alterations dir ($CWT_CUSTOM_DIR).
   │   ├── env/              ← Environment settings (global variables) actions (e.g. (re)write).
   │   │   └── current/      ← Generated settings specific to local instance (git-ignored).
+  │   ├── extensions/       ← Contains CWT extensions. Remove or add according to project needs.
   │   ├── git/              ← Versionning-related includes.
   │   │   └── hooks/        ← Entry points for auto-exec (tests, code linting, etc.)
   │   ├── instance/         ← Actions related to the entire project instance (init, (re)build, destroy, etc.)
@@ -133,20 +132,21 @@ See section *Frequent tasks (howtos / FAQ)* for details.
   │   ├── service/          ← Actions related to individual stack services (start, stop, remove, etc.)
   │   ├── stack/            ← Manage all services and/or workers for current project instance at once.
   │   ├── test/             ← Automated tests and actions.
-  │   │   └── self/         ← CWT 'core' internal tests (uses shunit2 - see 'vendor' dir).
+  │   │   └── cwt/          ← CWT 'core' internal tests (uses shunit2 - see 'vendor' dir).
   │   ├── utilities/        ← CWT internal functions (hides complexity).
   │   └── vendor/           ← Bundled third-party dependencies.
-  ├── web/                  ← [configurable] The app dir - can be outside project dir ($APP_DOCROOT).
+  ├── scripts/              ← [configurable] default path to current project's scripts ($PROJECT_SCRIPTS).
+  ├── web/                  ← [configurable] The app dir. Can be outside project dir ($APP_DOCROOT).
   └── .gitignore            ← Replace with your own and/or edit.
 ```
 
 ## Alter / Extend CWT
 
-Altering or extending CWT happens in `cwt/custom` by default, but this path may be overridden using the `CWT_CUSTOM_DIR` global.
+Altering or extending CWT happens in `cwt/custom` by default, but this path may be overridden using the `PROJECT_SCRIPTS` global.
 
 ### Overrides and Complements
 
-These mecanisms consist respectively in loading an additional script or replacing it by another corresponding script. The correspondance matches the relative path from `$PROJECT_DOCROOT/cwt` in `$CWT_CUSTOM_DIR` : if the complementary file exists, it is included (sourced) - either instead of the original include, or simply as an extra.
+These mecanisms consist respectively in loading an additional script or replacing it by another corresponding script. The correspondance matches the relative path from `$PROJECT_DOCROOT/cwt` in `$PROJECT_SCRIPTS` : if the complementary file exists, it is included (sourced) - either instead of the original include, or simply as an extra.
 
 Example use case from `cwt/bootstrap.sh` :
 

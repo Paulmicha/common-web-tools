@@ -34,13 +34,13 @@
 #
 # @example
 #   # Run drupal cron task every 20 minutes :
-#   u_host_cron_add "drush --root=$APP_DOCROOT cron" "*/20 * * * *"
+#   u_host_crontab "drush --root=$APP_DOCROOT cron" "*/20 * * * *"
 #
-u_host_cron_add() {
+u_host_crontab() {
   local p_cmd="$1"
   local p_freq="$2"
 
-  if [[ -z "$p_freq" ]]; then
+  if [ -z "$p_freq" ]; then
     p_freq="*/30 * * * *"
   fi
 

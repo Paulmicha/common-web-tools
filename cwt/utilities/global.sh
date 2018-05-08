@@ -105,8 +105,8 @@ u_global_aggregate() {
   done
 
   # Allow extra env vars file at the root of custom dir, *after* dynamic lookups.
-  if [[ -f "$CWT_CUSTOM_DIR/global.vars.sh" ]]; then
-    . "$CWT_CUSTOM_DIR/global.vars.sh"
+  if [[ -f "$PROJECT_SCRIPTS/global.vars.sh" ]]; then
+    . "$PROJECT_SCRIPTS/global.vars.sh"
   fi
 
   # Support deferred value assignation.

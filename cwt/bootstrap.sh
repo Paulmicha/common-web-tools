@@ -28,7 +28,7 @@ if [ $CWT_BS_FLAG -ne 1 ]; then
 
   # If stack init was run at least once, automatically load global env vars.
   # NB : this must happen before u_cwt_extend() gets called because it uses the
-  # customizable global var CWT_CUSTOM_DIR to populate primitive values.
+  # customizable global var PROJECT_SCRIPTS to populate primitive values.
   if [ -f "cwt/env/current/global.vars.sh" ]; then
     . cwt/env/current/global.vars.sh
   fi

@@ -30,10 +30,8 @@ oneTimeSetUp() {
   done
 
   # Also test with a dummy extension (requires bootstrap reload, see below).
-  u_cwt_get_extensions_dir
-
   # Failsafe : cannot carry on without an existing CWT extensions dir.
-  if [[ ! -d "$extensions_dir" ]]; then
+  if [[ ! -d "cwt/extensions" ]]; then
     echo >&2
     echo "Error (3) in $BASH_SOURCE line $LINENO: CWT extensions dir does not exist." >&2
     echo "-> aborting" >&2
@@ -41,7 +39,7 @@ oneTimeSetUp() {
     exit 3
   fi
 
-  mkdir -p "$extensions_dir/nftcwthdehnc/app"
+  mkdir -p "cwt/extensions/nftcwthdehnc/app"
 
   # Failsafe : cannot carry on without successful temporary extension dir creation.
   if [[ $? -ne 0 ]]; then
@@ -52,18 +50,18 @@ oneTimeSetUp() {
     exit 4
   fi
 
-  mkdir "$extensions_dir/nftcwthdehnc/stack"
-  mkdir "$extensions_dir/nftcwthdehnc/remote"
-  mkdir "$extensions_dir/nftcwthdehnc/test"
+  mkdir "cwt/extensions/nftcwthdehnc/stack"
+  mkdir "cwt/extensions/nftcwthdehnc/remote"
+  mkdir "cwt/extensions/nftcwthdehnc/test"
 
   # Empty files are enough to trigger positive detection during CWT primitives
   # values aggregation during bootstrap and during hook lookup paths generation.
   # @see u_cwt_extend()
   # @see hook()
-  touch "$extensions_dir/nftcwthdehnc/app/nftcwthhnc_dry_run.hook.sh"
-  touch "$extensions_dir/nftcwthdehnc/stack/nftcwthhnc_dry_run.hook.sh"
-  touch "$extensions_dir/nftcwthdehnc/remote/nftcwthhnc_dry_run.hook.sh"
-  touch "$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.sh"
+  touch "cwt/extensions/nftcwthdehnc/app/nftcwthhnc_dry_run.hook.sh"
+  touch "cwt/extensions/nftcwthdehnc/stack/nftcwthhnc_dry_run.hook.sh"
+  touch "cwt/extensions/nftcwthdehnc/remote/nftcwthhnc_dry_run.hook.sh"
+  touch "cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.sh"
 
   # Variants tests require the following globals. We set them with dummy values
   # if stack init hasn't been run in current instance yet.
@@ -75,16 +73,16 @@ oneTimeSetUp() {
   if [[ -z "$HOST_TYPE" ]]; then
     HOST_TYPE='local'
   fi
-  touch "$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh"
-  touch "$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$HOST_TYPE.hook.sh"
-  touch "$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.$HOST_TYPE.hook.sh"
+  touch "cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh"
+  touch "cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$HOST_TYPE.hook.sh"
+  touch "cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.$HOST_TYPE.hook.sh"
 
   # Prefix tests.
-  touch "$extensions_dir/nftcwthdehnc/test/pre_nftcwthhnc_dry_run.hook.sh"
-  touch "$extensions_dir/nftcwthdehnc/test/post_nftcwthhnc_dry_run.hook.sh"
-  touch "$extensions_dir/nftcwthdehnc/test/post_nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh"
-  touch "$extensions_dir/nftcwthdehnc/test/post_nftcwthhnc_dry_run.$HOST_TYPE.hook.sh"
-  touch "$extensions_dir/nftcwthdehnc/test/undo_nftcwthhnc_dry_run.$INSTANCE_TYPE.$HOST_TYPE.hook.sh"
+  touch "cwt/extensions/nftcwthdehnc/test/pre_nftcwthhnc_dry_run.hook.sh"
+  touch "cwt/extensions/nftcwthdehnc/test/post_nftcwthhnc_dry_run.hook.sh"
+  touch "cwt/extensions/nftcwthdehnc/test/post_nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh"
+  touch "cwt/extensions/nftcwthdehnc/test/post_nftcwthhnc_dry_run.$HOST_TYPE.hook.sh"
+  touch "cwt/extensions/nftcwthdehnc/test/undo_nftcwthhnc_dry_run.$INSTANCE_TYPE.$HOST_TYPE.hook.sh"
 
   # Forces detection of our newly created temporary extension.
   u_cwt_extend
@@ -164,18 +162,18 @@ _cwt_hook_compare_expected_result_helper() {
 test_cwt_hook_single_action() {
   local inc_dry_run_files_list=''
   local expected_list="cwt/app/nftcwthhnc_dry_run.hook.sh
-$extensions_dir/nftcwthdehnc/app/nftcwthhnc_dry_run.hook.sh
+cwt/extensions/nftcwthdehnc/app/nftcwthhnc_dry_run.hook.sh
 cwt/cron/nftcwthhnc_dry_run.hook.sh
 cwt/db/nftcwthhnc_dry_run.hook.sh
 cwt/env/nftcwthhnc_dry_run.hook.sh
 cwt/git/nftcwthhnc_dry_run.hook.sh
 cwt/instance/nftcwthhnc_dry_run.hook.sh
 cwt/remote/nftcwthhnc_dry_run.hook.sh
-$extensions_dir/nftcwthdehnc/remote/nftcwthhnc_dry_run.hook.sh
+cwt/extensions/nftcwthdehnc/remote/nftcwthhnc_dry_run.hook.sh
 cwt/service/nftcwthhnc_dry_run.hook.sh
 cwt/stack/nftcwthhnc_dry_run.hook.sh
-$extensions_dir/nftcwthdehnc/stack/nftcwthhnc_dry_run.hook.sh
-$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
+cwt/extensions/nftcwthdehnc/stack/nftcwthhnc_dry_run.hook.sh
+cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
 "
 
   hook -a 'nftcwthhnc_dry_run' -t
@@ -189,7 +187,7 @@ $extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
 #
 test_cwt_hook_subject() {
   local inc_dry_run_files_list=''
-  local expected_list="$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh"
+  local expected_list="cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh"
 
   hook -a 'nftcwthhnc_dry_run' -s 'test' -t
 
@@ -202,9 +200,9 @@ test_cwt_hook_subject() {
 #
 test_cwt_hook_combinatory_variants() {
   local inc_dry_run_files_list=''
-  local expected_list="$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
-$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$HOST_TYPE.hook.sh
-$extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.$HOST_TYPE.hook.sh
+  local expected_list="cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
+cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$HOST_TYPE.hook.sh
+cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.$HOST_TYPE.hook.sh
 "
 
   hook -a 'nftcwthhnc_dry_run' -s 'test' -v 'INSTANCE_TYPE HOST_TYPE' -t
@@ -218,7 +216,7 @@ $extensions_dir/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.$HOST_TYPE.h
 #
 test_cwt_hook_prefix() {
   local inc_dry_run_files_list=''
-  local expected_list="$extensions_dir/nftcwthdehnc/test/pre_nftcwthhnc_dry_run.hook.sh"
+  local expected_list="cwt/extensions/nftcwthdehnc/test/pre_nftcwthhnc_dry_run.hook.sh"
 
   hook -a 'nftcwthhnc_dry_run' -p 'pre' -t
 
@@ -231,8 +229,8 @@ test_cwt_hook_prefix() {
 #
 test_cwt_hook_prefix_variants() {
   local inc_dry_run_files_list=''
-  local expected_list="$extensions_dir/nftcwthdehnc/test/post_nftcwthhnc_dry_run.hook.sh
-$extensions_dir/nftcwthdehnc/test/post_nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
+  local expected_list="cwt/extensions/nftcwthdehnc/test/post_nftcwthhnc_dry_run.hook.sh
+cwt/extensions/nftcwthdehnc/test/post_nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
 "
 
   hook -a 'nftcwthhnc_dry_run' -s 'test' -p 'post' -t
@@ -246,7 +244,7 @@ $extensions_dir/nftcwthdehnc/test/post_nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
 #
 test_cwt_hook_prefix_combinatory_variants() {
   local inc_dry_run_files_list=''
-  local expected_list="$extensions_dir/nftcwthdehnc/test/undo_nftcwthhnc_dry_run.$INSTANCE_TYPE.$HOST_TYPE.hook.sh"
+  local expected_list="cwt/extensions/nftcwthdehnc/test/undo_nftcwthhnc_dry_run.$INSTANCE_TYPE.$HOST_TYPE.hook.sh"
 
   hook -a 'nftcwthhnc_dry_run' -s 'test' -v 'INSTANCE_TYPE HOST_TYPE' -p 'undo' -t
 
@@ -264,7 +262,7 @@ oneTimeTearDown() {
   for s in $CWT_SUBJECTS; do
     rm -f "cwt/$s/nftcwthhnc_dry_run.hook.sh"
   done
-  rm -fr "$extensions_dir/nftcwthdehnc"
+  rm -fr "cwt/extensions/nftcwthdehnc"
 }
 
 # Load and run shUnit2.

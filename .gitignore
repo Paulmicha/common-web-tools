@@ -4,7 +4,8 @@
 # using Common Web Tools.
 #
 
-# Public web dir (the application).
+# Public web dir (or application docroot).
+# See $APP_DOCROOT global var.
 # There are 2 implementation approaches for using common web tools in a project :
 #   1 • Use a single, "monolothic" repo for everything
 #   2 • [default] Keep application code in a separate Git repo
@@ -29,26 +30,20 @@
 !/private/README.md
 !/private/.htaccess
 
-# Docker-compose env file generated during stack init.
+# Docker-compose env file.
+# @see cwt/extensions/docker-compose
 /.env
 
-# Customizations.
-/cwt/custom/*
-!/cwt/custom/README.md
-!/cwt/custom/overrides
-/cwt/custom/overrides/*
-!/cwt/custom/overrides/README.md
-!/cwt/custom/complements
-/cwt/custom/complements/*
-!/cwt/custom/complements/README.md
-
-# TODO make final decision about extensions folder location.
-# TODO (wip) keep third-party code in this repo for now (until "incubation" of a few examples is done).
-!/cwt/custom/extensions
-
-# DB dumps.
-/dumps/*
-!/dumps/README.md
+# Folder containing overrides and complements (configurable).
+# See $PROJECT_SCRIPTS global var.
+/scripts/*
+!/scripts/README.md
+!/scripts/overrides
+/scripts/overrides/*
+!/scripts/overrides/README.md
+!/scripts/complements
+/scripts/complements/*
+!/scripts/complements/README.md
 
 # Misc.
 docker-runtime

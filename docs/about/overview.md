@@ -89,7 +89,7 @@ TODO evaluate minimalist GUI opportunity (Electron ?)
 
 CWT is under construction. Folders might still move around depending on its use, until I feel it can start proper versionning. Consider this repo a scratchpad for now.
 
-CWT essentially relies on a relative global namepace. Its creation process involves building it "on the fly" in other side projects in which each step listed above (*Next steps*) is achieved by specific, custom scripts placed in a different `scripts` dir alongside `cwt` in `PROJECT_DOCROOT`. In such cases, `CWT_CUSTOM_DIR` is also set to `$PROJECT_DOCROOT/scripts` (See the *Alter / Extend CWT* section).
+CWT essentially relies on a relative global namepace. Its creation process involves building it "on the fly" in other side projects in which each step listed above (*Next steps*) is achieved by specific, custom scripts placed in a different `scripts` dir alongside `cwt` in `PROJECT_DOCROOT`. In such cases, `PROJECT_SCRIPTS` is also set to `$PROJECT_DOCROOT/scripts` (See the *Alter / Extend CWT* section).
 
 Ultimately, it should not compete with [other projects](https://paulmicha.github.io/common-web-tools/about/tools-considerations.html) (and I couldn't find a better word than "glue" for now, sorry).
 
@@ -101,7 +101,7 @@ The file structure follows [loose naming and folder structure conventions](https
 /path/to/project/           <- Project root dir ($PROJECT_DOCROOT).
   ├── cwt/
   │   ├── app/              <- [WIP] App init / (re)build / watch includes.
-  │   ├── custom/           <- [configurable] default "modules" dir (alter or extend CWT. $CWT_CUSTOM_DIR).
+  │   ├── custom/           <- [configurable] default "modules" dir (alter or extend CWT. $PROJECT_SCRIPTS).
   │   ├── db/               <- [WIP] Database-related includes.
   │   ├── env/              <- Environment settings includes (global variables).
   │   │   └── current/      <- Generated settings specific to local instance (git-ignored).
