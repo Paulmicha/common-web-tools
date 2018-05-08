@@ -21,7 +21,9 @@ u_stack_template() {
 
   hook -a 'docker-compose' -c "yml" -v 'DC_YML_VARIANTS' -t
 
-  for f in $inc_dry_run_files_list; do
-    . "$f"
-  done
+  # TODO [wip] unfinished - this should create or override the file :
+  # "$PROJECT_DOCROOT/docker-compose.yml" based on the most specific match.
+  # for f in $inc_dry_run_files_list; do
+  #   . "$f"
+  # done
 }

@@ -143,9 +143,9 @@ hook() {
   done
 
   # Enforce minimum conditions for triggering hook (see 5 in function docblock).
-  if [ -z "$p_actions_filter" ] && [ -z "$p_extensions_filter" ] && [ -z "$p_variants_filter" ] && [ -z "$p_custom_filter" ]; then
+  if [ -z "$p_actions_filter" ] && [ -z "$p_extensions_filter" ] && [ -z "$p_variants_filter" ]; then
     echo
-    echo "Error in $BASH_SOURCE line $LINENO: cannot trigger hook without either 1 action or custom filter (or 1 extension + 1 variant)." >&2
+    echo "Error in $BASH_SOURCE line $LINENO: cannot trigger hook without either 1 action (or 1 extension + 1 variant)." >&2
     echo "-> Aborting." >&2
     echo
     return 1
