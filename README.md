@@ -126,10 +126,10 @@ See section *Frequent tasks (howtos / FAQ)* for details.
   │   ├── extensions/       ← Contains CWT extensions. Remove or add according to project needs.
   │   ├── git/              ← Versionning-related includes.
   │   │   └── hooks/        ← Entry points for auto-exec (tests, code linting, etc.)
+  │   ├── host/             ← Host-level metadata / crontab / network helpers.
   │   ├── instance/         ← Actions related to the entire project instance (init, (re)build, destroy, etc.)
   │   ├── remote/           ← Remote operations (e.g. instance tasks, but can be any action)
   │   │   └── instances/    ← Generated settings for each remote instance (git-ignored).
-  │   ├── service/          ← Actions related to individual stack services (start, stop, remove, etc.)
   │   ├── stack/            ← Manage all services and/or workers for current project instance at once.
   │   ├── test/             ← Automated tests and actions.
   │   │   └── cwt/          ← CWT 'core' internal tests (uses shunit2 - see 'vendor' dir).
