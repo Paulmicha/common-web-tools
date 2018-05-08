@@ -19,7 +19,7 @@ u_stack_template() {
   local f
   local inc_dry_run_files_list
 
-  hook -a 'docker-compose' -c "yml" -v 'DC_YML_VARIANTS' -t -d
+  hook -a 'docker-compose' -c "yml" -v 'DC_YML_VARIANTS' -t
 
   for f in $inc_dry_run_files_list; do
     . "$f"
