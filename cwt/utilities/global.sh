@@ -151,7 +151,6 @@ u_global_aggregate() {
   # avoid the default variants lookups in hook().
   # @see u_hook_build_lookup_by_subject()
   _NO_VARIANTS=''
-  # hook -a 'global.vars.sh' -v '_NO_VARIANTS' -t
   hook -a 'global' -c 'vars.sh' -v '_NO_VARIANTS' -t
 
   for f in $inc_dry_run_files_list; do
