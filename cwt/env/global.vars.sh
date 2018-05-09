@@ -40,7 +40,7 @@ global APP_GIT_WORK_TREE "[if-CWT_MODE]=separate [default]=$APP_DOCROOT"
 
 # These values are used to generate lookup paths in hooks (events), overrides
 # and/or complements.
-# @see cwt/custom/README.md
+# @see scripts/README.md
 global HOST_TYPE "[default]=local"
 global HOST_OS "[default]='$(u_host_os)'"
 global PROVISION_USING "[default]=docker-compose"

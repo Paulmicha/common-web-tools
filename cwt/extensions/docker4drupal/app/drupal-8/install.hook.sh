@@ -3,7 +3,7 @@
 ##
 # Drupal 8 specific implementations for hook -a 'install' -s 'app'.
 #
-# @see cwt/custom/extensions/docker4drupal/app/install.hook.sh
+# @see cwt/extensions/docker4drupal/app/install.hook.sh
 #
 
 cat >> "$DRUPAL_LOCAL_SETTINGS" <<'EOF'

@@ -98,7 +98,7 @@ u_autoload_print_lookup_paths() {
 ##
 # Allows to optionally replace or bypass a default script include (sourcing).
 #
-# Checks if its counterpart exists in cwt/custom/overrides, and if it does,
+# Checks if its counterpart exists in scripts/overrides, and if it does,
 # return the code that will source it and return early in main shell.
 #
 # This function works by populating a variable named inc_override_evaled_code
@@ -148,7 +148,7 @@ u_autoload_override() {
     operand="$p_operand"
   fi
 
-  local base_dir='cwt/custom'
+  local base_dir='scripts'
   if [[ -n "$PROJECT_SCRIPTS" ]]; then
     base_dir="$PROJECT_SCRIPTS"
   fi
@@ -170,7 +170,7 @@ u_autoload_override() {
 ##
 # [TODO document new arg] Sources complement of given script.
 #
-# Checks if its counterpart exists in cwt/custom/complements, and if it does,
+# Checks if its counterpart exists in scripts/complements, and if it does,
 # source it in the scope of the calling script.
 #
 # This function is normally called after existing CWT generic script operations.
@@ -182,7 +182,7 @@ u_autoload_get_complement() {
   local p_script_path="$1"
   local p_reaction="$2"
 
-  local base_dir='cwt/custom'
+  local base_dir='scripts'
   if [[ -n "$PROJECT_SCRIPTS" ]]; then
     base_dir="$PROJECT_SCRIPTS"
   fi

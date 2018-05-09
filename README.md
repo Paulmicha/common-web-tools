@@ -127,10 +127,9 @@ See section *Frequent tasks (howtos / FAQ)* for details.
   │   ├── git/              ← Versionning-related includes.
   │   │   └── hooks/        ← Entry points for auto-exec (tests, code linting, etc.)
   │   ├── host/             ← Host-level metadata / crontab / network helpers.
-  │   ├── instance/         ← Actions related to the entire project instance (init, (re)build, destroy, etc.)
+  │   ├── instance/         ← Actions related to the entire project instance (init, destroy, start, stop)
   │   ├── remote/           ← Remote operations (e.g. instance tasks, but can be any action)
   │   │   └── instances/    ← Generated settings for each remote instance (git-ignored).
-  │   ├── stack/            ← Manage all services and/or workers for current project instance at once.
   │   ├── test/             ← Automated tests and actions.
   │   │   └── cwt/          ← CWT 'core' internal tests (uses shunit2 - see 'vendor' dir).
   │   ├── utilities/        ← CWT internal functions (hides complexity).
@@ -142,7 +141,7 @@ See section *Frequent tasks (howtos / FAQ)* for details.
 
 ## Alter / Extend CWT
 
-Altering or extending CWT happens in `cwt/custom` by default, but this path may be overridden using the `PROJECT_SCRIPTS` global.
+Altering or extending CWT happens in `scripts` by default, but this path may be overridden using the `PROJECT_SCRIPTS` global.
 
 ### Overrides and Complements
 
@@ -176,7 +175,7 @@ Unless otherwise stated, all the examples below are to be run on *local* host fr
 Regarding ways to alter existing scripts, [the pattern "Autoload"](https://paulmicha.github.io/common-web-tools/about/patterns.html) usually means :
 
 - Wrap customizations in functions or subshells
-- Use `return` when working in the main shell scope - i.e. in your custom scripts autoloaded from `cwt/custom/overrides` and `cwt/custom/complements`
+- Use `return` when working in the main shell scope - i.e. in your custom scripts autoloaded from `scripts/overrides` and `scripts/complements`
 
 ### Initialize local instance env settings
 

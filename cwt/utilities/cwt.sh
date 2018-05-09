@@ -47,7 +47,7 @@
 #   to each one of these extensions.
 #   Important notes : extensions' folder names can only contain the following
 #   characters : A-Z a-z 0-9 dots . underscores _ dashes -
-#   Also, if the CWT customization dir (PROJECT_SCRIPTS = 'cwt/custom' by default)
+#   Also, if the CWT customization dir (PROJECT_SCRIPTS = 'scripts' by default)
 #   is altered, extensions can only be detected AFTER stack init has been run once.
 #
 # 4. The 'CWT_INC' values are a simple list of files to be sourced in

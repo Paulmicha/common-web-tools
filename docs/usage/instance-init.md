@@ -24,7 +24,7 @@ This process generates a single file (`cwt/env/current/vars.sh`) by assembling 2
 1. dependency files - purpose : aggregate host-level *services* (or softwares) dependencies;
 1. env files called config or env *includes* - purpose : aggregate env settings (global variables) necessary for configuring the local project instance and its services.
 
-Aggregation will include (or more precisely - load using bash `source` command) the more generic files first, then gradually the more specific ones, each file allowing to provide its own customization. See *complements* documentation at `cwt/custom/complements/README.md`.
+Aggregation will include (or more precisely - load using bash `source` command) the more generic files first, then gradually the more specific ones, each file allowing to provide its own customization. See *complements* documentation at `scripts/complements/README.md`.
 
 CWT provides a few example project dependencies and env includes, but its purpose is to be useful for your specific project(s). So the reason this process is detailed here is to better understand how to provide your own custom declarations.
 
@@ -86,7 +86,7 @@ software_version['php']='5.6'
 
 Here's a "stack init" example listing its corresponding dependencies lookup paths. They represent all possibilities matching the `$PROJECT_STACK`, provisioning method (`$PROVISION_USING`), current host's OS and type (e.g. `local`, `remote`), and project's `$INSTANCE_TYPE` (e.g. `dev`, `test`, `qa`, `stage`, `preprod`, `live`, `production`).
 
-Any existing file is included (sourced) in the order indicated, each one allowing to provide its own customization. See *complements* documentation at `cwt/custom/complements/README.md`.
+Any existing file is included (sourced) in the order indicated, each one allowing to provide its own customization. See *complements* documentation at `scripts/complements/README.md`.
 
 ```sh
 # Running this on "Bash on Ubuntu on Windows 10" (tested on 2017/11/16) :

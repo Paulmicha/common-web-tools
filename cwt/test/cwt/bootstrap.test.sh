@@ -38,7 +38,7 @@ test_cwt_autoload_complement_works() {
   assertTrue 'Flag should be empty at this stage ("complement" alteration mechanism failed)' "[ -e $complement_flag ]"
 
   # Test with match (populates the local complement_flag variable).
-  local base_dir='cwt/custom'
+  local base_dir='scripts'
   if [[ -n "$PROJECT_SCRIPTS" ]]; then
     base_dir="$PROJECT_SCRIPTS"
   fi
@@ -65,7 +65,7 @@ test_cwt_autoload_override_works() {
   assertTrue 'Flag should be empty at this stage ("override" alteration mechanism failed)' "[ -e $override_flag ]"
 
   # Test with match (populates the local override_flag variable).
-  local base_dir='cwt/custom'
+  local base_dir='scripts'
   if [[ -n "$PROJECT_SCRIPTS" ]]; then
     base_dir="$PROJECT_SCRIPTS"
   fi
@@ -85,7 +85,7 @@ EOF
 # (Internal shunit2 function called after all tests have run.)
 #
 oneTimeTearDown() {
-  local base_dir='cwt/custom'
+  local base_dir='scripts'
   if [[ -n "$PROJECT_SCRIPTS" ]]; then
     base_dir="$PROJECT_SCRIPTS"
   fi

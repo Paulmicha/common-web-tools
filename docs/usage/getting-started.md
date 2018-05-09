@@ -36,7 +36,7 @@ Unless otherwise stated, all CWT scripts are to be run on your computer (*local*
 
 Regarding ways to alter the execution of existing scripts and/or its order, the pattern "Autoload" usually means :
 
-- Use `return` when working in the main shell scope - i.e. in your custom scripts autoloaded from `cwt/custom/overrides` and `cwt/custom/complements`
+- Use `return` when working in the main shell scope - i.e. in your custom scripts autoloaded from `scripts/overrides` and `scripts/complements`
 - Wrap customizations in functions or subshells
 
 ## Initialize local instance env settings
