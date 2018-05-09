@@ -68,8 +68,8 @@
 #   # (given INSTANCE_TYPE='prod')
 #   # - cwt/<CWT_SUBJECTS>/bootstrap.hook.sh
 #   # - cwt/<CWT_SUBJECTS>/bootstrap.prod.hook.sh
-#   # - $PROJECT_SCRIPTS/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/bootstrap.hook.sh
-#   # - $PROJECT_SCRIPTS/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/bootstrap.prod.hook.sh
+#   # - cwt/extensions/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/bootstrap.hook.sh
+#   # - cwt/extensions/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/bootstrap.prod.hook.sh
 #
 #   # 2. When providing an action + a filter by subject :
 #   hook -a 'init' -s 'stack'
@@ -77,8 +77,8 @@
 #   # (given INSTANCE_TYPE='prod')
 #   # - cwt/stack/init.hook.sh
 #   # - cwt/stack/init.prod.hook.sh
-#   # - $PROJECT_SCRIPTS/<CWT_EXTENSIONS>/stack/init.hook.sh
-#   # - $PROJECT_SCRIPTS/<CWT_EXTENSIONS>/stack/init.prod.hook.sh
+#   # - cwt/extensions/<CWT_EXTENSIONS>/stack/init.hook.sh
+#   # - cwt/extensions/<CWT_EXTENSIONS>/stack/init.prod.hook.sh
 #
 #   # 3. When providing an action + a filter by 1 or several subjects + 1 or
 #   #   several variants filter :
@@ -89,10 +89,10 @@
 #   # - cwt/stack/init.dev.hook.sh
 #   # - cwt/stack/init.local.hook.sh
 #   # - cwt/stack/init.dev.local.hook.sh
-#   # - $PROJECT_SCRIPTS/<CWT_EXTENSIONS>/stack/init.hook.sh
-#   # - $PROJECT_SCRIPTS/<CWT_EXTENSIONS>/stack/init.dev.hook.sh
-#   # - $PROJECT_SCRIPTS/<CWT_EXTENSIONS>/stack/init.local.hook.sh
-#   # - $PROJECT_SCRIPTS/<CWT_EXTENSIONS>/stack/init.dev.local.hook.sh
+#   # - cwt/extensions/<CWT_EXTENSIONS>/stack/init.hook.sh
+#   # - cwt/extensions/<CWT_EXTENSIONS>/stack/init.dev.hook.sh
+#   # - cwt/extensions/<CWT_EXTENSIONS>/stack/init.local.hook.sh
+#   # - cwt/extensions/<CWT_EXTENSIONS>/stack/init.dev.local.hook.sh
 #
 #   # 4. Extensions filter :
 #   hook -e 'nodejs'
@@ -107,8 +107,8 @@
 #   # (given INSTANCE_TYPE='prod')
 #   # - cwt/<CWT_SUBJECTS>/pre_bootstrap.hook.sh
 #   # - cwt/<CWT_SUBJECTS>/pre_bootstrap.prod.hook.sh
-#   # - $PROJECT_SCRIPTS/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/pre_bootstrap.hook.sh
-#   # - $PROJECT_SCRIPTS/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/pre_bootstrap.prod.hook.sh
+#   # - cwt/extensions/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/pre_bootstrap.hook.sh
+#   # - cwt/extensions/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/pre_bootstrap.prod.hook.sh
 #
 # We exceptionally name that function without following the usual convention.
 #

@@ -18,8 +18,11 @@
 u_stack_template() {
   local f
   local inc_dry_run_files_list
+  local prioritized_lookups
 
-  hook -a 'docker-compose' -c "yml" -v 'DC_YML_VARIANTS' -t
+  # prioritized_lookups="$PROJECT_SCRIPTS/"
+
+  hook -s 'stack' -a 'docker-compose' -c "yml" -v 'DC_YML_VARIANTS' -t
 
   # TODO [wip] unfinished - this should create or override the file :
   # "$PROJECT_DOCROOT/docker-compose.yml" based on the most specific match.

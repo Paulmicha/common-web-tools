@@ -1,17 +1,16 @@
 #!/usr/bin/env bash
 
 ##
-# Run CWT core tests (checks CWT itself).
+# Implements hook -s 'test' -a 'self_test' -v 'HOST_TYPE PROVISION_USING'.
 #
-# Verifies that the generic CWT functions can successfully run on current host.
+# Runs CWT core tests (checks CWT itself). Verifies that the generic CWT
+# functions can successfully run on current host.
 #
 # @requires running the tests with the same user that will use CWT.
 #
 # @example
-#   cwt/test/self.sh
+#   cwt/test/self_test.sh
 #
-
-. cwt/bootstrap.sh
 
 u_fs_file_list cwt/test/cwt '*.test.sh'
 

@@ -12,6 +12,9 @@
 # - nftcwthhnc = name for testing CWT hooks hopefully not colliding
 # - nftcwthdehnc = name for testing CWT hooks dummy extension hopefully not colliding
 #
+# TODO test dotfiles like '.cwt_subjects_ignore' in extensions.
+# TODO test folder names with dots (extensions + subjects + actions + prefixes).
+#
 # @example
 #   cwt/test/cwt/hook.test.sh
 #
@@ -27,6 +30,14 @@ oneTimeSetUp() {
   local s
   for s in $CWT_SUBJECTS; do
     touch "cwt/$s/nftcwthhnc_dry_run.hook.sh"
+
+    # Failsafe : cannot carry on if touch did not complete without error.
+    if [[ $? -ne 0 ]]; then
+      echo >&2
+      echo "Error (2) in $BASH_SOURCE line $LINENO: cannot create temporary file for testing CWT hooks." >&2
+      echo "-> aborting" >&2
+      echo >&2
+      exit 2
   done
 
   # Also test with a dummy extension (requires bootstrap reload, see below).
@@ -89,74 +100,6 @@ oneTimeSetUp() {
 }
 
 ##
-# Custom hook test assertion helper.
-#
-# @param 1 String : failed test error message.
-# @param 2 Int : numerical flag (error number).
-#
-_cwt_hook_test_assertion_helper() {
-  local p_msg="$1"
-  local p_flag=$2
-
-  local fail_reason
-  case $flag in
-    1) fail_reason='missing matching lookup paths' ;;
-    2) fail_reason='too many matching lookup paths found' ;;
-    *) fail_reason='unexpected error' ;;
-  esac
-
-  assertTrue "$p_msg (error $flag : $fail_reason)" "[ $flag -eq 0 ]"
-}
-
-##
-# Custom hook expected result comparator helper.
-#
-# Writes result in the following variable in calling scope :
-# @var flag
-#
-# @requires the following vars in calling scope :
-# - inc_dry_run_files_list
-# - expected_list
-#
-_cwt_hook_compare_expected_result_helper() {
-  local i
-  local j
-  local is_found
-
-  local expected_count=0
-  for i in $expected_list; do
-    ((++expected_count))
-  done
-
-  local count_found=0
-  for j in $inc_dry_run_files_list; do
-    ((++count_found))
-  done
-
-  flag=0
-
-  for i in $expected_list; do
-    is_found=0
-
-    for j in $inc_dry_run_files_list; do
-      if [[ "$i" == "$j" ]]; then
-        is_found=1
-        break
-      fi
-    done
-
-    if [[ $is_found -eq 0 ]]; then
-      flag=1
-      break
-    fi
-  done
-
-  if [[ $flag -eq 0 ]] && [[ $count_found -ne $expected_count ]]; then
-    flag=2
-  fi
-}
-
-##
 # Will single action hooks load every matching files and none other ?
 #
 test_cwt_hook_single_action() {
@@ -178,8 +121,8 @@ cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
 
   hook -a 'nftcwthhnc_dry_run' -t
 
-  _cwt_hook_compare_expected_result_helper
-  _cwt_hook_test_assertion_helper "Single action hook test failed." $flag
+  u_test_compare_expected_lookup_paths
+  u_test_lookup_paths_assertion "Single action hook test failed." $flag
 }
 
 ##
@@ -191,8 +134,8 @@ test_cwt_hook_subject() {
 
   hook -a 'nftcwthhnc_dry_run' -s 'test' -t
 
-  _cwt_hook_compare_expected_result_helper
-  _cwt_hook_test_assertion_helper "Subject filter hook test failed." $flag
+  u_test_compare_expected_lookup_paths
+  u_test_lookup_paths_assertion "Subject filter hook test failed." $flag
 }
 
 ##
@@ -207,8 +150,8 @@ cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.$HOST_TYPE.ho
 
   hook -a 'nftcwthhnc_dry_run' -s 'test' -v 'INSTANCE_TYPE HOST_TYPE' -t
 
-  _cwt_hook_compare_expected_result_helper
-  _cwt_hook_test_assertion_helper "Combinatory variants filter hook test failed." $flag
+  u_test_compare_expected_lookup_paths
+  u_test_lookup_paths_assertion "Combinatory variants filter hook test failed." $flag
 }
 
 ##
@@ -220,8 +163,8 @@ test_cwt_hook_prefix() {
 
   hook -a 'nftcwthhnc_dry_run' -p 'pre' -t
 
-  _cwt_hook_compare_expected_result_helper
-  _cwt_hook_test_assertion_helper "Prefix filter hook test failed." $flag
+  u_test_compare_expected_lookup_paths
+  u_test_lookup_paths_assertion "Prefix filter hook test failed." $flag
 }
 
 ##
@@ -235,8 +178,8 @@ cwt/extensions/nftcwthdehnc/test/post_nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
 
   hook -a 'nftcwthhnc_dry_run' -s 'test' -p 'post' -t
 
-  _cwt_hook_compare_expected_result_helper
-  _cwt_hook_test_assertion_helper "Prefix + variants filter hook test failed." $flag
+  u_test_compare_expected_lookup_paths
+  u_test_lookup_paths_assertion "Prefix + variants filter hook test failed." $flag
 }
 
 ##
@@ -248,8 +191,8 @@ test_cwt_hook_prefix_combinatory_variants() {
 
   hook -a 'nftcwthhnc_dry_run' -s 'test' -v 'INSTANCE_TYPE HOST_TYPE' -p 'undo' -t
 
-  _cwt_hook_compare_expected_result_helper
-  _cwt_hook_test_assertion_helper "Prefix + combinatory variants filter hook test failed." $flag
+  u_test_compare_expected_lookup_paths
+  u_test_lookup_paths_assertion "Prefix + combinatory variants filter hook test failed." $flag
 }
 
 ##

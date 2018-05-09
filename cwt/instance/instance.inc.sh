@@ -34,11 +34,6 @@ u_instance_init() {
   local p_instance_type=''
   local p_instance_domain=''
 
-  # Optional remote host(s).
-  local p_remote_instances=''
-  local p_remote_instances_cmds=''
-  local p_remote_instances_types=''
-
   # Configurable CWT internals.
   local p_host_type=''
   local p_provision_using=''
@@ -57,10 +52,6 @@ u_instance_init() {
       -i) p_app_git_work_tree="$2"; shift 2;;
       -t) p_instance_type="$2"; shift 2;;
       -d) p_instance_domain="$2"; shift 2;;
-
-      -r) p_remote_instances="$2"; shift 2;;
-      -u) p_remote_instances_cmds="$2"; shift 2;;
-      -q) p_remote_instances_types="$2"; shift 2;;
 
       -h) p_host_type="$2"; shift 2;;
       -p) p_provision_using="$2"; shift 2;;
