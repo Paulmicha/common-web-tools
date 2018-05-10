@@ -1,7 +1,8 @@
-# Current environment variables
+# Current environment files
 
-The files contained in this directory provide the environment values specific to the current local instance.
+The files contained in this directory are automatically generated during "instance init" and git-ignored. They should not be edited manually.
 
-They are automatically generated during the project initialization from config includes files, and are git-ignored.
+- `cwt/env/current/global.vars.sh` declares global values specific to the current local instance
+- `cwt/env/current/default.mk` provides generic `make` "convenience" aliases corresponding to CWT primitives (actions by subject)
 
-See `cwt/env/README.md`
+See `u_instance_init()` in `cwt/instance/instance.inc.sh` for more details about the "instance init" process.

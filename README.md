@@ -1,32 +1,32 @@
 # Common Web Tools (CWT)
 
-WIP / not ready for use yet (re-organization + evaluation stage, documentation-driven).
+WIP / not ready for use yet (re-organization + evaluation stage).
 
 TODO rewrite **Documentation** : [paulmicha.github.io/common-web-tools](https://paulmicha.github.io/common-web-tools/)
 
 ## WHAT
 
-"Scaffolding" CLI for usual development tasks aimed at relatively small web projects.
+Scaffolding bash shell CLI for usual web project tasks.
 
-CWT is not a program; it's a generic, customizable "glue" between programs. Simple, loosely articulated bash scripts with a minimalist ambition.
+CWT is not a program; it's a generic, customizable "glue" between programs. [Third-party tools](https://paulmicha.github.io/common-web-tools/about/tools-considerations.html) integration is provided by extensions having their own separate Git repository. TODO include by default a predefined list of extensions - like in the [DrupalVM](https://www.drupalvm.com/) project ?
 
-It's a collection of scripts that can be used in 2 ways - see *usage* :
-
-- Added to a separate, complementary repo (referred to as the project's *dev stack*)
-- Directly added to your project's sources
+CWT "core" - this repo - contains common utilities related to managing global environment variables, local and remote hosts, project instance self-tests, and the building blocks of the conventions facilitating the implementation of recurrent web project tasks (see *HOW* below).
 
 ## PURPOSE
 
-TL;DR CWT allows you to **maintain a common CLI** while easily swapping out [implementations](https://paulmicha.github.io/common-web-tools/about/tools-considerations.html) (i.e. "not marrying them").
+CWT helps individual developers or teams to streamline a similar workflow across older and newer projects. It allows to **maintain a common CLI** while easily swapping out [implementations](https://paulmicha.github.io/common-web-tools/about/tools-considerations.html) (i.e. "not marrying them").
 
-CWT core provides a common set of commands to execute variable implementations of the following tasks :
+CWT core provides some generic bash shell functions and scripts. It can generate a `Makefile` for chosen tasks. Most importantly, it organizes scripts around a set of conventions to implement in a **modular** way e.g. :
 
-- install host-level dependencies (provision required packets/apps/services - e.g. docker, node, etc) - locally and/or remotely
-- instanciate project locally and/or remotely, with variants per env. type - dev, test, live... (e.g. get or generate services credentials, write local app settings, create database, build...)
-- implement deployment and/or automated tests
+- host-level dependencies installation / setup (provisioning required packets/apps/services)
+- building / running / stopping / destroying project instances with variants per env. type - e.g. dev, test, live... (i.e. allowing each to have different services or settings)
+- get / generate services credentials
+- generate / (re)write local app settings
+- create / import / backup database
+- deployment
+- automated tests
 - remote 2-way sync
-
-CWT targets individual developers or relatively small teams attempting to streamline or implement a common workflow across older *and* newer projects (see *targeted audience* section below).
+- etc.
 
 ## HOW
 
@@ -41,9 +41,7 @@ The organization of these scripts relies on file structure, naming conventions, 
 
 ## WHY
 
-To be more productive. To easily test and quickly throw away what doesn't work. To [standardize](https://imgs.xkcd.com/comics/standards.png) the use of common solutions for targeted use cases - see *purpose*.
-
-While tools like Ansible, `docker-compose` or `nvm` already address some of its purposes, adapting or integrating projects to use these tools for common tasks requires some amount of work.
+To facilitate tools testing / throwing away what doesn't work *with minimal impact to other parts of the project*. To be more productive.
 
 "*[...] There are core parts of the technology that deliver most of the value / differentiator, and these are important to get right. There’s usually then a bunch of other software and services which is more like scaffolding; **you have it around in order to get stuff done**.*
 *[...] “Mash-up” shouldn’t be a dirty hackfest concept.*"

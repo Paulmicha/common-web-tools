@@ -56,3 +56,11 @@ global REG_BACKEND "[default]=file"
 # @see u_autoload_override()
 # @see u_autoload_get_complement()
 global PROJECT_SCRIPTS "[default]=scripts"
+
+# [optional] Allows extensions to provide their own makefile includes (after
+# instance init). This global must contain a list of paths relative to
+# PROJECT_DOCROOT separated by space.
+# @see https://www.gnu.org/software/make/manual/html_node/Include.html
+# @see cwt/env/current/README.md
+# @see Makefile
+global CWT_MAKE_INC
