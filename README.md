@@ -141,7 +141,22 @@ See section *Frequent tasks (howtos / FAQ)* for details.
 
 ## Alter / Extend CWT
 
-Altering or extending CWT happens in `scripts` by default, but this path may be overridden using the `PROJECT_SCRIPTS` global.
+Altering or extending CWT happens in the `scripts` dir by default, but this path may be overridden using the `PROJECT_SCRIPTS` global. Here are the different ways to adapt CWT to current project needs :
+
+### Hooks & Primitives
+
+TODO
+
+### Extensions
+
+Any folder present in the `cwt/extensions` dir is considered a CWT extension. Their structure follows that of the `cwt` dir (see *Hooks & Primitives*). The only particularity is the ability to declare dependencies (i.e. other extensions required to use the current one) by providing a dotfile named `.cwt_requires` at the root of the extension dir.
+
+Example contents from `cwt/extensions/docker4drupal/.cwt_requires` :
+
+```sh
+docker-compose:https://github.com/Paulmicha/cwt.docker-compose.git
+mysql:https://github.com/Paulmicha/cwt.mysql.git
+```
 
 ### Overrides and Complements
 
@@ -162,138 +177,6 @@ for file in $CWT_INC; do
 done
 ```
 
-### Extensions and hooks
-
-TODO
-
 ## Frequent tasks (howtos / FAQ)
 
-Unless otherwise stated, all the examples below are to be run on *local* host from `PROJECT_DOCROOT` as sudo or root (i.e. for host provisioning support).
-
-**NB** : Currently, no exit codes are used in any top-level entry points listed below. These includes (and all those sourced in the "main shell") use `return` instead of `exit`. CWT attempts to follow [Google's Shell Style Guide](https://google.github.io/styleguide/shell.xml) where possible.
-
-Regarding ways to alter existing scripts, [the pattern "Autoload"](https://paulmicha.github.io/common-web-tools/about/patterns.html) usually means :
-
-- Wrap customizations in functions or subshells
-- Use `return` when working in the main shell scope - i.e. in your custom scripts autoloaded from `scripts/overrides` and `scripts/complements`
-
-### Initialize local instance env settings
-
-*Purpose* : Specifies what kind of project we're working with - i.e its "stack" specifications, what kind of deployment / automated tests / CI workflow it uses, etc.
-
-*When to run* : initially + on-demand to **add, remove, change** project specifications (overwrites local env settings).
-
-```sh
-# TODO rewrite example code.
-```
-
-### Install host-level dependencies
-
-*Purpose* : Makes sure everything needed to run the app, the tests, the compilation tasks, etc. is installed.
-
-*When to run* : initially + on-demand to **add** host-level dependencies (local and/or remote).
-
-*Prerequisites* : `cwt/stack/init.sh`
-
-```sh
-# TODO rewrite example code.
-```
-
-### Specify remote host
-
-*Purpose* : Sets remote host address + installs SSH connexion using current user's keys. **Note** : for now, onky one remote host is supported. **TODO** : support Hashicorp Vault.
-
-*When to run* : on-demand to **add or change** the remote host.
-
-*Prerequisites* : SSH keys must already be set up & loaded in current user's bash session.
-
-```sh
-# TODO rewrite example code.
-```
-
-### Manage host services
-
-*Purpose* : Starts, stops, restarts the necessary host services.
-
-*When to run* : on-demand.
-
-*Prerequisites* :
-
-- Local : `cwt/stack/setup.sh
-- Remote : `cwt/remote/add_host.sh` + `cwt/remote/setup.sh`
-
-```sh
-# TODO rewrite example code.
-```
-
-### Initialize application instance
-
-*Purpose* : Includes all steps necessary to produce a working instance of the project, ready to be started. For example, this would include tasks like local database creation, writing specific settings files, etc.
-
-*When to run* : initially + on-demand to **add, remove, change** specific instance settings or features.
-
-*Prerequisites* :
-
-- Local : `cwt/stack/start.sh`
-- Remote : `cwt/remote/start.sh`
-
-```sh
-# TODO rewrite example code.
-```
-
-### Reset application instance
-
-*Purpose* : Restores an instance to its "factory" / default state. Typically wipes the database and relaunches `cwt/app/init.sh`.
-
-*When to run* : on-demand.
-
-*Prerequisites* :
-
-- Local : `cwt/app/init.sh`
-- Remote : `cwt/remote/init.sh`
-
-```sh
-# TODO rewrite example code.
-```
-
-### Manage specific application tasks
-
-*Purpose* : Builds, watches app sources (for auto-compilation on save), runs tests.
-
-*When to run* : on-demand.
-
-*Prerequisites* :
-
-- Local : `cwt/stack/init.sh`
-- Remote : `cwt/remote/init.sh`
-
-```sh
-# TODO rewrite example code.
-```
-
-### Deploy to remote
-
-*Purpose* : Depending on specified instance parameters, deployment typically executes tests and/or custom scripts. It should result in an updated remote instance.
-
-*When to run* : on-demand.
-
-*Prerequisites* : `cwt/remote/init.sh`
-
-```sh
-# TODO rewrite example code.
-```
-
-### 2-way Sync
-
-*Purpose* : Some projects use a database and/or require files (e.g. media) to be synchronized between remote and local instances. This makes sure these can easily be fetched and/or sent.
-
-*When to run* : on-demand.
-
-*Prerequisites* :
-
-- Local : `cwt/stack/init.sh`
-- Remote : `cwt/remote/add_host.sh` + `cwt/remote/init.sh`
-
-```sh
-# TODO
-```
+TODO
