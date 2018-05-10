@@ -19,25 +19,27 @@ CWT helps individual developers or teams to streamline a similar workflow across
 CWT core provides some generic bash shell functions and scripts. It can generate a `Makefile` for chosen tasks. Most importantly, it organizes scripts around a set of conventions to implement in a **modular** way e.g. :
 
 - host-level dependencies installation / setup (provisioning required packets/apps/services)
-- building / running / stopping / destroying project instances with variants per env. type - e.g. dev, test, live... (i.e. allowing each to have different services or settings)
 - get / generate services credentials
+- building / running / stopping / destroying project instances with variants per env. type - e.g. dev, test, live... (i.e. allowing each to have different services or settings)
 - generate / (re)write local app settings
-- create / import / backup database
-- deployment
+- continuous (or on-demand) linting / watching / compiling of some project sources
+- host-level setup / removal of periodic task(s) execution (cron jobs)
 - automated tests
+- deployment
+- create / import / backup database
 - remote 2-way sync
 - etc.
 
 ## HOW
 
-CWT "core" (i.e. this repo - as opposed to CWT *extensions*) provides a minimal base for abstracting usual tasks while allowing to complement, combine, replace or add specific operations **with or without** [existing tools](https://paulmicha.github.io/common-web-tools/about/tools-considerations.html).
+Provide some abstractions to complement, combine, replace or add specific operations.
 
-The organization of these scripts relies on file structure, naming conventions, and a few concepts :
+CWT heavily relies on **file structure**, **naming conventions**, and a few concepts :
 
 - **Globals** are the environment variables related to current project instance. They may be declared using the `global` function in files named `env.vars.sh` aggregated during initialization.
 - **Bootstrap** is the entry point of any task's execution. It deals with the inclusion of all the relevant scripts and loads global variables (e.g. host type, instance type, etc).
-- **Primitives** are fundamental values for CWT extension mecanisms. These are **subjects**, **actions**, and **extensions**. TODO insert here links to documentation.
-- **Hooks** are function calls mimicking events (optionally filtered by primitives), where "listening" entails creating some specific file(s) in certain path(s) corresponding to its arguments. TODO insert here links to documentation.
+- **Primitives** are fundamental values for CWT extension mecanisms. These are **subjects**, **actions**, and **extensions**.
+- **Hooks** are function calls mimicking events (optionally filtered by primitives), where "listening" entails creating some specific file(s) in certain path(s) corresponding to its arguments.
 
 ## WHY
 
@@ -60,11 +62,11 @@ If CWT targets the same portability as Python (~ since [2011](https://unix.stack
 
 That choice has more to do with personal interest, self-teaching, and minimalism (though one could perfectly implement a minimalist scaffolding tool in either language).
 
-## What could an ideal solution look like (high-level & secondary goals)
+## High-level Goals
 
-CWT only cares about testing and making [different tools](https://paulmicha.github.io/common-web-tools/about/tools-considerations.html) work together, so it should be as invisible / simple as possible and require minimal effort. The ideal solution would be measured in cognitive ressource - i.e. how quickly / cheaply can I try these tools together to see if they fit my needs ?
+CWT only cares about testing and making [different tools](https://paulmicha.github.io/common-web-tools/about/tools-considerations.html) work together as painlessly as possible. The success (or failure) of this tool would be measured in **cognitive ressource** - i.e. how quickly / cheaply can I try other tools together to see if they fit my needs ?
 
-My current intuition of an "ideal" scaffolding tool is to apply focus on [language](https://pierrelevyblog.com/2017/10/06/the-next-platform) and communication (naming things as transparently as possible, information design, terse documentation and code comments).
+Regading how best to achieve this "economical" objective, my current intuition is to apply focus on [meaning](https://pierrelevyblog.com/2017/12/08/what-is-meaning/) and communication (i.e. naming things as transparently as possible, information design, terse documentation and code comments, etc).
 
 Among secondary goals are :
 
@@ -73,11 +75,11 @@ Among secondary goals are :
 
 ## Preprequisites
 
-- Bash version 4+ (e.g. MacOS : `brew update && brew install bash && sudo bash -c 'echo /usr/local/bin/bash >> /etc/shells' && chsh -s /usr/local/bin/bash`)
-- Local host or VM with bash support
+- Local host or VM with **Bash shell version 4+** (e.g. MacOS : `brew update && brew install bash && sudo bash -c 'echo /usr/local/bin/bash >> /etc/shells' && chsh -s /usr/local/bin/bash`)
 - Git
 - Existing project (new or old)
-- [optional] Remote host accessible via SSH
+- [optional] Remote host accessible via SSH with Bash 4+
+- [optional] *GNU make* in local / remote host(s)
 
 CWT is currently only tested on Debian and/or Ubuntu Linux hosts.
 
