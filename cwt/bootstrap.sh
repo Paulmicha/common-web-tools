@@ -16,17 +16,15 @@ if [[ $CWT_BS_FLAG -ne 1 ]]; then
   CWT_BS_FLAG=1
 
   # Include CWT core utilities.
-  . cwt/utilities/array.sh
-  . cwt/utilities/autoload.sh
   . cwt/utilities/cwt.sh
-  . cwt/utilities/fs.sh
   . cwt/utilities/global.sh
   . cwt/utilities/hook.sh
-  . cwt/utilities/once.sh # TODO remove or make opt-in.
-  . cwt/utilities/registry.sh # TODO remove or make opt-in.
+  . cwt/utilities/autoload.sh
+  . cwt/utilities/fs.sh
+  . cwt/utilities/array.sh
   . cwt/utilities/string.sh
 
-  # If stack init was run at least once, automatically load global env vars.
+  # If instance init was run at least once, automatically load global env vars.
   # NB : this must happen before u_cwt_extend() gets called because it uses the
   # customizable global var PROJECT_SCRIPTS to populate primitive values.
   if [ -f "cwt/env/current/global.vars.sh" ]; then
