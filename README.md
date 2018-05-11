@@ -1,16 +1,16 @@
 # Common Web Tools (CWT)
 
-WIP / not ready for use yet (re-organization + evaluation stage).
-
-TODO rewrite **Documentation** : [paulmicha.github.io/common-web-tools](https://paulmicha.github.io/common-web-tools/)
+WIP / not ready yet (experimental).
 
 ## WHAT
 
-Scaffolding bash shell CLI for usual web project tasks.
+Scaffolding bash shell CLI for usual web project tasks. Customizable, extensible toolbox for local (internal) development tasks.
 
-CWT is not a program; it's a generic, customizable "glue" between programs. [Third-party tools](https://paulmicha.github.io/common-web-tools/about/tools-considerations.html) integration is provided by extensions having their own separate Git repository. TODO include by default a predefined list of extensions - like in the [DrupalVM](https://www.drupalvm.com/) project ?
+CWT is not a program; it's a generic, customizable "glue" between programs. [Third-party tools](https://paulmicha.github.io/common-web-tools/about/tools-considerations.html) integration is provided by extensions having their own separate Git repository. CWT includes by default (for now) a predefined list of extensions - like in the [DrupalVM](https://www.drupalvm.com/) project.
 
 CWT "core" - this repo - contains common utilities related to managing global environment variables, local and remote hosts, project instance self-tests, and the building blocks of the conventions facilitating the implementation of recurrent web project tasks (see *HOW* below).
+
+Important note : CWT is *not* a production hosting tool.
 
 ## PURPOSE
 
@@ -41,6 +41,30 @@ CWT heavily relies on **file structure**, **naming conventions**, and a few conc
 - **Primitives** are fundamental values for CWT extension mecanisms. These are **subjects**, **actions**, and **extensions**.
 - **Hooks** are function calls mimicking events (optionally filtered by primitives), where "listening" entails creating some specific file(s) in certain path(s) corresponding to its arguments.
 
+## File structure
+
+```txt
+/path/to/project.instance/  ← Project root dir ($PROJECT_DOCROOT).
+  ├── cwt/
+  │   ├── app/              ← App-level tasks (e.g. fix permissions, watch, compile, etc.)
+  │   ├── env/              ← Default global env. vars
+  │   │   └── current/      ← [git-ignored] Generated global env. vars / Makefiles
+  │   ├── extensions/       ← Contains CWT extensions. Remove or add according to project needs
+  │   ├── git/              ← Versionning-related tasks
+  │   │   └── hooks/        ← Entry points for auto-exec (tests, etc.)
+  │   ├── host/             ← Host-level metadata / crontab / network utils + "abstract" provision action
+  │   ├── instance/         ← Actions related to the entire project instance (init, destroy, start, stop)
+  │   ├── remote/           ← Remote operations (e.g. instance actions, but can be any task)
+  │   │   └── instances/    ← [git-ignored] Generated settings for each remote instance
+  │   ├── test/             ← Self-test entry point / automated tests actions
+  │   │   └── cwt/          ← CWT 'core' internal tests (uses shunit2 - see 'vendor' dir)
+  │   ├── utilities/        ← CWT internal functions (hides complexity)
+  │   └── vendor/           ← Bundled third-party dependencies (only shunit2 by default)
+  ├── scripts/              ← [configurable] default path to current project's scripts ($PROJECT_SCRIPTS)
+  ├── web/                  ← [configurable] The app dir. Can be outside project dir ($APP_DOCROOT)
+  └── .gitignore            ← Replace with your own and/or edit
+```
+
 ## WHY
 
 To facilitate tools testing / throwing away what doesn't work *with minimal impact to other parts of the project*. To be more productive.
@@ -51,16 +75,6 @@ To facilitate tools testing / throwing away what doesn't work *with minimal impa
 -- From Alex Hudson's article (2017/10/14) : [Software architecture is failing](https://www.alexhudson.com/2017/10/14/software-architecture-failing/)
 
 See also RDX's article (2016/07/20) : [Modern Software Over-Engineering Mistakes](https://medium.com/@rdsubhas/10-modern-software-engineering-mistakes-bc67fbef4fc8).
-
-## Targeted audience
-
-Developers with or without much knowledge on using a terminal (CLI) working under Linux, MacOS, or Windows (using [Git Bash](https://git-for-windows.github.io/) or [Windows Subsystem for Linux ("bash on Ubuntu on Windows")](https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux)).
-
-## Why bash
-
-If CWT targets the same portability as Python (~ since [2011](https://unix.stackexchange.com/a/24808)), why not just use that language instead ?
-
-That choice has more to do with personal interest, self-teaching, and minimalism (though one could perfectly implement a minimalist scaffolding tool in either language).
 
 ## High-level Goals
 
@@ -73,6 +87,16 @@ Among secondary goals are :
 - [modularity](https://www.youtube.com/watch?v=vypCsVm5z28) - to **hide complexity** by fragmentation (*"people got mad when I put it all in one file"*). "*[Start] with a list of difficult design decisions or design decisions that are likely to change. Each module is then designed to hide such a decision from the others*" -- David Parnas, *on the criteria to be used in decomposing systems into modules* (1971)
 - Code generation (WIP)
 
+## Targeted audience
+
+Developers with or without much knowledge on using a terminal (CLI) working under Linux, MacOS, or Windows (using [Git Bash](https://git-for-windows.github.io/) or [Windows Subsystem for Linux ("bash on Ubuntu on Windows")](https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux)).
+
+## Why bash
+
+If CWT targets the same portability as Python (~ since [2011](https://unix.stackexchange.com/a/24808)), why not just use that language instead ?
+
+That choice has more to do with personal interest, self-teaching, and minimalism (though one could perfectly implement a minimalist scaffolding tool in either language).
+
 ## Preprequisites
 
 - Local host or VM with **Bash shell version 4+** (e.g. MacOS : `brew update && brew install bash && sudo bash -c 'echo /usr/local/bin/bash >> /etc/shells' && chsh -s /usr/local/bin/bash`)
@@ -81,67 +105,76 @@ Among secondary goals are :
 - [optional] Remote host accessible via SSH with Bash 4+
 - [optional] *GNU make* in local / remote host(s)
 
-CWT is currently only tested on Debian and/or Ubuntu Linux hosts.
+Disclaimer : CWT is currently only tested on Debian and/or Ubuntu Linux hosts.
 
-## Usage
+## Usage / Getting started
 
 There are 2 ways to use CWT in existing or new projects :
 
-1. Use a single, "monolothic" repo for everything
-1. Keep application code in a separate Git repo (default, see `.gitignore`)
+1. Use a single, "monolothic" repo for the whole project
+1. Keep application code in a separate Git repo (this is the default assumption in the `.gitignore` config featured in this repo)
 
-### Option 1 first steps ("monolothic" repo)
+The files contained in CWT core - this repo - may be placed either inside the application code (in this case `APP_DOCROOT` = `PROJECT_DOCROOT`), inside its parent folder (this is the default assumption and usually has its own separate "dev stack" Git repo), or even anywhere else on the host (see `APP_DOCROOT`, `PROJECT_SCRIPTS` and `APP_GIT_WORK_TREE` global env vars).
 
-- Download and/or copy&paste CWT files into project root dir (existing or new Git repo)
-- Undo default ignored subfolders in `.gitignore` file if/as needed
+So the first step will always be to clone or download / copy / paste the files from this repo to desired location (in relation to your choice for this project instance source files organization described above), then :
 
-### Option 2 first steps (separate Git repo)
+1. Review the `.gitignore` file and adapt it to suit your needs.
+1. Launch *instance init* action (e.g. run `make` or `make instance init`) - this will generate `readonly` global env vars and optional Makefiles. See `cwt/instance/instance.inc.sh` and `cwt/utilities/global.sh` for details.
+1. [optional] launch *host provision* action (e.g. run `make host provision`) - this is not implemented in CWT, but this "entry point" exists to streamline host-level software installation in extensions.
+1. [optional] launch *instance start* action (e.g. run `make instance start`) - this is meant to run any service required to use or work on current project instance.
 
-- Download CWT in desired location (aka the project root dir `$PROJECT_DOCROOT`)
-- Clone the application into a subfolder named e.g. `web`, `public`, etc. (`$APP_DOCROOT`)
-- Gitignore that subfolder by updating the `.gitignore` file accordingly
-- [optional] Make any alterations necessary
-- [optional] Maintain as a separate repo
-
-### Next steps
-
-When CWT files are in place alongside the rest of the project :
-
-- Init local instance
-- Install host-level software (local and/or remote provisioning)
-- Install app instance(s) (local and/or remote)
-- [optional] Implement automated tests
-- [optional] Implement deployment to desired remote instance(s)
-
-See section *Frequent tasks (howtos / FAQ)* for details.
-
-## CWT 'core' file structure
-
-```txt
-/path/to/project/           ← Project root dir ($PROJECT_DOCROOT).
-  ├── cwt/
-  │   ├── app/              ← App init / (re)build / watch.
-  │   ├── env/              ← Environment settings (global variables) actions (e.g. (re)write).
-  │   │   └── current/      ← Generated settings specific to local instance (git-ignored).
-  │   ├── extensions/       ← Contains CWT extensions. Remove or add according to project needs.
-  │   ├── git/              ← Versionning-related includes.
-  │   │   └── hooks/        ← Entry points for auto-exec (tests, code linting, etc.)
-  │   ├── host/             ← Host-level metadata / crontab / network helpers.
-  │   ├── instance/         ← Actions related to the entire project instance (init, destroy, start, stop)
-  │   ├── remote/           ← Remote operations (e.g. instance tasks, but can be any action)
-  │   │   └── instances/    ← Generated settings for each remote instance (git-ignored).
-  │   ├── test/             ← Automated tests and actions.
-  │   │   └── cwt/          ← CWT 'core' internal tests (uses shunit2 - see 'vendor' dir).
-  │   ├── utilities/        ← CWT internal functions (hides complexity).
-  │   └── vendor/           ← Bundled third-party dependencies.
-  ├── scripts/              ← [configurable] default path to current project's scripts ($PROJECT_SCRIPTS).
-  ├── web/                  ← [configurable] The app dir. Can be outside project dir ($APP_DOCROOT).
-  └── .gitignore            ← Replace with your own and/or edit.
-```
+See *Frequent tasks (howtos / FAQ)* below for other tasks and details.
 
 ## Alter / Extend CWT
 
-Altering or extending CWT happens in the `scripts` dir by default, but this path may be overridden using the `PROJECT_SCRIPTS` global. Here are the different ways to adapt CWT to current project needs :
+Altering or extending CWT involves either :
+
+- creating bash shell scripts in the `scripts` dir (this path may be overridden using the `PROJECT_SCRIPTS` global)
+- creating your own extension(s) in `cwt/extensions` (1 folder = 1 extension)
+
+Here are the different ways to adapt CWT to current project needs :
+
+### Global (env) variables
+
+Since every entry point sources `cwt/bootstrap.sh` to load CWT functions and globals, these (`readonly`) variables are available everywhere. Their values are assigned during *instance init* which generates a single, git-ignored script : `cwt/env/current/global.vars.sh`.
+
+One of the most straightforward ways to customize or add globals is by providing your own `global.vars.sh` file in current project instance's `scripts` folder, however any extension can provide its own - be it in the folder of the extension directly, or inside any of its subfolder (called *subjects*).
+
+CWT core provides 13 globals by default (see `cwt/env/global.vars.sh`, and `cwt/utilities/global.sh` for details about the `global()` function) :
+
+```sh
+global PROJECT_DOCROOT "[default]=$PWD"
+global APP_DOCROOT "[default]=$PROJECT_DOCROOT/web"
+global INSTANCE_TYPE "[default]=dev"
+global INSTANCE_DOMAIN "[default]='$(u_instance_domain)'"
+global HOST_TYPE "[default]=local"
+global HOST_OS "[default]='$(u_host_os)'"
+global PROVISION_USING "[default]=docker-compose"
+global DEPLOY_USING "[default]=git"
+
+# Path to custom scripts ~ commonly automated processes. CWT will also use this
+# path to look for overrides and complements.
+# @see u_autoload_override()
+# @see u_autoload_get_complement()
+global PROJECT_SCRIPTS "[default]=scripts"
+
+# This allows supporting multi-repo projects, i.e. 1 repo for the app + 1 for
+# the "dev stack" :
+# - Use CWT_MODE='monolithic' for single-repo projects.
+# - Use CWT_MODE='separate' for multi-repo projects (mandatory app Git details).
+# TODO support any other combination of any number of repos ?
+global CWT_MODE "[default]=separate"
+global APP_GIT_ORIGIN "[if-CWT_MODE]=separate"
+global APP_GIT_WORK_TREE "[if-CWT_MODE]=separate [default]=$APP_DOCROOT"
+
+# [optional] Allows extensions to provide their own makefile includes (after
+# instance init). This global must contain a list of paths relative to
+# $PROJECT_DOCROOT separated by space.
+# @see https://www.gnu.org/software/make/manual/html_node/Include.html
+# @see cwt/env/current/README.md
+# @see Makefile
+global CWT_MAKE_INC
+```
 
 ### Hooks & Primitives
 

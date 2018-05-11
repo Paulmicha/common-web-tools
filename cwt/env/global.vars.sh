@@ -27,7 +27,6 @@ global PROJECT_DOCROOT "[default]=$PWD"
 global APP_DOCROOT "[default]=$PROJECT_DOCROOT/web"
 global INSTANCE_TYPE "[default]=dev"
 global INSTANCE_DOMAIN "[default]='$(u_instance_domain)'"
-global INSTANCE_ALIAS
 
 # This allows supporting multi-repo projects, i.e. 1 repo for the app + 1 for
 # the "dev stack" :
