@@ -20,4 +20,9 @@
 P_REG_KEY="$1"
 P_REG_VAL=$2
 
-hook -s 'host' -a 'registry_set' -v 'HOST_TYPE'
+# Allows empty values (in which case this entry acts as a boolean flag).
+if [[ -z "$P_REG_VAL" ]]; then
+  P_REG_VAL=1
+fi
+
+u_hook_most_specific -s 'host' -a 'registry_set' -v 'HOST_TYPE'

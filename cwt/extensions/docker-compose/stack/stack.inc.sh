@@ -12,21 +12,25 @@
 ##
 # Gets the docker-compose.yml file template to use in current project instance.
 #
-# @requires global DC_YML_VARIANTS in calling scope.
+# Creates or override the docker-compose.yml file for local project instance
+# based on the most specific match found.
+#
+# @requires the following globals in calling scope :
+#   - DC_YML
+#   - DC_YML_VARIANTS
+#
 # @see cwt/extensions/docker-compose/global.vars.sh
 #
 u_stack_template() {
   local f
-  local hook_dry_run_matches
-  local prioritized_lookups
+  local hook_most_specific_dry_run_match=''
 
-  # prioritized_lookups="$PROJECT_SCRIPTS/"
+  u_hook_most_specific 'dry-run' -s 'stack' -a 'docker-compose' -c "yml" -v 'DC_YML_VARIANTS' -t
 
-  hook -s 'stack' -a 'docker-compose' -c "yml" -v 'DC_YML_VARIANTS' -t
-
-  # TODO [wip] unfinished - this should create or override the file :
-  # "$PROJECT_DOCROOT/docker-compose.yml" based on the most specific match.
-  # for f in $hook_dry_run_matches; do
-  #   . "$f"
-  # done
+  if [ -n "$hook_most_specific_dry_run_match" ]; then
+    if [ -f "$DC_YML" ]; then
+      rm "$DC_YML"
+    fi
+    cp "$hook_most_specific_dry_run_match" "$DC_YML"
+  fi
 }

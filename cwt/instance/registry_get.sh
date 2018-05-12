@@ -19,10 +19,12 @@
 # @see hook()
 P_REG_KEY="$1"
 
-# Any positive match MUST exit with 0 code after printing value to stdin.
-# TODO implement "most specific" version of the hook() function - in case there
-# are multiple matches (only 1 can "win" in this case).
-hook -s 'instance' -a 'registry_get' -v 'HOST_TYPE'
+# Failsafe from potential collisions in previous calls.
+unset REG_VAL
+
+# Any positive match MUST exit with 0 code after printing value to stdin - or
+# setting the REG_VAL variable to the value fetched.
+u_hook_most_specific -s 'instance' -a 'registry_get' -v 'HOST_TYPE'
 
 # If we reach this point, it means no match or no value was found.
 exit 1

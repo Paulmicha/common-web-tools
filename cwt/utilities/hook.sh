@@ -431,7 +431,7 @@ u_hook_build_lookup_by_subject() {
 #
 # This notion is totally arbitrary here - it will use the file having the
 # deepest path and the highest number of dots in its path. In case of equality,
-# the last match will be used.
+# the first match will be used.
 #
 # This "score" - a simple addition of slash & dot count in the filepath - allows
 # to differenciate CWT's file-name-based implementations (hooks, globals,
@@ -439,13 +439,40 @@ u_hook_build_lookup_by_subject() {
 #   - multiple extension (i.e. variants : pre_bootstrap.docker-compose.hook.sh)
 #   - complements (e.g. scripts/complements/test/self_test.hook.sh)
 #   - overrides (e.g. scripts/overrides/extensions/docker-compose/instance/init.docker-compose.hook.sh)
+# @see hook()
 #
 # TODO [evol] Attempt to implement some control over which one gets sourced
 # in case of equality.
 #
-# @see hook()
+# [optional] (re)sets the following var in calling scope :
+# @var hook_most_specific_dry_run_match
+#
+# @example
+#   # Basic usage - only sources 1 match (the "most specific") :
+#   u_hook_most_specific -s 'instance' -a 'registry_get' -v 'HOST_TYPE'
+#
+#   # Dry run example.
+#   # @see u_stack_template() in cwt/extensions/docker-compose/stack/stack.inc.sh
+#   local hook_most_specific_dry_run_match
+#   u_hook_most_specific 'dry-run' -s 'stack' -a 'docker-compose' -c "yml" -v 'DC_YML_VARIANTS' -t
+#   echo "$local hook_most_specific_dry_run_match" # <- Prints the most specific "docker-compose.yml" found.
 #
 u_hook_most_specific() {
+  local msdr_flag=0
+
+  # Here we "preprocess" specific arguments and remove them if found to avoid
+  # breaking the call to hook() below.
+  # For now, only the first is checked - but we may have to loop through all of
+  # them if we need more later on.
+  case $1 in
+    # Request to set an existing var in calling scope to the most specific match
+    # found (instead of sourcing it).
+    'dry-run')
+      msdr_flag=1
+      shift 1
+    ;;
+  esac
+
   local f
   local depth=0
   local dot_arr
@@ -466,10 +493,18 @@ u_hook_most_specific() {
 
     if [ $depth -gt $highest_depth ]; then
       most_specific_match="$f"
+      highest_depth=$depth
     fi
   done
 
   if [ -n "$most_specific_match" ] && [ -f "$most_specific_match" ]; then
+    # If the "dry run" flag is requested, it bypasses the override mechanism.
+    # TODO can we workaround this ?
+    if [ $msdr_flag -eq 1 ]; then
+      hook_most_specific_dry_run_match="$most_specific_match"
+      continue
+    fi
+
     u_autoload_override "$most_specific_match" 'continue'
     eval "$inc_override_evaled_code"
 

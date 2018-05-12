@@ -22,7 +22,12 @@
 # @see cwt/bootstrap.sh
 #
 
-# Determins which docker-compose.yml "template" will be used for current project
+# Specifies where the generated (& to be git-ignored) docker-compose.yml file
+# will be (over)written.
+# @see u_stack_template()
+global DC_YML "[default]='$PROJECT_DOCROOT/docker-compose.yml'"
+
+# Determines which docker-compose.yml "template" will be used for current project
 # instance.
 # @see u_stack_template()
 global DC_YML_VARIANTS "[default]='INSTANCE_TYPE HOST_TYPE'"

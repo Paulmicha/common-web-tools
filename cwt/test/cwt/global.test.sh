@@ -74,7 +74,7 @@ EOF
 }
 
 ##
-# Does the initial agregation process work ?
+# Does the initial aggregation process work ?
 #
 test_cwt_global_aggregate() {
   local inc
