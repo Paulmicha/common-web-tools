@@ -169,8 +169,7 @@ u_remote_authorize_ssh_key() {
   fi
 
   # Prevent running this more than once per host.
-  # TODO support other implementations of "once" mecanism (currently file based).
-  if ! $(u_check_once "u_remote_authorize_ssh_key.${REMOTE_INSTANCE_HOST}.$USER.${public_key_path}" 'host'); then
+  if ! $(u_host_once "u_remote_authorize_ssh_key.${REMOTE_INSTANCE_HOST}.${USER}.${public_key_path}"); then
     echo
     echo "Notice in $BASH_SOURCE line $LINENO: it appears that key was already sent to that remote host."
     echo "There is no need to send it again."

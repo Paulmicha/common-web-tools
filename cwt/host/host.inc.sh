@@ -186,28 +186,29 @@ u_host_registry_del() {
 }
 
 ##
-# TODO [wip] refacto in progress.
 # Checks boolean flag for the entire local host.
 #
 # @example
-#   if $(u_host_once "$BASH_SOURCE"); then
+#   if $(u_host_once "my_once_id"); then
 #     echo "Proceed."
 #   else
-#     echo "Abort : this script has already been run on this host."
-#     return
+#     echo "Notice : this has already been run on this host."
+#     echo "-> Aborting."
+#     exit
 #   fi
 #
 u_host_once() {
   local p_flag="$1"
 
-  # We expect this call to exit with 0 code if flag is found.
-  cwt/host/registry_get.sh "$p_flag"
+  # TODO check what happens in case of unexpected collisions (if that var
+  # already exist in calling scope).
+  local reg_val
 
-  # if [[ $? -eq 0 ]]; then
-  #   return
-  # fi
+  u_host_registry_get "$p_flag"
 
-  # false
+  if [[ $reg_val -eq 1 ]]; then
+    return
+  fi
 
-  return $?
+  false
 }

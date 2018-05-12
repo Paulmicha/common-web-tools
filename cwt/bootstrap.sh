@@ -33,6 +33,7 @@ if [[ $CWT_BS_FLAG -ne 1 ]]; then
 
   # Initializes "primitives" for hooks and lookups (CWT extension mecanisms).
   # These are : subjects, actions, prefixes, variants and extensions.
+  CWT_INC=''
   u_cwt_extend
 
   # Load additional includes (including extensions').

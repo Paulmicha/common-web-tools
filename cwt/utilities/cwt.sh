@@ -134,7 +134,9 @@ u_cwt_extend() {
 # @see u_cwt_extend()
 #
 u_cwt_extensions() {
+  local inc
   local extension
+
   u_fs_dir_list "cwt/extensions"
   for extension in $dir_list; do
 
@@ -143,10 +145,16 @@ u_cwt_extensions() {
       continue
     fi
 
-    eval "CWT_EXTENSIONS+=\"$extension \""
+    CWT_EXTENSIONS+="$extension "
 
     # Aggregate namespaced primitives for every extension.
     u_cwt_extend "cwt/extensions/$extension"
+
+    # For convenience, also accept generic includes at the root of extensions.
+    inc="cwt/extensions/$extension/${extension}.inc.sh"
+    if [[ -f "$inc" ]]; then
+      CWT_INC+="$inc "
+    fi
   done
 }
 
