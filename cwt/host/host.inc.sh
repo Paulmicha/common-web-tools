@@ -110,3 +110,29 @@ u_host_os() {
 
   echo "$os-$version" | tr '[:upper:]' '[:lower:]'
 }
+
+##
+# Checks boolean flag for the entire local host.
+#
+# @example
+#   if $(u_host_once "$BASH_SOURCE"); then
+#     echo "Proceed."
+#   else
+#     echo "Abort : this script has already been run on this host."
+#     return
+#   fi
+#
+u_host_once() {
+  local p_flag="$1"
+
+  # We expect this call to exit with 0 code if flag is found.
+  cwt/host/registry_get.sh "$p_flag"
+
+  # if [[ $? -eq 0 ]]; then
+  #   return
+  # fi
+
+  # false
+
+  return $?
+}

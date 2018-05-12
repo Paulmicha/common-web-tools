@@ -36,7 +36,7 @@ u_db_get_credentials() {
 
   export DB_NAME="$DB_ID"
   export DB_USERNAME="$DB_ID"
-  export DB_PASSWORD="$(u_registry_get_val "DB_${DB_ID}_PASSWORD")"
+  export DB_PASSWORD="$(cwt/instance/registry_get.sh "DB_${DB_ID}_PASSWORD")"
 
   # Generate random local instance DB password and store it for subsequent calls.
   if [[ -z "$DB_PASSWORD" ]]; then
@@ -46,7 +46,7 @@ u_db_get_credentials() {
 
     DB_PASSWORD=`< /dev/urandom tr -dc A-Za-z0-9 | head -c14; echo`
 
-    u_registry_set_val "DB_${DB_ID}_PASSWORD" "$DB_PASSWORD"
+    cwt/instance/registry_set.sh "DB_${DB_ID}_PASSWORD" "$DB_PASSWORD"
   fi
 
   # Prevent MySQL error :

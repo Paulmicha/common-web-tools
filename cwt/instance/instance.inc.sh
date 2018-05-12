@@ -178,3 +178,29 @@ u_instance_domain() {
 
   echo "${PWD##*/}.${lh//./-}.io"
 }
+
+##
+# Checks boolean flag for current project instance.
+#
+# @example
+#   if $(u_instance_once "$BASH_SOURCE"); then
+#     echo "Proceed."
+#   else
+#     echo "Abort : this script has already been run for this project instance."
+#     return
+#   fi
+#
+u_instance_once() {
+  local p_flag="$1"
+
+  # We expect this call to exit with 0 code if flag is found.
+  cwt/instance/registry_get.sh "$p_flag"
+
+  # if [[ $? -eq 0 ]]; then
+  #   return
+  # fi
+
+  # false
+
+  return $?
+}
