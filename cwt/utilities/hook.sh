@@ -287,7 +287,7 @@ hook() {
       # @see cwt/test/cwt/hook.test.sh
       # @see u_hook_most_specific()
       if [ $p_dry_run -eq 1 ]; then
-        inc_dry_run_files_list+="$inc
+        hook_dry_run_matches+="$inc
 "
         continue
       fi
@@ -430,26 +430,40 @@ u_hook_build_lookup_by_subject() {
 # Same as hook() except it will only source the "most specific" match.
 #
 # This notion is totally arbitrary here - it will use the file having the
-# deepest path, and in case of equal depth, the last match will be used.
+# deepest path and the highest number of dots in its path. In case of equality,
+# the last match will be used.
+#
+# This "score" - a simple addition of slash & dot count in the filepath - allows
+# to differenciate CWT's file-name-based implementations (hooks, globals,
+# etc.) because of the way its patterns work :
+#   - multiple extension (i.e. variants : pre_bootstrap.docker-compose.hook.sh)
+#   - complements (e.g. scripts/complements/test/self_test.hook.sh)
+#   - overrides (e.g. scripts/overrides/extensions/docker-compose/instance/init.docker-compose.hook.sh)
 #
 # TODO [evol] Attempt to implement some control over which one gets sourced
-# in case of depth equality.
+# in case of equality.
 #
 # @see hook()
 #
 u_hook_most_specific() {
   local f
   local depth=0
+  local dot_arr
+  local slash_arr
   local highest_depth=0
   local most_specific_match=''
-  local inc_dry_run_files_list=''
+  local hook_dry_run_matches=''
 
   # Forwards all arguments while forcing the "dry run" (-t) flag.
   hook -t $@
 
-  for f in $inc_dry_run_files_list; do
+  for f in $hook_dry_run_matches; do
+    u_str_split1 dot_arr "$f" '.'
     u_str_split1 slash_arr "$f" '/'
-    depth=${#slash_arr[@]}
+
+    depth=${#dot_arr[@]}
+    depth=$(( depth + ${#slash_arr[@]} ))
+
     if [ $depth -gt $highest_depth ]; then
       most_specific_match="$f"
     fi

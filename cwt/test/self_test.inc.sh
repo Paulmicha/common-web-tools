@@ -38,11 +38,11 @@ u_test_lookup_paths_assertion() {
 # @var flag
 #
 # @requires the following vars in calling scope :
-# - inc_dry_run_files_list
+# - hook_dry_run_matches
 # - expected_list
 #
 # TODO [wip] implement proper params (instead of requiring
-#   $inc_dry_run_files_list + $expected_list vars in calling scope).
+#   $hook_dry_run_matches + $expected_list vars in calling scope).
 # TODO [wip] @example
 #
 u_test_compare_expected_lookup_paths() {
@@ -56,7 +56,7 @@ u_test_compare_expected_lookup_paths() {
   done
 
   local count_found=0
-  for j in $inc_dry_run_files_list; do
+  for j in $hook_dry_run_matches; do
     ((++count_found))
   done
 
@@ -65,7 +65,7 @@ u_test_compare_expected_lookup_paths() {
   for i in $expected_list; do
     is_found=0
 
-    for j in $inc_dry_run_files_list; do
+    for j in $hook_dry_run_matches; do
       if [[ "$i" == "$j" ]]; then
         is_found=1
         break

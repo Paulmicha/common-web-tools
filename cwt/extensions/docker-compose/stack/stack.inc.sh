@@ -17,7 +17,7 @@
 #
 u_stack_template() {
   local f
-  local inc_dry_run_files_list
+  local hook_dry_run_matches
   local prioritized_lookups
 
   # prioritized_lookups="$PROJECT_SCRIPTS/"
@@ -26,7 +26,7 @@ u_stack_template() {
 
   # TODO [wip] unfinished - this should create or override the file :
   # "$PROJECT_DOCROOT/docker-compose.yml" based on the most specific match.
-  # for f in $inc_dry_run_files_list; do
+  # for f in $hook_dry_run_matches; do
   #   . "$f"
   # done
 }

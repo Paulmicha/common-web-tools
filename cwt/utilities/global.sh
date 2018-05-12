@@ -103,7 +103,7 @@ EOF
 #
 u_global_lookup_paths() {
   local f
-  local inc_dry_run_files_list
+  local hook_dry_run_matches
 
   # TODO find a better workaround : we're using an empty global variable to
   # avoid the default variants lookups in hook().
@@ -111,7 +111,7 @@ u_global_lookup_paths() {
   _NO_VARIANTS=''
   hook -a 'global' -c 'vars.sh' -v '_NO_VARIANTS' -t
 
-  for f in $inc_dry_run_files_list; do
+  for f in $hook_dry_run_matches; do
     global_lookup_paths+="$f "
   done
 
