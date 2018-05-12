@@ -285,9 +285,7 @@ hook() {
 
       # Note : for tests, the "dry run" option prevents "override" alterations.
       # @see cwt/test/cwt/hook.test.sh
-      # This is also used for operations using the same lookup mechanism. These
-      # then transform the generated file paths, e.g. using string replacements.
-      # @see u_stack_deps_get_lookup_paths()
+      # @see u_hook_most_specific()
       if [ $p_dry_run -eq 1 ]; then
         inc_dry_run_files_list+="$inc
 "
@@ -426,4 +424,41 @@ u_hook_build_lookup_by_subject() {
       esac
     done
   done
+}
+
+##
+# Same as hook() except it will only source the "most specific" match.
+#
+# This notion is totally arbitrary here - it will use the file having the
+# deepest path, and in case of equal depth, the last match will be used.
+#
+# TODO [evol] Attempt to implement some control over which one gets sourced
+# in case of depth equality.
+#
+# @see hook()
+#
+u_hook_most_specific() {
+  local f
+  local depth=0
+  local highest_depth=0
+  local most_specific_match=''
+  local inc_dry_run_files_list=''
+
+  # Forwards all arguments while forcing the "dry run" (-t) flag.
+  hook -t $@
+
+  for f in $inc_dry_run_files_list; do
+    u_str_split1 slash_arr "$f" '/'
+    depth=${#slash_arr[@]}
+    if [ $depth -gt $highest_depth ]; then
+      most_specific_match="$f"
+    fi
+  done
+
+  if [ -n "$most_specific_match" ] && [ -f "$most_specific_match" ]; then
+    u_autoload_override "$most_specific_match" 'continue'
+    eval "$inc_override_evaled_code"
+
+    . "$most_specific_match"
+  fi
 }

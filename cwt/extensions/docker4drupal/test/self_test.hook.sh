@@ -12,3 +12,5 @@
 . cwt/bootstrap.sh
 
 # TODO [wip] refacto in progress.
+
+echo "TODO [wip] implement cwt/extensions/docker4drupal/test/self_test.hook.sh"
