@@ -180,6 +180,81 @@ u_instance_domain() {
 }
 
 ##
+# [abstract] Sets instance-level registry value.
+#
+# Writes to an abstract instance-level storage by given key. "Abstract" means that
+# CWT core itself doesn't provide any actual implementation for this
+# functionality. It is necessary to use an extension which does. E.g. :
+# @see cwt/extensions/file_registry
+#
+# @example
+#   u_instance_registry_set 'my_key' 1
+#
+u_instance_registry_set() {
+  local reg_key="$1"
+  local reg_val=$2
+
+  # Allows empty values (in which case this entry acts as a boolean flag).
+  if [[ -z "$reg_val" ]]; then
+    reg_val=1
+  fi
+
+  # NB : any implementation of this hook MUST use the reg_val and reg_key
+  # variables (which are restricted to this function scope).
+  u_hook_most_specific -s 'instance' -a 'registry_set' -v 'INSTANCE_TYPE HOST_TYPE'
+}
+
+##
+# [abstract] Gets instance-level registry value.
+#
+# Reads from an abstract instance-level storage by given key. "Abstract" means that
+# CWT core itself doesn't provide any actual implementation for this
+# functionality. It is necessary to use an extension which does. E.g. :
+# @see cwt/extensions/file_registry
+#
+# NB : for performance reasons (to avoid using a subshell), this function
+# writes its result to a variable subject to collision in calling scope.
+#
+# @var reg_val
+#
+# @example
+#   u_instance_registry_get 'my_key'
+#   echo "$reg_val" # <- Prints the value if there is an entry for 'my_key'.
+#
+u_instance_registry_get() {
+  local reg_key="$1"
+
+  # Prevents risks of intereference between multiple calls (since we reuse the
+  # same variable).
+  unset reg_val
+
+  # NB : any implementation of this hook MUST set its result using the reg_val
+  # variable, in this case NOT restricted to this function scope.
+  u_hook_most_specific -s 'instance' -a 'registry_get' -v 'INSTANCE_TYPE HOST_TYPE'
+}
+
+##
+# [abstract] Deletes instance-level registry value.
+#
+# Removes given entry from an abstract instance-level storage by given key.
+# "Abstract" means that CWT core itself doesn't provide any actual
+# implementation for this functionality. It is necessary to use an extension
+# which does. E.g. :
+# @see cwt/extensions/file_registry
+#
+# @example
+#   u_instance_registry_del 'my_key'
+#
+u_instance_registry_del() {
+  local reg_key="$1"
+
+  # NB : any implementation of this hook MUST use the reg_key variable (which is
+  # restricted to this function scope).
+  u_hook_most_specific -s 'instance' -a 'registry_del' -v 'INSTANCE_TYPE HOST_TYPE'
+}
+
+##
+# TODO [wip] refacto in progress.
 # Checks boolean flag for current project instance.
 #
 # @example
