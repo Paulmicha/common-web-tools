@@ -30,7 +30,7 @@
 #   +------------- min (0 - 59)
 #
 # Numbers like 10 mean "at the 10th ..." (depending on position above).
-# Fractions like "0/5" mean "every 5 ..." (depending on position above).
+# Fractions like "*/5" mean "every 5 ..." (depending on position above).
 #
 # @example
 #   # Run drupal cron task every 20 minutes :
@@ -187,6 +187,10 @@ u_host_registry_del() {
 
 ##
 # Prevents running something more than once for entire host.
+#
+# TODO use variable in calling scope instead of subshell (because currently,
+# given the use of the condition in examples below, anything printed out to
+# stdin would be evaluated).
 #
 # Checks boolean flag for the entire local host.
 # @see u_host_registry_get()

@@ -10,6 +10,55 @@
 #
 
 ##
+# Sanitizes strings (basic search/replace using regex).
+#
+# @param 1 String : the value to sanitize.
+# @param 2 [optional] String : with what to replace filtered out characters.
+#   Defaults to : '-'
+# @param 3 [optional] String : characters to filter (regex). Defaults to :
+#   '[^a-zA-Z0-9_\-\.]'
+# @param 4 [optional] String : the variable name in calling scope which will
+#   hold the result for performance reasons (to avoid using a subshell).
+#   Defaults to : 'sanitized_str'.
+#
+# NB : for performance reasons (to avoid using a subshell), this function
+# writes its result to a variable subject to collision in calling scope.
+# The default variable name is overridable : see param 4.
+#
+# @var sanitized_str
+#
+# @see cwt/test/cwt/utilities.test.sh
+#
+# @example
+#   u_str_sanitize "a b c d"
+#   echo "$sanitized_str" # <- Prints 'a-b-c-d'
+#   u_str_sanitize "a b c d" '_'
+#   echo "$sanitized_str" # <- Prints 'a_b_c_d'
+#
+u_str_sanitize() {
+  local p_str="$1"
+  local p_replace="$2"
+  local p_filter="$3"
+  local p_varname="$4"
+
+  if [[ -z "$p_filter" ]]; then
+    p_filter='[^a-zA-Z0-9_\-\.]'
+  fi
+
+  # Allows empty strings.
+  if [[ $# -lt 2 ]] && [[ -z "$p_replace" ]]; then
+    p_replace='-'
+  fi
+
+  if [[ -z "$p_varname" ]]; then
+    p_varname='sanitized_str'
+  fi
+
+  # ${!p_varname}="${p_str//$p_filter/$p_replace}"
+  printf -v "$p_varname" '%s' "${p_str//$p_filter/$p_replace}"
+}
+
+##
 # Gets all unique unordered combinations of given string values.
 #
 # See https://codereview.stackexchange.com/questions/7001/generating-all-combinations-of-an-array

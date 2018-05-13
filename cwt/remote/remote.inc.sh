@@ -171,6 +171,10 @@ u_remote_authorize_ssh_key() {
   fi
 
   # Prevent running this more than once per host.
+  # TODO use variable in calling scope instead of subshell (because currently,
+  # given the use of the condition in examples below, anything printed out to
+  # stdin would be evaluated).
+  # @see u_host_once()
   if ! $(u_host_once "u_remote_authorize_ssh_key.${REMOTE_INSTANCE_HOST}.${USER}.${public_key_path}"); then
     echo
     echo "Notice in $BASH_SOURCE line $LINENO: it appears that key was already sent to that remote host."
@@ -296,8 +300,8 @@ u_remote_script_wrapper() {
 #   u_remote_instance_add \
 #     'my_short_id' \
 #     'remote.instance.example.com' \
-#     'dev' \
-#     'username' \
+#     'stage' \
+#     'my_ssh_user' \
 #     '/path/to/remote/instance/docroot'
 #
 u_remote_instance_add() {
