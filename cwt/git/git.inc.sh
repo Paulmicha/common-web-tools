@@ -3,7 +3,10 @@
 ##
 # Git-related utility functions.
 #
-# This file is sourced during core CWT bootstrap.
+# TODO implement optional git hooks setup.
+# Ex : cwt/git/hooks/pre_commit.sh
+#
+# This file is dynamically loaded.
 # @see cwt/bootstrap.sh
 #
 # Convention : functions names are all prefixed by "u" (for "utility").
@@ -43,45 +46,6 @@ u_git_get_staged_files() {
   fi
 
   echo "$(u_git_wrapper diff --name-only --cached)"
-}
-
-##
-# Applies common Git config.
-#
-# @param 1 [optional] String : the git "working dir". Defaults to global
-#   APP_GIT_WORK_TREE if it exists in calling scope, or none.
-# @param 2 [optional] String : the git dir. Defaults to "$1/.git".
-#
-# @example
-#   u_git_apply_config
-#
-#   # Notice that NO TRAILING SLASH is used in arg (requirement).
-#   u_git_apply_config /custom/path/to/another/git/work/tree
-#
-u_git_apply_config() {
-  local p_git_work_tree="$1"
-  local p_git_dir=''
-
-  if [[ -n "$2" ]]; then
-    p_git_dir="$2"
-  elif [[ -n "$p_git_work_tree" ]]; then
-    p_git_dir="$p_git_work_tree/.git"
-  fi
-
-  # Require git user config. Prompt if not set globally, in which case we only
-  # apply git config to this instance.
-  GIT_USER_MAIL="$(git config user.email)"
-  if [[ -z "$GIT_USER_MAIL" ]]; then
-    u_git_wrapper config user.email $(u_prompt "please enter your Git user EMAIL : ")
-  fi
-
-  GIT_USER_NAME="$(git config user.name)"
-  if [[ -z "$GIT_USER_NAME" ]]; then
-    u_git_wrapper config user.name $(u_prompt "please enter your Git user NAME : ")
-  fi
-
-  # Always enforce the following settings.
-  u_git_wrapper config push.default simple
 }
 
 ##

@@ -3,6 +3,8 @@
 ##
 # Remote host-related utility functions.
 #
+# TODO implement SSH setup as an action (authorize local user key).
+#
 # This file is dynamically loaded.
 # @see cwt/bootstrap.sh
 #
