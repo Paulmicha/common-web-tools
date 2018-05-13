@@ -52,7 +52,7 @@ u_remote_download() {
     p_remote_path="$REMOTE_INSTANCE_PROJECT_DOCROOT/$p_remote_path"
   fi
 
-  scp "${REMOTE_USER}@${REMOTE_INSTANCE_HOST}:$p_remote_path" "$p_local_path" $@
+  scp "${REMOTE_USER}@${REMOTE_INSTANCE_HOST}:$p_remote_path" "$p_local_path" "$@"
 
   if [[ $? -ne 0 ]]; then
     echo >&2
@@ -109,7 +109,7 @@ u_remote_upload() {
     p_remote_path="$REMOTE_INSTANCE_PROJECT_DOCROOT/$p_remote_path"
   fi
 
-  scp "$p_local_path" "${REMOTE_USER}@${REMOTE_INSTANCE_HOST}:${p_remote_path}" $@
+  scp "$p_local_path" "${REMOTE_USER}@${REMOTE_INSTANCE_HOST}:${p_remote_path}" "$@"
 
   if [[ $? -ne 0 ]]; then
     echo >&2

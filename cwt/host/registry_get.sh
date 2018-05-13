@@ -13,5 +13,5 @@
 #
 
 . cwt/bootstrap.sh
-u_host_registry_get $@
+u_host_registry_get "$@"
 echo "$reg_val"

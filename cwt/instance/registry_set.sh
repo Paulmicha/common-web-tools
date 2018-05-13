@@ -13,4 +13,4 @@
 #
 
 . cwt/bootstrap.sh
-u_instance_registry_set $@
+u_instance_registry_set "$@"

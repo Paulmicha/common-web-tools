@@ -14,4 +14,4 @@
 #
 
 . cwt/bootstrap.sh
-u_host_registry_del $@
+u_host_registry_del "$@"
