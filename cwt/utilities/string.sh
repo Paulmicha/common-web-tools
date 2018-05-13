@@ -14,18 +14,18 @@
 #
 # @param 1 String : the value to sanitize.
 # @param 2 [optional] String : with what to replace filtered out characters.
-#   Defaults to : '-'
-# @param 3 [optional] String : characters to filter (regex). Defaults to :
-#   '[^a-zA-Z0-9_\-\.]'
-# @param 4 [optional] String : the variable name in calling scope which will
+#   Defaults to : '-'.
+# @param 3 [optional] String : the variable name in calling scope which will
 #   hold the result for performance reasons (to avoid using a subshell).
 #   Defaults to : 'sanitized_str'.
+# @param 4 [optional] String : characters to filter (regex). Defaults to :
+#   '[^a-zA-Z0-9_\-\.]'
 #
 # NB : for performance reasons (to avoid using a subshell), this function
 # writes its result to a variable subject to collision in calling scope.
-# The default variable name is overridable : see param 4.
+# The default variable name is overridable : see arg 3.
 #
-# @var sanitized_str
+# @var [default(3)] sanitized_str
 #
 # @see cwt/test/cwt/utilities.test.sh
 #
@@ -38,8 +38,8 @@
 u_str_sanitize() {
   local p_str="$1"
   local p_replace="$2"
-  local p_filter="$3"
-  local p_varname="$4"
+  local p_varname="$3"
+  local p_filter="$4"
 
   if [[ -z "$p_filter" ]]; then
     p_filter='[^a-zA-Z0-9_\-\.]'

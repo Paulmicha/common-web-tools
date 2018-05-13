@@ -68,7 +68,7 @@ u_instance_init() {
   done
 
   # Trigger pre-init (optional) extra processes.
-  hook -a 'init' -p 'pre' -v 'PROVISION_USING INSTANCE_TYPE HOST_TYPE'
+  hook -p 'pre' -a 'init'
 
   export GLOBALS
   export GLOBALS_COUNT

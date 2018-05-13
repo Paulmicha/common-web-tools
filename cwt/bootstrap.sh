@@ -27,7 +27,9 @@ if [[ $CWT_BS_FLAG -ne 1 ]]; then
   # If instance init was run at least once, automatically load global env vars.
   # NB : this must happen before u_cwt_extend() gets called because it uses the
   # customizable global var PROJECT_SCRIPTS to populate primitive values.
-  if [ -f "cwt/env/current/global.vars.sh" ]; then
+  # This can be opted-out by setting the flag CWT_BS_SKIP_GLOBALS to 1.
+  # @see cwt/instance/init.sh
+  if [[ -f "cwt/env/current/global.vars.sh" ]] && [[ $CWT_BS_SKIP_GLOBALS -ne 1 ]]; then
     . cwt/env/current/global.vars.sh
   fi
 

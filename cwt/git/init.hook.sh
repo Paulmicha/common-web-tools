@@ -11,6 +11,10 @@
 # - APP_GIT_WORK_TREE
 #
 
-if [[ "$CWT_MODE" == 'separate' ]] && [ -n "$APP_GIT_ORIGIN"] && [-n "$APP_GIT_WORK_TREE"] && [ ! -d "$APP_GIT_WORK_TREE/.git" ]; then
+if [[ "$CWT_MODE" == 'separate' ]] \
+  && [[ -n "$APP_GIT_ORIGIN" ]] \
+  && [[ -n "$APP_GIT_WORK_TREE" ]] \
+  && [[ ! -d "$APP_GIT_WORK_TREE/.git" ]]
+then
   git clone "$APP_GIT_ORIGIN" "$APP_GIT_WORK_TREE"
 fi

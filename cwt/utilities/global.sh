@@ -97,19 +97,23 @@ EOF
 #   u_global_lookup_paths
 #   echo "$global_lookup_paths" # <- Yields the following lookup paths :
 #   # - cwt/<CWT_SUBJECTS>/global.vars.sh
+#   # - cwt/<CWT_SUBJECTS>/global.<PROVISION_USING>.vars.sh
 #   # - cwt/extensions/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/global.vars.sh
+#   # - cwt/extensions/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/global.<PROVISION_USING>.vars.sh
 #   # - cwt/extensions/<CWT_EXTENSIONS>/global.vars.sh
+#   # - cwt/extensions/<CWT_EXTENSIONS>/global.<PROVISION_USING>.vars.sh
 #   # - $PROJECT_SCRIPTS/global.vars.sh
+#   # - $PROJECT_SCRIPTS/global.<PROVISION_USING>.vars.sh
+#   # -> Ex :
+#   # - cwt/app/global.vars.sh
+#   # - cwt/app/global.docker-compose.vars.sh
+#   # - ...
 #
 u_global_lookup_paths() {
   local f
   local hook_dry_run_matches
 
-  # TODO find a better workaround : we're using an empty global variable to
-  # avoid the default variants lookups in hook().
-  # @see u_hook_build_lookup_by_subject()
-  _NO_VARIANTS=''
-  hook -a 'global' -c 'vars.sh' -v '_NO_VARIANTS' -t
+  hook -a 'global' -c 'vars.sh' -v 'PROVISION_USING' -t
 
   for f in $hook_dry_run_matches; do
     global_lookup_paths+="$f "
