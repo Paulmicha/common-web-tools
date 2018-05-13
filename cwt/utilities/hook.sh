@@ -136,9 +136,9 @@ hook() {
       # Flag (arg without any value).
       -d) p_debug=1; shift 1;;
       -t) p_dry_run=1; shift 1;;
-      # Warn for unhandled arguments.
-      -*) echo "Error in $BASH_SOURCE line $LINENO: unknown option: $1" >&2; return;;
-      *) echo "Notice in $BASH_SOURCE line $LINENO: unsupported unnamed argument: $1" >&2; shift 1;;
+      # Prevent unhandled arguments.
+      -*) echo "Error in $BASH_SOURCE line $LINENO: unknown option: $1" >&2; return 1;;
+      *) echo "Error in $BASH_SOURCE line $LINENO: unsupported unnamed argument: $1" >&2; return 2;;
     esac
   done
 
@@ -482,7 +482,7 @@ u_hook_most_specific() {
   local hook_dry_run_matches=''
 
   # Forwards all arguments while forcing the "dry run" (-t) flag.
-  hook -t $@
+  hook -t "$@"
 
   for f in $hook_dry_run_matches; do
     u_str_split1 dot_arr "$f" '.'

@@ -254,28 +254,42 @@ u_instance_registry_del() {
 }
 
 ##
-# TODO [wip] refacto in progress.
-# Checks boolean flag for current project instance.
+# Prevents running something more than once for current project instance.
+#
+# Checks boolean flag for this instance.
+# @see u_instance_registry_get()
+# @see u_instance_registry_set()
 #
 # @example
-#   if $(u_instance_once "$BASH_SOURCE"); then
+#   # When you need to proceed inside the condition :
+#   if $(u_instance_once "my_once_id"); then
 #     echo "Proceed."
 #   else
-#     echo "Abort : this script has already been run for this project instance."
-#     return
+#     echo "Notice in $BASH_SOURCE line $LINENO : this has already been run on this instance."
+#     echo "-> Aborting."
+#     exit
+#   fi
+#
+#   # When you need to stop/exit inside the condition :
+#   if ! $(u_instance_once "my_once_id"); then
+#     echo "Notice in $BASH_SOURCE line $LINENO: already run for current project instance."
+#     echo "-> Aborting."
+#     exit
 #   fi
 #
 u_instance_once() {
   local p_flag="$1"
 
-  # We expect this call to exit with 0 code if flag is found.
-  cwt/instance/registry_get.sh "$p_flag"
+  # TODO check what happens in case of unexpected collisions (if that var
+  # already exists in calling scope).
+  local reg_val
 
-  # if [[ $? -eq 0 ]]; then
-  #   return
-  # fi
+  u_instance_registry_get "$p_flag"
 
-  # false
+  if [[ $reg_val -ne 1 ]]; then
+    u_instance_registry_set "$p_flag"
+    return
+  fi
 
-  return $?
+  false
 }

@@ -186,13 +186,25 @@ u_host_registry_del() {
 }
 
 ##
+# Prevents running something more than once for entire host.
+#
 # Checks boolean flag for the entire local host.
+# @see u_host_registry_get()
+# @see u_host_registry_set()
 #
 # @example
+#   # When you need to proceed inside the condition :
 #   if $(u_host_once "my_once_id"); then
 #     echo "Proceed."
 #   else
-#     echo "Notice : this has already been run on this host."
+#     echo "Notice in $BASH_SOURCE line $LINENO : this has already been run on this host."
+#     echo "-> Aborting."
+#     exit
+#   fi
+#
+#   # When you need to stop/exit inside the condition :
+#   if ! $(u_host_once "my_once_id"); then
+#     echo "Notice in $BASH_SOURCE line $LINENO : this has already been run on this host."
 #     echo "-> Aborting."
 #     exit
 #   fi
@@ -201,12 +213,13 @@ u_host_once() {
   local p_flag="$1"
 
   # TODO check what happens in case of unexpected collisions (if that var
-  # already exist in calling scope).
+  # already exists in calling scope).
   local reg_val
 
   u_host_registry_get "$p_flag"
 
-  if [[ $reg_val -eq 1 ]]; then
+  if [[ $reg_val -ne 1 ]]; then
+    u_host_registry_set "$p_flag"
     return
   fi
 

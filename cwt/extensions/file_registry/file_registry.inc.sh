@@ -12,12 +12,15 @@
 ##
 # Generates a registry filepath from string.
 #
-# Requires $INSTANCE_DOMAIN env var, as it's used as default namespace.
-# If the directory used to store files doesn't exist, it will be created.
-#
 # @param 1 String : the key identifying a registry entry.
 # @param 2 String [optional] : the namespace to use for this registry entry.
 #   Can be 'host' or any string. Default: $INSTANCE_DOMAIN.
+#
+# @requires the following globals in calling scope :
+#   - $INSTANCE_DOMAIN
+#   - $FILE_REGISTRY_PATH
+#
+# If the directory used to store files doesn't exist, it will be created.
 #
 # NB : for performance reasons (to avoid using a subshell), this function
 # writes its result to a variable subject to collision in calling scope.
@@ -39,12 +42,12 @@ u_file_registry_get_path() {
   local slug
 
   slug=$(u_slugify_u "$p_key")
-  reg_file_path="/opt/cwt-registry/$INSTANCE_DOMAIN"
+  reg_file_path="$FILE_REGISTRY_PATH/$INSTANCE_DOMAIN"
 
   if [[ -n "$p_namespace" ]]; then
     local namespace
     namespace=$(u_slugify "$p_namespace")
-    reg_file_path="/opt/cwt-registry/$namespace"
+    reg_file_path="$FILE_REGISTRY_PATH/$namespace"
 
   # Cannot carry on without an INSTANCE_DOMAIN value here.
   elif [[ -z "$INSTANCE_DOMAIN" ]]; then
