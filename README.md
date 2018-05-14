@@ -148,9 +148,8 @@ global APP_DOCROOT "[default]=$PROJECT_DOCROOT/web"
 global INSTANCE_TYPE "[default]=dev"
 global INSTANCE_DOMAIN "[default]='$(u_instance_domain)'"
 global HOST_TYPE "[default]=local"
-global HOST_OS "[default]='$(u_host_os)'"
+global HOST_OS "$(u_host_os)"
 global PROVISION_USING "[default]=docker-compose"
-global DEPLOY_USING "[default]=git"
 
 # Path to custom scripts ~ commonly automated processes. CWT will also use this
 # path to look for overrides and complements.

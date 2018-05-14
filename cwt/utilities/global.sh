@@ -16,6 +16,8 @@
 # Write global (env) vars declarations to script file.
 #
 u_global_write() {
+  echo "Writing global (env) vars to cwt/env/current/global.vars.sh ..."
+
   # First make sure we have something to write.
   if [ -z "$GLOBALS_COUNT" ]; then
     echo >&2
@@ -27,32 +29,8 @@ u_global_write() {
     u_global_debug
   fi
 
-  # And make sure that we have a file path to write to.
-  if [ -z "$GLOBALS_FILEPATH" ]; then
-    echo >&2
-    echo "Error in $BASH_SOURCE line $LINENO: \$GLOBALS_FILEPATH is empty." >&2
-    echo "Aborting (2)." >&2
-    echo >&2
-    return 2
-  else
-    echo "Writing global (env) vars to $GLOBALS_FILEPATH ..."
-  fi
-
-  # Confirm overwriting existing settings if the file already exists.
-  # TODO the '-y' flag comes from u_instance_init() -> should we un-local it ?
-  if [$p_yes -eq 0] && [-f "$GLOBALS_FILEPATH"]; then
-    while true; do
-      read -p "Override existing settings ? (y/n) : " yn
-      case $yn in
-        [Yy]* ) echo "Ok, proceeding to override existing settings."; break;;
-        [Nn]* ) echo "Aborting (3)."; return 3;;
-        * ) echo "Please answer yes (enter 'y') or no (enter 'n').";;
-      esac
-    done
-  fi
-
   # (Re)init destination file (make empty).
-  cat > "$GLOBALS_FILEPATH" <<'EOF'
+  cat > cwt/env/current/global.vars.sh <<'EOF'
 #!/usr/bin/env bash
 
 ##
@@ -71,11 +49,11 @@ EOF
   for global_name in ${GLOBALS['.sorting']}; do
     u_str_split1 evn_arr $global_name '|'
     global_name="${evn_arr[1]}"
-    eval "[[ -z \"\$$global_name\" ]] && echo \"readonly $global_name\"=\'\' >> \"$GLOBALS_FILEPATH\""
-    eval "[[ -n \"\$$global_name\" ]] && echo \"readonly $global_name=\\\"\$$global_name\\\"\" >> \"$GLOBALS_FILEPATH\""
+    eval "[[ -z \"\$$global_name\" ]] && echo \"readonly $global_name\"=\'\' >> cwt/env/current/global.vars.sh"
+    eval "[[ -n \"\$$global_name\" ]] && echo \"readonly $global_name=\\\"\$$global_name\\\"\" >> cwt/env/current/global.vars.sh"
   done
 
-  echo "Writing global (env) vars to $GLOBALS_FILEPATH : done."
+  echo "Writing global (env) vars to cwt/env/current/global.vars.sh : done."
   echo
 }
 
@@ -199,19 +177,17 @@ u_global_foreach() {
 ##
 # Assigns arg or default value to given global env var.
 #
-# Unless "-y" argument was used in cwt/stack/init.sh call, this will also prompt
-# before using default value fallback.
+# Unless "-y" flag is used in instance init call, this will also prompt for
+# user input (terminal) before using default value fallback.
 #
 # @param 1 String : global variable name.
 #
 # @requires the following globals in calling scope :
-# - $P_YES
+# - $GLOBALS_INTERACTIVE
 # - $GLOBALS
 # - $P_MY_VAR_NAME (replacing 'MY_VAR_NAME' with the actual var name)
 #
 # @see global()
-# @see cwt/stack/init/get_args.sh
-# @see cwt/stack/init/aggregate_env_vars.sh
 #
 # @example
 #   u_global_assign_value 'MY_VAR_NAME'
@@ -219,6 +195,8 @@ u_global_foreach() {
 u_global_assign_value() {
   local p_var="$1"
   local multi_values=''
+
+  u_str_sanitize_var_name "$p_var" 'p_var'
 
   eval "export $p_var"
   eval "unset $p_var"
@@ -239,7 +217,7 @@ u_global_assign_value() {
     eval "$p_var='$multi_values'"
 
   # Skippable default value assignment.
-  elif [[ $P_YES == 0 ]]; then
+  elif [[ $GLOBALS_INTERACTIVE -eq 0 ]]; then
     echo
     if [[ -n "$default_val" ]]; then
       echo "Enter $p_var value,"
@@ -252,17 +230,16 @@ u_global_assign_value() {
   # Assign default value fallback if the value is empty (e.g. may have been the
   # result of entering empty value in prompt).
   local empty_test=$(eval "echo \"\$$p_var\"")
-  if [[ (-z "$empty_test") && (-n "$default_val") ]]; then
+  if [[ -z "$empty_test" ]] && [[ -n "$default_val" ]]; then
     eval "$p_var='$default_val'"
   fi
 
   # Once prompt has been made, prevent repeated calls for this var (recursion).
-  # @see cwt/stack/init/aggregate_env_vars.sh
   # Except for 'append' vars (multiple values must pile-up on each call).
   # TODO [wip] confirm workaround edge case (multiple declarations must override
   # previous default value).
-  if [[ $P_YES == 0 ]]; then
-    if [[ ("${GLOBALS[$p_var|no_prompt]}" != 1) && (-z "$multi_values") ]]; then
+  if [[ $GLOBALS_INTERACTIVE -eq 0 ]]; then
+    if [[ ${GLOBALS[$p_var|no_prompt]} -ne 1 ]] && [[ -z "$multi_values" ]]; then
       GLOBALS[$p_var|no_prompt]=1
       GLOBALS[$p_var|value]=$(eval "echo \"\$$p_var\"")
     fi
@@ -287,8 +264,6 @@ u_global_assign_value() {
 # - $GLOBALS_UNIQUE_KEYS
 #
 # @see u_global_assign_value()
-# @see cwt/stack/init.sh
-# @see cwt/stack/init/aggregate_env_vars.sh
 #
 # For better readability in env includes files, we exceptionally name that
 # function without following the usual convention.
@@ -338,6 +313,8 @@ global() {
 
   local index='0'
 
+  u_str_sanitize_var_name "$p_var_name" 'p_var_name'
+
   if [[ -n "$p_values" ]]; then
 
     # If the value does not begin with '[', assume the var non-configurable.
@@ -347,9 +324,11 @@ global() {
 
     # Key/value store system.
     else
+      local key
       local declaration_arr
 
       # Transform input string to associative array.
+      # TODO sanitize $p_values.
       eval "declare -A declaration_arr=( $p_values )"
 
       for key in "${!declaration_arr[@]}"; do
@@ -367,7 +346,11 @@ global() {
           # provided (matching using operator provided as a prefix).
           if-*|notif-*)
             local depending_var="${key:3}"
-            local depending_value=$(eval "echo \"\$$depending_var\"")
+            local depending_value
+
+            u_str_sanitize_var_name "$depending_var" 'depending_var'
+            depending_value=$(eval "echo \"\$$depending_var\"")
+
             case "$key" in
               notif-*)
                 if [[ "$depending_value" == "${declaration_arr[$key]}" ]]; then

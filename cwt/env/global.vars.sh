@@ -13,9 +13,10 @@
 # bootstrap - if it exists, that is if "instance init" was already launched once
 # in current project instance.
 #
-# Unless the "instance init" command is set to bypass prompts, every call to
+# Unless the "instance init" command is set to bypass prompts, most calls to
 # global() will prompt for confirming or replacing default values or for simply
-# entering a value if no default is declared.
+# entering a value if no default is declared. The only exceptions are global
+# declarations explicitly providing a value.
 #
 # @see cwt/env/current/global.vars.sh
 # @see cwt/instance/instance.inc.sh
@@ -41,14 +42,8 @@ global APP_GIT_WORK_TREE "[if-CWT_MODE]=separate [default]=$APP_DOCROOT"
 # and/or complements.
 # @see scripts/README.md
 global HOST_TYPE "[default]=local"
-global HOST_OS "[default]='$(u_host_os)'"
+global HOST_OS "$(u_host_os)"
 global PROVISION_USING "[default]=docker-compose"
-global DEPLOY_USING "[default]=git"
-
-# TODO remove or make opt-in.
-global REG_BACKEND "[default]=file"
-# TODO else consider using a separate store for secrets, see cwt/env/README.md.
-# global SECRETS_BACKEND
 
 # Path to custom scripts ~ commonly automated processes. CWT will also use this
 # path to look for overrides and complements.

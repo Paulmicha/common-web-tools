@@ -18,7 +18,6 @@
 # @exports GLOBALS_UNIQUE_KEYS
 # @exports PROVISION_USING
 # @exports PROJECT_SCRIPTS
-# @exports GLOBALS_FILEPATH
 #
 # @example
 #   # TODO [wip] provide detailed examples.
@@ -37,14 +36,13 @@ u_instance_init() {
   # Configurable CWT internals.
   local p_host_type=''
   local p_provision_using=''
-  local p_deploy_using=''
   local p_cwt_mode=''
   local p_cwt_custom_dir=''
 
   local p_yes=0
   local p_verbose=0
 
-  while [ "$#" -gt 0 ]; do
+  while [[ $# -gt 0 ]]; do
     case "$1" in
       -o) p_project_docroot="$2"; shift 2;;
       -a) p_app_docroot="$2"; shift 2;;
@@ -55,7 +53,6 @@ u_instance_init() {
 
       -h) p_host_type="$2"; shift 2;;
       -p) p_provision_using="$2"; shift 2;;
-      -e) p_deploy_using="$2"; shift 2;;
       -m) p_cwt_mode="$2"; shift 2;;
       -c) p_cwt_custom_dir="$2"; shift 2;;
 
@@ -74,15 +71,10 @@ u_instance_init() {
   export GLOBALS_COUNT
   export GLOBALS_UNIQUE_NAMES
   export GLOBALS_UNIQUE_KEYS
+  export GLOBALS_INTERACTIVE
 
   export PROVISION_USING="$p_provision_using"
   export PROJECT_SCRIPTS="$p_cwt_custom_dir"
-  export GLOBALS_FILEPATH='cwt/env/current/global.vars.sh'
-
-  # Remove previously generated globals to avoid any interference.
-  if [[ -f "$GLOBALS_FILEPATH" ]]; then
-    rm "$GLOBALS_FILEPATH"
-  fi
 
   # (Re)start dependencies and env vars aggregation.
   unset GLOBALS
@@ -90,6 +82,7 @@ u_instance_init() {
   GLOBALS_COUNT=0
   GLOBALS_UNIQUE_NAMES=()
   GLOBALS_UNIQUE_KEYS=()
+  GLOBALS_INTERACTIVE=$p_yes
 
   # Load default CWT 'core' globals.
   # These contain paths required for aggregating env vars and services.

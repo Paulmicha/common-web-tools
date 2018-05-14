@@ -18,20 +18,7 @@ if [[ -z "$GLOBALS_COUNT" ]]; then
   echo "Error in $BASH_SOURCE line $LINENO: nothing to write."
   echo "Aborting (1)."
   echo
-  return 1
-fi
-
-# Confirm overwriting existing env file if it already exists.
-if [[ $P_YES -eq 0 ]] && [[ -f "$docker_compose_env_file" ]]; then
-  echo
-  while true; do
-    read -p "Override existing docker-compose env file ? (y/n) : " yn
-    case $yn in
-      [Yy]* ) echo "Ok, proceeding to override docker-compose env file."; break;;
-      [Nn]* ) echo "Aborting (3)."; return 3;;
-      * ) echo "Please answer yes (enter 'y') or no (enter 'n').";;
-    esac
-  done
+  exit 1
 fi
 
 # (Re)init destination file (make empty).

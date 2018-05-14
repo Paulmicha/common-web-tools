@@ -42,5 +42,18 @@ test_u_str_sanitize() {
   assertEquals 'u_str_sanitize() special chars test failed.' "$expected_output" "$sanitized_str"
 }
 
+##
+# Var name sanitizing test.
+#
+test_u_str_sanitize_var_name() {
+  local sanitized_var_name
+  local expected_output
+
+  sanitized_var_name=''
+  u_str_sanitize_var_name 'the.var-name Test' 'sanitized_var_name'
+  expected_output='the_var_name_Test'
+  assertEquals 'u_str_sanitize_var_name() space test failed.' "$expected_output" "$sanitized_var_name"
+}
+
 # Load and run shUnit2.
 . cwt/vendor/shunit2/shunit2

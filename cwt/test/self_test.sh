@@ -5,8 +5,7 @@
 #
 # This generic implementation is meant for providing self-checking tests
 # concerning current project instance whose services may not necessarily be
-# running. For automated tests aimed at deployment / at runtime, see
-# $DEPLOY_USING-related hooks instead (e.g. git).
+# running.
 #
 # @see hook()
 #

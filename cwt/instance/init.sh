@@ -18,6 +18,4 @@ CWT_BS_SKIP_GLOBALS=1
 
 . cwt/bootstrap.sh
 
-# TODO [wip] Makefile debug :
-echo "u_instance_init $@"
-# u_instance_init "$@"
+u_instance_init "$@"
