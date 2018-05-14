@@ -45,30 +45,24 @@ args_to_convert='a s p v e c'
 for a2c in $args_to_convert; do
   formatted_args="${formatted_args//"${a2c}:"/">< -${a2c} '"}"
 done
+
 formatted_args="<$formatted_args >"
+formatted_args="${formatted_args//'< >'/}"
 formatted_args="${formatted_args//'< -d -t >'/'-d -t '}"
-formatted_args="${formatted_args//</}"
+formatted_args="${formatted_args//'<'/}"
 formatted_args="${formatted_args//[[:space:]]>/\'}"
 
 case "$hook_mode" in
-
   'most-specific')
     if [[ $debug_mode -eq 1 ]]; then
       formatted_args="${formatted_args//'-d -t'/}"
-
-      # echo "u_hook_most_specific dry-run $formatted_args"
       eval "u_hook_most_specific dry-run $formatted_args"
-
       u_autoload_print_lookup_paths hook_most_specific_dry_run_match "u_hook_most_specific $formatted_args"
-
     else
-      # echo "u_hook_most_specific $formatted_args"
       eval "u_hook_most_specific $formatted_args"
     fi
   ;;
-
   *)
-    # echo "hook $formatted_args"
     eval "hook $formatted_args"
   ;;
 esac
