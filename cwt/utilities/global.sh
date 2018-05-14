@@ -315,6 +315,7 @@ global() {
 
   u_str_sanitize_var_name "$p_var_name" 'p_var_name'
 
+  # TODO sanitize $p_values.
   if [[ -n "$p_values" ]]; then
 
     # If the value does not begin with '[', assume the var non-configurable.
@@ -328,7 +329,6 @@ global() {
       local declaration_arr
 
       # Transform input string to associative array.
-      # TODO sanitize $p_values.
       eval "declare -A declaration_arr=( $p_values )"
 
       for key in "${!declaration_arr[@]}"; do
