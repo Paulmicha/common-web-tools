@@ -247,21 +247,6 @@ u_string_append_once() {
 }
 
 ##
-# Replaces all occurences of a substring by another in given string.
-#
-# @example
-#   # Yields 'qsdqsdazemlkjdfoiuzrekh'
-#   echo "$(u_str_replace ' ' '' 'qsdqsd aze mlkj dfoiu zrekh')"
-#
-u_str_replace() {
-  local p_search="$1"
-  local p_replace="$2"
-  local p_haystack="$3"
-
-  echo "${p_haystack//$p_search/"$p_replace"}"
-}
-
-##
 # Splits a string given a 1-character long separator.
 #
 # @param 1 The variable name that will contain the array of substrings (in calling scope).

@@ -513,7 +513,7 @@ u_hook_most_specific() {
     # TODO can we workaround this ?
     if [ $msdr_flag -eq 1 ]; then
       hook_most_specific_dry_run_match="$most_specific_match"
-      continue
+      return
     fi
 
     u_autoload_override "$most_specific_match" 'continue'
