@@ -441,6 +441,11 @@ u_hook_build_lookup_by_subject() {
 #   - overrides (e.g. scripts/overrides/extensions/docker-compose/instance/init.docker-compose.hook.sh)
 # @see hook()
 #
+# NB : We must give some advantage to the (custom project) 'scripts' path in
+# comparison to CWT extensions, so that the custom implementations always
+# take precedence over extensions'.
+# -> Any implementation located in $PROJECT_SCRIPTS gets +4 to its score.
+#
 # TODO [evol] Attempt to implement some control over which one gets sourced
 # in case of equality.
 #
@@ -490,6 +495,12 @@ u_hook_most_specific() {
 
     depth=${#dot_arr[@]}
     depth=$(( depth + ${#slash_arr[@]} ))
+
+    # Apply score bonus to custom project immplementations so they take
+    # precedence over extensions'.
+    case "$f" in "$PROJECT_SCRIPTS"*)
+      depth=$(( depth + 4 ))
+    esac
 
     if [ $depth -gt $highest_depth ]; then
       most_specific_match="$f"

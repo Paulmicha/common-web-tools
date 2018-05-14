@@ -10,6 +10,35 @@
 #
 
 ##
+# Sanitizes a string to be used as a variable name (for 'eval').
+#
+# This function is a "preset" of the more generic string sanitizing utility.
+# @see u_str_sanitize()
+#
+# @param 1 String : variable name to be sanitized.
+# @param 2 String : name of the variable in calling scope which holds the
+#   variable name to be sanitized (acronym : notvicswhtvntbs).
+#
+# @see https://stackoverflow.com/a/41059855 (why use 'eval' in the first place).
+#
+# @example
+#   # Typical use case : see u_str_split1().
+#   local p_var_name="$1"
+#   u_str_sanitize_var_name "$p_var_name" 'p_var_name'
+#   echo "$p_var_name" # <- Prints sanitized variable name.
+#
+u_str_sanitize_var_name() {
+  local p_input="$1"
+  local p_notvicswhtvntbs="$2"
+
+  # The variable p_notvicswhtvntbs must not collide in calling scope. Hopefully
+  # the acronym used here is enough to make it sufficiently unlikely.
+  printf -v "$p_notvicswhtvntbs" '%s' "${p_notvicswhtvntbs//[^a-zA-Z0-9_]/_}"
+
+  u_str_sanitize "$p_input" '_' "$p_notvicswhtvntbs" '[^a-zA-Z0-9_]'
+}
+
+##
 # Sanitizes strings (basic search/replace using regex).
 #
 # @param 1 String : the value to sanitize.
@@ -250,6 +279,8 @@ u_str_split1() {
   local p_str="$2"
   local p_sep="$3"
 
+  u_str_sanitize_var_name "$p_var_name" 'p_var_name'
+
   # See https://stackoverflow.com/a/41059855
   eval "${p_var_name}=()"
 
@@ -314,22 +345,6 @@ u_slugify() {
 #
 u_slugify_u() {
   echo "${1}" | iconv -t ascii//TRANSLIT | sed -r s/[~\^]+//g | sed -r s/[^a-zA-Z0-9]+/_/g | sed -r s/^_+\|_+$//g | tr A-Z a-z
-}
-
-##
-# Prompts for a value in terminal.
-#
-# @param 1 String : the question.
-#
-# @example
-#   input_git_user_name=$(u_prompt "please enter your Git user name : ")
-#   echo "You entered : '$input_git_user_name'"
-#
-u_prompt() {
-  local p_question="$1"
-  local input=''
-  read -p "$p_question" input
-  echo "$input"
 }
 
 ##

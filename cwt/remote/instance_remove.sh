@@ -15,3 +15,6 @@ p_id=${p_id//[^a-zA-Z0-9_\-\.]/}
 
 conf="cwt/remote/instances/${p_id}.sh"
 
+if [[ -f "$conf" ]]; then
+  rm "$conf"
+fi

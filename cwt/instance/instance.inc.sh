@@ -102,10 +102,10 @@ u_instance_init() {
 
   # Make sure every writeable folders potentially git-ignored gets created
   # before attempting to (re)set their permissions (see below).
-  hook -a 'ensure_dirs_exist' -s 'app instance'
+  hook -s 'app instance' -a 'ensure_dirs_exist'
 
   # (Re)set file system ownership and permissions.
-  hook -a 'set_fsop' -s 'app instance'
+  hook -s 'app instance' -a 'set_fsop'
 
   # Trigger instance init (optional) extra processes.
   hook -a 'init' -v 'PROVISION_USING INSTANCE_TYPE HOST_TYPE'
