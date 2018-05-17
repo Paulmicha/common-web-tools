@@ -67,7 +67,7 @@ u_str_sanitize_var_name() {
 u_str_sanitize() {
   local p_str="$1"
   local p_replace="$2"
-  local p_varname="$3"
+  local p_str_sanitize_var_name="$3"
   local p_filter="$4"
 
   if [[ -z "$p_filter" ]]; then
@@ -79,12 +79,12 @@ u_str_sanitize() {
     p_replace='-'
   fi
 
-  if [[ -z "$p_varname" ]]; then
-    p_varname='sanitized_str'
+  if [[ -z "$p_str_sanitize_var_name" ]]; then
+    p_str_sanitize_var_name='sanitized_str'
   fi
 
-  # ${!p_varname}="${p_str//$p_filter/$p_replace}"
-  printf -v "$p_varname" '%s' "${p_str//$p_filter/$p_replace}"
+  # ${!p_str_sanitize_var_name}="${p_str//$p_filter/$p_replace}"
+  printf -v "$p_str_sanitize_var_name" '%s' "${p_str//$p_filter/$p_replace}"
 }
 
 ##
@@ -152,14 +152,24 @@ u_str_subsequences() {
 # See https://stackoverflow.com/questions/2264428/converting-string-to-lower-case-in-bash
 #
 # @example
-#   lowercase='MY_STRING'
-#   u_str_lowercase
+#   lowercase=''
+#   u_str_lowercase 'MY_STRING'
 #   echo "$lowercase" # Outputs 'my_string'
 #
+#   # Using custom variable name :
+#   my_custom_var_name=''
+#   u_str_lowercase 'MY_STRING' my_custom_var_name
+#   echo "$my_custom_var_name" # Outputs 'my_string'
+#
 u_str_lowercase() {
-  # [opti] avoid subshell for performance reasons.
-  # lowercase=$(tr '[:lower:]' '[:upper:]' <<< "$lowercase")
-  lowercase="${lowercase,,}"
+  local p_input="$1"
+  local p_str_lowercase_var_name="$2"
+
+  if [[ -z "$p_str_lowercase_var_name" ]]; then
+    p_str_lowercase_var_name='lowercase'
+  fi
+
+  printf -v "$p_str_lowercase_var_name" '%s' "${p_input,,}"
 }
 
 ##
@@ -169,14 +179,24 @@ u_str_lowercase() {
 # See https://stackoverflow.com/questions/2264428/converting-string-to-lower-case-in-bash
 #
 # @example
-#   uppercase='my_string'
-#   u_str_uppercase
+#   uppercase=''
+#   u_str_uppercase 'my_string'
 #   echo "$uppercase" # Outputs 'MY_STRING'
 #
+#   # Using custom variable name :
+#   my_custom_var_name=''
+#   u_str_uppercase 'my_string' my_custom_var_name
+#   echo "$my_custom_var_name" # Outputs 'MY_STRING'
+#
 u_str_uppercase() {
-  # [opti] avoid subshell for performance reasons.
-  # uppercase=$(tr '[:upper:]' '[:lower:]' <<< "$uppercase")
-  uppercase="${uppercase^^}"
+  local p_input="$1"
+  local p_str_uppercase_var_name="$2"
+
+  if [[ -z "$p_str_uppercase_var_name" ]]; then
+    p_str_uppercase_var_name='uppercase'
+  fi
+
+  printf -v "$p_str_uppercase_var_name" '%s' "${p_input^^}"
 }
 
 ##
@@ -254,24 +274,27 @@ u_string_append_once() {
 # @param 3 String : separator that must be 1 character long.
 #
 # @example
-#   u_str_split1 MY_VAR_NAME 'the,string' ','
+#   u_str_split1 'MY_VAR_NAME' "the,string" ','
 #   for substr in "${MY_VAR_NAME[@]}"; do
 #     echo "$substr"
 #   done
 #
 u_str_split1() {
-  local p_var_name="$1"
+  local p_str_split1_var_name="$1"
   local p_str="$2"
   local p_sep="$3"
 
-  u_str_sanitize_var_name "$p_var_name" 'p_var_name'
+  # local sanitized_var_name
+  # u_str_sanitize_var_name "$p_str_split1_var_name" 'sanitized_var_name'
+  # p_str_split1_var_name="$sanitized_var_name"
+  u_str_sanitize_var_name "$p_str_split1_var_name" 'p_str_split1_var_name'
 
   # See https://stackoverflow.com/a/41059855
-  eval "${p_var_name}=()"
+  eval "${p_str_split1_var_name}=()"
 
   # See https://stackoverflow.com/a/45201229 (#7)
   while read -rd"$p_sep"; do
-    eval "${p_var_name}+=(\"$REPLY\")"
+    eval "${p_str_split1_var_name}+=(\"$REPLY\")"
   done <<<"${p_str}${p_sep}"
 }
 

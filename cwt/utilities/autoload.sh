@@ -48,7 +48,7 @@ u_autoload_add_lookup_level() {
     local path="${p_prefix}${name_version_arr[0]}-"
     local version_arr=()
 
-    u_str_split1 version_arr "${name_version_arr[1]}" '.'
+    u_str_split1 'version_arr' "${name_version_arr[1]}" '.'
 
     for v in "${version_arr[@]}"; do
       path+="${v}${sep}"

@@ -47,7 +47,7 @@ EOF
 
   # Write every aggregated globals.
   for global_name in ${GLOBALS['.sorting']}; do
-    u_str_split1 evn_arr $global_name '|'
+    u_str_split1 'evn_arr' "$global_name" '|'
     global_name="${evn_arr[1]}"
     eval "[[ -z \"\$$global_name\" ]] && echo \"readonly $global_name\"=\'\' >> cwt/env/current/global.vars.sh"
     eval "[[ -n \"\$$global_name\" ]] && echo \"readonly $global_name=\\\"\$$global_name\\\"\" >> cwt/env/current/global.vars.sh"
@@ -168,7 +168,7 @@ u_global_foreach() {
   local global_name
 
   for global_name in ${GLOBALS['.sorting']}; do
-    u_str_split1 globals_arr $global_name '|'
+    u_str_split1 'globals_arr' "$global_name" '|'
     global_name="${globals_arr[1]}"
     $p_callback $global_name
   done
@@ -466,7 +466,7 @@ u_global_debug() {
   echo
 
   for global_name in ${GLOBALS['.sorting']}; do
-    u_str_split1 globals_arr $global_name '|'
+    u_str_split1 'globals_arr' "$global_name" '|'
     global_name="${globals_arr[1]}"
 
     eval "[[ -z \"\$$global_name\" ]] && echo \"$global_name\" \(empty\)";

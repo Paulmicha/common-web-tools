@@ -26,7 +26,7 @@ echo -n '' > "$docker_compose_env_file"
 
 # Write every aggregated globals.
 for global_name in ${GLOBALS['.sorting']}; do
-  u_str_split1 evn_arr $global_name '|'
+  u_str_split1 'evn_arr' "$global_name" '|'
   global_name="${evn_arr[1]}"
   eval "[[ -z \"\$$global_name\" ]] && echo \"$global_name\"= >> \"$docker_compose_env_file\""
   eval "[[ -n \"\$$global_name\" ]] && echo \"$global_name=\$$global_name\" >> \"$docker_compose_env_file\""

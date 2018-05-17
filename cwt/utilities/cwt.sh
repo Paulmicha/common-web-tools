@@ -64,15 +64,12 @@ u_cwt_extend() {
     p_path='cwt'
   fi
 
-  # Namespace defaults to the "$p_path" folder name (uppercase).
-  local uppercase
+  # Namespace defaults to the "$p_path" sanitized folder name (uppercase).
   if [[ -z "$p_namespace" ]]; then
-    uppercase="${p_path##*/}"
-    u_str_uppercase
-    p_namespace="$uppercase"
+    p_namespace="${p_path##*/}"
+    u_str_sanitize_var_name "$p_namespace" 'p_namespace'
+    u_str_uppercase "$p_namespace" 'p_namespace'
   fi
-
-  u_str_sanitize_var_name "$p_namespace" 'p_namespace'
 
   # Always reinit as empty strings on every call to u_cwt_extend().
   # @see cwt/test/cwt/hook.test.sh
@@ -290,4 +287,38 @@ u_cwt_primitive_values() {
       fi
     fi
   done
+}
+
+##
+# Checks if an extension has given subject.
+#
+# @example
+#   for extension in $CWT_EXTENSIONS; do
+#     if u_cwt_extension_has_subject "cwt/extensions/$extension" 'db' ; then
+#       echo "extension '$extension' has the 'db' subject"
+#     fi
+#   done
+#
+u_cwt_extension_has_subject() {
+  local p_extension_path="$1"
+  local p_subject="$2"
+
+  local ext_namespace
+  local ext_subjects
+
+  ext_namespace="${p_extension_path##*/}"
+  u_str_sanitize_var_name "$ext_namespace" 'ext_namespace'
+  u_str_uppercase "$ext_namespace" ext_namespace
+  eval "ext_subjects=\"\$${ext_namespace}_SUBJECTS\""
+
+  if [[ -n "$ext_subjects" ]]; then
+    local s
+    for s in $ext_subjects; do
+      case "$p_subject" in "$s")
+        return
+      esac
+    done
+  fi
+
+  false
 }

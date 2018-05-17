@@ -159,16 +159,14 @@ hook() {
 
   local base_paths=("cwt")
   local extension
-  local lowercase
   local uppercase
 
   # Allow using only a particular extension (see the '-p' argument).
   if [ -n "$p_extensions_filter" ]; then
     for extension in $p_extensions_filter; do
       uppercase="$extension"
-      u_str_uppercase
-      uppercase="${uppercase//\./_}"
-      uppercase="${uppercase//-/_}"
+      u_str_sanitize_var_name "$uppercase" 'uppercase'
+      u_str_uppercase "$uppercase"
       eval "subjects=\"\$${uppercase}_SUBJECTS\""
       eval "actions=\"\$${uppercase}_ACTIONS\""
       # Override base path for lookups.
@@ -182,9 +180,8 @@ hook() {
   elif [ -n "$extensions" ]; then
     for extension in $extensions; do
       uppercase="$extension"
-      u_str_uppercase
-      uppercase="${uppercase//\./_}"
-      uppercase="${uppercase//-/_}"
+      u_str_sanitize_var_name "$uppercase" 'uppercase'
+      u_str_uppercase "$uppercase"
       eval "subjects+=\" \$${uppercase}_SUBJECTS\""
       eval "actions+=\" \$${uppercase}_ACTIONS\""
       # Every extension defines an additional base path for lookups.
@@ -380,6 +377,12 @@ u_hook_build_lookup_by_subject() {
   fi
 
   for bp in "${base_paths[@]}"; do
+
+    # Avoid lookups for extensions not having the subject we're looking for.
+    if ! u_cwt_extension_has_subject "$bp" "$p_subject" ; then
+      continue
+    fi
+
     for a_path in $actions; do
 
       # Ignore actions not "belonging" to current subject.
@@ -390,7 +393,7 @@ u_hook_build_lookup_by_subject() {
           lookup_paths+=("$bp/${a_path}.${suffix}")
         fi
 
-        u_str_split1 a_parts_arr "$a_path" '/'
+        u_str_split1 'a_parts_arr' "$a_path" '/'
         a="${a_parts_arr[1]}"
 
         # Then add "prefixed" actions suggestions.
@@ -510,8 +513,8 @@ u_hook_most_specific() {
   hook -t "$@"
 
   for f in $hook_dry_run_matches; do
-    u_str_split1 dot_arr "$f" '.'
-    u_str_split1 slash_arr "$f" '/'
+    u_str_split1 'dot_arr' "$f" '.'
+    u_str_split1 'slash_arr' "$f" '/'
 
     depth=${#dot_arr[@]}
     depth=$(( depth + ${#slash_arr[@]} ))
