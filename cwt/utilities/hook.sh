@@ -274,7 +274,27 @@ hook() {
 
   # Debug.
   if [ $p_debug -eq 1 ]; then
-    u_autoload_print_lookup_paths lookup_paths "hook -a '$p_actions_filter' -s '$p_subjects_filter' -p '$p_prefixes_filter' -v '$p_variants_filter' -e '$p_extensions_filter'"
+    local debug_msg
+    debug_msg='hook'
+    if [[ -n "$p_subjects_filter" ]]; then
+      debug_msg+=" -s '$p_subjects_filter'"
+    fi
+    if [[ -n "$p_actions_filter" ]]; then
+      debug_msg+=" -a '$p_actions_filter'"
+    fi
+    if [[ -n "$p_custom_filter" ]]; then
+      debug_msg+=" -c '$p_custom_filter'"
+    fi
+    if [[ -n "$p_variants_filter" ]]; then
+      debug_msg+=" -v '$p_variants_filter'"
+    fi
+    if [[ -n "$p_prefixes_filter" ]]; then
+      debug_msg+=" -p '$p_prefixes_filter'"
+    fi
+    if [[ -n "$p_extensions_filter" ]]; then
+      debug_msg+=" -e '$p_extensions_filter'"
+    fi
+    u_autoload_print_lookup_paths lookup_paths "$debug_msg"
   fi
 
   # Source each file include (with optional override mecanism).

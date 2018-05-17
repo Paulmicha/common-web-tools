@@ -13,15 +13,6 @@
 # @see Makefile
 #
 # @example
-#   # Prints lookup paths for the CWT hook call :
-#   # hook -s 'instance' -a 'stop' -v 'PROVISION_USING HOST_TYPE'
-#   make hook-debug s:instance a:stop v:PROVISION_USING HOST_TYPE
-#
-#   # Prints lookup paths for the "most specific" hook variant :
-#   make hook-debug ms s:instance a:stop v:PROVISION_USING HOST_TYPE
-#
-#   # Trigger instance start manually :
-#   make hook-call s:instance a:start
 #
 
 . cwt/bootstrap.sh

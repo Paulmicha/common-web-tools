@@ -16,6 +16,7 @@
 # @exports GLOBALS_COUNT
 # @exports GLOBALS_UNIQUE_NAMES
 # @exports GLOBALS_UNIQUE_KEYS
+# @exports GLOBALS_INTERACTIVE
 # @exports PROVISION_USING
 # @exports PROJECT_SCRIPTS
 #
