@@ -12,7 +12,9 @@
 # - 'hook-call', a convenience wrapper to CWT hook() calls;
 # - 'hook-debug', the same except it will just print out the lookup paths.
 #   Useful for looking up positive matches to then provide overrides and/or
-#   complements.
+#   complements;
+# - 'globals-lp', to show every globals lookup paths checked for aggregation
+#   during instance init for current project instance.
 #
 # @example
 #   # Initialize current project instance = trigger "instance init" :

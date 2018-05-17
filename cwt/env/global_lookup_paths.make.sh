@@ -3,7 +3,7 @@
 ##
 # CWT instance globals introspection for convenience 'make' task.
 #
-# Prints all globals lookup paths tested for aggregation during instance init
+# Prints all globals lookup paths checked for aggregation during instance init
 # for current project instance.
 #
 # @see Makefile

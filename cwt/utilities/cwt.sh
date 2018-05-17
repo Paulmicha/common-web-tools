@@ -70,19 +70,14 @@ u_cwt_extend() {
     uppercase="${p_path##*/}"
     u_str_uppercase
     p_namespace="$uppercase"
-    p_namespace="${p_namespace//\./_}"
-    p_namespace="${p_namespace//-/_}"
-  else
-    u_str_sanitize_var_name "$p_namespace" 'p_namespace'
   fi
 
-  # Export initial global variables for every primitive + always reinit as empty
-  # strings on every call to u_cwt_extend().
-  local primitives='SUBJECTS ACTIONS EXTENSIONS'
-  local prim
-  for prim in $primitives; do
-    eval "export ${p_namespace}_${prim}=''"
-  done
+  u_str_sanitize_var_name "$p_namespace" 'p_namespace'
+
+  # Always reinit as empty strings on every call to u_cwt_extend().
+  # @see cwt/test/cwt/hook.test.sh
+  eval "export ${p_namespace}_SUBJECTS=''"
+  eval "export ${p_namespace}_ACTIONS=''"
 
   # "Reusable" local var name.
   # @see u_cwt_primitive_values()
@@ -216,7 +211,7 @@ u_cwt_primitive_values() {
   for dn in $dotfile_names; do
     dotfile="$p_path/.${dn}_${p_primitive}_ignore"
     if [[ -f "$dotfile" ]]; then
-      dotfile_contents=$(< "$dotfile")
+      u_fs_get_file_contents "$dotfile" 'dotfile_contents'
       if [[ -n "$dotfile_contents" ]]; then
         for ignored_val in $dotfile_contents; do
           ignored_values+=("$ignored_val")
@@ -231,7 +226,7 @@ u_cwt_primitive_values() {
     dotfile="$p_path/.${dn}_${p_primitive}"
     if [[ -f "$dotfile" ]]; then
       proceed=0
-      dotfile_contents=$(< "$dotfile")
+      u_fs_get_file_contents "$dotfile" 'dotfile_contents'
       if [[ -n "$dotfile_contents" ]]; then
         primitive_values="$dotfile_contents"
       fi
@@ -286,7 +281,7 @@ u_cwt_primitive_values() {
   for dn in $dotfile_names; do
     dotfile="$p_path/.${dn}_${p_primitive}_append"
     if [[ -f "$dotfile" ]]; then
-      dotfile_contents=$(< "$dotfile")
+      u_fs_get_file_contents "$dotfile" 'dotfile_contents'
       if [[ -n "$dotfile_contents" ]]; then
         local added_val
         for added_val in $dotfile_contents; do

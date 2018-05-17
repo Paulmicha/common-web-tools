@@ -10,6 +10,41 @@
 #
 
 ##
+# Reads file contents (without using subshell).
+#
+# @see https://stackoverflow.com/questions/7427262/how-to-read-a-file-into-a-variable-in-shell
+#
+# @example
+#   my_file_contents=''
+#   u_fs_get_file_contents 'cwt/.cwt_subjects_ignore' 'my_file_contents'
+#   echo "$my_file_contents"
+#
+u_fs_get_file_contents() {
+  local p_file_path="$1"
+  local p_var_name="$2"
+
+  if [[ ! -f "$p_file_path" ]]; then
+    echo >&2
+    echo "Error in u_fs_get_file_contents() - $BASH_SOURCE line $LINENO: file '$p_file_path' was not found." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    return 1
+  fi
+
+  u_str_sanitize_var_name "$p_var_name" 'p_var_name'
+
+  local line=''
+  local contents=''
+
+  while read line; do
+    contents+="$line
+"
+  done < "$p_file_path"
+
+  printf -v "$p_var_name" '%s' "$contents"
+}
+
+##
 # Adds or updates a single line in given file.
 #
 # NB : hasn't been tested when pattern matches several lines.
@@ -27,14 +62,15 @@ u_fs_update_line() {
   local p_file_path="$3"
 
   if [[ ! -f "$p_file_path" ]]; then
-    echo
+    echo >&2
     echo "Error in u_fs_update_line() - $BASH_SOURCE line $LINENO: file $p_file_path was not found." >&2
     echo "Aborting (1)." >&2
-    echo
+    echo >&2
     return 1
   fi
 
-  local haystack="$(< "$p_file_path")"
+  local haystack
+  u_fs_get_file_contents "$p_file_path" 'haystack'
   if [[ -z "$haystack" ]]; then
     echo "$p_new_line" > "$p_file_path"
     return
@@ -62,7 +98,8 @@ u_fs_write_once() {
   local p_needle="$1"
   local p_file_path="$2"
 
-  local haystack="$(< "$p_file_path")"
+  local haystack
+  u_fs_get_file_contents "$p_file_path" 'haystack'
 
   if [[ -z "$haystack" ]]; then
     echo "$p_needle" > "$p_file_path"
