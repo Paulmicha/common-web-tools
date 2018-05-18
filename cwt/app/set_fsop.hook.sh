@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 
 ##
-# Implements hook -a 'set_fsop' -s 'app stack'.
+# Implements hook -s 'app stack' -a 'set_fsop'.
+#
+# TODO remove this default implementation / make opt-in ?
+# The idea was to illustrate the use of 'append' type globals for automating
+# specific files and/or dirs permission reset.
 #
 # This file is dynamically included when the "hook" is triggered.
 # @see u_instance_init() in cwt/instance/instance.inc.sh

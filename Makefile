@@ -37,7 +37,7 @@
 #   # Print lookup paths for "instance start" using PROVISION_USING variant :
 #   make hook-debug s:instance a:start v:PROVISION_USING
 #   # Same but using more variants :
-#   make hook-debug s:instance a:start v:PROVISION_USING INSTANCE_TYPE HOST_TYPE
+#   make hook-debug s:instance a:start v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
 #
 
 -include .env

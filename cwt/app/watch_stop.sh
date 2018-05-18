@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 
 ##
-# [abstract] Installs required software on current host.
+# [abstract] Stops watchers in current app instance.
+#
+# "Watchers" are programs running continuously in the background to react upon
+# code modifications. They usually compile source files when they are modified.
 #
 # This script provides an entry point for triggering a specific hook. "Abstract"
 # means that CWT core itself doesn't provide any actual implementation for this
@@ -9,9 +12,9 @@
 # to use an extension that does.
 #
 # @example
-#   cwt/host/provision.sh
+#   cwt/app/watch_stop.sh
 #
 
 . cwt/bootstrap.sh
 
-hook -s 'host' -a 'provision' -v 'HOST_OS HOST_TYPE PROVISION_USING'
+hook -s 'app' -a 'watch_stop' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'

@@ -82,7 +82,7 @@
 #
 #   # 3. When providing an action + a filter by 1 or several subjects + 1 or
 #   #   several variants filter :
-#   hook -a 'init' -s 'stack' -v 'INSTANCE_TYPE HOST_TYPE'
+#   hook -a 'init' -s 'stack' -v 'HOST_TYPE INSTANCE_TYPE'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
 #   # (given INSTANCE_TYPE='dev' and HOST_TYPE='local')
 #   # - cwt/stack/init.hook.sh
@@ -363,9 +363,9 @@ u_hook_build_lookup_by_subject() {
 
   # These comments illustrate possible changes for default variants (left here
   # intentionally for potential future re-evaluation).
-  # local v_fallback_values='PROVISION_USING INSTANCE_TYPE HOST_TYPE'
+  # local v_fallback_values='PROVISION_USING HOST_TYPE INSTANCE_TYPE'
   # local v_fallback_values='PROVISION_USING INSTANCE_TYPE'
-  # local v_fallback_values='INSTANCE_TYPE HOST_TYPE'
+  # local v_fallback_values='HOST_TYPE INSTANCE_TYPE'
   local v_fallback_values='INSTANCE_TYPE'
 
   # By default, this function will produce lookup paths using the default

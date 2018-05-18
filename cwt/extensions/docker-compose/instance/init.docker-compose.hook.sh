@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ##
-# Implements hook -a 'init' -v 'PROVISION_USING INSTANCE_TYPE HOST_TYPE'.
+# Implements hook -a 'init' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'.
 #
 # Reacts to "instance init" for project instances using 'docker-compose' as
 # provisioning method ($PROVISION_USING).

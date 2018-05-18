@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 
 ##
-# CWT app install action.
+# [abstract] Installs application instance on current host.
 #
-# This generic implementation is meant to setup the application if it requires
-# e.g. a database to be initialiazed, an initial DB dump to be imported, etc.
+# The "app install" action is meant to setup the application if it requires
+# e.g. some settings file to be generated, a database to be initialiazed, some
+# DB dump to be imported, etc.
 #
-# It supports variants by :
-# - PROVISION_USING
-# - INSTANCE_TYPE
-# @see hook()
+# This script provides an entry point for triggering a specific hook. "Abstract"
+# means that CWT core itself doesn't provide any actual implementation for this
+# functionality. In order for this script to have any effect, it is necessary
+# to use an extension that does.
 #
 # @prereq stack services must be running (see 'instance start' action).
 # @see cwt/instance/start.sh
@@ -20,4 +21,4 @@
 
 . cwt/bootstrap.sh
 
-hook -a 'install' -s 'app' -v 'PROVISION_USING INSTANCE_TYPE'
+hook -s 'app' -a 'install' -v 'PROVISION_USING INSTANCE_TYPE'

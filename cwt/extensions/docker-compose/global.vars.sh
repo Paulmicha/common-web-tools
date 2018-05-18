@@ -19,4 +19,4 @@ global DC_YML "[default]='$PROJECT_DOCROOT/docker-compose.yml'"
 # Determines which docker-compose.yml "template" will be used for current project
 # instance.
 # @see u_stack_template()
-global DC_YML_VARIANTS "[default]='INSTANCE_TYPE HOST_TYPE'"
+global DC_YML_VARIANTS "[default]='HOST_TYPE INSTANCE_TYPE'"

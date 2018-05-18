@@ -1,15 +1,12 @@
 #!/usr/bin/env bash
 
 ##
-# CWT instance start action.
+# [abstract] Starts this project instance's necessary services on host.
 #
-# This generic implementation is meant for starting this project instance's
-# necessary services on host. It supports variants by :
-# - PROVISION_USING
-# - INSTANCE_TYPE
-# - HOST_TYPE
-#
-# @see hook()
+# This script provides an entry point for triggering a specific hook. "Abstract"
+# means that CWT core itself doesn't provide any actual implementation for this
+# functionality. In order for this script to have any effect, it is necessary
+# to use an extension that does.
 #
 # @example
 #   cwt/instance/start.sh
@@ -17,4 +14,4 @@
 
 . cwt/bootstrap.sh
 
-hook -s 'instance app' -a 'start' -v 'PROVISION_USING INSTANCE_TYPE HOST_TYPE'
+hook -s 'instance app' -a 'start' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'

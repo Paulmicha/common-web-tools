@@ -68,7 +68,7 @@ u_git_wrapper() {
   local cmd=''
   local work_tree="$p_git_work_tree"
 
-  if [[ (-z "$work_tree") && (-n "$APP_GIT_WORK_TREE") ]]; then
+  if [[ -z "$work_tree" ]] && [[ -n "$APP_GIT_WORK_TREE" ]]; then
     work_tree="$APP_GIT_WORK_TREE"
   fi
 

@@ -105,7 +105,7 @@ u_instance_init() {
   hook -s 'app instance' -a 'set_fsop'
 
   # Trigger instance init (optional) extra processes.
-  hook -a 'init' -v 'PROVISION_USING INSTANCE_TYPE HOST_TYPE'
+  hook -a 'init' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
 }
 
 ##
@@ -335,7 +335,7 @@ u_instance_registry_set() {
 
   # NB : any implementation of this hook MUST use the reg_val and reg_key
   # variables (which are restricted to this function scope).
-  u_hook_most_specific -s 'instance' -a 'registry_set' -v 'INSTANCE_TYPE HOST_TYPE'
+  u_hook_most_specific -s 'instance' -a 'registry_set' -v 'HOST_TYPE INSTANCE_TYPE'
 }
 
 ##
@@ -364,7 +364,7 @@ u_instance_registry_get() {
 
   # NB : any implementation of this hook MUST set its result using the reg_val
   # variable, in this case NOT restricted to this function scope.
-  u_hook_most_specific -s 'instance' -a 'registry_get' -v 'INSTANCE_TYPE HOST_TYPE'
+  u_hook_most_specific -s 'instance' -a 'registry_get' -v 'HOST_TYPE INSTANCE_TYPE'
 }
 
 ##
@@ -384,7 +384,7 @@ u_instance_registry_del() {
 
   # NB : any implementation of this hook MUST use the reg_key variable (which is
   # restricted to this function scope).
-  u_hook_most_specific -s 'instance' -a 'registry_del' -v 'INSTANCE_TYPE HOST_TYPE'
+  u_hook_most_specific -s 'instance' -a 'registry_del' -v 'HOST_TYPE INSTANCE_TYPE'
 }
 
 ##

@@ -1,15 +1,12 @@
 #!/usr/bin/env bash
 
 ##
-# CWT instance destroy action.
+# [abstract] Deletes all traces of this project instance on current host.
 #
-# This generic implementation is meant for deleting all traces of this project
-# instance on its host. It supports variants by :
-# - PROVISION_USING
-# - INSTANCE_TYPE
-# - HOST_TYPE
-#
-# @see hook()
+# This script provides an entry point for triggering a specific hook. "Abstract"
+# means that CWT core itself doesn't provide any actual implementation for this
+# functionality. In order for this script to have any effect, it is necessary
+# to use an extension that does.
 #
 # @example
 #   cwt/instance/destroy.sh
@@ -17,4 +14,4 @@
 
 . cwt/bootstrap.sh
 
-hook -s 'instance' -a 'destroy' -v 'PROVISION_USING INSTANCE_TYPE HOST_TYPE'
+hook -s 'instance' -a 'destroy' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
