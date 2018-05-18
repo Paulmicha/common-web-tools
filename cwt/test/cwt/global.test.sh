@@ -17,6 +17,7 @@
 #
 
 . cwt/bootstrap.sh
+. cwt/test/self_test.inc.sh
 
 ##
 # Creates temporary files for verification purposes in current test case.

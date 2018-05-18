@@ -14,6 +14,5 @@
 #
 
 . cwt/bootstrap.sh
-. cwt/test/self_test.inc.sh
 
 hook -s 'test' -a 'self_test' -v 'HOST_TYPE PROVISION_USING'

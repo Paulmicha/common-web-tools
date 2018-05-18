@@ -54,8 +54,6 @@
 #   cwt/bootstrap.sh scope directly. They are meant to contain bash functions
 #   organized by subject. E.g. given subject = git : "$p_path/git/git.inc.sh".
 #
-# @see "conventions" + "extensibility" documentation.
-#
 u_cwt_extend() {
   local p_path="$1"
   local p_namespace="$2"
@@ -66,9 +64,7 @@ u_cwt_extend() {
 
   # Namespace defaults to the "$p_path" sanitized folder name (uppercase).
   if [[ -z "$p_namespace" ]]; then
-    p_namespace="${p_path##*/}"
-    u_str_sanitize_var_name "$p_namespace" 'p_namespace'
-    u_str_uppercase "$p_namespace" 'p_namespace'
+    u_cwt_extension_namespace "${p_path##*/}" 'p_namespace'
   fi
 
   # Always reinit as empty strings on every call to u_cwt_extend().
@@ -290,30 +286,67 @@ u_cwt_primitive_values() {
 }
 
 ##
-# Checks if an extension has given subject.
+# Gets a CWT extension namespace.
+#
+# @param 1 String : extension folder name or path.
+# @param 2 [optional] String : the variable name in calling scope which will be
+#   assigned the result. Defaults to 'extension_namespace'.
+#
+# @var [default] extension_namespace
+#
+# @example
+#   u_cwt_extension_namespace "cwt/extensions/docker-compose"
+#   echo "$extension_namespace" # <- Prints DOCKER_COMPOSE.
+#
+#   # Using a custom variable name :
+#   my_ns_var=""
+#   for extension in $CWT_EXTENSIONS; do
+#     u_cwt_extension_namespace "$extension" 'my_ns_var'
+#     echo "$my_ns_var"
+#   done
+#
+u_cwt_extension_namespace() {
+  local p_ext="$1"
+  local p_cwt_ext_ns_var_name="$2"
+  local cwt_ext_ns_result
+
+  if [[ -z "$p_cwt_ext_ns_var_name" ]]; then
+    p_cwt_ext_ns_var_name='extension_namespace'
+  fi
+
+  cwt_ext_ns_result="${p_ext##*/}"
+  u_str_sanitize_var_name "$cwt_ext_ns_result" 'cwt_ext_ns_result'
+  u_str_uppercase "$cwt_ext_ns_result" 'cwt_ext_ns_result'
+
+  printf -v "$p_cwt_ext_ns_var_name" '%s' "$cwt_ext_ns_result"
+}
+
+##
+# Checks if a namespace has given subject.
+#
+# @param 1 String : extension path (or folder name).
+# @param 2 String : the subject to check against.
 #
 # @example
 #   for extension in $CWT_EXTENSIONS; do
-#     if u_cwt_extension_has_subject "cwt/extensions/$extension" 'db' ; then
+#     if u_cwt_namespace_has_subject "cwt/extensions/$extension" 'db' ; then
 #       echo "extension '$extension' has the 'db' subject"
 #     fi
 #   done
 #
-u_cwt_extension_has_subject() {
+u_cwt_namespace_has_subject() {
   local p_extension_path="$1"
   local p_subject="$2"
 
-  local ext_namespace
-  local ext_subjects
+  local extension_subjects
+  local extension_namespace
 
-  ext_namespace="${p_extension_path##*/}"
-  u_str_sanitize_var_name "$ext_namespace" 'ext_namespace'
-  u_str_uppercase "$ext_namespace" ext_namespace
-  eval "ext_subjects=\"\$${ext_namespace}_SUBJECTS\""
+  u_cwt_extension_namespace "$p_extension_path"
+  eval "extension_subjects=\"\$${extension_namespace}_SUBJECTS\""
 
-  if [[ -n "$ext_subjects" ]]; then
+  if [[ -n "$extension_subjects" ]]; then
     local s
-    for s in $ext_subjects; do
+    for s in $extension_subjects; do
       case "$p_subject" in "$s")
         return
       esac

@@ -378,8 +378,8 @@ u_hook_build_lookup_by_subject() {
 
   for bp in "${base_paths[@]}"; do
 
-    # Avoid lookups for extensions not having the subject we're looking for.
-    if ! u_cwt_extension_has_subject "$bp" "$p_subject" ; then
+    # Avoid lookups for namespaces not having the subject we're looking for.
+    if ! u_cwt_namespace_has_subject "$bp" "$p_subject" ; then
       continue
     fi
 

@@ -20,6 +20,7 @@
 #
 
 . cwt/bootstrap.sh
+. cwt/test/self_test.inc.sh
 
 ##
 # Creates temporary files for verification purposes in current test case.
@@ -38,6 +39,7 @@ oneTimeSetUp() {
       echo "-> aborting" >&2
       echo >&2
       exit 2
+    fi
   done
 
   # Also test with a dummy extension (requires bootstrap reload, see below).
@@ -75,9 +77,9 @@ oneTimeSetUp() {
   touch "cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.sh"
 
   # Variants tests require the following globals. We set them with dummy values
-  # if stack init hasn't been run in current instance yet.
-  # @see cwt/stack/init.sh
-  # @see cwt/env/write.sh
+  # if instance init hasn't been run in current instance yet.
+  # @see u_instance_init()
+  # @see cwt/instance/init.sh
   if [[ -z "$INSTANCE_TYPE" ]]; then
     INSTANCE_TYPE='dev'
   fi
@@ -106,19 +108,15 @@ test_cwt_hook_single_action() {
   local hook_dry_run_matches=''
   local expected_list="cwt/app/nftcwthhnc_dry_run.hook.sh
 cwt/extensions/nftcwthdehnc/app/nftcwthhnc_dry_run.hook.sh
-cwt/cron/nftcwthhnc_dry_run.hook.sh
-cwt/db/nftcwthhnc_dry_run.hook.sh
-cwt/env/nftcwthhnc_dry_run.hook.sh
 cwt/git/nftcwthhnc_dry_run.hook.sh
+cwt/host/nftcwthhnc_dry_run.hook.sh
 cwt/instance/nftcwthhnc_dry_run.hook.sh
 cwt/remote/nftcwthhnc_dry_run.hook.sh
 cwt/extensions/nftcwthdehnc/remote/nftcwthhnc_dry_run.hook.sh
-cwt/service/nftcwthhnc_dry_run.hook.sh
-cwt/stack/nftcwthhnc_dry_run.hook.sh
-cwt/extensions/nftcwthdehnc/stack/nftcwthhnc_dry_run.hook.sh
+cwt/test/nftcwthhnc_dry_run.hook.sh
 cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
+cwt/extensions/nftcwthdehnc/stack/nftcwthhnc_dry_run.hook.sh
 "
-
   hook -a 'nftcwthhnc_dry_run' -t
 
   u_test_compare_expected_lookup_paths
@@ -130,7 +128,8 @@ cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
 #
 test_cwt_hook_subject() {
   local hook_dry_run_matches=''
-  local expected_list="cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh"
+  local expected_list="cwt/test/nftcwthhnc_dry_run.hook.sh
+cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh"
 
   hook -a 'nftcwthhnc_dry_run' -s 'test' -t
 
