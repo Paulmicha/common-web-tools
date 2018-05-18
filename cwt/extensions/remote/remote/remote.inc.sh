@@ -175,7 +175,7 @@ u_remote_authorize_ssh_key() {
   # given the use of the condition in examples below, anything printed out to
   # stdin would be evaluated).
   # @see u_host_once()
-  if ! $(u_host_once "u_remote_authorize_ssh_key.${REMOTE_INSTANCE_HOST}.${USER}.${public_key_path}"); then
+  if ! u_host_once "u_remote_authorize_ssh_key.${REMOTE_INSTANCE_HOST}.${USER}.${public_key_path}" ; then
     echo
     echo "Notice in $BASH_SOURCE line $LINENO: it appears that key was already sent to that remote host."
     echo "There is no need to send it again."

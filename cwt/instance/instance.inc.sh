@@ -109,30 +109,91 @@ u_instance_init() {
 }
 
 ##
-# TODO [wip] Unfinished.
+# Converts given string to a task name - e.g. for use as Make task.
+#
+# During conversion, some terms are abbreviated - e.g. :
+#   - registry -> reg
+#   - lookup-path -> lp
+#   - docker-compose -> dc
+#   - docker4drupal -> d4d
+#
+# TODO [minor] provide ability to set these from extensions.
+#
+# @param 1 String : input to convert.
+# @param 2 [optional] String : the variable name in calling scope which will be
+#   assigned the result. Defaults to 'task'.
+#
+# @var [default] task
+#
+u_instance_task_name() {
+  local p_str="$1"
+  local p_itn_var_name="$2"
+
+  if [[ -z "$p_itn_var_name" ]]; then
+    p_itn_var_name='task'
+  fi
+
+  u_str_sanitize "$p_str" '-' 'p_str' '[^a-zA-Z0-9]'
+
+  p_str="${p_str//registry/reg}"
+  p_str="${p_str//lookup-path/lp}"
+  p_str="${p_str//docker-compose/dc}"
+  p_str="${p_str//docker4drupal/d4d}"
+
+  printf -v "$p_itn_var_name" '%s' "$p_str"
+}
+
+##
+# Aggregates subject-action entry points and adds them as Make tasks.
 #
 # Generates a Makefile include with tasks corresponding to every subject-action
 # in current instance.
 #
 u_instance_write_mk() {
-  local a
-  local entry_point
-  local mk_entry_points
   local extension
   local extension_actions
   local extension_namespace
 
-  for a in $CWT_ACTIONS; do
-    mk_entry_points+="cwt/$a.sh "
+  # From our "entry point" scripts' path, we need to provide a unique task
+  # name -> we use subject-action pairs while preventing potential collisions
+  # in case different extensions implement the same subject-action pair.
+  # Important note : the arrays 'mk_tasks' and 'mk_entry_points' must have the
+  # exact same order and size.
+  local mk_tasks=()
+  local mk_entry_points=()
+  local index
+
+  local task
+  local sa_pair
+
+  # No need to check for collisions in CWT core (we know there aren't any).
+  for sa_pair in $CWT_ACTIONS; do
+    task=''
+    u_instance_task_name "$sa_pair"
+    mk_tasks+=("$task")
+    mk_entry_points+=("cwt/$sa_pair.sh")
   done
 
   for extension in $CWT_EXTENSIONS; do
     u_cwt_extension_namespace "$extension"
     eval "extension_actions=\"\$${extension_namespace}_ACTIONS\""
     if [[ -n "$extension_actions" ]]; then
-      for a in $extension_actions; do
-        mk_entry_points+="cwt/extensions/$extension/$a.sh "
+
+      # Extensions' subject-action pairs must yield unique tasks -> check for
+      # collisions.
+      for sa_pair in $extension_actions; do
+        task=''
+        u_instance_task_name "$sa_pair"
+
+        if u_in_array "$task" 'mk_tasks'; then
+          task="${extension}-$task"
+          u_instance_task_name "$task"
+        fi
+
+        mk_tasks+=("$task")
+        mk_entry_points+=("cwt/extensions/$extension/$a.sh")
       done
+
     fi
   done
 
@@ -159,11 +220,16 @@ u_instance_write_mk() {
 
 EOF
 
-  for entry_point in $mk_entry_points; do
-    echo ".PHONY: debug
-debug:
-	@ $entry_point \$(filter-out \$@,\$(MAKECMDGOALS))
+  # for entry_point in $mk_entry_points; do
+  # for entry_point in "${mk_entry_points[@]}"; do
+  for index in "${!mk_entry_points[@]}"; do
+    task="${mk_tasks[index]}"
+
+    echo ".PHONY: $task
+$task:
+	@ ${mk_entry_points[index]} \$(filter-out \$@,\$(MAKECMDGOALS))
 " >> cwt/env/current/default.mk
+
   done
 
   echo "Writing generic Makefile include cwt/env/current/default.mk : done."
@@ -253,6 +319,15 @@ u_instance_registry_set() {
   local reg_key="$1"
   local reg_val=$2
 
+  # Disallow empty keys.
+  if [[ -z "$reg_key" ]]; then
+    echo >&2
+    echo "Error in u_instance_registry_set() - $BASH_SOURCE line $LINENO: key is required." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    exit 1
+  fi
+
   # Allows empty values (in which case this entry acts as a boolean flag).
   if [[ -z "$reg_val" ]]; then
     reg_val=1
@@ -325,7 +400,7 @@ u_instance_registry_del() {
 #
 # @example
 #   # When you need to proceed inside the condition :
-#   if $(u_instance_once "my_once_id"); then
+#   if u_instance_once "my_once_id" ; then
 #     echo "Proceed."
 #   else
 #     echo "Notice in $BASH_SOURCE line $LINENO : this has already been run on this instance."
@@ -334,7 +409,7 @@ u_instance_registry_del() {
 #   fi
 #
 #   # When you need to stop/exit inside the condition :
-#   if ! $(u_instance_once "my_once_id"); then
+#   if ! u_instance_once "my_once_id" ; then
 #     echo "Notice in $BASH_SOURCE line $LINENO: already run for current project instance."
 #     echo "-> Aborting."
 #     exit

@@ -65,26 +65,26 @@ u_str_sanitize_var_name() {
 #   echo "$sanitized_str" # <- Prints 'a_b_c_d'
 #
 u_str_sanitize() {
-  local p_str="$1"
-  local p_replace="$2"
-  local p_str_sanitize_var_name="$3"
-  local p_filter="$4"
+  local p_ussvfhnc_str="$1"
+  local p_ussvfhnc_replace="$2"
+  local p_ussvfhnc_var_name="$3"
+  local p_ussvfhnc_filter="$4"
 
-  if [[ -z "$p_filter" ]]; then
-    p_filter='[^a-zA-Z0-9_\-\.]'
+  if [[ -z "$p_ussvfhnc_filter" ]]; then
+    p_ussvfhnc_filter='[^a-zA-Z0-9_\-\.]'
   fi
 
   # Allows empty strings.
-  if [[ $# -lt 2 ]] && [[ -z "$p_replace" ]]; then
-    p_replace='-'
+  if [[ $# -lt 2 ]] && [[ -z "$p_ussvfhnc_replace" ]]; then
+    p_ussvfhnc_replace='-'
   fi
 
-  if [[ -z "$p_str_sanitize_var_name" ]]; then
-    p_str_sanitize_var_name='sanitized_str'
+  if [[ -z "$p_ussvfhnc_var_name" ]]; then
+    p_ussvfhnc_var_name='sanitized_str'
   fi
 
-  # ${!p_str_sanitize_var_name}="${p_str//$p_filter/$p_replace}"
-  printf -v "$p_str_sanitize_var_name" '%s' "${p_str//$p_filter/$p_replace}"
+  # ${!p_ussvfhnc_var_name}="${p_ussvfhnc_str//$p_ussvfhnc_filter/$p_ussvfhnc_replace}"
+  printf -v "$p_ussvfhnc_var_name" '%s' "${p_ussvfhnc_str//$p_ussvfhnc_filter/$p_ussvfhnc_replace}"
 }
 
 ##

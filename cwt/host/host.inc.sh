@@ -126,6 +126,15 @@ u_host_registry_set() {
   local reg_key="$1"
   local reg_val=$2
 
+  # Disallow empty keys.
+  if [[ -z "$reg_key" ]]; then
+    echo >&2
+    echo "Error in u_host_registry_set() - $BASH_SOURCE line $LINENO: key is required." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    exit 1
+  fi
+
   # Allows empty values (in which case this entry acts as a boolean flag).
   if [[ -z "$reg_val" ]]; then
     reg_val=1
@@ -198,7 +207,7 @@ u_host_registry_del() {
 #
 # @example
 #   # When you need to proceed inside the condition :
-#   if $(u_host_once "my_once_id"); then
+#   if u_host_once "my_once_id" ; then
 #     echo "Proceed."
 #   else
 #     echo "Notice in $BASH_SOURCE line $LINENO : this has already been run on this host."
@@ -207,7 +216,7 @@ u_host_registry_del() {
 #   fi
 #
 #   # When you need to stop/exit inside the condition :
-#   if ! $(u_host_once "my_once_id"); then
+#   if ! u_host_once "my_once_id" ; then
 #     echo "Notice in $BASH_SOURCE line $LINENO : this has already been run on this host."
 #     echo "-> Aborting."
 #     exit
