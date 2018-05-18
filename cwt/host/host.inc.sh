@@ -102,8 +102,8 @@ u_host_os() {
   fi
 
   # Prevent unexpected characters.
-  os=$(u_slugify "$os")
-  version=$(u_slugify "$version" '\.')
+  os=$(u_str_slug "$os")
+  version=$(u_str_slug "$version" '\.')
 
   # Prevent '-gnu-linux' in OS name.
   os=${os/-gnu-linux/""}

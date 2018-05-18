@@ -3,6 +3,8 @@
 ##
 # CWT core generic utilities tests.
 #
+# TODO [wip] to complete for all CWT core utilities.
+#
 # @requires cwt/vendor/shunit2
 #
 # This file may be dynamically executed.

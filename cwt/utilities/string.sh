@@ -202,7 +202,7 @@ u_str_uppercase() {
 ##
 # Escapes all slashes for use in 'sed' calls.
 #
-# @see u_str_change_line()
+# @see u_fs_change_line()
 #
 # @example
 #   my_var=$(u_str_sed_escape "A string with commas, and dots... !")
@@ -220,25 +220,6 @@ u_str_sed_escape() {
 }
 
 ##
-# Replaces an entire line in given file.
-#
-# See https://stackoverflow.com/questions/11245144/replace-whole-line-containing-a-string-using-sed
-#
-# @example
-#   u_str_change_line "The existing line matching pattern" "The replacement text" path/to/file.ext
-#
-u_str_change_line() {
-  local p_existing_line_match="$1"
-  local p_replacement="$2"
-  local p_file="$3"
-
-  local new=$(u_str_sed_escape "${p_replacement}")
-
-  sed "/$p_existing_line_match/c $new" -i "$p_file"
-}
-
-
-##
 # Appends a given value to a string only once.
 #
 # @param 1 String : the value to append.
@@ -246,11 +227,11 @@ u_str_change_line() {
 #
 # @example
 #   str='Foo bar'
-#   str="$(u_string_append_once '--test A' "$str")" # str='Foo bar--test A'
-#   str="$(u_string_append_once '--test A' "$str")" # (unchanged)
-#   str="$(u_string_append_once '--test B' "$str")" # str='Foo bar--test A--test B'
+#   str="$(u_str_append_once '--test A' "$str")" # str='Foo bar--test A'
+#   str="$(u_str_append_once '--test A' "$str")" # (unchanged)
+#   str="$(u_str_append_once '--test B' "$str")" # str='Foo bar--test A--test B'
 #
-u_string_append_once() {
+u_str_append_once() {
   local p_needle="$1"
   local p_haystack="$2"
 
@@ -284,9 +265,6 @@ u_str_split1() {
   local p_str="$2"
   local p_sep="$3"
 
-  # local sanitized_var_name
-  # u_str_sanitize_var_name "$p_str_split1_var_name" 'sanitized_var_name'
-  # p_str_split1_var_name="$sanitized_var_name"
   u_str_sanitize_var_name "$p_str_split1_var_name" 'p_str_split1_var_name'
 
   # See https://stackoverflow.com/a/41059855
@@ -301,12 +279,14 @@ u_str_split1() {
 ##
 # Generates a random string.
 #
+# TODO [evol] optimize this.
+#
 # @param 1 [optional] Integer : string length - default : 16.
 #
 # @example
-#   RANDOM_STR=$(u_random_str)
+#   RANDOM_STR=$(u_str_random)
 #
-u_random_str() {
+u_str_random() {
   local l="16"
 
   if [[ -n "${1}" ]]; then
@@ -326,15 +306,15 @@ u_random_str() {
 # @param 2 [optional] String : the replacement character.
 #
 # @example
-#   SLUG=$(u_slugify "A string with non-standard characters and accents. éàù!îôï. Test out!")
+#   SLUG=$(u_str_slug "A string with non-standard characters and accents. éàù!îôï. Test out!")
 #   echo "$SLUG" # Result : "a-string-with-non-standard-characters-and-accents-eau-ioi-test-out"
 #
 # @example with different custom separator :
 #   # WARNING : regex special characters need escaping.
-#   SLUG_DOT=$(u_slugify "second test .. 456.2" '\.')
+#   SLUG_DOT=$(u_str_slug "second test .. 456.2" '\.')
 #   echo "$SLUG" # Result : "second.test.456.2"
 #
-u_slugify() {
+u_str_slug() {
   local p_str="$1"
   local p_sep="$2"
 
@@ -343,16 +323,26 @@ u_slugify() {
     sep="$p_sep"
   fi
 
-  echo "$p_str" | iconv -t ascii//TRANSLIT | sed -r s/[~\^]+//g | sed -r s/[^a-zA-Z0-9]+/"$sep"/g | sed -r s/^"$sep"+\|"$sep"+$//g | tr A-Z a-z
+  echo "$p_str" \
+    | iconv -t ascii//TRANSLIT \
+    | sed -r s/[~\^]+//g \
+    | sed -r s/[^a-zA-Z0-9]+/"$sep"/g \
+    | sed -r s/^"$sep"+\|"$sep"+$//g \
+    | tr A-Z a-z
 }
 
 ##
 # Generates a slug from string - variant using underscores instead of dashes.
 #
-# @see u_slugify()
+# @see u_str_slug()
 #
-u_slugify_u() {
-  echo "${1}" | iconv -t ascii//TRANSLIT | sed -r s/[~\^]+//g | sed -r s/[^a-zA-Z0-9]+/_/g | sed -r s/^_+\|_+$//g | tr A-Z a-z
+u_str_slug_u() {
+  echo "${1}" \
+    | iconv -t ascii//TRANSLIT \
+    | sed -r s/[~\^]+//g \
+    | sed -r s/[^a-zA-Z0-9]+/_/g \
+    | sed -r s/^_+\|_+$//g \
+    | tr A-Z a-z
 }
 
 ##
@@ -363,9 +353,9 @@ u_slugify_u() {
 # @param 1 String : the string to trim.
 #
 # @example
-#   str_trimmed=$(u_string_trim " testing space trim ")
+#   str_trimmed=$(u_str_trim " testing space trim ")
 #   echo "str_trimmed = '$str_trimmed'"
 #
-u_string_trim() {
+u_str_trim() {
   echo "$(echo -e "$1" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
 }

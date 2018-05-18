@@ -227,7 +227,7 @@ u_cwt_primitive_values() {
   done
 
   # Provide dynamic default values.
-  if [[ $proceed == 1 ]]; then
+  if [[ $proceed -eq 1 ]]; then
     local dyn_values
     case "$p_primitive" in
       subjects)
@@ -241,9 +241,8 @@ u_cwt_primitive_values() {
     esac
 
     # Filter out invalid values.
-    # TODO should we forbid / sanitize unexpected characters (space, *, etc.) ?
     local v
-    local v_wodots
+    local v_dots_arr
     for v in $dyn_values; do
 
       # Always ignore values starting with a dot.
@@ -252,7 +251,7 @@ u_cwt_primitive_values() {
       fi
 
       # Leave out any value explicitly ignored via dotfile.
-      if u_in_array "$v" ignored_values; then
+      if u_in_array "$v" 'ignored_values'; then
         continue
       fi
 
@@ -260,8 +259,8 @@ u_cwt_primitive_values() {
       # extension pattern.
       if [[ "$p_primitive" == 'actions' ]]; then
         v="${v%%.sh}"
-        v_wodots="${v//\.}"
-        if (( ${#v} - ${#v_wodots} > 0 )); then
+        u_str_split1 'v_dots_arr' "$v" '.'
+        if [[ ${#v_dots_arr[@]} -gt 1 ]]; then
           continue
         fi
       fi

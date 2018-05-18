@@ -216,7 +216,7 @@ u_global_assign_value() {
 
   # List or "pile" of values (space-separated string).
   elif [[ -n "${GLOBALS[$p_var|values]}" ]]; then
-    multi_values=$(u_string_trim "${GLOBALS[$p_var|values]}")
+    multi_values=$(u_str_trim "${GLOBALS[$p_var|values]}")
     eval "$p_var='$multi_values'"
 
   # Skippable default value assignment.
@@ -318,7 +318,7 @@ global() {
 
   u_str_sanitize_var_name "$p_var_name" 'p_var_name'
 
-  # TODO sanitize $p_values.
+  # TODO [evol] sanitize $p_values ?
   if [[ -n "$p_values" ]]; then
 
     # If the value does not begin with '[', assume the var non-configurable.
@@ -405,7 +405,9 @@ global() {
     fi
   fi
 
-  # These globals allow dynamic handling of args and default values.
+  # Because it's possible to call global() several times for the same variable
+  # (e.g. to append values to a list), and because the declaration order may
+  # matter, we need to keep a list (and count) of unique variable names.
   if ! u_in_array $p_var_name GLOBALS_UNIQUE_NAMES; then
     ((++GLOBALS_COUNT))
     GLOBALS_UNIQUE_NAMES+=($p_var_name)

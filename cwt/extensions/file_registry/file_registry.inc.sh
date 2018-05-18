@@ -41,12 +41,12 @@ u_file_registry_get_path() {
   local p_namespace="$2"
   local slug
 
-  slug=$(u_slugify_u "$p_key")
+  slug=$(u_str_slug_u "$p_key")
   reg_file_path="$FILE_REGISTRY_PATH/$INSTANCE_DOMAIN"
 
   if [[ -n "$p_namespace" ]]; then
     local namespace
-    namespace=$(u_slugify "$p_namespace")
+    namespace=$(u_str_slug "$p_namespace")
     reg_file_path="$FILE_REGISTRY_PATH/$namespace"
 
   # Cannot carry on without an INSTANCE_DOMAIN value here.

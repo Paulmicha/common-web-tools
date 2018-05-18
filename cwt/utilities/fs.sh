@@ -45,75 +45,6 @@ u_fs_get_file_contents() {
 }
 
 ##
-# Adds or updates a single line in given file.
-#
-# NB : hasn't been tested when pattern matches several lines.
-#
-# @param 1 String : the matching pattern (recognizes which line to update).
-# @param 2 String : the entire new line to write.
-# @param 3 String : (writeable) file path.
-#
-# @example
-#   u_fs_update_line 'MY_VAR=' 'MY_VAR="new-val"' path/to/writeable/file
-#
-u_fs_update_line() {
-  local p_pattern="$1"
-  local p_new_line="$2"
-  local p_file_path="$3"
-
-  if [[ ! -f "$p_file_path" ]]; then
-    echo >&2
-    echo "Error in u_fs_update_line() - $BASH_SOURCE line $LINENO: file $p_file_path was not found." >&2
-    echo "Aborting (1)." >&2
-    echo >&2
-    return 1
-  fi
-
-  local haystack
-  u_fs_get_file_contents "$p_file_path" 'haystack'
-  if [[ -z "$haystack" ]]; then
-    echo "$p_new_line" > "$p_file_path"
-    return
-  fi
-
-  # Escape backslash, forward slash and ampersand for use as a sed replacement.
-  # See https://stackoverflow.com/a/42727904
-  p_new_line=$(echo "$p_new_line" | sed -e 's/[\/&]/\\&/g')
-
-  sed -e "s,${p_pattern}.*,${p_new_line},g" -i "$p_file_path"
-}
-
-##
-# Writes given string to a file only once.
-#
-# @param 1 String : the string to append to the file.
-# @param 2 String : (writeable) file path.
-#
-# @example
-#   u_fs_write_once '--test A' path/to/writeable/file # File contents appended.
-#   u_fs_write_once '--test A' path/to/writeable/file # (unchanged)
-#   u_fs_write_once '--test B' path/to/writeable/file # File contents appended.
-#
-u_fs_write_once() {
-  local p_needle="$1"
-  local p_file_path="$2"
-
-  local haystack
-  u_fs_get_file_contents "$p_file_path" 'haystack'
-
-  if [[ -z "$haystack" ]]; then
-    echo "$p_needle" > "$p_file_path"
-    return
-  fi
-
-  local new_str="$(u_string_append_once $'\n'"$p_needle" "$haystack")"
-
-  if [[ "$new_str" != "$haystack" ]]; then
-    echo "$new_str" > "$p_file_path"
-  fi
-}
-
-##
 # Lists folders (shorter naming choice : we use 'dir' for directories).
 #
 # NB : for performance reasons (to avoid using a subshell), this function
@@ -356,4 +287,91 @@ u_fs_relative_path() {
 #
 u_fs_absolute_path() {
   echo $(cd "$(dirname "$1")" && pwd)/$(basename "$1")
+}
+
+##
+# Adds or updates a single line in given file.
+#
+# NB : hasn't been tested when pattern matches several lines.
+#
+# @param 1 String : the matching pattern (recognizes which line to update).
+# @param 2 String : the entire new line to write.
+# @param 3 String : (writeable) file path.
+#
+# @example
+#   u_fs_update_or_append_line 'MY_VAR=' 'MY_VAR="new-val"' path/to/writeable/file
+#
+u_fs_update_or_append_line() {
+  local p_pattern="$1"
+  local p_new_line="$2"
+  local p_file_path="$3"
+
+  if [[ ! -f "$p_file_path" ]]; then
+    echo >&2
+    echo "Error in u_fs_update_or_append_line() - $BASH_SOURCE line $LINENO: file $p_file_path was not found." >&2
+    echo "Aborting (1)." >&2
+    echo >&2
+    return 1
+  fi
+
+  local haystack
+  u_fs_get_file_contents "$p_file_path" 'haystack'
+  if [[ -z "$haystack" ]]; then
+    echo "$p_new_line" > "$p_file_path"
+    return
+  fi
+
+  # Escape backslash, forward slash and ampersand for use as a sed replacement.
+  # See https://stackoverflow.com/a/42727904
+  p_new_line=$(echo "$p_new_line" | sed -e 's/[\/&]/\\&/g')
+
+  sed -e "s,${p_pattern}.*,${p_new_line},g" -i "$p_file_path"
+}
+
+##
+# Writes given string to a file only once.
+#
+# @param 1 String : the string to append to the file.
+# @param 2 String : (writeable) file path.
+#
+# @example
+#   u_fs_write_once '--test A' path/to/writeable/file # File contents appended.
+#   u_fs_write_once '--test A' path/to/writeable/file # (unchanged)
+#   u_fs_write_once '--test B' path/to/writeable/file # File contents appended.
+#
+u_fs_write_once() {
+  local p_needle="$1"
+  local p_file_path="$2"
+
+  local haystack
+  u_fs_get_file_contents "$p_file_path" 'haystack'
+
+  if [[ -z "$haystack" ]]; then
+    echo "$p_needle" > "$p_file_path"
+    return
+  fi
+
+  local new_str="$(u_str_append_once $'\n'"$p_needle" "$haystack")"
+
+  if [[ "$new_str" != "$haystack" ]]; then
+    echo "$new_str" > "$p_file_path"
+  fi
+}
+
+##
+# Replaces an entire line in given file.
+#
+# See https://stackoverflow.com/questions/11245144/replace-whole-line-containing-a-string-using-sed
+#
+# @example
+#   u_fs_change_line "The existing line matching pattern" "The replacement text" path/to/file.ext
+#
+u_fs_change_line() {
+  local p_existing_line_match="$1"
+  local p_replacement="$2"
+  local p_file="$3"
+
+  local new=$(u_str_sed_escape "${p_replacement}")
+
+  sed "/$p_existing_line_match/c $new" -i "$p_file"
 }

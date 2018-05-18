@@ -32,7 +32,7 @@ u_db_get_credentials() {
   echo "Get (or generate ONCE on current host) the DB credentials for this instance (using ID: $p_id) ..."
 
   # Note : assumes every instance has a distinct domain, even "local dev" ones.
-  export DB_ID=$(u_slugify_u "$p_id")
+  export DB_ID=$(u_str_slug_u "$p_id")
 
   export DB_NAME="$DB_ID"
   export DB_USERNAME="$DB_ID"
