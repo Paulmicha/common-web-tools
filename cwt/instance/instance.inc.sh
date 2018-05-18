@@ -191,7 +191,7 @@ u_instance_write_mk() {
         fi
 
         mk_tasks+=("$task")
-        mk_entry_points+=("cwt/extensions/$extension/$a.sh")
+        mk_entry_points+=("cwt/extensions/$extension/$sa_pair.sh")
       done
 
     fi
