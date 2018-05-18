@@ -22,8 +22,8 @@
 !/cwt/env/current/README.md
 
 # Ignore remote instances defined on current local instance.
-/cwt/remote/instances/*
-!/cwt/remote/instances/README.md
+/cwt/extensions/remote/remote/instances/*
+!/cwt/extensions/remote/remote/instances/README.md
 
 # Private files, outside of public (web) dir.
 /private/*

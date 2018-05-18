@@ -54,8 +54,6 @@ CWT heavily relies on **file structure**, **naming conventions**, and a few conc
   │   │   └── hooks/        ← Entry points for auto-exec (tests, etc.)
   │   ├── host/             ← Host-level metadata / crontab / network utils + "abstract" provision action
   │   ├── instance/         ← Actions related to the entire project instance (init, destroy, start, stop)
-  │   ├── remote/           ← Remote operations (e.g. instance actions, but can be any task)
-  │   │   └── instances/    ← [git-ignored] Generated settings for each remote instance
   │   ├── test/             ← Self-test entry point / automated tests actions
   │   │   └── cwt/          ← CWT 'core' internal tests (uses shunit2 - see 'vendor' dir)
   │   ├── utilities/        ← CWT internal functions (hides complexity)

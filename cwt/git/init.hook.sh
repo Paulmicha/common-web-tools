@@ -7,6 +7,7 @@
 # Only attempts to clone if it's not already done (idempotent).
 #
 # @requires the following variables in calling scope (main shell) :
+# - CWT_MODE
 # - APP_GIT_ORIGIN
 # - APP_GIT_WORK_TREE
 #

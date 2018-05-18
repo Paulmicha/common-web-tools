@@ -45,7 +45,7 @@
 -include $(CWT_MAKE_INC)
 
 default: init
-.PHONY: init hook-call hook-debug
+.PHONY: init hook-call hook-debug globals-lp
 
 init:
 	@ cwt/instance/init.sh $(filter-out $@,$(MAKECMDGOALS))

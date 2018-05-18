@@ -170,7 +170,7 @@ u_remote_authorize_ssh_key() {
     return 2
   fi
 
-  # Prevent running this more than once per host.
+  # Prevent running this more than once per host + user + key path.
   # TODO use variable in calling scope instead of subshell (because currently,
   # given the use of the condition in examples below, anything printed out to
   # stdin would be evaluated).
@@ -318,7 +318,7 @@ u_remote_instance_add() {
     p_app_docroot="$p_project_docroot/web"
   fi
 
-  local conf="cwt/remote/instances/${p_id}.sh"
+  local conf="cwt/extensions/remote/remote/instances/${p_id}.sh"
 
   # Confirm overwriting existing config if the file already exists.
   if [[ -f "$conf" ]]; then
@@ -378,7 +378,7 @@ EOF
 #
 # @param 1 [optional] String : remote instance's id (short name, no space,
 #   _a-zA-Z0-9 only). Defaults to the first *.sh file found in folder :
-#   cwt/remote/instances.
+#   cwt/extensions/remote/remote/instances.
 #
 # @exports REMOTE_INSTANCE_ID
 # @exports REMOTE_INSTANCE_HOST
@@ -393,7 +393,7 @@ EOF
 #
 u_remote_instance_load() {
   local p_id="$1"
-  local conf="cwt/remote/instances/${p_id}.sh"
+  local conf="cwt/extensions/remote/remote/instances/${p_id}.sh"
 
   if [[ ! -f "$conf" ]]; then
     echo

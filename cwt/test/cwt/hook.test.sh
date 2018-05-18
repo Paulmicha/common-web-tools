@@ -111,7 +111,6 @@ cwt/extensions/nftcwthdehnc/app/nftcwthhnc_dry_run.hook.sh
 cwt/git/nftcwthhnc_dry_run.hook.sh
 cwt/host/nftcwthhnc_dry_run.hook.sh
 cwt/instance/nftcwthhnc_dry_run.hook.sh
-cwt/remote/nftcwthhnc_dry_run.hook.sh
 cwt/extensions/nftcwthdehnc/remote/nftcwthhnc_dry_run.hook.sh
 cwt/test/nftcwthhnc_dry_run.hook.sh
 cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
@@ -142,7 +141,8 @@ cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh"
 #
 test_cwt_hook_combinatory_variants() {
   local hook_dry_run_matches=''
-  local expected_list="cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
+  local expected_list="cwt/test/nftcwthhnc_dry_run.hook.sh
+cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
 cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$HOST_TYPE.hook.sh
 cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.$HOST_TYPE.hook.sh
 "
