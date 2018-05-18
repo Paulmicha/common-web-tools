@@ -390,10 +390,6 @@ u_instance_registry_del() {
 ##
 # Prevents running something more than once for current project instance.
 #
-# TODO use variable in calling scope instead of subshell (because currently,
-# given the use of the condition in examples below, anything printed out to
-# stdin would be evaluated).
-#
 # Checks boolean flag for this instance.
 # @see u_instance_registry_get()
 # @see u_instance_registry_set()

@@ -197,10 +197,6 @@ u_host_registry_del() {
 ##
 # Prevents running something more than once for entire host.
 #
-# TODO use variable in calling scope instead of subshell (because currently,
-# given the use of the condition in examples below, anything printed out to
-# stdin would be evaluated).
-#
 # Checks boolean flag for the entire local host.
 # @see u_host_registry_get()
 # @see u_host_registry_set()
