@@ -10,24 +10,27 @@
 #
 
 ##
-# TODO [wip] not finished - refacto in progress.
+# Writes global vars readonly declarations for current instance.
+#
+# Result (git-ignored) : cwt/env/current/global.vars.sh
+#
 # @see u_instance_init()
 #
-# Write global (env) vars declarations to script file.
-#
 u_global_write() {
-  echo "Writing global (env) vars to cwt/env/current/global.vars.sh ..."
-
-  # First make sure we have something to write.
   if [ -z "$GLOBALS_COUNT" ]; then
     echo >&2
-    echo "Error in $BASH_SOURCE line $LINENO: nothing to write." >&2
+    echo "Error in u_global_write() - $BASH_SOURCE line $LINENO: nothing to write." >&2
     echo "Aborting (1)." >&2
     echo >&2
     return 1
-  elif [[ $P_VERBOSE == 1 ]]; then
-    u_global_debug
   fi
+
+  if [[ $GLOBALS_DRY_RUN -eq 1 ]]; then
+    u_global_debug
+    return
+  fi
+
+  echo "Writing global (env) vars to cwt/env/current/global.vars.sh ..."
 
   # (Re)init destination file (make empty).
   cat > cwt/env/current/global.vars.sh <<'EOF'
@@ -479,5 +482,6 @@ u_global_debug() {
       fi
     done
   done
+
   echo
 }

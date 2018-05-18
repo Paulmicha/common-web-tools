@@ -17,7 +17,7 @@ fi
 
 if [[ -n "$WRITEABLE_FILES" ]]; then
   for writeable_file in $WRITEABLE_FILES; do
-    if [[ -d "$writeable_file" ]]; then
+    if [[ -f "$writeable_file" ]]; then
       chmod +w "$writeable_file"
     fi
   done
