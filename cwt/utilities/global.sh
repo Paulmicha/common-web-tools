@@ -104,8 +104,8 @@ u_global_lookup_paths() {
   if [ -n "$CWT_EXTENSIONS" ]; then
     local extension
     for extension in $CWT_EXTENSIONS; do
-      if [ -f "$extension/global.vars.sh" ]; then
-        global_lookup_paths+="$extension/global.vars.sh "
+      if [ -f "cwt/extensions/$extension/global.vars.sh" ]; then
+        global_lookup_paths+="cwt/extensions/$extension/global.vars.sh "
       fi
     done
   fi

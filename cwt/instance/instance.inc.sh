@@ -12,6 +12,14 @@
 ##
 # Instance initialization process ("instance init").
 #
+# This is the first action to execute in any project instance in order to make
+# CWT useful. It generates readonly global (env) vars, default Git hooks
+# implementations, and convenience "make" shortcuts for all subjects & actions.
+#
+# @see u_global_aggregate()
+# @see u_global_write()
+# @see u_instance_write_mk()
+#
 # @exports GLOBALS
 # @exports GLOBALS_COUNT
 # @exports GLOBALS_UNIQUE_NAMES
@@ -22,8 +30,23 @@
 # @exports PROJECT_SCRIPTS
 #
 # @example
-#   # TODO [wip] provide detailed examples.
+#   # Calling this script without any arguments will use prompts in terminal
+#   # to provide values for every globals.
 #   u_instance_init
+#
+#   # Initializes an instance of type 'dev', host type 'local', provisionned
+#   # using 'ansible', identified by domain 'dev.cwt.com', with git origin
+#   # 'git@my-git-origin.org:my-git-account/cwt.git', app sources cloned in 'dist',
+#   # and using 'dist/web' as app dir - without terminal prompts (-y flag).
+#   u_instance_init \
+#     -t 'dev' \
+#     -h 'local' \
+#     -p 'ansible' \
+#     -d 'dev.cwt.com' \
+#     -g 'git@my-git-origin.org:my-git-account/cwt.git' \
+#     -i 'dist' \
+#     -a 'dist/web' \
+#     -y
 #
 u_instance_init() {
   # Default values :
@@ -38,7 +61,6 @@ u_instance_init() {
   # Configurable CWT internals.
   local p_host_type=''
   local p_provision_using=''
-  local p_cwt_mode=''
   local p_project_scripts_dir=''
 
   local p_yes=0
@@ -55,7 +77,6 @@ u_instance_init() {
 
       -h) p_host_type="$2"; shift 2;;
       -p) p_provision_using="$2"; shift 2;;
-      -m) p_cwt_mode="$2"; shift 2;;
       -c) p_project_scripts_dir="$2"; shift 2;;
 
       -y) p_yes=1; shift 1;;
@@ -117,8 +138,6 @@ u_instance_init() {
 #   - docker-compose -> dc
 #   - docker4drupal -> d4d
 #
-# TODO [minor] provide ability to set these from extensions.
-#
 # @param 1 String : input to convert.
 # @param 2 [optional] String : the variable name in calling scope which will be
 #   assigned the result. Defaults to 'task'.
@@ -135,10 +154,13 @@ u_instance_task_name() {
 
   u_str_sanitize "$p_str" '-' 'p_str' '[^a-zA-Z0-9]'
 
-  p_str="${p_str//registry/reg}"
-  p_str="${p_str//lookup-path/lp}"
-  p_str="${p_str//docker-compose/dc}"
-  p_str="${p_str//docker4drupal/d4d}"
+  if [[ -n "$CWT_MAKE_TASKS_SHORTER" ]]; then
+    local search_replace_pattern=''
+    for search_replace_pattern in $CWT_MAKE_TASKS_SHORTER; do
+      u_str_sanitize "$search_replace_pattern" '' 'search_replace_pattern' '[^a-zA-Z0-9\/\-_]'
+      eval "p_str=\"\${p_str//$search_replace_pattern}\""
+    done
+  fi
 
   printf -v "$p_itn_var_name" '%s' "$p_str"
 }
@@ -219,8 +241,6 @@ u_instance_write_mk() {
 
 EOF
 
-  # for entry_point in $mk_entry_points; do
-  # for entry_point in "${mk_entry_points[@]}"; do
   for index in "${!mk_entry_points[@]}"; do
     task="${mk_tasks[index]}"
 

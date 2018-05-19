@@ -12,8 +12,7 @@
 
 # Automatically clones the app repo if it is separate from the "dev stack" repo.
 # Only attempts to clone if it's not already done (idempotent).
-if [[ "$CWT_MODE" == 'separate' ]] \
-  && [[ -n "$APP_GIT_ORIGIN" ]] \
+if [[ -n "$APP_GIT_ORIGIN" ]] \
   && [[ -n "$APP_GIT_WORK_TREE" ]] \
   && [[ ! -d "$APP_GIT_WORK_TREE/.git" ]]
 then

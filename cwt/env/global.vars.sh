@@ -26,24 +26,19 @@
 
 global PROJECT_DOCROOT "[default]=$PWD"
 global APP_DOCROOT "[default]=$PROJECT_DOCROOT/web"
+
+# [optional] Set these values for applications having their own separate repo
+# in order to benefit from the automatic instanciation and Git hooks integration
+# features provided by CWT core by default (overridable).
+# @see cwt/git/init.hook.sh
+global APP_GIT_ORIGIN
+global APP_GIT_WORK_TREE "[default]=$APP_DOCROOT"
+
 global INSTANCE_TYPE "[default]=dev"
 global INSTANCE_DOMAIN "[default]='$(u_instance_domain)'"
-
-# This allows supporting multi-repo projects, i.e. 1 repo for the app + 1 for
-# the "dev stack" :
-# - Use CWT_MODE='monolithic' for single-repo projects.
-# - Use CWT_MODE='separate' for multi-repo projects (mandatory app Git details).
-# TODO support any other combination of any number of repos ?
-global CWT_MODE "[default]=separate"
-global APP_GIT_ORIGIN "[if-CWT_MODE]=separate"
-global APP_GIT_WORK_TREE "[if-CWT_MODE]=separate [default]=$APP_DOCROOT"
-
-# These values are used to generate lookup paths in hooks (events), overrides
-# and/or complements.
-# @see scripts/README.md
+global PROVISION_USING "[default]=docker-compose"
 global HOST_TYPE "[default]=local"
 global HOST_OS "$(u_host_os)"
-global PROVISION_USING "[default]=docker-compose"
 
 # Path to custom scripts ~ commonly automated processes. CWT will also use this
 # path to look for overrides and complements.
@@ -51,6 +46,10 @@ global PROVISION_USING "[default]=docker-compose"
 # @see u_autoload_get_complement()
 global PROJECT_SCRIPTS "[default]=scripts"
 
-# [optional] Provide additional custom makefile includes.
+# [optional] Provide additional custom makefile includes, and short subjects
+# or actions replacements used for generating Makefile task names.
+# @see u_instance_write_mk()
+# @see u_instance_task_name()
 # @see Makefile
 global CWT_MAKE_INC "[append]='$PROJECT_SCRIPTS/make.mk'"
+global CWT_MAKE_TASKS_SHORTER "[append]='registry/reg lookup-path/lp'"

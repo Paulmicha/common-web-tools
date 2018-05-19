@@ -11,16 +11,6 @@
 # @see cwt/bootstrap.sh
 #
 
-# Specifies where the generated (& to be git-ignored) docker-compose.yml file
-# will be (over)written.
-# @see u_stack_template()
-global DC_YML "[default]='$PROJECT_DOCROOT/docker-compose.yml'"
-
-# Determines which docker-compose.yml "template" will be used for current project
-# instance.
-# @see u_stack_template()
-global DC_YML_VARIANTS "[default]='HOST_TYPE INSTANCE_TYPE'"
-
 # [optional] Shorter generated make tasks names.
 # @see u_instance_task_name() in cwt/instance/instance.inc.sh
-global CWT_MAKE_TASKS_SHORTER "[append]='docker-compose/dc'"
+global CWT_MAKE_TASKS_SHORTER "[append]='docker4drupal/d4d'"

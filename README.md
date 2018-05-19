@@ -1,6 +1,12 @@
 # Common Web Tools (CWT)
 
-WIP / not ready yet (experimental).
+## TL;DR
+
+Clone or download / copy / paste the files from this repo, open terminal in chosen dir and :
+
+```sh
+make
+```
 
 ## WHAT
 
@@ -50,8 +56,8 @@ CWT heavily relies on **file structure**, **naming conventions**, and a few conc
   │   ├── env/              ← Default global env. vars
   │   │   └── current/      ← [git-ignored] Generated global env. vars / Makefiles
   │   ├── extensions/       ← Contains CWT extensions. Remove or add according to project needs
-  │   ├── git/              ← Versionning-related tasks
-  │   │   └── hooks/        ← Entry points for auto-exec (tests, etc.)
+  │   ├── git/              ← Integration of Git hooks with CWT hooks + Git-related utilities.
+  │   │   └── samples/      ← [doc] Examples of git hooks implementations.
   │   ├── host/             ← Host-level metadata / crontab / network utils + "abstract" provision action
   │   ├── instance/         ← Actions related to the entire project instance (init, destroy, start, stop)
   │   ├── test/             ← Self-test entry point / automated tests actions
@@ -117,9 +123,9 @@ The files contained in CWT core - this repo - may be placed either inside the ap
 So the first step will always be to clone or download / copy / paste the files from this repo to desired location (in relation to your choice for this project instance source files organization described above), then :
 
 1. Review the `.gitignore` file and adapt it to suit your needs.
-1. Launch *instance init* action (e.g. run `make` or `make instance init`) - this will generate `readonly` global env vars and optional Makefiles. See `cwt/instance/instance.inc.sh` and `cwt/utilities/global.sh` for details.
-1. [optional] launch *host provision* action (e.g. run `make host provision`) - this is not implemented in CWT, but this "entry point" exists to streamline host-level software installation in extensions.
-1. [optional] launch *instance start* action (e.g. run `make instance start`) - this is meant to run any service required to use or work on current project instance.
+1. Launch *instance init* action (e.g. run `make` or `make-init`) - this will generate `readonly` global env vars and optional Makefiles. See `cwt/instance/instance.inc.sh` and `cwt/utilities/global.sh` for details.
+1. [optional] launch *host provision* action (e.g. run `make-host-provision`) - this is not implemented in CWT, but this "entry point" exists to streamline host-level software installation in extensions.
+1. [optional] launch *instance start* action (e.g. run `make-instance-start`) - this is meant to run any service required to use or work on current project instance.
 
 See *Frequent tasks (howtos / FAQ)* below for other tasks and details.
 
@@ -138,16 +144,24 @@ Since every entry point sources `cwt/bootstrap.sh` to load CWT functions and glo
 
 One of the most straightforward ways to customize or add globals is by providing your own `global.vars.sh` file in current project instance's `scripts` folder, however any extension can provide its own - be it in the folder of the extension directly, or inside any of its subfolder (called *subjects*).
 
-CWT core provides 13 globals by default (see `cwt/env/global.vars.sh`, and `cwt/utilities/global.sh` for details about the `global()` function) :
+CWT core provides 12 globals by default (see `cwt/env/global.vars.sh`, and `cwt/utilities/global.sh` for details about the `global()` function) :
 
 ```sh
 global PROJECT_DOCROOT "[default]=$PWD"
 global APP_DOCROOT "[default]=$PROJECT_DOCROOT/web"
+
+# [optional] Set these values for applications having their own separate repo
+# in order to benefit from the automatic instanciation and Git hooks integration
+# features provided by CWT core by default (overridable).
+# @see cwt/git/init.hook.sh
+global APP_GIT_ORIGIN
+global APP_GIT_WORK_TREE "[default]=$APP_DOCROOT"
+
 global INSTANCE_TYPE "[default]=dev"
 global INSTANCE_DOMAIN "[default]='$(u_instance_domain)'"
+global PROVISION_USING "[default]=docker-compose"
 global HOST_TYPE "[default]=local"
 global HOST_OS "$(u_host_os)"
-global PROVISION_USING "[default]=docker-compose"
 
 # Path to custom scripts ~ commonly automated processes. CWT will also use this
 # path to look for overrides and complements.
@@ -155,22 +169,13 @@ global PROVISION_USING "[default]=docker-compose"
 # @see u_autoload_get_complement()
 global PROJECT_SCRIPTS "[default]=scripts"
 
-# This allows supporting multi-repo projects, i.e. 1 repo for the app + 1 for
-# the "dev stack" :
-# - Use CWT_MODE='monolithic' for single-repo projects.
-# - Use CWT_MODE='separate' for multi-repo projects (mandatory app Git details).
-# TODO support any other combination of any number of repos ?
-global CWT_MODE "[default]=separate"
-global APP_GIT_ORIGIN "[if-CWT_MODE]=separate"
-global APP_GIT_WORK_TREE "[if-CWT_MODE]=separate [default]=$APP_DOCROOT"
-
-# [optional] Allows extensions to provide their own makefile includes (after
-# instance init). This global must contain a list of paths relative to
-# $PROJECT_DOCROOT separated by space.
-# @see https://www.gnu.org/software/make/manual/html_node/Include.html
-# @see cwt/env/current/README.md
+# [optional] Provide additional custom makefile includes, and short subjects
+# or actions replacements used for generating Makefile task names.
+# @see u_instance_write_mk()
+# @see u_instance_task_name()
 # @see Makefile
-global CWT_MAKE_INC
+global CWT_MAKE_INC "[append]='$PROJECT_SCRIPTS/make.mk'"
+global CWT_MAKE_TASKS_SHORTER "[append]='registry/reg lookup-path/lp'"
 ```
 
 ### Hooks & Primitives
