@@ -63,10 +63,10 @@ u_git_write_hooks() {
   fi
 
   if [[ -z "$p_git_hook_dir" ]]; then
-    p_git_hook_dir="$APP_GIT_WORK_TREE/.git/hooks"
+    p_git_hook_dir="$PROJECT_DOCROOT/.git/hooks"
 
-    if [[ ! -d "$p_git_hook_dir" ]]; then
-      p_git_hook_dir="$PROJECT_DOCROOT/.git/hooks"
+    if [[ -n "$APP_GIT_WORK_TREE" ]]; then
+      p_git_hook_dir="$APP_GIT_WORK_TREE/.git/hooks"
     fi
 
     if [[ ! -d "$p_git_hook_dir" ]]; then
