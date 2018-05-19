@@ -204,7 +204,10 @@ u_global_assign_value() {
   eval "export $p_var"
   eval "unset $p_var"
 
-  eval "local arg_val=\$P_${p_var}"
+  local arg_val_var_name="P_$p_var"
+  u_str_lowercase "$arg_val_var_name" 'arg_val_var_name'
+  eval "local arg_val=\"\$$arg_val_var_name\""
+
   local default_val="${GLOBALS[$p_var|default]}"
 
   if [[ -n "$arg_val" ]]; then

@@ -20,15 +20,6 @@
 # @see u_global_write()
 # @see u_instance_write_mk()
 #
-# @exports GLOBALS
-# @exports GLOBALS_COUNT
-# @exports GLOBALS_UNIQUE_NAMES
-# @exports GLOBALS_UNIQUE_KEYS
-# @exports GLOBALS_INTERACTIVE
-# @exports GLOBALS_DRY_RUN
-# @exports PROVISION_USING
-# @exports PROJECT_SCRIPTS
-#
 # @example
 #   # Calling this script without any arguments will use prompts in terminal
 #   # to provide values for every globals.
@@ -89,16 +80,6 @@ u_instance_init() {
 
   # Trigger pre-init (optional) extra processes.
   hook -p 'pre' -a 'init'
-
-  export GLOBALS
-  export GLOBALS_COUNT
-  export GLOBALS_UNIQUE_NAMES
-  export GLOBALS_UNIQUE_KEYS
-  export GLOBALS_INTERACTIVE
-  export GLOBALS_DRY_RUN
-
-  export PROVISION_USING="$p_provision_using"
-  export PROJECT_SCRIPTS="$p_project_scripts_dir"
 
   # (Re)start dependencies and env vars aggregation.
   unset GLOBALS
