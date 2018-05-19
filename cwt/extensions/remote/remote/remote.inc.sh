@@ -5,7 +5,7 @@
 #
 # TODO implement SSH setup as an action (authorize local user key).
 #
-# This file is dynamically loaded.
+# This file is sourced during core CWT bootstrap.
 # @see cwt/bootstrap.sh
 #
 
