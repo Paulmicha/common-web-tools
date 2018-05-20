@@ -39,12 +39,16 @@
 #     was a branch checkout (changing branches, flag=1) or a file checkout
 #     (retrieving a file from the index, flag=0).
 #   - 'post-merge' (see pre-commit) : used for permissions/ownership, ACLS, etc.
-#     The hook takes a single parameter, a status flag specifying whether or not
-#     the merge being done was a squash merge.
+#     This hook is invoked by git merge, which happens when a git pull is done
+#     on a local repository. It takes a single parameter, a status flag
+#     specifying whether or not the merge being done was a squash merge.
 #   - 'pre-push' : can be used to prevent a push from taking place (exit with a
 #     non-zero status). The hook is called with two parameters which provide the
 #     name and location of the destination remote, if a named remote is not
 #     being used both values will be the same.
+#   - 'post-receive' : executes on the remote repository once after all the refs
+#     have been updated. This hook does not affect the outcome of
+#     git-receive-pack, as it is called after the real work is done.
 # @param 2 [optional] String : the Git hooks folder to use. Defaults to
 #   "$APP_GIT_WORK_TREE/.git/hooks" if it exists, otherwise to
 #   "$PROJECT_DOCROOT/.git/hooks".
@@ -59,7 +63,7 @@ u_git_write_hooks() {
   local p_git_hook_dir="$2"
 
   if [[ -z "$p_git_hooks" ]]; then
-    p_git_hooks='pre-applypatch pre-commit post-checkout post-merge pre-push'
+    p_git_hooks='pre-applypatch pre-commit post-checkout post-merge pre-push post-receive'
   fi
 
   if [[ -z "$p_git_hook_dir" ]]; then
