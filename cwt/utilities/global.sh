@@ -25,7 +25,7 @@ u_global_write() {
     return 1
   fi
 
-  if [[ $GLOBALS_DRY_RUN -eq 1 ]]; then
+  if [[ $p_cwtii_dry_run -eq 1 ]]; then
     u_global_debug
     return
   fi
@@ -186,7 +186,7 @@ u_global_foreach() {
 # @param 1 String : global variable name.
 #
 # @requires the following globals in calling scope :
-# - $GLOBALS_INTERACTIVE
+# - $p_cwtii_yes
 # - $GLOBALS
 # - $P_MY_VAR_NAME (replacing 'MY_VAR_NAME' with the actual var name)
 #
@@ -204,7 +204,7 @@ u_global_assign_value() {
   eval "export $p_var"
   eval "unset $p_var"
 
-  local arg_val_var_name="P_$p_var"
+  local arg_val_var_name="p_cwtii_$p_var"
   u_str_lowercase "$arg_val_var_name" 'arg_val_var_name'
   eval "local arg_val=\"\$$arg_val_var_name\""
 
@@ -223,7 +223,7 @@ u_global_assign_value() {
     eval "$p_var='$multi_values'"
 
   # Skippable default value assignment.
-  elif [[ $GLOBALS_INTERACTIVE -eq 0 ]]; then
+  elif [[ $p_cwtii_yes -eq 0 ]]; then
     echo
     echo "Initializing $p_var value :"
 
@@ -249,7 +249,7 @@ u_global_assign_value() {
   # Except for 'append' vars (multiple values must pile-up on each call).
   # TODO [wip] confirm workaround edge case (multiple declarations must override
   # previous default value).
-  if [[ $GLOBALS_INTERACTIVE -eq 0 ]]; then
+  if [[ $p_cwtii_yes -eq 0 ]]; then
     if [[ ${GLOBALS[$p_var|no_prompt]} -ne 1 ]] && [[ -z "$multi_values" ]]; then
       GLOBALS[$p_var|no_prompt]=1
       GLOBALS[$p_var|value]=$(eval "echo \"\$$p_var\"")

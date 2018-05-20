@@ -40,15 +40,17 @@
 #   make hook-debug s:instance a:start v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
 #
 
+.DEFAULT_GOAL := init
+
 -include .env
 -include cwt/env/current/default.mk
 -include $(CWT_MAKE_INC)
 
+.PHONY: default init hook-call hook-debug globals-lp
 default: init
-.PHONY: init hook-call hook-debug globals-lp
 
 init:
-	@ cwt/instance/init.sh $(filter-out $@,$(MAKECMDGOALS))
+	@ cwt/instance/init.make.sh $(filter-out $@,$(MAKECMDGOALS))
 
 hook-call:
 	@ cwt/instance/hook.make.sh $(filter-out $@,$(MAKECMDGOALS))

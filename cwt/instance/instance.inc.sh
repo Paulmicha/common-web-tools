@@ -42,41 +42,45 @@
 u_instance_init() {
   # Default values :
   # @see cwt/env/global.vars.sh
-  local p_project_docroot=''
-  local p_app_docroot=''
-  local p_app_git_origin=''
-  local p_app_git_work_tree=''
-  local p_instance_type=''
-  local p_instance_domain=''
+  local p_cwtii_project_docroot=''
+  local p_cwtii_app_docroot=''
+  local p_cwtii_app_git_origin=''
+  local p_cwtii_app_git_work_tree=''
+  local p_cwtii_instance_type=''
+  local p_cwtii_instance_domain=''
 
   # Configurable CWT internals.
-  local p_host_type=''
-  local p_provision_using=''
-  local p_project_scripts_dir=''
+  local p_cwtii_host_type=''
+  local p_cwtii_provision_using=''
+  local p_cwtii_project_scripts_dir=''
 
-  local p_yes=0
-  local p_dry_run=0
+  local p_cwtii_yes=0
+  local p_cwtii_dry_run=0
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      -o) p_project_docroot="$2"; shift 2;;
-      -a) p_app_docroot="$2"; shift 2;;
-      -g) p_app_git_origin="$2"; shift 2;;
-      -i) p_app_git_work_tree="$2"; shift 2;;
-      -t) p_instance_type="$2"; shift 2;;
-      -d) p_instance_domain="$2"; shift 2;;
+      -o) p_cwtii_project_docroot="$2"; shift 2;;
+      -a) p_cwtii_app_docroot="$2"; shift 2;;
+      -g) p_cwtii_app_git_origin="$2"; shift 2;;
+      -i) p_cwtii_app_git_work_tree="$2"; shift 2;;
+      -t) p_cwtii_instance_type="$2"; shift 2;;
+      -d) p_cwtii_instance_domain="$2"; shift 2;;
 
-      -h) p_host_type="$2"; shift 2;;
-      -p) p_provision_using="$2"; shift 2;;
-      -c) p_project_scripts_dir="$2"; shift 2;;
+      -h) p_cwtii_host_type="$2"; shift 2;;
+      -p) p_cwtii_provision_using="$2"; shift 2;;
+      -c) p_cwtii_project_scripts_dir="$2"; shift 2;;
 
-      -y) p_yes=1; shift 1;;
-      -r) p_dry_run=1; shift 1;;
+      -y) p_cwtii_yes=1; shift 1;;
+      -r) p_cwtii_dry_run=1; shift 1;;
 
       -*) echo "Error in $BASH_SOURCE line $LINENO: unknown option: $1" >&2; return;;
       *) echo "Notice in $BASH_SOURCE line $LINENO: unsupported unnamed argument: $1" >&2; shift 1;;
     esac
   done
+
+  if [[ -n "$p_cwtii_project_docroot" ]]; then
+    PROJECT_DOCROOT="$p_cwtii_project_docroot"
+  fi
 
   # Trigger pre-init (optional) extra processes.
   hook -p 'pre' -a 'init'
@@ -87,8 +91,6 @@ u_instance_init() {
   GLOBALS_COUNT=0
   GLOBALS_UNIQUE_NAMES=()
   GLOBALS_UNIQUE_KEYS=()
-  GLOBALS_INTERACTIVE=$p_yes
-  GLOBALS_DRY_RUN=$p_dry_run
 
   # Load default CWT 'core' globals.
   # These contain paths required for aggregating env vars and services.
