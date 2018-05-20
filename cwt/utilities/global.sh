@@ -225,11 +225,16 @@ u_global_assign_value() {
   # Skippable default value assignment.
   elif [[ $GLOBALS_INTERACTIVE -eq 0 ]]; then
     echo
+    echo "Initializing $p_var value :"
+
+    if [[ -n "${GLOBALS[$p_var|help]}" ]]; then
+      echo "${GLOBALS[$p_var|help]}"
+    fi
+
     if [[ -n "$default_val" ]]; then
-      echo "Enter $p_var value,"
-      eval "read -p \"or leave blank to use '$default_val' : \" $p_var"
+      eval "read -p \"-> Leave blank to use '$default_val' : \" $p_var"
     else
-      eval "read -p \"Enter $p_var value : \" $p_var"
+      eval "read -p \"-> Enter $p_var value : \" $p_var"
     fi
   fi
 
@@ -287,6 +292,7 @@ u_global_assign_value() {
 #   # - 'no_prompt'
 #   # - 'append'
 #   # - 'if-VAR_NAME'
+#   # - 'ifnot-VAR_NAME'
 #   global MY_VAR_NAME3 "[key]=value [key2]='value 2' [key3]='$(my_callback_function)'"
 #
 # @examples (append)
@@ -350,7 +356,7 @@ global() {
           # Handles conditional declarations. Prevents declaring the variable
           # altogether if the depending variable's value does not match the one
           # provided (matching using operator provided as a prefix).
-          if-*|notif-*)
+          if-*|ifnot-*)
             local depending_var="${key:3}"
             local depending_value
 
@@ -358,7 +364,7 @@ global() {
             depending_value=$(eval "echo \"\$$depending_var\"")
 
             case "$key" in
-              notif-*)
+              ifnot-*)
                 if [[ "$depending_value" == "${declaration_arr[$key]}" ]]; then
                   return 0
                 fi

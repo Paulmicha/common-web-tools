@@ -24,27 +24,27 @@
 # @see cwt/bootstrap.sh
 #
 
-global PROJECT_DOCROOT "[default]=$PWD"
-global APP_DOCROOT "[default]=$PROJECT_DOCROOT/web"
+global PROJECT_DOCROOT "[default]=$PWD [help]='Absolute path to project instance. All scripts MUST be run from this dir. No trailing slash.'"
+global APP_DOCROOT "[default]=$PROJECT_DOCROOT/web [help]='The application may have its \"entry point\" in a different dir than PROJECT_DOCROOT. It could be a folder accessible from the web.'"
 
 # [optional] Set these values for applications having their own separate repo
 # in order to benefit from the automatic instanciation and Git hooks integration
 # features provided by CWT core by default (overridable).
 # @see cwt/git/init.hook.sh
-global APP_GIT_ORIGIN
-global APP_GIT_WORK_TREE "[default]=$APP_DOCROOT"
+global APP_GIT_ORIGIN "[help]='Optional (leave blank to skip). Ex: git@my-git-origin.org:my-git-account/cwt.git. Allows projects to have their own separate repo. If set, then by default \"instance init\" will clone that repo (once) and a default selection of Git hooks will be overwritten to trigger CWT hooks.'"
+global APP_GIT_WORK_TREE "[ifnot-APP_GIT_ORIGIN]='' [default]=$APP_DOCROOT [help]='Some applications might contain APP_DOCROOT in their versionned sources. This global is the path of the git work tree (if different).'"
 
-global INSTANCE_TYPE "[default]=dev"
+global INSTANCE_TYPE "[default]=dev [help]='E.g. dev, stage, prod... It is used as the default variant for hook triggers not defining any.'"
 global INSTANCE_DOMAIN "[default]='$(u_instance_domain)'"
-global PROVISION_USING "[default]=docker-compose"
-global HOST_TYPE "[default]=local"
+global PROVISION_USING "[default]=docker-compose [help]='Generic differenciator used by many hooks. It does not have to be explicitly named after the host provisioning tool used. It could be a distinction allowing a wider variety of implementations for the same project (~ additional isolation).'"
+global HOST_TYPE "[default]=local [help]='Idem. E.g. local, remote...'"
 global HOST_OS "$(u_host_os)"
 
 # Path to custom scripts ~ commonly automated processes. CWT will also use this
 # path to look for overrides and complements.
 # @see u_autoload_override()
 # @see u_autoload_get_complement()
-global PROJECT_SCRIPTS "[default]=scripts"
+global PROJECT_SCRIPTS "[default]=scripts [help]='Path to custom scripts ~ commonly automated processes. CWT will also use this path to look for overrides and complements (alteration mecanisms).'"
 
 # [optional] Provide additional custom makefile includes, and short subjects
 # or actions replacements used for generating Makefile task names.
