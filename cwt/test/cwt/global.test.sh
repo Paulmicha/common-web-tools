@@ -26,8 +26,14 @@
 #
 oneTimeSetUp() {
   local s
+  local s_upper
+
   for s in $CWT_SUBJECTS; do
-    touch "cwt/$s/global.vars.sh"
+    u_str_uppercase "$s" 's_upper'
+    cat > "cwt/$s/global.vars.sh" <<EOF
+#!/usr/bin/env bash
+global NFTCWTGEVHNC_VAR_CWT_$s_upper 'test'
+EOF
 
     # Failsafe : cannot carry on if touch did not complete without error.
     if [[ $? -ne 0 ]]; then
@@ -78,12 +84,30 @@ EOF
 # Does the initial aggregation process work ?
 #
 test_cwt_global_aggregate() {
-  local inc
   local global_lookup_paths=''
+  local p_cwtii_dry_run=1
+  local p_cwtii_yes=1
 
-  # TODO [wip] This is not possible to test the same way as cwt/test/cwt/hook.test.sh
-  # u_global_lookup_paths
-  # assertTrue 'Directory missing (creation test failed)' "[ -d '_cwt_dir_test' ]"
+  unset GLOBALS
+  declare -A GLOBALS
+  GLOBALS_COUNT=0
+  GLOBALS_UNIQUE_NAMES=()
+  GLOBALS_UNIQUE_KEYS=()
+
+  u_global_aggregate
+  u_global_debug
+
+  local s
+  local s_upper
+  local s_test_val
+  for s in $CWT_SUBJECTS; do
+    u_str_uppercase "$s" 's_upper'
+    eval "s_test_val=\"\$$NFTCWTGEVHNC_VAR_CWT_$s_upper\""
+    assertEquals "Value of NFTCWTGEVHNC_VAR_CWT_$s_upper is missing or incorrect." "test" "$s_test_val"
+  done
+
+  assertEquals 'Value of NFTCWTGEVHNC_VAR_1 is missing or incorrect.' "test" "$NFTCWTGEVHNC_VAR_1"
+  assertEquals 'Value of NFTCWTGEVHNC_APP_VAR_1 is missing or incorrect.' "test" "$NFTCWTGEVHNC_APP_VAR_1"
 }
 
 ##

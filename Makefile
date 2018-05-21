@@ -9,7 +9,7 @@
 # It provides the following tasks out of the box for all project instances :
 # - [default] 'init': the 1st common step necessary to actually make CWT & its
 #   extensions useful;
-# - 'hook-call', a convenience wrapper to CWT hook() calls;
+# - 'hook', a convenience wrapper to CWT hook() calls;
 # - 'hook-debug', the same except it will just print out the lookup paths.
 #   Useful for looking up positive matches to then provide overrides and/or
 #   complements;
@@ -32,7 +32,7 @@
 #   make hook-debug ms s:instance a:stop v:PROVISION_USING HOST_TYPE
 #
 #   # Trigger "instance start" manually :
-#   make hook-call s:instance a:start
+#   make hook s:instance a:start
 #
 #   # Print lookup paths for "instance start" using PROVISION_USING variant :
 #   make hook-debug s:instance a:start v:PROVISION_USING
@@ -46,13 +46,16 @@
 -include cwt/env/current/default.mk
 -include $(CWT_MAKE_INC)
 
-.PHONY: default init hook-call hook-debug globals-lp
+.PHONY: default init init-debug hook hook-debug globals-lp
 default: init
 
 init:
 	@ cwt/instance/init.make.sh $(filter-out $@,$(MAKECMDGOALS))
 
-hook-call:
+init-debug:
+	@ cwt/instance/init.make.sh -d -r $(filter-out $@,$(MAKECMDGOALS))
+
+hook:
 	@ cwt/instance/hook.make.sh $(filter-out $@,$(MAKECMDGOALS))
 
 hook-debug:

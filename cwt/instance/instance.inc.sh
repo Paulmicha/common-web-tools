@@ -85,7 +85,7 @@ u_instance_init() {
   # Trigger pre-init (optional) extra processes.
   hook -p 'pre' -a 'init'
 
-  # (Re)start dependencies and env vars aggregation.
+  # (Re)start global vars aggregation.
   unset GLOBALS
   declare -A GLOBALS
   GLOBALS_COUNT=0
