@@ -25,11 +25,6 @@ u_global_write() {
     return 1
   fi
 
-  if [[ $p_cwtii_dry_run -eq 1 ]]; then
-    u_global_debug
-    return
-  fi
-
   echo "Writing global (env) vars to cwt/env/current/global.vars.sh ..."
 
   # (Re)init destination file (make empty).
@@ -232,7 +227,7 @@ u_global_assign_value() {
     fi
 
     if [[ -n "$default_val" ]]; then
-      eval "read -p \"-> Leave blank to use '$default_val' : \" $p_var"
+      eval "read -p \"-> Enter $p_var value. Leave blank to use the default value '$default_val' : \" $p_var"
     else
       eval "read -p \"-> Enter $p_var value : \" $p_var"
     fi
@@ -357,8 +352,12 @@ global() {
           # altogether if the depending variable's value does not match the one
           # provided (matching using operator provided as a prefix).
           if-*|ifnot-*)
-            local depending_var="${key:3}"
+            local depending_var
+            local depending_var_split_arr
             local depending_value
+
+            u_str_split1 'depending_var_split_arr' "$key" '-'
+            depending_var="${depending_var_split_arr[1]}"
 
             u_str_sanitize_var_name "$depending_var" 'depending_var'
             depending_value=$(eval "echo \"\$$depending_var\"")

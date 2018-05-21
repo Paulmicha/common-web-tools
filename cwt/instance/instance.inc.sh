@@ -97,6 +97,17 @@ u_instance_init() {
   . cwt/env/global.vars.sh
 
   u_global_aggregate
+
+  # If we want to test instance init (when "dry run" flag is set), nothing is
+  # written and hooks are replaced by a prefixed variant.
+  if [[ $p_cwtii_dry_run -eq 1 ]]; then
+    u_global_debug
+    hook -s 'app instance' -a 'ensure_dirs_exist' -p 'dry_run'
+    hook -s 'app instance' -a 'set_fsop' -p 'dry_run'
+    hook -a 'init' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE' -p 'dry_run'
+    return
+  fi
+
   u_global_write
 
   u_instance_write_mk
