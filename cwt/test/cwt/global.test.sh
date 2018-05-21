@@ -12,6 +12,9 @@
 # - nftcwtgevhnc = name for testing CWT global env vars hopefully not colliding
 # - nftcwtgevdehnc = name for testing CWT global env vars dummy extension hopefully not colliding
 #
+# TODO test the different globals keys.
+# @see global() in cwt/utilities/global.sh
+#
 # @example
 #   cwt/test/cwt/global.test.sh
 #
@@ -87,6 +90,7 @@ test_cwt_global_aggregate() {
   local global_lookup_paths=''
   local p_cwtii_dry_run=1
   local p_cwtii_yes=1
+  local test_cwt_global_aggregate=1
 
   unset GLOBALS
   declare -A GLOBALS
@@ -95,14 +99,14 @@ test_cwt_global_aggregate() {
   GLOBALS_UNIQUE_KEYS=()
 
   u_global_aggregate
-  u_global_debug
+  # u_global_debug
 
   local s
   local s_upper
   local s_test_val
   for s in $CWT_SUBJECTS; do
     u_str_uppercase "$s" 's_upper'
-    eval "s_test_val=\"\$$NFTCWTGEVHNC_VAR_CWT_$s_upper\""
+    eval "s_test_val=\"\$NFTCWTGEVHNC_VAR_CWT_$s_upper\""
     assertEquals "Value of NFTCWTGEVHNC_VAR_CWT_$s_upper is missing or incorrect." "test" "$s_test_val"
   done
 

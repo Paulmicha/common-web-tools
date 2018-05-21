@@ -180,10 +180,11 @@ u_global_foreach() {
 #
 # @param 1 String : global variable name.
 #
-# @requires the following globals in calling scope :
-# - $p_cwtii_yes
+# @requires or uses the following globals in calling scope :
 # - $GLOBALS
-# - $P_MY_VAR_NAME (replacing 'MY_VAR_NAME' with the actual var name)
+# - $p_cwtii_yes
+# - $p_cwtii_my_var_name (replacing 'MY_VAR_NAME' with the actual var name)
+# - $test_cwt_global_aggregate
 #
 # @see global()
 #
@@ -196,8 +197,12 @@ u_global_assign_value() {
 
   u_str_sanitize_var_name "$p_var" 'p_var'
 
-  eval "export $p_var"
-  eval "unset $p_var"
+  # Support tests.
+  # @see cwt/test/cwt/global.test.sh
+  if [[ $test_cwt_global_aggregate -ne 1 ]]; then
+    eval "export $p_var"
+    eval "unset $p_var"
+  fi
 
   local arg_val_var_name="p_cwtii_$p_var"
   u_str_lowercase "$arg_val_var_name" 'arg_val_var_name'
@@ -213,7 +218,7 @@ u_global_assign_value() {
     eval "$p_var='${GLOBALS[$p_var|value]}'"
 
   # List or "pile" of values (space-separated string).
-  elif [[ -n "${GLOBALS[$p_var|values]}" ]]; then
+  elif [[ -n "${GLOBALS[$p_var|values]}" ]] && [[ $test_cwt_global_aggregate -ne 1 ]]; then
     multi_values=$(u_str_trim "${GLOBALS[$p_var|values]}")
     eval "$p_var='$multi_values'"
 
