@@ -6,5 +6,7 @@
 # Reacts to "instance stop" for project instances using 'docker-compose' as
 # provisioning method ($PROVISION_USING).
 #
+# @see cwt/extensions/docker-compose/instance/instance.inc.sh
+#
 
-docker-compose stop
+u_dc_instance_stop

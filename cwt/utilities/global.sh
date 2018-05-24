@@ -12,7 +12,9 @@
 ##
 # Writes global vars readonly declarations for current instance.
 #
-# Result (git-ignored) : cwt/env/current/global.vars.sh
+# Resulting generated files (git-ignored) :
+#   - .env
+#   - cwt/env/current/global.vars.sh
 #
 # @see u_instance_init()
 #
@@ -27,7 +29,8 @@ u_global_write() {
 
   echo "Writing global (env) vars to cwt/env/current/global.vars.sh ..."
 
-  # (Re)init destination file (make empty).
+  # (Re)init destination files (make empty).
+  echo -n '' > .env
   cat > cwt/env/current/global.vars.sh <<'EOF'
 #!/usr/bin/env bash
 
@@ -49,6 +52,11 @@ EOF
     global_name="${evn_arr[1]}"
     eval "[[ -z \"\$$global_name\" ]] && echo \"readonly $global_name\"=\'\' >> cwt/env/current/global.vars.sh"
     eval "[[ -n \"\$$global_name\" ]] && echo \"readonly $global_name=\\\"\$$global_name\\\"\" >> cwt/env/current/global.vars.sh"
+
+    # Also write globals to git-ignored '.env' file for Makefile and other tools
+    # like docker-compose.
+    eval "[[ -z \"\$$global_name\" ]] && echo \"$global_name\"= >> .env"
+    eval "[[ -n \"\$$global_name\" ]] && echo \"$global_name=\$$global_name\" >> .env"
   done
 
   echo "Writing global (env) vars to cwt/env/current/global.vars.sh : done."

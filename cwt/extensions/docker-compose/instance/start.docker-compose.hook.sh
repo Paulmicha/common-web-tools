@@ -6,5 +6,7 @@
 # Reacts to "instance start" for project instances using 'docker-compose' as
 # provisioning method ($PROVISION_USING).
 #
+# @see cwt/extensions/docker-compose/instance/instance.inc.sh
+#
 
-. cwt/extensions/docker-compose/stack/restart.sh
+u_dc_instance_start

@@ -35,7 +35,7 @@ global APP_GIT_ORIGIN "[help]='Optional. Ex: git@my-git-origin.org:my-git-accoun
 global APP_GIT_WORK_TREE "[ifnot-APP_GIT_ORIGIN]='' [default]=$APP_DOCROOT [help]='Some applications might contain APP_DOCROOT in their versionned sources. This global is the path of the git work tree (if different).'"
 
 global INSTANCE_TYPE "[default]=dev [help]='E.g. dev, stage, prod... It is used as the default variant for hook triggers not defining any.'"
-global INSTANCE_DOMAIN "[default]='$(u_instance_domain)'"
+global INSTANCE_DOMAIN "[default]='$(u_instance_domain)' [help]='This value is used to identify different project instances and MUST be unique per host.'"
 global PROVISION_USING "[default]=docker-compose [help]='Generic differenciator used by many hooks. It does not have to be explicitly named after the host provisioning tool used. It could be any distinction allowing a wider variety of implementations for the same project (~ additional isolation).'"
 global HOST_TYPE "[default]=local [help]='Idem. E.g. local, remote...'"
 global HOST_OS "$(u_host_os)"

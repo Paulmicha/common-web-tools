@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ##
-# Docker-compose stack-related utility functions.
+# Docker-compose utility functions.
 #
 # This file is sourced during core CWT bootstrap.
 # @see cwt/bootstrap.sh
@@ -21,7 +21,7 @@
 #
 # @see cwt/extensions/docker-compose/global.vars.sh
 #
-u_stack_template() {
+u_dc_template() {
   local f
   local hook_most_specific_dry_run_match=''
 
