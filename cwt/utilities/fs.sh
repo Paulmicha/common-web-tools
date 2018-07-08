@@ -10,6 +10,50 @@
 #
 
 ##
+# Recursively gets the last N most recent file(s) in given path.
+#
+# @param 1 [optional] String base path (defaults to '.').
+# @param 2 [optional] Number number of most recent files to get (defaults to 1).
+#
+# @see https://stackoverflow.com/questions/4561895/how-to-recursively-find-the-latest-modified-file-in-a-directory
+#
+# @example
+#   most_recent="$(u_fs_get_most_recent)"
+#   echo "$most_recent"
+#
+#   # Gets the last modified file in path 'cwt' :
+#   most_recent="$(u_fs_get_most_recent 'cwt')"
+#   echo "$most_recent"
+#
+#   # Gets the last 3 files modified in path 'cwt' :
+#   most_recent="$(u_fs_get_most_recent 'cwt' 3)"
+#   echo "$most_recent"
+#
+u_fs_get_most_recent() {
+  local p_path="$1"
+  local p_max=$2
+
+  if [[ -z "$p_path" ]]; then
+    p_path='.'
+  fi
+  if [[ -z "$p_max" ]]; then
+    p_max=1
+  fi
+
+  # TODO Mac OSX ?
+  # find "$p_path" -type f -print0 \
+  #   | xargs -0 stat -f "%m %N" \
+  #   | sort -rn \
+  #   | head -1 \
+  #   | cut -f2- -d" "
+
+  find "$p_path" -type f -printf '%T@ %p\n' \
+    | sort -rn \
+    | head -$p_max \
+    | cut -f2- -d" "
+}
+
+##
 # Reads file contents (without using subshell).
 #
 # @see https://stackoverflow.com/questions/7427262/how-to-read-a-file-into-a-variable-in-shell

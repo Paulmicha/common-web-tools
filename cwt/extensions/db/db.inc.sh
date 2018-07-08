@@ -277,21 +277,32 @@ u_db_restore() {
 ##
 # Empties database + imports the last dump file.
 #
-# @param 1 String : the dump file path.
-# @param 2 [optional] String : $DB_NAME override.
+# @see u_fs_get_most_recent()
+# @requires globals CWT_DB_DUMPS_BASE_PATH in calling scope.
+#
+# @param 1 [optional] String : $DB_NAME override.
 #
 # @example
 #   u_db_restore_last
 #   u_db_restore_last 'custom_db_name'
 #
 u_db_restore_last() {
-  local p_db_name_override="$1"
+  if [[ -z "$CWT_DB_DUMPS_BASE_PATH" ]]; then
+    echo >&2
+    echo "Error in u_db_restore_last() - $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_BASE_PATH' is undefined." >&2
+    echo "Current instance must be (re)initialized with the 'db' extension enabled." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    exit 1
+  fi
 
-  # TODO [wip] get last dump path & restore it.
+  u_db_restore "$(u_fs_get_most_recent $CWT_DB_DUMPS_BASE_PATH)" "$@"
 }
 
 ##
 # Creates a routine DB dump backup + progressively deletes old DB dumps.
+#
+# @requires globals CWT_DB_DUMPS_BASE_PATH in calling scope.
 #
 # @param 1 [optional] String : 'no-purge' to prevent automatic deletion of old
 #   backups.
@@ -304,8 +315,39 @@ u_db_restore_last() {
 #   u_db_restore_last 'no-purge' 'custom_db_name'
 #
 u_db_routine_backup() {
-  local p_db_name_override="$1"
+  if [[ -z "$CWT_DB_DUMPS_BASE_PATH" ]]; then
+    echo >&2
+    echo "Error in u_db_routine_backup() - $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_BASE_PATH' is undefined." >&2
+    echo "Current instance must be (re)initialized with the 'db' extension enabled." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    exit 1
+  fi
 
-  # TODO [wip] get last dump path & export it.
+  local p_no_purge="$1"
+  local p_db_name_override="$2"
+  local db_routine_new_backup_file
+  local db_routine_new_backup_dir
+
+  u_db_get_credentials
+  db_routine_new_backup_file="${CWT_DB_DUMPS_BASE_PATH}/local/$(date +"%Y/%m/%d/%H-%M-%S").$DB_ID.sql"
+  db_routine_new_backup_dir="${db_routine_new_backup_file%${db_routine_new_backup_file##*/}}"
+
+  if [[ ! -d "$db_routine_new_backup_dir" ]]; then
+    mkdir -p "$db_routine_new_backup_dir"
+
+    if [[ $? -ne 0 ]]; then
+      echo >&2
+      echo "Error in u_db_routine_backup() - $BASH_SOURCE line $LINENO: failed to create new backup dir '$db_routine_new_backup_dir'." >&2
+      echo "-> Aborting (2)." >&2
+      echo >&2
+      exit 2
+    fi
+  fi
+
+  u_db_export "$db_routine_new_backup_file"
+
   # TODO [wip] unless 'no-purge' option is set, implement old dumps cleanup.
+  # If we had time, this could be implemented with something like :
+  # global CWT_DB_BAK_ROUTINE_PURGE "[default]='1m:5,3m:3,6m:2,1y:1' [help]='Custom syntax specifying how many dump files to keep by age. Comma-separated list of quotas - ex: 1m:5 = for backups older than 1 month, keep max 5 files in that month.'"
 }
