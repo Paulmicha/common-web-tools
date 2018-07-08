@@ -1,4 +1,7 @@
 # CWT extensions
 
-This folder contains CWT extensions (each subfolder is an extension). Some are
-included by default as example, and can be removed (or git-ignored) if not used.
+Every folder in this path is an extension, but not their subfolders.
+
+In order to disable extensions without having to delete or move their folder,
+add one per line in the dotfile `.cwt_extensions_ignore` (to be placed in this
+directory, i.e. `cwt/extensions/.cwt_extensions_ignore`).
