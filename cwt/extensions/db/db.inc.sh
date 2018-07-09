@@ -182,11 +182,14 @@ u_db_create() {
 # @see cwt/extensions/mysql
 #
 # Important notes : implementations of the hook -s 'db' -a 'import' MUST use the
-# following variable in calling scope as output path (resulting file) :
+# following variable in calling scope as input path (source file) :
+#
 # @var db_dump_file
+#
 # This function does not implement the import of the "raw" DB dump file, but
 # it always checks if it must be previously uncompressed (detects the ".tgz"
 # extension).
+#
 # TODO [evol] handle other compression formats ?
 #
 # @param 1 String : the dump file path.
@@ -238,7 +241,7 @@ u_db_import() {
     fi
 
     # Decompressed file MUST be stored in the $db_dump_file var, as expected by
-    # implementations of the hook -s 'db' -a 'import'.
+    # implementations of the hook -s 'db' -a 'import' below.
     db_dump_file="${db_dump_file%.$db_dump_file_ext}"
 
     # In this case, we would have for ex. :
@@ -256,6 +259,7 @@ u_db_import() {
     fi
   esac
 
+  # Implementations MUST use var $db_dump_file as input path (source file).
   u_hook_most_specific -s 'db' -a 'import' -v 'PROVISION_USING'
 
   # Remove uncompressed version of the dump when we're done.
@@ -280,10 +284,13 @@ u_db_import() {
 #
 # Important notes : implementations of the hook -s 'db' -a 'export' MUST use the
 # following variable in calling scope as output path (resulting file) :
+#
 # @var db_dump_file
+#
 # This function does not implement the creation of the "raw" DB dump file, but
 # it always compresses it immediately (appends ".tgz" to given file path).
-# TODO make compression optional ?
+#
+# TODO [evol] make compression optional ?
 #
 # @param 1 String : the dump file path.
 # @param 2 [optional] String : $DB_NAME override.
