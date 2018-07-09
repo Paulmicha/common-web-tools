@@ -10,7 +10,10 @@
 ##
 # Gets DB credentials (opt-out available when CWT_DB_MODE = 'none').
 #
-# @requires globals INSTANCE_DOMAIN & CWT_DB_MODE in calling scope.
+# @requires the following globals in calling scope :
+# - INSTANCE_DOMAIN
+# - CWT_DB_MODE
+# - CWT_DB_DUMPS_BASE_PATH
 #
 # @exports DB_ID : underscore-separated string to identify the database, also
 #   used "as is" for the DB name, username and password by default in 'auto' mode.
@@ -24,6 +27,15 @@
 #   DB credentials vars are already exported in current shell scope.
 #
 u_db_get_credentials() {
+  if [[ -z "$CWT_DB_DUMPS_BASE_PATH" ]]; then
+    echo >&2
+    echo "Error in u_db_get_credentials() - $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_BASE_PATH' is undefined." >&2
+    echo "Current instance must be (re)initialized with the 'db' extension enabled." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    exit 1
+  fi
+
   local p_db_id="$1"
   local p_force_reload="$2"
   local reg_val
@@ -37,6 +49,13 @@ u_db_get_credentials() {
   if [[ -z "$p_db_id" ]]; then
     # Note : assumes every instance has a distinct domain, even "local dev" ones
     # if cwt/extensions/file_registry is used as registry storage backend.
+    if [[ -z "$INSTANCE_DOMAIN" ]]; then
+      echo >&2
+      echo "Error in u_db_routine_backup() - $BASH_SOURCE line $LINENO: the required global 'INSTANCE_DOMAIN' is undefined." >&2
+      echo "-> Aborting (2)." >&2
+      echo >&2
+      exit 2
+    fi
     p_db_id="$INSTANCE_DOMAIN";
   fi
 
@@ -191,11 +210,18 @@ u_db_import() {
 }
 
 ##
-# [abstract] Exports database to a dump file.
+# [abstract] Exports database to a compressed (tgz) dump file.
 #
 # "Abstract" means that this extension doesn't provide any actual implementation
 # for this functionality. It is necessary to use an extension which does. E.g. :
 # @see cwt/extensions/mysql
+#
+# Important notes : implementations of the hook -s 'db' -a 'export' MUST use the
+# following variable in calling scope as output path (resulting file) :
+# @var db_dump_file
+# This function does not implement the creation of the "raw" DB dump file, but
+# it always compresses it immediately (appends ".tgz" to given file path).
+# TODO make compression optional ?
 #
 # @param 1 String : the dump file path.
 # @param 2 [optional] String : $DB_NAME override.
@@ -207,6 +233,8 @@ u_db_import() {
 u_db_export() {
   local p_dump_file_path="$1"
   local p_db_name_override="$2"
+  local db_dump_dir
+  local db_dump_file
 
   u_db_get_credentials
 
@@ -214,7 +242,62 @@ u_db_export() {
     DB_NAME="$p_db_name_override"
   fi
 
+  # TODO [minor] sanitize $p_dump_file_path ?
+  db_dump_file="$p_dump_file_path"
+  db_dump_dir="${db_dump_file%/${db_dump_file##*/}}"
+
+  # The "export" action should only have to create a new file. If it already
+  # exists, we consider it an error. This case should be explicitly dealt with
+  # beforehand (e.g. existing file deleted or moved).
+  if [[ -f "$db_dump_file" ]]; then
+    echo >&2
+    echo "Error in u_db_export() - $BASH_SOURCE line $LINENO: destination file '$db_dump_file' already exists." >&2
+    echo "-> Aborting (2)." >&2
+    echo >&2
+    exit 2
+  fi
+
+  if [[ ! -d "$db_dump_dir" ]]; then
+    mkdir -p "$db_dump_dir"
+
+    if [[ $? -ne 0 ]]; then
+      echo >&2
+      echo "Error in u_db_export() - $BASH_SOURCE line $LINENO: failed to create new backup dir '$db_dump_dir'." >&2
+      echo "-> Aborting (1)." >&2
+      echo >&2
+      exit 1
+    fi
+  fi
+
+  # Implementations MUST use var $db_dump_file as output path (resulting file).
   u_hook_most_specific -s 'db' -a 'export' -v 'PROVISION_USING'
+
+  if [ ! -f "$db_dump_file" ]; then
+    echo >&2
+    echo "Error in u_db_export() - $BASH_SOURCE line $LINENO: file '$db_dump_file' does not exist." >&2
+    echo "-> Aborting (2)." >&2
+    echo >&2
+    exit 2
+  fi
+
+  # Compress & remove uncompressed dump file.
+  tar czf "$db_dump_file.tgz" -C "$db_dump_dir" "$db_dump_file"
+  if [[ $? -ne 0 ]]; then
+    echo >&2
+    echo "Error in u_db_export() - $BASH_SOURCE line $LINENO: failed to compress dump file '$db_dump_file'." >&2
+    echo "-> Aborting (3)." >&2
+    echo >&2
+    exit 3
+  fi
+
+  rm "$db_dump_file"
+  if [[ $? -ne 0 ]]; then
+    echo >&2
+    echo "Error in u_db_export() - $BASH_SOURCE line $LINENO: failed to remove uncompressed dump file '$db_dump_file'." >&2
+    echo "-> Aborting (4)." >&2
+    echo >&2
+    exit 4
+  fi
 }
 
 ##
@@ -275,7 +358,7 @@ u_db_restore() {
 }
 
 ##
-# Empties database + imports the last dump file.
+# Empties database + imports the last (= most recent) dump file available.
 #
 # @see u_fs_get_most_recent()
 # @requires globals CWT_DB_DUMPS_BASE_PATH in calling scope.
@@ -287,15 +370,6 @@ u_db_restore() {
 #   u_db_restore_last 'custom_db_name'
 #
 u_db_restore_last() {
-  if [[ -z "$CWT_DB_DUMPS_BASE_PATH" ]]; then
-    echo >&2
-    echo "Error in u_db_restore_last() - $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_BASE_PATH' is undefined." >&2
-    echo "Current instance must be (re)initialized with the 'db' extension enabled." >&2
-    echo "-> Aborting (1)." >&2
-    echo >&2
-    exit 1
-  fi
-
   u_db_restore "$(u_fs_get_most_recent $CWT_DB_DUMPS_BASE_PATH)" "$@"
 }
 
@@ -315,35 +389,12 @@ u_db_restore_last() {
 #   u_db_restore_last 'no-purge' 'custom_db_name'
 #
 u_db_routine_backup() {
-  if [[ -z "$CWT_DB_DUMPS_BASE_PATH" ]]; then
-    echo >&2
-    echo "Error in u_db_routine_backup() - $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_BASE_PATH' is undefined." >&2
-    echo "Current instance must be (re)initialized with the 'db' extension enabled." >&2
-    echo "-> Aborting (1)." >&2
-    echo >&2
-    exit 1
-  fi
-
   local p_no_purge="$1"
   local p_db_name_override="$2"
   local db_routine_new_backup_file
-  local db_routine_new_backup_dir
 
   u_db_get_credentials
   db_routine_new_backup_file="${CWT_DB_DUMPS_BASE_PATH}/local/$(date +"%Y/%m/%d/%H-%M-%S").$DB_ID.sql"
-  db_routine_new_backup_dir="${db_routine_new_backup_file%${db_routine_new_backup_file##*/}}"
-
-  if [[ ! -d "$db_routine_new_backup_dir" ]]; then
-    mkdir -p "$db_routine_new_backup_dir"
-
-    if [[ $? -ne 0 ]]; then
-      echo >&2
-      echo "Error in u_db_routine_backup() - $BASH_SOURCE line $LINENO: failed to create new backup dir '$db_routine_new_backup_dir'." >&2
-      echo "-> Aborting (2)." >&2
-      echo >&2
-      exit 2
-    fi
-  fi
 
   u_db_export "$db_routine_new_backup_file"
 

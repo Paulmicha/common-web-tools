@@ -12,6 +12,10 @@
 # to use an extension that does. E.g. :
 # @see cwt/extensions/mysql
 #
+# Important note : implementations of the hook -s 'db' -a 'export' MUST use the
+# following variable in calling scope as output path (resulting file) :
+# @var db_dump_file
+#
 # @example
 #   cwt/extensions/db/db/export.sh '/path/to/dump/file.sql'
 #   cwt/extensions/db/db/export.sh '/path/to/dump/file.sql' 'custom_db_name'
