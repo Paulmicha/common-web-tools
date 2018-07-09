@@ -181,6 +181,14 @@ u_db_create() {
 # for this functionality. It is necessary to use an extension which does. E.g. :
 # @see cwt/extensions/mysql
 #
+# Important notes : implementations of the hook -s 'db' -a 'import' MUST use the
+# following variable in calling scope as output path (resulting file) :
+# @var db_dump_file
+# This function does not implement the import of the "raw" DB dump file, but
+# it always checks if it must be previously uncompressed (detects the ".tgz"
+# extension).
+# TODO [evol] handle other compression formats ?
+#
 # @param 1 String : the dump file path.
 # @param 2 [optional] String : $DB_NAME override.
 #
@@ -191,6 +199,10 @@ u_db_create() {
 u_db_import() {
   local p_dump_file_path="$1"
   local p_db_name_override="$2"
+  local db_dump_dir
+  local db_dump_file
+  local db_dump_file_ext
+  local db_dump_is_compressed=0
 
   if [[ ! -f "$p_dump_file_path" ]]; then
     echo >&2
@@ -206,7 +218,48 @@ u_db_import() {
     DB_NAME="$p_db_name_override"
   fi
 
+  # TODO [minor] sanitize $p_dump_file_path ?
+  db_dump_file="$p_dump_file_path"
+  db_dump_file_ext="${db_dump_file##*.}"
+
+  # If we detect the 'tgz' extension, uncompress the dump file before triggering
+  # the "import" action.
+  # @see u_db_export()
+  case "$db_dump_file_ext" in 'tgz')
+    db_dump_is_compressed=1
+    local db_dump_file_dc
+    db_dump_file_dc="${db_dump_file%.$db_dump_file_ext}"
+
+    # In this case, we would have for ex. :
+    # db_dump_dir = '/path/to/dumps/local/2018/07/09'
+    # db_dump_file = '/path/to/dumps/local/2018/07/09/10-32-42.my_project.sql.tgz'
+    # db_dump_file_ext = 'tgz'
+    # db_dump_file_dc = '/path/to/dumps/local/2018/07/09/10-32-42.my_project.sql'
+
+    tar xzf "$db_dump_file" -C "$db_dump_dir"
+    if [[ $? -ne 0 ]]; then
+      echo >&2
+      echo "Error in u_db_import() - $BASH_SOURCE line $LINENO: failed to uncompress dump file '$db_dump_file'." >&2
+      echo "-> Aborting (2)." >&2
+      echo >&2
+      exit 2
+    fi
+
+    if [[ ! -f "$db_dump_file_dc" ]]; then
+      echo >&2
+      echo "Error in u_db_import() - $BASH_SOURCE line $LINENO: missing uncompressed dump file '$db_dump_file_dc'." >&2
+      echo "-> Aborting (3)." >&2
+      echo >&2
+      exit 3
+    fi
+  esac
+
   u_hook_most_specific -s 'db' -a 'import' -v 'PROVISION_USING'
+
+  # Remove uncompressed version of the dump when we're done.
+  if [[ $db_dump_is_compressed -eq 1 ]]; then
+
+  fi
 }
 
 ##
