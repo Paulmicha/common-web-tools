@@ -227,14 +227,6 @@ u_db_import() {
   # @see u_db_export()
   case "$db_dump_file_ext" in 'tgz')
     db_dump_is_compressed=1
-    local db_dump_file_dc
-    db_dump_file_dc="${db_dump_file%.$db_dump_file_ext}"
-
-    # In this case, we would have for ex. :
-    # db_dump_dir = '/path/to/dumps/local/2018/07/09'
-    # db_dump_file = '/path/to/dumps/local/2018/07/09/10-32-42.my_project.sql.tgz'
-    # db_dump_file_ext = 'tgz'
-    # db_dump_file_dc = '/path/to/dumps/local/2018/07/09/10-32-42.my_project.sql'
 
     tar xzf "$db_dump_file" -C "$db_dump_dir"
     if [[ $? -ne 0 ]]; then
@@ -245,9 +237,19 @@ u_db_import() {
       exit 2
     fi
 
-    if [[ ! -f "$db_dump_file_dc" ]]; then
+    # Decompressed file MUST be stored in the $db_dump_file var, as expected by
+    # implementations of the hook -s 'db' -a 'import'.
+    db_dump_file="${db_dump_file%.$db_dump_file_ext}"
+
+    # In this case, we would have for ex. :
+    # db_dump_dir = '/path/to/dumps/local/2018/07/09'
+    # db_dump_file = '/path/to/dumps/local/2018/07/09/10-32-42.my_project.sql.tgz'
+    # db_dump_file_ext = 'tgz'
+    # db_dump_file_dc = '/path/to/dumps/local/2018/07/09/10-32-42.my_project.sql'
+
+    if [[ ! -f "$db_dump_file" ]]; then
       echo >&2
-      echo "Error in u_db_import() - $BASH_SOURCE line $LINENO: missing uncompressed dump file '$db_dump_file_dc'." >&2
+      echo "Error in u_db_import() - $BASH_SOURCE line $LINENO: missing uncompressed dump file '$db_dump_file'." >&2
       echo "-> Aborting (3)." >&2
       echo >&2
       exit 3
@@ -258,7 +260,14 @@ u_db_import() {
 
   # Remove uncompressed version of the dump when we're done.
   if [[ $db_dump_is_compressed -eq 1 ]]; then
-
+    rm "$db_dump_file"
+    if [[ $? -ne 0 ]]; then
+      echo >&2
+      echo "Error in u_db_import() - $BASH_SOURCE line $LINENO: failed to remove uncompressed dump file '$db_dump_file'." >&2
+      echo "-> Aborting (4)." >&2
+      echo >&2
+      exit 4
+    fi
   fi
 }
 
