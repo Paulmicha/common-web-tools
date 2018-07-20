@@ -15,11 +15,21 @@
 # - CWT_DB_MODE
 # - CWT_DB_DUMPS_BASE_PATH
 #
-# @exports DB_ID : underscore-separated string to identify the database, also
-#   used "as is" for the DB name, username and password by default in 'auto' mode.
-# @exports DB_NAME : $DB_ID.
-# @exports DB_USERNAME : $DB_ID (truncated to satisfy the 16 characters limit).
-# @exports DB_PASSWORD : a random string generated once per instance + DB_ID.
+# @see cwt/extensions/db/global.vars.sh
+#
+# If CWT_DB_MODE is set to 'auto' or 'manual', the first call to this function
+# will generate *once* the following globals :
+#
+# @exports DB_ID - defaults to sanitized "$INSTANCE_DOMAIN".
+# @exports DB_NAME - defaults to "$DB_ID".
+# @exports DB_USERNAME - defaults to first 16 characters of DB_ID.
+# @exports DB_PASSWORD - defaults to 14 random characters.
+# @exports DB_HOST - defaults to 'localhost'.
+# @exports DB_PORT - defaults to '3306'.
+#
+# Subsequent calls to this function will read said values from registry.
+# @see cwt/instance/registry_set.sh
+# @see cwt/instance/registry_get.sh
 #
 # @param 1 [optional] String : unique identifier for requested DB (defaults to
 #   sanitized INSTANCE_DOMAIN global).

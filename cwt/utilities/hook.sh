@@ -197,13 +197,6 @@ hook() {
     echo >&2
     return 2
   fi
-  if [ -z "$actions" ]; then
-    echo >&2
-    echo "Error in $BASH_SOURCE line $LINENO: cannot trigger hook without any actions." >&2
-    echo "-> Aborting." >&2
-    echo >&2
-    return 3
-  fi
 
   # Apply filters.
   local filters='subjects actions prefixes variants'

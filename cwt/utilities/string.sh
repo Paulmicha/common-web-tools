@@ -202,6 +202,8 @@ u_str_uppercase() {
 ##
 # Escapes all slashes for use in 'sed' calls.
 #
+# TODO [opti] Rewrite without subshell.
+#
 # @see u_fs_change_line()
 #
 # @example
@@ -221,6 +223,8 @@ u_str_sed_escape() {
 
 ##
 # Appends a given value to a string only once.
+#
+# TODO [opti] Rewrite without subshell.
 #
 # @param 1 String : the value to append.
 # @param 2 String : to which str to append that value to.

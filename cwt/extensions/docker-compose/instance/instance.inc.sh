@@ -43,6 +43,20 @@ u_dc_instance_stop() {
 }
 
 ##
+# Builds containers.
+#
+# @see https://github.com/wodby/docker4drupal/blob/master/docker.mk
+#
+u_dc_instance_build() {
+  echo "Building $INSTANCE_DOMAIN containers ..."
+
+  docker-compose build --no-cache
+
+  echo "Building $INSTANCE_DOMAIN containers : done."
+  echo
+}
+
+##
 # Deletes containers and remove networks (except if external).
 #
 # @see https://docs.docker.com/compose/reference/down/

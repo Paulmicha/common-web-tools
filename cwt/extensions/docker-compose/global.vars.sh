@@ -13,7 +13,7 @@
 
 global DC_YML "[default]='$PROJECT_DOCROOT/docker-compose.yml' [help]='Specifies where the generated (& to be git-ignored) docker-compose.yml file will be (over)written.'"
 
-global DC_YML_VARIANTS "[default]='HOST_TYPE INSTANCE_TYPE' [help]='Determines which docker-compose.yml \"template\" will be used for current project instance.'"
+global DC_YML_VARIANTS "[default]='$HOST_TYPE $INSTANCE_TYPE' [help]='Determines which docker-compose.yml \"template\" will be used for current project instance.'"
 
 # [optional] Shorter generated make tasks names.
 # @see u_instance_task_name() in cwt/instance/instance.inc.sh

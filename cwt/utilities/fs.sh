@@ -321,19 +321,6 @@ u_fs_relative_path() {
 }
 
 ##
-# Prints bash script file absolute path (from where this function is called).
-#
-# @param 1 String : the bash script file - use ${BASH_SOURCE[0]} for the current
-#   (calling) file.
-#
-# @example
-#   FILE_ABS_PATH=$(u_fs_absolute_path ${BASH_SOURCE[0]})
-#
-u_fs_absolute_path() {
-  echo $(cd "$(dirname "$1")" && pwd)/$(basename "$1")
-}
-
-##
 # Adds or updates a single line in given file.
 #
 # NB : hasn't been tested when pattern matches several lines.

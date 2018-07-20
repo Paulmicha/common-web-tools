@@ -21,6 +21,9 @@
 #
 # @see cwt/extensions/docker-compose/global.vars.sh
 #
+# To list all the possible paths that can be used, use :
+# $ make hook-debug s:stack a:docker-compose c:yml v:DC_YML_VARIANTS
+#
 u_dc_template() {
   local f
   local hook_most_specific_dry_run_match=''
