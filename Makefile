@@ -39,6 +39,9 @@
 #   # Same but using more variants :
 #   make hook-debug s:instance a:start v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
 #
+#   # Trigger "test self_test" manually :
+#   make self-test
+#
 
 .DEFAULT_GOAL := init
 
@@ -46,7 +49,7 @@
 -include cwt/env/current/default.mk
 -include $(CWT_MAKE_INC)
 
-.PHONY: default init init-debug hook hook-debug globals-lp
+.PHONY: default init init-debug hook hook-debug globals-lp self-test
 default: init
 
 init:
@@ -63,6 +66,9 @@ hook-debug:
 
 globals-lp:
 	@ cwt/env/global_lookup_paths.make.sh
+
+self-test:
+	@ cwt/test/self_test.sh
 
 # Automatically append arguments to tasks calls.
 # @see https://stackoverflow.com/a/6273809/1826109

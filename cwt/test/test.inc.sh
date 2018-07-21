@@ -15,6 +15,8 @@
 # @requires that the folder contains files using the double extension pattern :
 # *.test.sh
 #
+# @param 1 String : path to folder containing test cases.
+#
 # @example
 #   u_test_batch_exec cwt/extensions/mysql/test/mysql
 #
@@ -32,7 +34,7 @@ u_test_batch_exec() {
   u_fs_file_list "$p_dir" '*.test.sh'
 
   for test_script in $file_list; do
-    echo "# Executing $test_script ..."
+    echo "# Executing $p_dir/$test_script ..."
 
     # Execute shunit2 test case.
     # See https://github.com/kward/shunit2
@@ -44,12 +46,32 @@ u_test_batch_exec() {
       echo "The test case '$test_script' did not pass" >&2
       echo "-> aborting (see details above)." >&2
       echo >&2
-      echo "# Executing $test_script : done."
+      echo "# Executing $p_dir/$test_script : done."
       echo
       break
     fi
 
-    echo "# Executing $test_script : done."
+    echo "# Executing $p_dir/$test_script : done."
     echo
   done
+}
+
+##
+# Tests if given program or alias is executable from current instance.
+#
+# @param 1 String : the program to test.
+# @return Int : 0 if OK, or 1 if program was not found or not executable.
+#
+# @example
+#   u_test_program_is_executable 'git'
+#
+u_test_program_is_executable() {
+  local p_program="$1"
+  local check=0
+
+  if ! [ -x "$(command -v $p_program)" ]; then
+    check=1
+  fi
+
+  return $check
 }

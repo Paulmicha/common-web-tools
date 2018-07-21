@@ -88,14 +88,14 @@ oneTimeSetUp() {
   fi
   touch "cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh"
   touch "cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$HOST_TYPE.hook.sh"
-  touch "cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.$HOST_TYPE.hook.sh"
+  touch "cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$HOST_TYPE.$INSTANCE_TYPE.hook.sh"
 
   # Prefix tests.
   touch "cwt/extensions/nftcwthdehnc/test/pre_nftcwthhnc_dry_run.hook.sh"
   touch "cwt/extensions/nftcwthdehnc/test/post_nftcwthhnc_dry_run.hook.sh"
   touch "cwt/extensions/nftcwthdehnc/test/post_nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh"
   touch "cwt/extensions/nftcwthdehnc/test/post_nftcwthhnc_dry_run.$HOST_TYPE.hook.sh"
-  touch "cwt/extensions/nftcwthdehnc/test/undo_nftcwthhnc_dry_run.$INSTANCE_TYPE.$HOST_TYPE.hook.sh"
+  touch "cwt/extensions/nftcwthdehnc/test/undo_nftcwthhnc_dry_run.$HOST_TYPE.$INSTANCE_TYPE.hook.sh"
 
   # Forces detection of our newly created temporary extension.
   u_cwt_extend
@@ -141,13 +141,14 @@ cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh"
 #
 test_cwt_hook_combinatory_variants() {
   local hook_dry_run_matches=''
-  local expected_list="cwt/test/nftcwthhnc_dry_run.hook.sh
-cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
+  local expected_list="cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
+cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$HOST_TYPE.$INSTANCE_TYPE.hook.sh
 cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$HOST_TYPE.hook.sh
-cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.$HOST_TYPE.hook.sh
 "
 
-  hook -a 'nftcwthhnc_dry_run' -s 'test' -v 'HOST_TYPE INSTANCE_TYPE' -t
+  # hook -a 'nftcwthhnc_dry_run' -s 'test' -e 'nftcwthdehnc' -v 'HOST_TYPE INSTANCE_TYPE' -t -d
+  # echo
+  hook -a 'nftcwthhnc_dry_run' -s 'test' -e 'nftcwthdehnc' -v 'HOST_TYPE INSTANCE_TYPE' -t
 
   u_test_compare_expected_lookup_paths
   u_test_lookup_paths_assertion "Combinatory variants filter hook test failed." $flag
@@ -175,7 +176,7 @@ test_cwt_hook_prefix_variants() {
 cwt/extensions/nftcwthdehnc/test/post_nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
 "
 
-  hook -a 'nftcwthhnc_dry_run' -s 'test' -p 'post' -t
+  hook -a 'nftcwthhnc_dry_run' -s 'test' -e 'nftcwthdehnc' -p 'post' -t
 
   u_test_compare_expected_lookup_paths
   u_test_lookup_paths_assertion "Prefix + variants filter hook test failed." $flag
@@ -186,7 +187,7 @@ cwt/extensions/nftcwthdehnc/test/post_nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
 #
 test_cwt_hook_prefix_combinatory_variants() {
   local hook_dry_run_matches=''
-  local expected_list="cwt/extensions/nftcwthdehnc/test/undo_nftcwthhnc_dry_run.$INSTANCE_TYPE.$HOST_TYPE.hook.sh"
+  local expected_list="cwt/extensions/nftcwthdehnc/test/undo_nftcwthhnc_dry_run.$HOST_TYPE.$INSTANCE_TYPE.hook.sh"
 
   hook -a 'nftcwthhnc_dry_run' -s 'test' -v 'HOST_TYPE INSTANCE_TYPE' -p 'undo' -t
 

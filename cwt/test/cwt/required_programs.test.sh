@@ -1,23 +1,18 @@
 #!/usr/bin/env bash
 
 ##
-# MySQL extension program-related tests.
+# CWT core program-related tests.
 #
 # This group of tests ensures current host has all the programs (and versions)
-# required to execute this extension's actions.
-#
-# Important note : for stacks provisionned by tools like docker-compose,
-# these tests require prior initialization in order to include aliases.
+# required to execute CWT core actions.
 #
 # @requires cwt/vendor/shunit2
 #
 # This file may be dynamically executed.
-# @see cwt/extensions/mysql/test/self_test.hook.sh
+# @see cwt/test/self_test.sh
 #
 # @example
-#   make self-test
-#   cwt/test/self_test.sh
-#   cwt/extensions/mysql/test/mysql/required_programs.test.sh
+#   cwt/test/cwt/required_programs.test.sh
 #
 
 . cwt/bootstrap.sh
@@ -25,9 +20,9 @@
 ##
 # Can we use all required commands from this instance ?
 #
-test_mysql_extension_required_programs() {
+test_cwt_required_programs() {
   local p
-  local programs_to_check='mysql mysqldump'
+  local programs_to_check='git tar'
 
   for p in $programs_to_check; do
     u_test_program_is_executable "$p"
