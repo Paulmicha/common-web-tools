@@ -185,6 +185,31 @@ u_db_create() {
 }
 
 ##
+# [abstract] Destroys given database.
+#
+# "Abstract" means that this extension doesn't provide any actual implementation
+# for this functionality. It is necessary to use an extension which does. E.g. :
+# @see cwt/extensions/mysql
+#
+# @param 1 [optional] String : $DB_NAME override.
+#
+# @example
+#   u_db_destroy
+#   u_db_destroy 'custom_db_name'
+#
+u_db_destroy() {
+  local p_db_name_override="$1"
+
+  u_db_get_credentials
+
+  if [[ -n "$p_db_name_override" ]]; then
+    DB_NAME="$p_db_name_override"
+  fi
+
+  u_hook_most_specific -s 'db' -a 'destroy' -v 'PROVISION_USING'
+}
+
+##
 # [abstract] Imports given dump file into database.
 #
 # "Abstract" means that this extension doesn't provide any actual implementation
@@ -269,6 +294,9 @@ u_db_import() {
     fi
   esac
 
+  # TODO should we trigger the hook that resets all filesystem ownership and
+  # permissions here ?
+
   # Implementations MUST use var $db_dump_file as input path (source file).
   u_hook_most_specific -s 'db' -a 'import' -v 'PROVISION_USING'
 
@@ -347,6 +375,9 @@ u_db_export() {
       exit 1
     fi
   fi
+
+  # TODO should we trigger the hook that resets all filesystem ownership and
+  # permissions here ?
 
   # Implementations MUST use var $db_dump_file as output path (resulting file).
   u_hook_most_specific -s 'db' -a 'export' -v 'PROVISION_USING'
