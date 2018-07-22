@@ -40,9 +40,7 @@ if [[ $? -ne 0 ]]; then
   exit 2
 fi
 
-# TODO [wip] handle 'default_character_set' separately from base extension ?
-# @see u_db_get_credentials() in cwt/extensions/db/db.inc.sh
-mysql --default_character_set=utf8 \
+mysql --default_character_set="$DB_CHARSET" \
   --user="$DB_USERNAME" \
   --password="$DB_PASSWORD" \
   --host="$DB_HOST" \

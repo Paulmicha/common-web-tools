@@ -24,6 +24,8 @@
 # @exports DB_NAME - defaults to "$DB_ID".
 # @exports DB_USERNAME - defaults to first 16 characters of DB_ID.
 # @exports DB_PASSWORD - defaults to 14 random characters.
+# @exports DB_ADMIN_USERNAME - defaults to DB_USERNAME.
+# @exports DB_ADMIN_PASSWORD - defaults to DB_PASSWORD.
 # @exports DB_HOST - defaults to 'localhost'.
 # @exports DB_PORT - defaults to '3306'.
 #
@@ -80,6 +82,7 @@ u_db_get_credentials() {
 
     # The 'auto' mode means we only store the password, which gets generated once
     # on first call (and read otherwise).
+    # Other values will be assigned to DB_ID for radical simplification.
     auto)
       export DB_NAME="$DB_ID"
       export DB_USERNAME="$DB_ID"
@@ -103,6 +106,9 @@ u_db_get_credentials() {
         export DB_PASSWORD=`< /dev/urandom tr -dc A-Za-z0-9 | head -c14; echo`
         u_instance_registry_set "${p_db_id}.DB_PASSWORD" "$DB_PASSWORD"
       fi
+
+      export DB_ADMIN_USERNAME="$DB_USERNAME"
+      export DB_ADMIN_PASSWORD="$DB_PASSWORD"
     ;;
 
     # 'manual' mode requires terminal (prompts) on first call.
@@ -110,7 +116,7 @@ u_db_get_credentials() {
       local var
       local val
       local val_default
-      local vars_to_getset='DB_NAME DB_USERNAME DB_PASSWORD DB_HOST DB_PORT'
+      local vars_to_getset='DB_NAME DB_USERNAME DB_PASSWORD DB_ADMIN_USERNAME DB_ADMIN_PASSWORD DB_HOST DB_PORT'
 
       for var in $vars_to_getset; do
         val=''
@@ -130,6 +136,12 @@ u_db_get_credentials() {
               ;;
             DB_PASSWORD)
               val_default=`< /dev/urandom tr -dc A-Za-z0-9 | head -c14; echo`
+              ;;
+            DB_ADMIN_USERNAME)
+              val_default="$DB_USERNAME"
+              ;;
+            DB_ADMIN_PASSWORD)
+              val_default="$DB_PASSWORD"
               ;;
             DB_HOST)
               val_default='localhost'
