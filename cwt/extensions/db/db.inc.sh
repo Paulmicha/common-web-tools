@@ -274,7 +274,7 @@ u_db_import() {
 
   # If we detect the 'tgz' extension, uncompress the dump file before triggering
   # the "import" action.
-  # @see u_db_export()
+  # @see u_db_backup()
   case "$db_dump_file_ext" in 'tgz')
     db_dump_is_compressed=1
 
@@ -326,13 +326,13 @@ u_db_import() {
 }
 
 ##
-# [abstract] Exports database to a compressed (tgz) dump file.
+# [abstract] Backs up (= exports = saves) database to a compressed (tgz) dump file.
 #
 # "Abstract" means that this extension doesn't provide any actual implementation
 # for this functionality. It is necessary to use an extension which does. E.g. :
 # @see cwt/extensions/mysql
 #
-# Important notes : implementations of the hook -s 'db' -a 'export' MUST use the
+# Important notes : implementations of the hook -s 'db' -a 'backup' MUST use the
 # following variable in calling scope as output path (resulting file) :
 #
 # @var db_dump_file
@@ -346,10 +346,10 @@ u_db_import() {
 # @param 2 [optional] String : $DB_NAME override.
 #
 # @example
-#   u_db_export '/path/to/dump/file.sql'
-#   u_db_export '/path/to/dump/file.sql' 'custom_db_name'
+#   u_db_backup '/path/to/dump/file.sql'
+#   u_db_backup '/path/to/dump/file.sql' 'custom_db_name'
 #
-u_db_export() {
+u_db_backup() {
   local p_dump_file_path="$1"
   local p_db_name_override="$2"
   local db_dump_dir
@@ -365,12 +365,12 @@ u_db_export() {
   db_dump_file="$p_dump_file_path"
   db_dump_dir="${db_dump_file%/${db_dump_file##*/}}"
 
-  # The "export" action should only have to create a new file. If it already
+  # The "backup" action should only have to create a new file. If it already
   # exists, we consider it an error. This case should be explicitly dealt with
   # beforehand (e.g. existing file deleted or moved).
   if [[ -f "$db_dump_file" ]]; then
     echo >&2
-    echo "Error in u_db_export() - $BASH_SOURCE line $LINENO: destination file '$db_dump_file' already exists." >&2
+    echo "Error in u_db_backup() - $BASH_SOURCE line $LINENO: destination file '$db_dump_file' already exists." >&2
     echo "-> Aborting (2)." >&2
     echo >&2
     exit 2
@@ -381,7 +381,7 @@ u_db_export() {
 
     if [[ $? -ne 0 ]]; then
       echo >&2
-      echo "Error in u_db_export() - $BASH_SOURCE line $LINENO: failed to create new backup dir '$db_dump_dir'." >&2
+      echo "Error in u_db_backup() - $BASH_SOURCE line $LINENO: failed to create new backup dir '$db_dump_dir'." >&2
       echo "-> Aborting (1)." >&2
       echo >&2
       exit 1
@@ -392,11 +392,11 @@ u_db_export() {
   # permissions here ?
 
   # Implementations MUST use var $db_dump_file as output path (resulting file).
-  u_hook_most_specific -s 'db' -a 'export' -v 'PROVISION_USING'
+  u_hook_most_specific -s 'db' -a 'backup' -v 'PROVISION_USING'
 
   if [ ! -f "$db_dump_file" ]; then
     echo >&2
-    echo "Error in u_db_export() - $BASH_SOURCE line $LINENO: file '$db_dump_file' does not exist." >&2
+    echo "Error in u_db_backup() - $BASH_SOURCE line $LINENO: file '$db_dump_file' does not exist." >&2
     echo "-> Aborting (2)." >&2
     echo >&2
     exit 2
@@ -406,7 +406,7 @@ u_db_export() {
   tar czf "$db_dump_file.tgz" -C "$db_dump_dir" "$db_dump_file"
   if [[ $? -ne 0 ]]; then
     echo >&2
-    echo "Error in u_db_export() - $BASH_SOURCE line $LINENO: failed to compress dump file '$db_dump_file'." >&2
+    echo "Error in u_db_backup() - $BASH_SOURCE line $LINENO: failed to compress dump file '$db_dump_file'." >&2
     echo "-> Aborting (3)." >&2
     echo >&2
     exit 3
@@ -415,7 +415,7 @@ u_db_export() {
   rm "$db_dump_file"
   if [[ $? -ne 0 ]]; then
     echo >&2
-    echo "Error in u_db_export() - $BASH_SOURCE line $LINENO: failed to remove uncompressed dump file '$db_dump_file'." >&2
+    echo "Error in u_db_backup() - $BASH_SOURCE line $LINENO: failed to remove uncompressed dump file '$db_dump_file'." >&2
     echo "-> Aborting (4)." >&2
     echo >&2
     exit 4
@@ -518,7 +518,7 @@ u_db_routine_backup() {
   u_db_get_credentials
   db_routine_new_backup_file="${CWT_DB_DUMPS_BASE_PATH}/local/$(date +"%Y/%m/%d/%H-%M-%S").$DB_ID.sql"
 
-  u_db_export "$db_routine_new_backup_file"
+  u_db_backup "$db_routine_new_backup_file"
 
   # TODO [wip] unless 'no-purge' option is set, implement old dumps cleanup.
   # If we had time, this could be implemented with something like :

@@ -12,6 +12,9 @@
 # @see cwt/extensions/mysql
 #
 # @example
+#   make db-destroy
+#   make db-destroy 'custom_db_name'
+#   # Or :
 #   cwt/extensions/db/db/destroy.sh
 #   cwt/extensions/db/db/destroy.sh 'custom_db_name'
 #

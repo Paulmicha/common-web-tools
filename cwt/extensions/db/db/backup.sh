@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ##
-# [abstract] Exports database to a dump file.
+# [abstract] Backs up (= exports = saves) database to a dump file.
 #
 # @param 1 String : the dump file path.
 # @param 2 [optional] String : $DB_NAME override.
@@ -12,14 +12,17 @@
 # to use an extension that does. E.g. :
 # @see cwt/extensions/mysql
 #
-# Important note : implementations of the hook -s 'db' -a 'export' MUST use the
+# Important note : implementations of the hook -s 'db' -a 'backup' MUST use the
 # following variable in calling scope as output path (resulting file) :
 # @var db_dump_file
 #
 # @example
-#   cwt/extensions/db/db/export.sh '/path/to/dump/file.sql'
-#   cwt/extensions/db/db/export.sh '/path/to/dump/file.sql' 'custom_db_name'
+#   make db-backup '/path/to/dump/file.sql'
+#   make db-backup '/path/to/dump/file.sql' 'custom_db_name'
+#   # Or :
+#   cwt/extensions/db/db/backup.sh '/path/to/dump/file.sql'
+#   cwt/extensions/db/db/backup.sh '/path/to/dump/file.sql' 'custom_db_name'
 #
 
 . cwt/bootstrap.sh
-u_db_export "$@"
+u_db_backup "$@"

@@ -7,7 +7,11 @@
 # @param 2 [optional] String : $DB_NAME override.
 #
 # @example
+#   make db-restore '/path/to/dump/file.sql'
+#   make db-restore '/path/to/dump/file.sql' 'custom_db_name'
+#   # Or :
 #   cwt/extensions/db/db/restore.sh '/path/to/dump/file.sql'
+#   cwt/extensions/db/db/restore.sh '/path/to/dump/file.sql' 'custom_db_name'
 #
 
 . cwt/bootstrap.sh

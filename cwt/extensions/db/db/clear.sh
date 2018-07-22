@@ -12,6 +12,9 @@
 # @see cwt/extensions/mysql
 #
 # @example
+#   make db-clear
+#   make db-clear 'custom_db_name'
+#   # Or :
 #   cwt/extensions/db/db/clear.sh
 #   cwt/extensions/db/db/clear.sh 'custom_db_name'
 #

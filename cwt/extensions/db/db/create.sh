@@ -12,6 +12,9 @@
 # @see cwt/extensions/mysql
 #
 # @example
+#   make db-create
+#   make db-create 'custom_db_name'
+#   # Or :
 #   cwt/extensions/db/db/create.sh
 #   cwt/extensions/db/db/create.sh 'custom_db_name'
 #

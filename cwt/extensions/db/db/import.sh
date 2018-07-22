@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ##
-# [abstract] Imports given dump file into database.
+# [abstract] Imports (= executes) given file into database.
 #
 # @param 1 String : the dump file path.
 # @param 2 [optional] String : $DB_NAME override.
@@ -13,6 +13,9 @@
 # @see cwt/extensions/mysql
 #
 # @example
+#   make db-import '/path/to/dump/file.sql'
+#   make db-import '/path/to/dump/file.sql' 'custom_db_name'
+#   # Or :
 #   cwt/extensions/db/db/import.sh '/path/to/dump/file.sql'
 #   cwt/extensions/db/db/import.sh '/path/to/dump/file.sql' 'custom_db_name'
 #
