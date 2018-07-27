@@ -4,9 +4,8 @@
 # Implements hook -a 'bootstrap' -v 'PROVISION_USING'.
 #
 # Implement custom bash alias for the 'docker-compose' program.
-#
-# @requires the DC_MODE global to specify if and how docker-compose will
-# choose a specific YAML declaration file for current project instance.
+# This global specifies if and how docker-compose will choose a YAML declaration
+# file for current project instance.
 #
 # @see cwt/extensions/docker-compose/global.vars.sh
 # @see cwt/bootstrap.sh

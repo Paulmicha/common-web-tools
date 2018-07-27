@@ -69,7 +69,12 @@ u_test_program_is_executable() {
   local p_program="$1"
   local check=0
 
-  if ! [ -x "$(command -v $p_program)" ]; then
+  if [[ "$(type -t $p_program)" == 'alias' ]]; then
+    # TODO [fail] there seems to be no reliable way to test if an alias can run
+    # successfully. Meanwhile, we assume that if an alias is found, it will be
+    # executable.
+    check=0
+  elif ! [ -x "$(command -v $p_program)" ]; then
     check=1
   fi
 

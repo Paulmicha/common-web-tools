@@ -4,7 +4,9 @@
 # CWT remote ssh key auth action.
 #
 # @example
-#   cwt/remote/ssh_key_auth.sh 'my_short_id'
+#   make remote-ssh-key-auth 'my_short_id'
+#   # Or :
+#   cwt/extensions/remote/remote/ssh_key_auth.sh 'my_short_id'
 #
 
 . cwt/bootstrap.sh

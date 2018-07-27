@@ -136,7 +136,7 @@ u_remote_upload() {
 # Note : these steps will prompt for confirmation and/or passwords. After it's
 # done, ssh should work without these prompts.
 #
-# @see u_remote_script_wrapper()
+# @see u_remote_exec_wrapper()
 #
 # @example
 #   u_remote_authorize_ssh_key 'my_short_id'
@@ -221,10 +221,14 @@ u_remote_authorize_ssh_key() {
 }
 
 ##
-# Executes local scripts remotely.
+# Executes commands remotely from local instance.
+#
+# Important note : any command should work, but not aliases (unless called from
+# within a script on the remote).
 #
 # @param 1 String : remote instance's id (short name, no space, _a-zA-Z0-9 only).
-# @param 2 String : file path to local script to execute remotely.
+# @param 2 String : command or file path of a script to execute remotely - which
+#   is relative to the PROJECT_DOCROOT of that remote instance.
 # @param ... The rest will be forwarded to the script.
 #
 # @requires the following global variables in calling scope :
@@ -240,41 +244,60 @@ u_remote_authorize_ssh_key() {
 # @prereq u_remote_instance_add() already launched locally at least once.
 #
 # @example
-#   u_remote_script_wrapper 'my_short_id' cwt/stack/init.sh -s drupal-7
+#   u_remote_exec_wrapper my_short_id cwt/test/cwt/global.test.sh
+#   u_remote_exec_wrapper my_short_id make globals-lp
+#   u_remote_exec_wrapper my_short_id git status
 #
-u_remote_script_wrapper() {
+u_remote_exec_wrapper() {
   local p_id="$1"
-  local p_remote_script="$2"
+  local p_cmd="$2"
   shift 2
-
-  if [[ ! -f "$p_remote_script" ]]; then
-    echo
-    echo "Error in $BASH_SOURCE line $LINENO: file '$p_remote_script' not found." >&2
-    echo "Aborting (1)." >&2
-    echo
-    return 1
-  fi
 
   u_remote_instance_load "$p_id"
 
   if [[ -z "$REMOTE_INSTANCE_CONNECT_CMD" ]]; then
-    echo
-    echo "Error in $BASH_SOURCE line $LINENO: no conf found for remote id '$p_id'." >&2
-    echo "Aborting (2)." >&2
-    echo
+    echo >&2
+    echo "Error in u_remote_exec_wrapper() - $BASH_SOURCE line $LINENO: no conf found for remote id '$p_id'." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    return 1
+  fi
+
+  # Sanitize command input + args.
+  # See https://unix.stackexchange.com/a/326672 (using the bash or ksh version).
+  local cmd
+  printf -v cmd '%q ' "$p_cmd"
+
+  if [[ $? -ne 0 ]]; then
+    echo >&2
+    echo "Error in u_remote_exec_wrapper() - $BASH_SOURCE line $LINENO: failed to sanitize given command." >&2
+    echo "-> Aborting (2)." >&2
+    echo >&2
     return 2
   fi
 
-  # Remote execution wrapper.
-  # See https://unix.stackexchange.com/a/326672 (using the bash or ksh version).
+  # Always execute remotely from REMOTE_INSTANCE_PROJECT_DOCROOT.
+  local cmd_prefix="$REMOTE_INSTANCE_CONNECT_CMD \"cd $REMOTE_INSTANCE_PROJECT_DOCROOT && "
+  local cmd_suffix="\""
+
   if [[ -n "$@" ]]; then
     local args
     printf -v args '%q ' "$@"
 
-    eval "$REMOTE_INSTANCE_CONNECT_CMD \"cd $REMOTE_INSTANCE_PROJECT_DOCROOT && bash -s -- $args\" < \"$p_remote_script\""
+    if [[ $? -ne 0 ]]; then
+      echo >&2
+      echo "Error in u_remote_exec_wrapper() - $BASH_SOURCE line $LINENO: failed to sanitize given arguments." >&2
+      echo "-> Aborting (3)." >&2
+      echo >&2
+      return 3
+    fi
+
+    # echo "$cmd_prefix $cmd $args $cmd_suffix"
+    eval "$cmd_prefix $cmd $args $cmd_suffix"
 
   else
-    eval "$REMOTE_INSTANCE_CONNECT_CMD \"cd $REMOTE_INSTANCE_PROJECT_DOCROOT && bash -s\" < \"$p_remote_script\""
+    # echo "$cmd_prefix $cmd $cmd_suffix"
+    eval "$cmd_prefix $cmd $cmd_suffix"
   fi
 }
 
@@ -293,7 +316,7 @@ u_remote_script_wrapper() {
 #   Defaults to: 'ssh username@example.com' (or 'ssh -p123 username@example.com'
 #   if param 7 is specified).
 #
-# TODO convert to named args.
+# TODO [evol] convert to named args.
 #
 # @example
 #   # Basic example with only mandatory params :
@@ -303,6 +326,26 @@ u_remote_script_wrapper() {
 #     'stage' \
 #     'my_ssh_user' \
 #     '/path/to/remote/instance/docroot'
+#
+#   # Example with custom port :
+#   u_remote_instance_add \
+#     'my_short_id' \
+#     'remote.instance.example.com' \
+#     'stage' \
+#     'my_ssh_user' \
+#     '/path/to/remote/instance/docroot' \
+#     '10050'
+#
+#   # Example removing the SSH agent forwarding (i.e. prevents remote commands
+#   # such as 'git pull') - illustrates SSH connection cmd override :
+#   u_remote_instance_add \
+#     'my_short_id' \
+#     'remote.instance.example.com' \
+#     'stage' \
+#     'my_ssh_user' \
+#     '/path/to/remote/instance/docroot' \
+#     '' \
+#     'ssh -T my_ssh_user@remote.instance.example.com'
 #
 u_remote_instance_add() {
   local p_id="$1"
@@ -318,7 +361,15 @@ u_remote_instance_add() {
     p_app_docroot="$p_project_docroot/web"
   fi
 
-  local conf="cwt/extensions/remote/remote/instances/${p_id}.sh"
+  if [[ ! -d 'cwt/env/current/remote-instances' ]]; then
+    echo >&2
+    echo "Error in u_remote_instance_add() - $BASH_SOURCE line $LINENO: dir cwt/env/current/remote-instances is missing." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    return 1
+  fi
+
+  local conf="cwt/env/current/remote-instances/${p_id}.sh"
 
   # Confirm overwriting existing config if the file already exists.
   if [[ -f "$conf" ]]; then
@@ -336,9 +387,14 @@ u_remote_instance_add() {
 
   local connection_cmd="$p_connect_cmd"
   if [[ -z "$p_connect_cmd" ]]; then
-    connection_cmd="ssh ${p_ssh_user}@${p_host}"
+
+    # NB : the '-A' flag allows to forward currently loaded SSH keys from
+    # the local terminal session. The '-T' flag requests an non-interactive
+    # tty (= opens a non-interactive terminal session on remote).
+    connection_cmd="ssh -T -A ${p_ssh_user}@${p_host}"
+
     if [[ -n "$p_ssh_port" ]]; then
-      connection_cmd="ssh -p${p_ssh_port} ${p_ssh_user}@${p_host}"
+      connection_cmd="ssh -T -A -p${p_ssh_port} ${p_ssh_user}@${p_host}"
     fi
   fi
 
@@ -393,13 +449,13 @@ EOF
 #
 u_remote_instance_load() {
   local p_id="$1"
-  local conf="cwt/extensions/remote/remote/instances/${p_id}.sh"
+  local conf="cwt/env/current/remote-instances/${p_id}.sh"
 
   if [[ ! -f "$conf" ]]; then
-    echo
-    echo "Error in $BASH_SOURCE line $LINENO: file '$conf' not found." >&2
-    echo "Aborting (1)." >&2
-    echo
+    echo >&2
+    echo "Error in u_remote_instance_load() - $BASH_SOURCE line $LINENO: file '$conf' not found." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
     return 1
   fi
 

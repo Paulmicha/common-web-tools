@@ -38,6 +38,19 @@
 # @param 2 [optional] String : force reload flag (bypasses optimization) if the
 #   DB credentials vars are already exported in current shell scope.
 #
+# @example
+#   # Calling this funcion without arguments = use defaults mentionned above,
+#   # depending on CWT_DB_MODE (see cwt/extensions/db/global.vars.sh).
+#   u_db_get_credentials
+#
+#   # Explicitly set DB_ID (TODO [wip] test multi-db projects).
+#   u_db_get_credentials my_custom_db_id
+#
+#   # If called in current shell scope once, exported values will prevent
+#   # re-loading values. TODO [wip] implement "static" keyed sets of vars ?
+#   # Meanwhile, the 2nd arg is a flag which can force re-loading these values.
+#   u_db_get_credentials my_custom_db_id 1
+#
 u_db_get_credentials() {
   if [[ -z "$CWT_DB_DUMPS_BASE_PATH" ]]; then
     echo >&2

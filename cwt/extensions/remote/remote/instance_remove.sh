@@ -4,7 +4,9 @@
 # CWT remote instance remove action.
 #
 # @example
-#   cwt/remote/instance_remove.sh 'my_short_id'
+#   make remote-instance-remove 'my_short_id'
+#   # Or :
+#   cwt/extensions/remote/remote/instance_remove.sh 'my_short_id'
 #
 
 . cwt/bootstrap.sh

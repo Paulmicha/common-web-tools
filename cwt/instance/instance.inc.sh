@@ -186,6 +186,21 @@ u_instance_write_mk() {
   for sa_pair in $CWT_ACTIONS; do
     task=''
     u_instance_task_name "$sa_pair"
+
+    # The 'instance' subject is a special case : we remove it for CWT core tasks
+    # to explicitly make it the default subject. All actions belonging to the
+    # 'instance' subject from CWT core are transformed to the action part alone.
+    # Exception : instance-init -> init = already hardcoded, so prevent adding
+    # it twice.
+    # @see cwt/instance/init.make.sh
+    # @see Makefile (the one in PROJECT_DOCROOT path).
+    case "$task" in instance-*)
+      case "$task" in instance-init)
+        continue
+      esac
+      task="${task#*instance-}"
+    esac
+
     mk_tasks+=("$task")
     mk_entry_points+=("cwt/$sa_pair.sh")
   done

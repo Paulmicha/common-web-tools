@@ -29,5 +29,8 @@ fi
 # Allow extra lookup path at the root of project's scripts, *after* all
 # dynamic lookups above.
 echo "$PROJECT_SCRIPTS/global.vars.sh"
+if [ -f "$PROJECT_SCRIPTS/global.vars.sh" ]; then
+  echo "  exists"
+fi
 
 echo

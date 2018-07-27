@@ -3,10 +3,11 @@
 ##
 # Convenience "instance init" wrapper for default 'make' task.
 #
+# It is necessary to convert arguments syntax when (ab)using make the way we do.
+# This "entry point" script implements a custom named arguments conversion
+# syntax to "forward" them as needed - i.e. replaces '-a' by 'a:'.
+#
 # @see cwt/instance/init.sh
-#
-# It uses a custom named arguments conversion syntax to "forward" them as needed.
-#
 # @see Makefile
 # @see cwt/instance/hook.make.sh
 #
@@ -16,9 +17,9 @@
 #     h:local \
 #     p:ansible \
 #     d:dev.cwt.com \
+#     a:dist/web \
 #     g:git@my-git-origin.org:my-git-account/cwt.git \
 #     i:dist \
-#     a:dist/web \
 #     y:
 #
 

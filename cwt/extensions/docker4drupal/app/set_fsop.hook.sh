@@ -7,10 +7,10 @@
 # @see cwt/instance/instance.inc.sh
 #
 
-CHMOD_W_FILES='0770'
+CHMOD_W_FILES='0775'
 CHMOD_W_DIRS='1771'
-CHMOD_NW_FILES='0750'
-CHMOD_NW_DIRS='0750'
+CHMOD_NW_FILES='0755'
+CHMOD_NW_DIRS='0755'
 
 # User 82 is www-data in Docker images like wodby/drupal-php.
 if [[ -n "$APP_DOCROOT" ]]; then

@@ -15,7 +15,7 @@
 # @see cwt/extensions/mysql/test/self_test.hook.sh
 #
 # @example
-#   cwt/extensions/mysql/test/mysql/required_programs.test.sh
+#   cwt/extensions/mysql/test/self/required_programs.test.sh
 #
 
 . cwt/bootstrap.sh

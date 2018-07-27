@@ -3,7 +3,10 @@
 ##
 # CWT instance hook call wrapper for convenience 'make' task.
 #
-# It uses a custom named arguments conversion syntax to "forward" them as needed.
+# It is necessary to convert arguments syntax when (ab)using make the way we do.
+# This "entry point" script implements a custom named arguments conversion
+# syntax to "forward" them as needed - i.e. replaces '-a' by 'a:'.
+#
 # E.g. if we want to execute hook -s 'instance' -a 'start', we would use :
 # $ make hook s:instance a:start
 #

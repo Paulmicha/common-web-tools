@@ -34,6 +34,6 @@ global WRITEABLE_DIRS "[append]=$DRUPAL_PRIVATE_DIR"
 global PROTECTED_FILES "[append]=$DRUPAL_LOCAL_SETTINGS"
 
 # Conditionally load Drupal version-specific globals.
-if [ -f "drupal-${DRUPAL_VERSION}/env.vars.sh" ]; then
-  . "drupal-${DRUPAL_VERSION}/env.vars.sh"
+if [ -f "cwt/extensions/docker4drupal/app/drupal-${DRUPAL_VERSION}/global.vars.sh" ]; then
+  . "cwt/extensions/docker4drupal/app/drupal-${DRUPAL_VERSION}/global.vars.sh"
 fi
