@@ -12,6 +12,7 @@
 #
 
 global DRUPAL_VERSION "[default]=8"
+global DRUPAL_CRON_FREQ "[default]='*/20 * * * *'"
 
 global DRUPAL_LOCAL_SETTINGS "[default]=$APP_DOCROOT/sites/default/settings.local.php"
 
@@ -26,6 +27,8 @@ global DRUPAL_TMP_DIR_C "[default]='/var/www/html/tmp'"
 
 global DRUPAL_PRIVATE_DIR "[default]=$APP_GIT_WORK_TREE/private"
 global DRUPAL_PRIVATE_DIR_C "[default]='/var/www/html/private'"
+
+global DRUPAL_HASH_SALT "$(u_str_random)"
 
 global WRITEABLE_DIRS "[append]=$DRUPAL_FILES_DIR"
 global WRITEABLE_DIRS "[append]=$DRUPAL_TMP_DIR"

@@ -12,12 +12,18 @@
 ##
 # Adds (once) a cronjob on local host.
 #
+# TODO [debt] Find better workaround to load PATH of required user. Currently :
+#   su $p_user -c "my command (param 1)"
+# -> avoid double quotes inside param 1 unless escaped (untested).
+#
 # @requires the 'crontab' software.
 # See https://stackoverflow.com/a/17975418
 #
-# @param 1 String the shell command to run.
-# @param 2 [optional] String crontab time - defaults to "every 30 minutes" which
-#   is noted like : */30 * * * *
+# @param 1 String : the shell command to run.
+# @param 2 [optional] String : crontab time - defaults to "every 30 minutes",
+#   which is noted like : */30 * * * *
+# @param 3 [optional] String : the user meant to run the script. Defaults to
+#   current user - the one calling this function ($USER).
 #
 # Quick crontab syntax notes :
 #
@@ -33,21 +39,51 @@
 # Fractions like "*/5" mean "every 5 ..." (depending on position above).
 #
 # @example
-#   # Run drupal cron task every 20 minutes :
-#   u_host_crontab "drush --root=$APP_DOCROOT cron" "*/20 * * * *"
+#   # Run drupal cron task every 30 minutes (default) using current user (default) :
+#   u_host_crontab_add "cd $PROJECT_DOCROOT && make drush cron"
 #
-u_host_crontab() {
+#   # Run drupal cron task every 20 minutes as user 'www-data' :
+#   u_host_crontab_add "cd $PROJECT_DOCROOT && make drush cron" '*/20 * * * *' 'www-data'
+#
+u_host_crontab_add() {
   local p_cmd="$1"
   local p_freq="$2"
+  local p_user="$3"
 
-  if [ -z "$p_freq" ]; then
+  if [[ -z "$p_freq" ]]; then
     p_freq="*/30 * * * *"
   fi
 
-  local cronjob="$p_freq $p_cmd"
+  if [[ -z "$p_user" ]]; then
+    p_user="$USER"
+  fi
+
+  # TODO [debt] find better workaround to run with PATH of required user loaded.
+  # @see http://www.lostsaloon.com/technology/how-to-run-cron-jobs-as-a-specific-user/
+  local cronjob="$p_freq su $p_user -c \"$p_cmd\""
 
   # See https://stackoverflow.com/a/17975418
   ( crontab -l | grep -v -F "$p_cmd" ; echo "$cronjob" ) | crontab -
+}
+
+##
+# Removes a cronjob on local host.
+#
+# @requires the 'crontab' software.
+# See https://stackoverflow.com/a/17975418
+#
+# @param 1 String : the shell command of the active cron job to remove. It
+#   should match the one used in u_host_crontab_add() - i.e. no need to include
+#   the user or frequency.
+#
+# @see u_host_crontab_add()
+#
+# @example
+#   u_host_crontab_remove "cd $PROJECT_DOCROOT && make drush cron"
+#
+u_host_crontab_remove() {
+  local p_cmd="$1"
+  ( crontab -l | grep -v -F "$p_cmd" ) | crontab -
 }
 
 ##

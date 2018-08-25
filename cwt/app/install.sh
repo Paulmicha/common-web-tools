@@ -16,6 +16,8 @@
 # @see cwt/instance/start.sh
 #
 # @example
+#   make app-install
+#   # Or :
 #   cwt/app/install.sh
 #
 

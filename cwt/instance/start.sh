@@ -9,6 +9,8 @@
 # to use an extension that does.
 #
 # @example
+#   make start
+#   # Or :
 #   cwt/instance/start.sh
 #
 

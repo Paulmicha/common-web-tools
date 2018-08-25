@@ -1,42 +1,31 @@
 #!/usr/bin/env bash
 
 ##
-# Implements hook -a 'install' -s 'app'.
+# Implements hook -s 'app' -a 'install' -v 'PROVISION_USING INSTANCE_TYPE'
 #
-# Write local (gitignored) Drupal settings.
+# This file is dynamically included when the "hook" is triggered.
+#
+# Debug lookup paths (make sure this file gets picked up) :
+# $ make hook-debug s:app a:install v:PROVISION_USING INSTANCE_TYPE
+#
+# @example
+#   make app-install
+#   # Or :
+#   cwt/app/install.sh
 #
 
-if [ -z "$DRUPAL_LOCAL_SETTINGS" ]; then
-  echo "Warning in $BASH_SOURCE line $LINENO: required global DRUPAL_LOCAL_SETTINGS is empty." >&2
-  echo "Aborting (1)." >&2
-  exit 1
-fi
+. cwt/bootstrap.sh
 
-cat > "$DRUPAL_LOCAL_SETTINGS" <<'EOF'
-<?php
+# Provide default cron job implementation for this Drupal instance on local host
+# using crontab. This setup is opt-in, i.e. the D4D_USE_CRONTAB global.
+# @see cwt/extensions/docker4drupal/global.vars.sh
+# @see cwt/extensions/docker4drupal/app/global.vars.sh
+# @see u_host_crontab_add() in cwt/host/host.inc.sh
+case "$D4D_USE_CRONTAB" in 1|y|yes|true)
+  echo "Setup Drupal cron job for instance $INSTANCE_DOMAIN on local host ..."
 
-/**
- * @file
- * Drupal instance-specific configuration file.
- *
- * IMPORTANT NOTE: this file is dynamically generated during CWT instance init.
- * -> Do not edit directly (will be overwritten).
- */
+  u_host_crontab_add "cd $PROJECT_DOCROOT && make drush cron" "$DRUPAL_CRON_FREQ"
 
-$databases['default']['default'] = array(
-  'driver' => 'mysql',
-  'database' => 'drupal',
-  'username' => 'drupal',
-  'password' => 'drupal',
-  'host' => 'mariadb',
-  'port' => '3306',
-  'prefix' => '',
-  'collation' => 'utf8mb4_general_ci',
-);
-
-EOF
-
-# This hook has Drupal version-specific implementations.
-if [ -f "drupal-${DRUPAL_VERSION}/install.hook.sh" ]; then
-  . "drupal-${DRUPAL_VERSION}/install.hook.sh"
-fi
+  echo "Setup Drupal cron job for instance $INSTANCE_DOMAIN on local host : done."
+  echo
+esac

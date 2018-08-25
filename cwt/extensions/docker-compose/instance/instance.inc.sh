@@ -64,7 +64,7 @@ u_dc_instance_build() {
 u_dc_instance_destroy() {
   echo "Destroying $INSTANCE_DOMAIN (stops and removes containers, networks, volumes, and images) ..."
 
-  docker-compose down
+  docker-compose down --remove-orphans
 
   echo "Destroying $INSTANCE_DOMAIN (stops and removes containers, networks, volumes, and images) : done."
   echo
