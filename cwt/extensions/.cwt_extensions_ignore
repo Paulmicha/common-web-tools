@@ -1,10 +1,10 @@
 ansible
-db--tmp
+db
 docker-compose
 docker4drupal
 docker4php
 docker4wordpress
 lando
-mysql--tmp
+mysql
 postgresql
 remote

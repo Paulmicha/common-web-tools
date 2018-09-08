@@ -17,7 +17,7 @@
 u_dc_instance_start() {
   echo "Starting $INSTANCE_DOMAIN containers ..."
 
-  docker-compose pull --parallel
+  docker-compose pull
   docker-compose up -d --remove-orphans
 
   # TODO [workaround] Sometimes services are not immediately available, so we add
