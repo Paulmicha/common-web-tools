@@ -34,6 +34,7 @@ global WRITEABLE_DIRS "[append]=$DRUPAL_FILES_DIR"
 global WRITEABLE_DIRS "[append]=$DRUPAL_TMP_DIR"
 global WRITEABLE_DIRS "[append]=$DRUPAL_PRIVATE_DIR"
 
+global PROTECTED_FILES "[append]=$APP_DOCROOT/sites/default/settings.php"
 global PROTECTED_FILES "[append]=$DRUPAL_LOCAL_SETTINGS"
 
 # Conditionally load Drupal version-specific globals.

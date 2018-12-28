@@ -14,10 +14,3 @@
 global DRUPAL_CONFIG_SYNC_DIR "[default]=$APP_GIT_WORK_TREE/config/sync"
 # TODO [debt] refacto needed for Docker container path conversion.
 global DRUPAL_CONFIG_SYNC_DIR_C "[default]=/var/www/html/config/sync"
-
-global WRITEABLE_DIRS "[append]=$APP_GIT_WORK_TREE/config"
-global WRITEABLE_DIRS "[append]=$APP_GIT_WORK_TREE/vendor"
-
-global WRITEABLE_FILES "[append]=$APP_GIT_WORK_TREE/composer.json"
-global WRITEABLE_FILES "[append]=$APP_GIT_WORK_TREE/composer.lock"
-global WRITEABLE_FILES "[append]=$APP_GIT_WORK_TREE/vendor/autoload.php"

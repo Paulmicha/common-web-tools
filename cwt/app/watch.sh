@@ -11,10 +11,16 @@
 # functionality. In order for this script to have any effect, it is necessary
 # to use an extension that does.
 #
+# To list all the possible paths that can be used - among which existing files
+# will be sourced when the hook is triggered, use :
+# $ make hook-debug s:app a:watch v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+#
 # @example
-#   cwt/app/watch_start.sh
+#   make app-watch
+#   # Or :
+#   cwt/app/watch.sh
 #
 
 . cwt/bootstrap.sh
 
-hook -s 'app' -a 'watch_start' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+hook -s 'app' -a 'watch' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
