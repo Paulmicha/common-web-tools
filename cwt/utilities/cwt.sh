@@ -373,3 +373,72 @@ u_cwt_namespace_has_subject() {
 
   false
 }
+
+##
+# Gets all actions + their script path defined in current project instance.
+#
+# NB : for performance reasons (to avoid using a subshell), this function
+# writes its result to variables subject to collision in calling scope.
+#
+# @var cwt_action_names
+# @var cwt_action_scripts
+#
+# @example
+#   u_cwt_get_actions
+#   # Check result (names) :
+#   declare -p cwt_action_names
+#   # -> output (names) :
+#   #   declare -a cwt_action_names='([0]="app/compile" [1]="app/git" ...)'
+#   # Check result (script files path) :
+#   for f in "${cwt_action_scripts[@]}"; do
+#     echo "$f"
+#   done
+#
+# @example (sorted)
+#   u_cwt_get_actions
+#   u_array_qsort "${cwt_action_names[@]}"
+#   u_array_print sorted_arr
+#
+u_cwt_get_actions() {
+  local subjects="$CWT_SUBJECTS"
+  local actions="$CWT_ACTIONS"
+  local extensions="$CWT_EXTENSIONS"
+  local base_paths=("cwt")
+
+  local a
+  local s
+  local bp
+  local extension
+  local uppercase
+
+  cwt_action_names=()
+  cwt_action_scripts=()
+
+  for extension in $extensions; do
+    uppercase="$extension"
+    u_str_sanitize_var_name "$uppercase" 'uppercase'
+    u_str_uppercase "$uppercase"
+    eval "subjects+=\" \$${uppercase}_SUBJECTS\""
+    eval "actions+=\" \$${uppercase}_ACTIONS\""
+    base_paths+=("cwt/extensions/$extension")
+  done
+
+  for s in $subjects; do
+    for bp in "${base_paths[@]}"; do
+      if ! u_cwt_namespace_has_subject "$bp" "$s" ; then
+        continue
+      fi
+      for a in $actions; do
+        case "$a" in "$s"*)
+          lookup_path="$bp/${a}.sh"
+          if [[ -f "$lookup_path" ]]; then
+            if ! u_in_array $lookup_path cwt_action_scripts; then
+              cwt_action_names+=("$a")
+              cwt_action_scripts+=("$lookup_path")
+            fi
+          fi
+        esac
+      done
+    done
+  done
+}

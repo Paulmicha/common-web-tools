@@ -52,4 +52,4 @@ global PROJECT_SCRIPTS "[default]=scripts [help]='Path to custom scripts ~ commo
 # @see u_instance_task_name()
 # @see Makefile
 global CWT_MAKE_INC "[append]='$PROJECT_SCRIPTS/make.mk'"
-global CWT_MAKE_TASKS_SHORTER "[append]='registry/reg lookup-path/lp test-self-test/test-self'"
+global CWT_MAKE_TASKS_SHORTER "[append]='registry/reg lookup-path/lp'"
