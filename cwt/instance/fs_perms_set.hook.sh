@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 
 ##
-# Implements hook -a 'fs_permissions_set' -s 'app stack'.
+# Implements hook -a 'fs_perms_set' -s 'app instance' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'.
 #
 # (Re)sets project root filesystem permissions (except application sources).
 #
 # This file is dynamically included when the "hook" is triggered.
 # @see u_instance_set_permissions() in cwt/instance/instance.inc.sh
+#
+# To verify which files can be used (and will be sourced) when this hook is
+# triggered :
+# $ make hook-debug s:app instance a:fs_perms_set
 #
 
 # Sets 'normal' file permissions (644 by default) to every single file in

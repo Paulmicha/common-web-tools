@@ -119,53 +119,61 @@ u_instance_init() {
   # before attempting to (re)set their permissions (see below).
   hook -s 'app instance' -a 'ensure_dirs_exist'
 
-  # (Re)set file system ownership and permissions.
+  # (Re)set file system permissions.
   u_instance_set_permissions
 }
 
 ##
-# [abstract] Triggers the application of filesystem ownership and permissions.
-#
-# "Abstract" means that CWT core itself doesn't provide any actual
-# implementation for this functionality. It is necessary to use an extension
-# which does. E.g. :
-# @see cwt/extensions/docker4drupal
+# (Re)sets filesystem permissions.
 #
 # This chain of hooks is meant for extensions (+ overrides) to provide and
-# apply ownership and permissions of files and folders for current instance,
-# according to its type, host type, and provisionning method.
-# @see u_instance_get_permissions()
+# apply permissions of files and folders for current instance, according to its
+# type, host type, and provisionning method.
 #
 # Additionally, the following globals may be used to specify lists of specific
 # paths (non-mutable / declared like any other CWT global) :
+# - PROTECTED_FILES : e.g. path to sensitive settings file(s).
+# - EXECUTABLE_FILES : e.g. custom app-related scripts.
+# - WRITEABLE_DIRS : e.g. path to folders (files, tmp, private) that must be
+#     writeable by the application.
+# - WRITEABLE_FILES : additional files (outside of WRITEABLE_DIRS) that must be
+#     writeable by the application.
 #
-# PROTECTED_FILES : e.g. path to sensitive settings file(s).
-# EXECUTABLE_FILES : e.g. custom app-related scripts.
-# WRITEABLE_DIRS : e.g. path to folders (files, tmp, private) that must be
-#   writeable by the application.
-# WRITEABLE_FILES : additional files (outside of WRITEABLE_DIRS) that must be
-#   writeable by the application.
+# By default, CWT resets all files and folders permissions in project root dir.
+# It also applies the corresponding permissions to any list of paths optionally
+# defined in globals (env vars) mentionned above.
+#
+# @see u_instance_get_permissions()
+# @see cwt/instance/fix_perms.sh
+# @see cwt/instance/fs_perms_set.hook.sh
 #
 # To verify which files can be used (and will be sourced) when these hooks are
 # triggered, in this order :
-# $ make hook-debug s:app instance a:fsop_get v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
-# $ make hook-debug p:pre s:app instance a:fsop_set v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
-# $ make hook-debug s:app instance a:fsop_set
-# $ make hook-debug p:post s:app instance a:fsop_set v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:app instance a:fs_ownership_get v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:app instance a:fs_perms_pre_set v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:app instance a:fs_perms_set v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:app instance a:fs_perms_post_set v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+#
+# There is also a convenience 'make' shortcut to reset all permissions.
+#
+# @example
+#   make fix_perms
+#   # Or :
+#   cwt/instance/fix_perms.sh
 #
 u_instance_set_permissions() {
   u_instance_get_permissions
 
-  hook -p 'pre' \
-    -s 'app instance' \
-    -a 'fsop_set' \
+  hook -s 'app instance' \
+    -a 'fs_perms_pre_set' \
     -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
 
-  hook -s 'app instance' -a 'fsop_set'
+  hook -s 'app instance' \
+    -a 'fs_perms_set' \
+    -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
 
-  hook -p 'post' \
-    -s 'app instance' \
-    -a 'fsop_set' \
+  hook -s 'app instance' \
+    -a 'fs_perms_post_set' \
     -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
 }
 
@@ -175,14 +183,6 @@ u_instance_set_permissions() {
 # By convention, these are specified using the following (mutable) variables in
 # calling scope :
 #
-# FS_OWNER : [optional] owner of all files and dirs.
-#   Defaults to current user, even if sudoing.
-# FS_GROUP : [optional] group ownership of all files and dirs.
-#   Defaults to $FS_OWNER.
-# FS_W_OWNER : [optional] owner of Writeable files and dirs.
-#   Defaults to $FS_OWNER.
-# FS_W_GROUP : [optional] group ownership of Writeable files and dirs.
-#   Defaults to $FS_W_OWNER.
 # FS_NW_FILES : [optional] permissions to apply to Non-Writeable files.
 #   Defaults to 0644.
 # FS_NW_DIRS : [optional] permissions to apply to Non-Writeable folders.
@@ -197,13 +197,11 @@ u_instance_set_permissions() {
 #   Defaults to 1771.
 #
 # To verify which files can be used (and will be sourced) to declare these vars :
-# $ make hook-debug s:app instance a:fsop_get v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:app instance a:fs_perms_get v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
 #
 # @example
 #   u_instance_get_permissions
 #   # Show the result :
-#   echo "ownership = $FS_OWNER:$FS_GROUP"
-#   echo "ownership for writeable files/dirs = $FS_W_OWNER:$FS_W_GROUP"
 #   echo "file permissions = $FS_NW_FILES"
 #   echo "folder permissions = $FS_NW_DIRS"
 #   echo "writeable file permissions = $FS_W_FILES"
@@ -212,23 +210,9 @@ u_instance_set_permissions() {
 #   echo "executable file permissions = $FS_E_FILES"
 #
 u_instance_get_permissions() {
-  hook -s 'app instance' -a 'fsop_get' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
-
-  # Deal with optional values (defaults).
-  if [[ -z "$FS_OWNER" ]]; then
-    # Get current user even if sudoing.
-    # See https://stackoverflow.com/questions/1629605/getting-user-inside-shell-script-when-running-with-sudo
-    FS_OWNER="$(logname 2>/dev/null || echo $SUDO_USER)"
-  fi
-  if [[ -z "$FS_GROUP" ]]; then
-    FS_GROUP="$FS_OWNER"
-  fi
-  if [[ -z "$FS_W_OWNER" ]]; then
-    FS_W_OWNER="$FS_OWNER"
-  fi
-  if [[ -z "$FS_W_GROUP" ]]; then
-    FS_W_GROUP="$FS_W_OWNER"
-  fi
+  hook -s 'app instance' \
+    -a 'fs_perms_get' \
+    -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
 
   if [[ -z "$FS_NW_FILES" ]]; then
     FS_NW_FILES='0644'
@@ -250,6 +234,95 @@ u_instance_get_permissions() {
 
   if [[ -z "$FS_E_FILES" ]]; then
     FS_E_FILES='0755'
+  fi
+}
+
+##
+# (Re)sets filesystem ownership.
+#
+# This chain of hooks is meant for extensions (+ overrides) to provide and
+# apply ownership of files and folders for current instance, according to its
+# type, host type, and provisionning method.
+#
+# By default, CWT resets all files and folders ownership in project root dir.
+# It also applies the corresponding ownership to any list of paths optionally
+# defined in globals (env vars) mentionned above.
+#
+# @see u_instance_get_permissions()
+# @see cwt/instance/fix_perms.sh
+# @see cwt/instance/fs_perms_set.hook.sh
+#
+# To verify which files can be used (and will be sourced) when these hooks are
+# triggered, in this order :
+# $ make hook-debug s:app instance a:fs_ownership_get v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:app instance a:fs_ownership_pre_set v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:app instance a:fs_ownership_set v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:app instance a:fs_ownership_post_set v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+#
+# There is also a convenience 'make' shortcut to reset all permissions.
+#
+# @example
+#   make fix_ownership
+#   # Or :
+#   cwt/instance/fix_ownership.sh
+#
+u_instance_set_ownership() {
+  u_instance_get_ownership
+
+  hook -s 'app instance' \
+    -a 'fs_ownership_pre_set' \
+    -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+
+  hook -s 'app instance' \
+    -a 'fs_ownership_set' \
+    -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+
+  hook -s 'app instance' \
+    -a 'fs_ownership_post_set' \
+    -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+}
+
+##
+# Gets filesystem ownership settings.
+#
+# By convention, these are specified using the following (mutable) variables in
+# calling scope :
+#
+# FS_OWNER : [optional] owner of all files and dirs.
+#   Defaults to current user, even if sudoing.
+# FS_GROUP : [optional] group ownership of all files and dirs.
+#   Defaults to $FS_OWNER.
+# FS_W_OWNER : [optional] owner of Writeable files and dirs.
+#   Defaults to $FS_OWNER.
+# FS_W_GROUP : [optional] group ownership of Writeable files and dirs.
+#   Defaults to $FS_W_OWNER.
+#
+# To verify which files can be used (and will be sourced) to declare these vars :
+# $ make hook-debug s:app instance a:fs_ownership_get v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+#
+# @example
+#   u_instance_get_ownership
+#   # Show the result :
+#   echo "ownership = $FS_OWNER:$FS_GROUP"
+#   echo "ownership for writeable files/dirs = $FS_W_OWNER:$FS_W_GROUP"
+#
+u_instance_get_ownership() {
+  hook -s 'app instance' -a 'fs_ownership_get' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+
+  # Deal with optional values (defaults).
+  if [[ -z "$FS_OWNER" ]]; then
+    # Get current user even if sudoing.
+    # See https://stackoverflow.com/questions/1629605/getting-user-inside-shell-script-when-running-with-sudo
+    FS_OWNER="$(logname 2>/dev/null || echo $SUDO_USER)"
+  fi
+  if [[ -z "$FS_GROUP" ]]; then
+    FS_GROUP="$FS_OWNER"
+  fi
+  if [[ -z "$FS_W_OWNER" ]]; then
+    FS_W_OWNER="$FS_OWNER"
+  fi
+  if [[ -z "$FS_W_GROUP" ]]; then
+    FS_W_GROUP="$FS_W_OWNER"
   fi
 }
 
