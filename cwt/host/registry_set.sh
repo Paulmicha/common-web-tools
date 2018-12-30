@@ -12,6 +12,8 @@
 # @see cwt/extensions/file_registry
 #
 # @example
+#   make host-reg-set
+#   # Or :
 #   cwt/host/registry_set.sh my_key 'my value'
 #
 

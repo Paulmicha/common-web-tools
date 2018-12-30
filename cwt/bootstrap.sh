@@ -57,5 +57,5 @@ if [[ $CWT_BS_FLAG -ne 1 ]]; then
   # expand_aliases shell option is set using shopt.
   # See https://unix.stackexchange.com/a/1498
   shopt -s expand_aliases
-  hook -a 'bootstrap' -v 'PROVISION_USING'
+  hook -s 'cwt' -a 'bootstrap' -v 'PROVISION_USING'
 fi

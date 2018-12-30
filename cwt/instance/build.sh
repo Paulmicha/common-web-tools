@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ##
-# [abstract] Stops this project instance's services on current host.
+# [abstract] Triggers a generic 'build' operation for this project instance.
 #
 # This script provides an entry point for triggering a specific hook. "Abstract"
 # means that CWT core itself doesn't provide any actual implementation for this
@@ -10,14 +10,14 @@
 #
 # To list all the possible paths that can be used - among which existing files
 # will be sourced when the hook is triggered, use :
-# $ make hook-debug s:instance a:stop v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:instance a:build v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
 #
 # @example
-#   make stop
+#   make build
 #   # Or :
-#   cwt/instance/stop.sh
+#   cwt/instance/build.sh
 #
 
 . cwt/bootstrap.sh
 
-hook -s 'instance' -a 'stop' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+hook -s 'instance' -a 'build' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'

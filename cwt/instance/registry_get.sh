@@ -12,6 +12,8 @@
 # @see cwt/extensions/file_registry
 #
 # @example
+#   make reg-get
+#   # Or :
 #   cwt/instance/registry_get.sh my_key
 #
 

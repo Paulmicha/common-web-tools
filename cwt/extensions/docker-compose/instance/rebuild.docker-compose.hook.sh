@@ -11,3 +11,4 @@
 
 u_dc_instance_stop
 u_dc_instance_build
+u_dc_instance_start
