@@ -3,19 +3,19 @@
 ##
 # Implements hook -a 'fs_ownership_pre_set' -s 'app instance' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'.
 #
-# (Re)sets filesystem permissions in application source files. This hook is
-# triggered before the 'normal' hook is triggered to ensure specific lists
-# of files which may be contained in app sources get their permissions applied
-# correctly afterwards.
+# (Re)sets filesystem ownership in application source files. This hook is
+# triggered before the 'normal' hook so that specific lists of paths (which may
+# be contained in app sources) get their owner/group applied correctly, without
+# being caught by recursion - i.e. when subfolder needs different ownership.
 #
 # @see cwt/app/fs_ownership_set.hook.sh
 #
 # This file is dynamically included when the "hook" is triggered.
-# @see u_instance_set_permissions() in cwt/instance/instance.inc.sh
+# @see u_instance_set_ownership() in cwt/instance/instance.inc.sh
 #
 # To verify which files can be used (and will be sourced) when this hook is
 # triggered :
-# $ make hook-debug s:app instance a:fs_ownership_pre_set
+# $ make hook-debug s:app instance a:fs_ownership_pre_set v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
 #
 
 # Handle projects using different Git repos for dev-stack and app.

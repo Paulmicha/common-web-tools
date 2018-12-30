@@ -149,7 +149,7 @@ u_instance_init() {
 #
 # To verify which files can be used (and will be sourced) when these hooks are
 # triggered, in this order :
-# $ make hook-debug s:app instance a:fs_ownership_get v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:app instance a:fs_perms_get v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
 # $ make hook-debug s:app instance a:fs_perms_pre_set v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
 # $ make hook-debug s:app instance a:fs_perms_set v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
 # $ make hook-debug s:app instance a:fs_perms_post_set v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
@@ -248,9 +248,9 @@ u_instance_get_permissions() {
 # It also applies the corresponding ownership to any list of paths optionally
 # defined in globals (env vars) mentionned above.
 #
-# @see u_instance_get_permissions()
-# @see cwt/instance/fix_perms.sh
-# @see cwt/instance/fs_perms_set.hook.sh
+# @see u_instance_get_ownership()
+# @see cwt/instance/fix_ownership.sh
+# @see cwt/instance/fs_ownership_set.hook.sh
 #
 # To verify which files can be used (and will be sourced) when these hooks are
 # triggered, in this order :

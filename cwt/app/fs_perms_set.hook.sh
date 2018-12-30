@@ -17,7 +17,7 @@
 #
 # To verify which files can be used (and will be sourced) when this hook is
 # triggered :
-# $ make hook-debug s:app instance a:fs_perms_set
+# $ make hook-debug s:app instance a:fs_perms_set v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
 #
 
 if [[ -n "$WRITEABLE_FILES" ]]; then

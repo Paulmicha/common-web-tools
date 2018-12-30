@@ -4,9 +4,9 @@
 # Implements hook -a 'fs_perms_pre_set' -s 'app instance' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'.
 #
 # (Re)sets filesystem permissions in application source files. This hook is
-# triggered before the 'normal' hook is triggered to ensure specific lists
-# of files which may be contained in app sources get their permissions applied
-# correctly afterwards.
+# triggered before the 'normal' hook so that specific lists of paths (which may
+# be contained in app sources) get their permissions applied correctly, without
+# being caught by recursion - i.e. when subfolder needs different permissions.
 #
 # @see cwt/app/fs_perms_set.hook.sh
 #
@@ -15,7 +15,7 @@
 #
 # To verify which files can be used (and will be sourced) when this hook is
 # triggered :
-# $ make hook-debug s:app instance a:fs_perms_pre_set
+# $ make hook-debug s:app instance a:fs_perms_pre_set v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
 #
 
 # Handle projects using different Git repos for dev-stack and app.
