@@ -74,7 +74,7 @@ find './cwt/test/cwt' -type f -exec chmod "$FS_E_FILES" {} +
 file_list=''
 u_fs_file_list './cwt' '*.make.sh' 32
 for f in $file_list; do
-  chmod "$FS_E_FILES" "$f"
+  chmod "$FS_E_FILES" "./cwt/$f"
   check_chmod=$?
   if [ $check_chmod -ne 0 ]; then
     echo >&2

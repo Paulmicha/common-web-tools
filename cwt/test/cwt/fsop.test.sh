@@ -44,13 +44,14 @@ test_cwt_can_create_file() {
 
 ##
 # Can CWT change ownership ?
+# Update : removed (would require sudoing, not enforceable).
 #
-test_cwt_can_chown() {
-  local rtrn
-  chown 81:81 '_cwt_dir_test/_cwt_file_test.txt'
-  rtrn=$?
-  assertEquals 'Chown failed (returned non-zero code)' 0 $rtrn
-}
+# test_cwt_can_chown() {
+#   local rtrn
+#   chown 81:81 '_cwt_dir_test/_cwt_file_test.txt'
+#   rtrn=$?
+#   assertEquals 'Chown failed (returned non-zero code)' 0 $rtrn
+# }
 
 ##
 # Cleans up any leftovers from previous tests.
