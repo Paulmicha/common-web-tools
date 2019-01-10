@@ -52,10 +52,15 @@ if [[ $CWT_BS_FLAG -ne 1 ]]; then
     done
   fi
 
-  # Bash aliases should be loaded by implementing the 'bootstrap' action hook.
+  # Allow extensions to implement custom global variables or aliases.
+  # To verify which files can be used (and will be sourced) when these hooks are
+  # triggered, use the following commands in this order :
+  # $ make hook-debug s:cwt a:pre_bootstrap v:PROVISION_USING
+  # $ make hook-debug s:cwt a:bootstrap v:PROVISION_USING
   # NB: aliases are not expanded when the shell is not interactive, unless the
   # expand_aliases shell option is set using shopt.
   # See https://unix.stackexchange.com/a/1498
   shopt -s expand_aliases
+  hook -s 'cwt' -a 'pre_bootstrap' -v 'PROVISION_USING'
   hook -s 'cwt' -a 'bootstrap' -v 'PROVISION_USING'
 fi
