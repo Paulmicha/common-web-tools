@@ -91,9 +91,9 @@ These steps are mere indications : in real life, you probably want to "wrap" the
   │   ├── utilities/        ← CWT internal functions (hides complexity)
   │   └── vendor/           ← Bundled third-party dependencies (only shunit2 by default)
   ├── scripts/              ← [configurable] default path to current project's scripts ($PROJECT_SCRIPTS)
-  │   └── cwt/              ← [configurable] CWT-related alterations and/or extensions ($PROJECT_CWT_SCRIPTS)
+  │   └── cwt/              ← [configurable] CWT-related alterations and/or extensions
   │       ├── extend/       ← [optional] Custom, project-specific CWT extension
-  │       ├── local/        ← [git-ignored] Generated global env. vars and Makefile specific to this instance
+  │       ├── local/        ← [git-ignored] Generated files specific to this instance ($INSTANCE_LOCAL_FILES)
   │       └── override/     ← [optional] Allows to replace virtually any bash file used by CWT
   ├── web/                  ← [optional+configurable] Application dir ($APP_DOCROOT or $APP_GIT_WORK_TREE*)
   │   └── dist/             ← [optional+configurable] Publicly accessible application dir ($APP_DOCROOT*)
@@ -117,7 +117,27 @@ Since every entry point sources `cwt/bootstrap.sh` to load CWT functions and glo
 
 One of the most straightforward ways to customize or add globals is by providing your own `global.vars.sh` file in current project instance's `scripts` folder, however any extension can provide its own - be it in the folder of the extension directly, or inside any of its subfolder (called *subjects*).
 
-CWT core provides the followig globals by default (see `cwt/env/global.vars.sh`, and `cwt/utilities/global.sh` for details about the `global()` function) :
+If all you need is a constant, the following syntax will not prompt for user input in terminal during *instance init* :
+
+```sh
+global MY_CONSTANT_VALUE "the value"
+```
+
+And if you need to always prompt for input during *instance init* (when the `-y` flag is not set), use only the 1st argument :
+
+```sh
+global MUST_INPUT_ON_INIT
+```
+
+These declarations are to be placed inside files named `global.vars.sh`. To show where these files can be placed in order to get picked up for aggregation - and in which order - during *instance init* in current project, you can use the following convenience command :
+
+```sh
+make globals-lp
+# Or :
+cwt/env/global_lookup_paths.make.sh
+```
+
+CWT core provides the followig globals by default (see `cwt/env/global.vars.sh`, and `cwt/utilities/global.sh` for details about the `global()` function), which show the syntax to provide default values and optional help text that will be displayed when user input is prompted during *instance init* when the `-y` flag is not set (otherwise it won't prompt for anything and just use the default value) :
 
 ```sh
 global PROJECT_DOCROOT "[default]='$PWD' [help]='Absolute path to project instance. All scripts using CWT *must* be run from this dir. No trailing slash.'"
@@ -148,17 +168,10 @@ global CWT_MAKE_INC "[append]='$PROJECT_SCRIPTS/cwt/extend/make.mk'"
 global CWT_MAKE_TASKS_SHORTER "[append]='registry/reg lookup-path/lp'"
 ```
 
-The syntax can be simpler if all you need is a constant :
+Once *instance init* has been run, every global env. vars aggregated are (over)written in 2 files :
 
-```sh
-global MY_CONSTANT_VALUE "the value"
-```
-
-And if you need to prompt for input during *instance init* (when the `-y` flag is not set), use only the 1st argument :
-
-```sh
-global MUST_INPUT_ON_INIT
-```
+- `.env` file in `$PROJECT_DOCROOT`, which is meant for Makefile and other programs like `docker-compose` (see the `cwt/extensions/docker-compose` extension, disabled by default)
+- `$INSTANCE_LOCAL_FILES/global.vars.sh` (`scripts/cwt/local/global.vars.sh` by default), which is exporting the resulting read-only shell variables and get loaded on every command that "bootstraps" CWT (see `cwt/bootstrap.sh`).
 
 ### Hooks
 
@@ -171,7 +184,7 @@ It follows the logic behind CWT folder structure, consisting in organizing `acti
 - **folders** represent **subjects**,
 - and their **files** represent **actions**.
 
-Excepted files using double extensions (e.g. `my_file.inc.sh`) or beginning with a dot (e.g. `.cwt_actions_ignore`), this pattern generates the following default pairs - also called *entry points* by default, here shown with their corresponding *make* shortcut :
+Excepted files using double extensions (e.g. `my_file.inc.sh`) or beginning with a dot (e.g. `.cwt_actions_ignore`), CWT generates the following *subject / action* pairs - also called *entry points* - by default during *instance init* , here shown with their corresponding *make* shortcut :
 
 ```txt
 cwt/app/compile.sh            - shortcut    $ make app-compile
@@ -208,7 +221,7 @@ Additional rules for *subject / action* pairs :
 - Dirnames starting with a dot in `cwt/extensions` are excluded from extensions list
 - Manual exclusion is possible for either subjects or actions using gitignore-like files (`.cwt_subjects_ignore` inside an extension folder, and `.cwt_actions_ignore` inside a subject dir).
 
-A
+TODO [wip] describe implementation
 
 ### Extensions
 
