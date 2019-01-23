@@ -129,6 +129,20 @@ And if you need to always prompt for input during *instance init* (when the `-y`
 global MUST_INPUT_ON_INIT
 ```
 
+See `cwt/utilities/global.sh` for details about the `global()` function, but we'll mention here one of its most commonly useful feature : the ability to stack values on each call with the same var name, which will be separated by space (and can be placed in different files because they will share the same namespace during *instance init*), e.g. :
+
+```sh
+global VALUES_WILL_CONCAT "[append]=path/to/file-1.txt"
+global VALUES_WILL_CONCAT "[append]=path/to/file-2.txt"
+global VALUES_WILL_CONCAT "[append]=path/to/file-3.txt"
+global VALUES_WILL_CONCAT "[append]='(if value has space or special characters, use quotes)'"
+
+# Example usage elsewhere, once "instance init" has run :
+for value in "$VALUES_WILL_CONCAT"; do
+  echo "$value"
+done
+```
+
 These declarations are to be placed inside files named `global.vars.sh`. To show where these files can be placed in order to get picked up for aggregation - and in which order - during *instance init* in current project, you can use the following convenience command :
 
 ```sh
@@ -137,7 +151,7 @@ make globals-lp
 cwt/env/global_lookup_paths.make.sh
 ```
 
-CWT core provides the followig globals by default (see `cwt/env/global.vars.sh`, and `cwt/utilities/global.sh` for details about the `global()` function), which show the syntax to provide default values and optional help text that will be displayed when user input is prompted during *instance init* when the `-y` flag is not set (otherwise it won't prompt for anything and just use the default value) :
+CWT core provides the followig globals by default (see `cwt/env/global.vars.sh`), which show the syntax to provide default values and optional help text that will be displayed when user input is prompted during *instance init* when the `-y` flag is not set (otherwise it won't prompt for anything and just use the default value) :
 
 ```sh
 global PROJECT_DOCROOT "[default]='$PWD' [help]='Absolute path to project instance. All scripts using CWT *must* be run from this dir. No trailing slash.'"
@@ -221,9 +235,31 @@ Additional rules for *subject / action* pairs :
 - Dirnames starting with a dot in `cwt/extensions` are excluded from extensions list
 - Manual exclusion is possible for either subjects or actions using gitignore-like files (`.cwt_subjects_ignore` inside an extension folder, and `.cwt_actions_ignore` inside a subject dir).
 
-TODO [wip] describe implementation
+Like for globals, to verify which files can be used (and will be sourced if they exist) when a hook is triggered, you can use the following convenience command :
+
+```sh
+make hook-debug a:start
+# Or :
+cwt/instance/hook.make.sh -d -t a:start
+```
+
+Given the example call above, here are the resulting lookup paths that will be output by default (will differ when more extensions are enabled or created):
+
+```txt
+cwt/app/start.hook.sh
+cwt/git/start.hook.sh
+cwt/host/start.hook.sh
+cwt/extensions/file_registry/host/start.hook.sh
+cwt/instance/start.hook.sh
+cwt/extensions/file_registry/instance/start.hook.sh
+cwt/test/start.hook.sh
+```
+
+Additional parameters allow to target specific subjects and/or actions. See `cwt/utilities/hook.sh` for detailed examples on using the `hook()` function.
 
 ### Extensions
+
+TODO [wip] provide global + hook implementations examples + mention special custom extension in `scripts/cwt/extend`.
 
 CWT Extensions can provide additional entry points and react to any hook. Any folder present in the `cwt/extensions` dir is considered a CWT extension. Their structure and functions follows that of the `cwt` dir (see *Hooks*).
 
