@@ -26,32 +26,6 @@ test_cwt_has_essential_globals() {
 }
 
 ##
-# Does the 'complement' alteration mechanism work ?
-#
-test_cwt_autoload_complement_works() {
-  local complement_flag
-  local complement_source='cwt/test/self.sh'
-
-  # Test without match.
-  complement_flag=''
-  u_autoload_get_complement "$complement_source"
-  assertTrue 'Flag should be empty at this stage ("complement" alteration mechanism failed)' "[ -e $complement_flag ]"
-
-  # Test with match (populates the local complement_flag variable).
-  local base_dir='scripts'
-  if [[ -n "$PROJECT_SCRIPTS" ]]; then
-    base_dir="$PROJECT_SCRIPTS"
-  fi
-  mkdir -p "$base_dir/complements/test"
-  cat > ${complement_source/cwt/"$base_dir/complements"} <<'EOF'
-#!/usr/bin/env bash
-complement_flag='not-empty'
-EOF
-  u_autoload_get_complement "$complement_source"
-  assertFalse 'Flag should not be empty at this stage ("complement" alteration mechanism failed)' "[ -e $complement_flag ]"
-}
-
-##
 # Does the 'override' alteration mechanism work ?
 #
 test_cwt_autoload_override_works() {

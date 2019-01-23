@@ -166,36 +166,3 @@ u_autoload_override() {
     fi
   fi
 }
-
-##
-# [TODO document new arg] Sources complement of given script.
-#
-# Checks if its counterpart exists in scripts/complements, and if it does,
-# source it in the scope of the calling script.
-#
-# This function is normally called after existing CWT generic script operations.
-#
-# @example
-#   u_autoload_get_complement "$BASH_SOURCE"
-#
-u_autoload_get_complement() {
-  local p_script_path="$1"
-  local p_reaction="$2"
-
-  local base_dir='scripts'
-  if [[ -n "$PROJECT_SCRIPTS" ]]; then
-    base_dir="$PROJECT_SCRIPTS"
-  fi
-
-  local complement=${p_script_path/cwt/"$base_dir/complements"}
-
-  if [[ -f "$complement" ]]; then
-
-    # Allows to react to the presence of a complement differently.
-    if [[ "$p_reaction" == 'get_complement_filepath' ]]; then
-      echo "$complement"
-    else
-      . "$complement"
-    fi
-  fi
-}

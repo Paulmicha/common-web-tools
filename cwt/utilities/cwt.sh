@@ -129,6 +129,7 @@ u_cwt_extensions() {
   local exclusions_arr
   local exclusions
   local excl
+  local custom_extend_path
 
   # ALlow to deactivate some extensions using dotfile '.cwt_extensions_ignore'.
   exclusions_arr=()
@@ -165,6 +166,23 @@ u_cwt_extensions() {
       CWT_INC+="$inc "
     fi
   done
+
+  # Consider "$PROJECT_SCRIPTS/cwt/extend" as an extension.
+  custom_extend_path="scripts/cwt/extend"
+  if [[ -n "$PROJECT_SCRIPTS" ]]; then
+    custom_extend_path="$PROJECT_SCRIPTS/cwt/extend"
+  fi
+  if [[ -d "$custom_extend_path" ]]; then
+
+    # TODO [wip] Workaround by using reserved keyword ? -> adapt everywhere ?
+    CWT_EXTENSIONS+="extend "
+
+    u_cwt_extend "$custom_extend_path"
+    inc="$custom_extend_path/custom.inc.sh"
+    if [[ -f "$inc" ]]; then
+      CWT_INC+="$inc "
+    fi
+  fi
 }
 
 ##

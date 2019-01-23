@@ -4,8 +4,12 @@
 # using Common Web Tools.
 #
 
-# Public web dir (or application docroot).
-# See $APP_DOCROOT global var.
+# [customizable] Local environment global variables and other generated files.
+/scripts/cwt/local/*
+!/scripts/cwt/local/README.md
+
+# [optional] Public web dir or application docroot.
+# See $APP_DOCROOT global var help in cwt/env/global.vars.sh.
 # There are 2 implementation approaches for using common web tools in a project :
 #   1 • Use a single, "monolothic" repo for everything
 #   2 • [default] Keep application code in a separate Git repo
@@ -17,39 +21,21 @@
 /web
 /www
 
-# Local environment variables.
-/cwt/env/current/*
-!/cwt/env/current/README.md
-
-# Ignore remote instances defined on current local instance.
-/cwt/extensions/remote/remote/instances/*
-!/cwt/extensions/remote/remote/instances/README.md
-
-# Private files, outside of public (web) dir.
+# [optional] Private files, outside of public (web) dir.
 /private/*
 !/private/README.md
 !/private/.htaccess
 
-# Folders for persisting DB data (volume) + DB dumps of optional extensions :
+# [optional] Folders for persisting DB data (volume) + DB dumps of the following
+# optional extensions :
 # @see cwt/extensions/db
 # @see cwt/extensions/mysql
 /db
 /dumps
 
-# Docker-compose env file.
+# [optional] Docker-compose env file.
 # @see cwt/extensions/docker-compose
 /.env
-
-# Folder containing overrides and complements (configurable).
-# See $PROJECT_SCRIPTS global var.
-/scripts/*
-!/scripts/README.md
-!/scripts/overrides
-/scripts/overrides/*
-!/scripts/overrides/README.md
-!/scripts/complements
-/scripts/complements/*
-!/scripts/complements/README.md
 
 # Misc.
 docker-runtime

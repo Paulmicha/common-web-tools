@@ -14,6 +14,8 @@
 
 . cwt/bootstrap.sh
 
+echo "cwt/env/global.vars.sh"
+
 hook -a 'global' -c 'vars.sh' -v 'PROVISION_USING' -t -d
 
 # Allow extra lookup paths at the root of extensions.
@@ -28,8 +30,13 @@ fi
 
 # Allow extra lookup path at the root of project's scripts, *after* all
 # dynamic lookups above.
-echo "$PROJECT_SCRIPTS/global.vars.sh"
-if [ -f "$PROJECT_SCRIPTS/global.vars.sh" ]; then
+global_lookup_project_scripts_path='scripts'
+if [[ -n "$PROJECT_SCRIPTS" ]]; then
+  global_lookup_project_scripts_path="$PROJECT_SCRIPTS"
+fi
+
+echo "$global_lookup_project_scripts_path/global.vars.sh"
+if [ -f "$global_lookup_project_scripts_path/global.vars.sh" ]; then
   echo "  exists"
 fi
 

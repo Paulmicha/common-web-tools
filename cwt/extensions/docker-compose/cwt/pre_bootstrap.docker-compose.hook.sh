@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ##
-# Implements hook -a 'pre_bootstrap' -v 'PROVISION_USING'.
+# Implements hook -s 'cwt' -a 'pre_bootstrap' -v 'PROVISION_USING'.
 #
 # Provide a global variable allowing to conditionally handle the pseudo-tty
 # allocation for "docker-compose run" and "docker-compose exec" commands. See

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ##
-# Implements hook -a 'bootstrap' -v 'PROVISION_USING'.
+# Implements hook -s 'cwt' -a 'bootstrap' -v 'PROVISION_USING'.
 #
 # Implement custom bash alias for the 'docker-compose' program given 'DC_MODE'
 # value, which specifies if and how docker-compose will choose a YAML
