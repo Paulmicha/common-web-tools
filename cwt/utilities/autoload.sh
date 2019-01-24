@@ -149,9 +149,6 @@ u_autoload_override() {
   fi
 
   local base_dir='scripts'
-  if [[ -n "$PROJECT_SCRIPTS" ]]; then
-    base_dir="$PROJECT_SCRIPTS"
-  fi
 
   inc_override_evaled_code=''
   local override=${p_script_path/cwt/"$base_dir/overrides"}

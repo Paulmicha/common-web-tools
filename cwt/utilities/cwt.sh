@@ -47,8 +47,6 @@
 #   to each one of these extensions.
 #   Important notes : extensions' folder names can only contain the following
 #   characters : A-Z a-z 0-9 dots . underscores _ dashes -
-#   Also, if the CWT customization dir (PROJECT_SCRIPTS = 'scripts' by default)
-#   is altered, extensions can only be detected AFTER stack init has been run once.
 #
 # 4. The 'CWT_INC' values are a simple list of files to be sourced in
 #   cwt/bootstrap.sh scope directly. They are meant to contain bash functions
@@ -167,13 +165,10 @@ u_cwt_extensions() {
     fi
   done
 
-  # Consider "$PROJECT_SCRIPTS/cwt/extend" as an extension. This allows to
-  # provide any implementation like "normal" CWT extensions, but dedicated to
-  # current project-specific operations (non-reusable).
+  # Consider "scripts/cwt/extend" as an extension. This allows to
+  # provide any implementation like "normal" CWT extensions meant for current
+  # project-specific operations (non-reusable).
   custom_extend_path="scripts/cwt/extend"
-  if [[ -n "$PROJECT_SCRIPTS" ]]; then
-    custom_extend_path="$PROJECT_SCRIPTS/cwt/extend"
-  fi
   if [[ -d "$custom_extend_path" ]]; then
 
     # TODO [wip] Workaround by using reserved keyword ? -> adapt everywhere ?

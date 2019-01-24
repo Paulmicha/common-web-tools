@@ -93,9 +93,9 @@ if [[ -d './.git' ]]; then
   find './.git/hooks' -type f -exec chmod "$FS_E_FILES" {} +
 fi
 
-# Same for custom scripts dir if defined.
-if [[ -n "$PROJECT_SCRIPTS" ]]; then
-  chmod "$FS_NW_DIRS" "$PROJECT_SCRIPTS"
+# Same for custom scripts dir if it exists.
+if [[ -d './scripts' ]]; then
+  chmod "$FS_NW_DIRS" './scripts'
   check_chmod=$?
   if [ $check_chmod -ne 0 ]; then
     echo >&2
@@ -104,6 +104,6 @@ if [[ -n "$PROJECT_SCRIPTS" ]]; then
     echo >&2
     exit 6
   fi
-  find "$PROJECT_SCRIPTS" -type d -exec chmod "$FS_NW_DIRS" {} +
-  find "$PROJECT_SCRIPTS" -type f -exec chmod "$FS_E_FILES" {} +
+  find './scripts' -type d -exec chmod "$FS_NW_DIRS" {} +
+  find './scripts' -type f -exec chmod "$FS_E_FILES" {} +
 fi

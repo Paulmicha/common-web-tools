@@ -40,9 +40,6 @@ global PROVISION_USING "[default]=docker-compose [help]='Generic differenciator 
 global HOST_TYPE "[default]=local [help]='Idem. E.g. local, remote...'"
 global HOST_OS "$(u_host_os)"
 
-global PROJECT_SCRIPTS "[default]=scripts [help]='Path to custom scripts folder. CWT will also use this path to look for extensions, and also overrides and complements (alteration mecanisms).'"
-global INSTANCE_LOCAL_FILES "[default]='$PROJECT_SCRIPTS/cwt/local' [help]='Path to local, git-ignored files. Contains generated files specific to current project instance, such as global env. vars and Makefile includes.'"
-
 # [optional] Provide additional custom makefile includes, and short subjects
 # or actions replacements used for generating Makefile task names.
 # @see u_instance_write_mk()

@@ -40,9 +40,6 @@ test_cwt_autoload_override_works() {
 
   # Test with match (populates the local override_flag variable).
   local base_dir='scripts'
-  if [[ -n "$PROJECT_SCRIPTS" ]]; then
-    base_dir="$PROJECT_SCRIPTS"
-  fi
   mkdir -p "$base_dir/overrides/test"
   cat > ${override_source/cwt/"$base_dir/overrides"} <<'EOF'
 #!/usr/bin/env bash
@@ -60,9 +57,6 @@ EOF
 #
 oneTimeTearDown() {
   local base_dir='scripts'
-  if [[ -n "$PROJECT_SCRIPTS" ]]; then
-    base_dir="$PROJECT_SCRIPTS"
-  fi
   rm -rf "$base_dir/complements/test"
   rm -rf "$base_dir/overrides/test"
 }

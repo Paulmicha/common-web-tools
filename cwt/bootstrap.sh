@@ -24,18 +24,13 @@ if [[ $CWT_BS_FLAG -ne 1 ]]; then
   . cwt/utilities/array.sh
   . cwt/utilities/string.sh
 
-  # If instance init was run at least once, automatically load global env vars.
-  # NB : this must happen before u_cwt_extend() gets called because it uses the
-  # customizable global var PROJECT_SCRIPTS to populate primitive values.
+  # If instance init was run at least once, automatically load locally generated
+  # global env vars.
   # This can be opted-out by setting the flag CWT_BS_SKIP_GLOBALS to 1.
   # @see cwt/instance/init.sh
   if [[ $CWT_BS_SKIP_GLOBALS -ne 1 ]]; then
-    CWT_LOCAL_GLOBALS="scripts/cwt/local/global.vars.sh"
-    if [[ -n "$INSTANCE_LOCAL_FILES" ]]; then
-      CWT_LOCAL_GLOBALS="$INSTANCE_LOCAL_FILES/global.vars.sh"
-    fi
-    if [[ -f "$CWT_LOCAL_GLOBALS" ]]; then
-      . "$CWT_LOCAL_GLOBALS"
+    if [[ -f scripts/cwt/local/global.vars.sh ]]; then
+      . scripts/cwt/local/global.vars.sh
     fi
   fi
 

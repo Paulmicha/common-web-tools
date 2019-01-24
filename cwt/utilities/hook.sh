@@ -42,7 +42,6 @@
 # - cwt/my_subject/my_action.docker-compose.dev.hook.sh
 #
 # @requires the following global variables in calling scope :
-# - PROJECT_SCRIPTS
 # - CWT_ACTIONS
 # - CWT_SUBJECTS
 # - CWT_EXTENSIONS
@@ -98,7 +97,7 @@
 #   hook -e 'nodejs'
 #   # Yields the following lookup paths (ALL includes found are sourced) :
 #   # (given INSTANCE_TYPE='prod')
-#   # - $PROJECT_SCRIPTS/extensions/nodejs/<EXT_SUBJECTS>/<SUBJECT_ACTIONS>.prod.hook.sh
+#   # - scripts/extensions/nodejs/<EXT_SUBJECTS>/<SUBJECT_ACTIONS>.prod.hook.sh
 #
 #   # 5. Prefixes filter are exclusive by default, which means pure actions are
 #   #   not included. Ex :
@@ -457,10 +456,10 @@ u_hook_build_lookup_by_subject() {
 #   - overrides (e.g. scripts/overrides/extensions/docker-compose/instance/init.docker-compose.hook.sh)
 # @see hook()
 #
-# NB : We must give some advantage to the (custom project) 'scripts' path in
-# comparison to CWT extensions, so that the custom implementations always
+# NB : We must give some advantage to the project-specific 'scripts' path in
+# comparison to generic CWT extensions so that the custom implementations always
 # take precedence over extensions'.
-# -> Any implementation located in $PROJECT_SCRIPTS gets +4 to its score.
+# -> Any implementation located in './scripts' gets +4 to its score.
 #
 # TODO [evol] Attempt to implement some control over which one gets sourced
 # in case of equality.
@@ -514,7 +513,7 @@ u_hook_most_specific() {
 
     # Apply score bonus to custom project immplementations so they take
     # precedence over extensions'.
-    case "$f" in "$PROJECT_SCRIPTS"*)
+    case "$f" in "scripts/"*)
       depth=$(( depth + 4 ))
     esac
 

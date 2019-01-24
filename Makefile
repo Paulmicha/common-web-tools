@@ -22,18 +22,11 @@
 # This '.env' file is generated during instance init.
 -include .env
 
-# Since the path to this project instance's scripts can be altered using a
-# global, and since its value is only available after instance init has run, we
-# attempt to include the default location if that global is not available yet.
-ifndef PROJECT_SCRIPTS
--include scripts/cwt/extend/custom.mk
-else
--include $(PROJECT_SCRIPTS)/cwt/extend/custom.mk
-endif
-
+# Project-specific tasks.
 ifdef CWT_MAKE_INC
 -include $(CWT_MAKE_INC)
 endif
+-include scripts/cwt/extend/custom.mk
 
 # Default CWT tasks.
 -include cwt/default.mk

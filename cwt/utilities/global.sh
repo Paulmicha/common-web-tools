@@ -86,8 +86,8 @@ EOF
 #   # - cwt/extensions/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/global.<PROVISION_USING>.vars.sh
 #   # - cwt/extensions/<CWT_EXTENSIONS>/global.vars.sh
 #   # - cwt/extensions/<CWT_EXTENSIONS>/global.<PROVISION_USING>.vars.sh
-#   # - $PROJECT_SCRIPTS/global.vars.sh
-#   # - $PROJECT_SCRIPTS/global.<PROVISION_USING>.vars.sh
+#   # - scripts/global.vars.sh
+#   # - scripts/global.<PROVISION_USING>.vars.sh
 #   # -> Ex :
 #   # - cwt/app/global.vars.sh
 #   # - cwt/app/global.docker-compose.vars.sh
@@ -111,12 +111,6 @@ u_global_lookup_paths() {
         global_lookup_paths+="cwt/extensions/$extension/global.vars.sh "
       fi
     done
-  fi
-
-  # Allow extra lookup path at the root of project's scripts, *after* all
-  # dynamic lookups above.
-  if [ -f "$PROJECT_SCRIPTS/global.vars.sh" ]; then
-    global_lookup_paths+="$PROJECT_SCRIPTS/global.vars.sh"
   fi
 }
 

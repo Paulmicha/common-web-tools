@@ -1,6 +1,6 @@
 # Overrides
 
-If the "counterpart" of a given script exists in the folder `$PROJECT_SCRIPTS/cwt/override` (`scripts/cwt/override` by default), it will be used *instead* of the original file.
+If the "counterpart" of a given script exists in the folder `scripts/cwt/override`, it will be used *instead* of the original file.
 
 This allows to replace any includes or hook implementations.
 

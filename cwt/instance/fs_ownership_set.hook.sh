@@ -70,8 +70,8 @@ if [[ -d './.git' ]]; then
 fi
 
 # Custom scripts ownership.
-if [[ -n "$PROJECT_SCRIPTS" ]]; then
-  chown "$FS_OWNER:$FS_GROUP" "$PROJECT_SCRIPTS" -R
+if [[ -d './scripts' ]]; then
+  chown "$FS_OWNER:$FS_GROUP" './scripts' -R
   check_chown=$?
   if [ $check_chown -ne 0 ]; then
     echo >&2

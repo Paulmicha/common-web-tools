@@ -63,7 +63,7 @@ There are 2 ways to use CWT in existing or new projects :
 1. Use a single, "monolothic" repo for the whole project
 1. Keep application code in a separate Git repo (this is the default assumption in the `.gitignore` config featured in this repo)
 
-The files contained in CWT core - this repo - may be placed either inside the application code (in this case `APP_DOCROOT` = `PROJECT_DOCROOT`), inside its parent folder (this is the default assumption and usually has its own separate "dev stack" Git repo), or even anywhere else on the host (see `APP_DOCROOT`, `PROJECT_SCRIPTS` and `APP_GIT_WORK_TREE` global env vars).
+The files contained in CWT core - this repo - may be placed either inside the application code (in this case `APP_DOCROOT` = `PROJECT_DOCROOT`), inside its parent folder (this is the default assumption and usually has its own separate "dev stack" Git repo), or even anywhere else on the host (see `APP_DOCROOT` and `APP_GIT_WORK_TREE` global env vars).
 
 So the first step will always be to clone or download / copy / paste the files from this repo to desired location (in relation to your choice for this project instance source files organization described above), then :
 
@@ -72,7 +72,7 @@ So the first step will always be to clone or download / copy / paste the files f
 1. [optional] launch *host provision* action (e.g. run `make-host-provision`) - this is not implemented in CWT, but this "entry point" exists to streamline host-level software installation in extensions.
 1. [optional] launch *instance start* action (e.g. run `make-instance-start`) - this is meant to run any service required to use or work on current project instance.
 
-These steps are mere indications : in real life, you probably want to "wrap" these calls in your own scripts (e.g. to preset some arguments, etc), usually in the `$PROJECT_SCRIPTS` folder (`./scripts` by default). Examples and detailed explanations are provided in CWT source code comments.
+These steps are mere indications : in real life, you probably want to "wrap" these calls in your own scripts (e.g. to preset some arguments, etc), usually in the `./scripts` folder. Examples and detailed explanations are provided in CWT source code comments.
 
 ## File structure
 
@@ -90,10 +90,10 @@ These steps are mere indications : in real life, you probably want to "wrap" the
   │   │   └── cwt/      ← CWT 'core' internal tests (uses shunit2 - see 'vendor' dir)
   │   ├── utilities/    ← CWT internal functions (hides complexity)
   │   └── vendor/       ← Bundled third-party dependencies (only shunit2 by default)
-  ├── scripts/          ← [configurable] default path to current project's scripts ($PROJECT_SCRIPTS)
+  ├── scripts/          ← Current project specific scripts
   │   └── cwt/          ← CWT-related project-specific alterations and/or extension
   │       ├── extend/   ← [optional] Custom, project-specific CWT extension
-  │       ├── local/    ← [configurable] Generated files specific to this instance ($INSTANCE_LOCAL_FILES)
+  │       ├── local/    ← Generated files specific to this instance
   │       └── override/ ← [optional] Allows to replace virtually any bash file used by CWT
   ├── web/              ← [optional+configurable] Application dir ($APP_DOCROOT or $APP_GIT_WORK_TREE*)
   │   └── dist/         ← [optional+configurable] Publicly accessible application dir ($APP_DOCROOT*)
@@ -106,15 +106,15 @@ These steps are mere indications : in real life, you probably want to "wrap" the
 
 Altering or extending CWT involves either :
 
-- creating bash shell scripts in the `scripts` dir (this path may be overridden using the `PROJECT_SCRIPTS` global)
+- creating bash shell scripts in the `scripts` dir
 - creating your own generic extension(s) in `cwt/extensions` (1 folder = 1 extension)
-- provide your own operations, globals, or implement CWT hooks in `$PROJECT_SCRIPTS/cwt/extend` (`scripts/cwt/extend` by default)
+- provide your own operations, globals, or implement CWT hooks in `scripts/cwt/extend`
 
 Here are the different ways to adapt CWT to current project needs :
 
 ### Globals
 
-Since every entry point sources `cwt/bootstrap.sh` to load CWT functions and globals, these (`readonly`) variables are available everywhere. Their values are assigned during *instance init* which generates a single, git-ignored script : `$INSTANCE_LOCAL_FILES/global.vars.sh` (`scripts/cwt/local/global.vars.sh` by default).
+Since every entry point sources `cwt/bootstrap.sh` to load CWT functions and globals, these (`readonly`) variables are available everywhere. Their values are assigned during *instance init* which generates a single, git-ignored script : `scripts/cwt/local/global.vars.sh`.
 
 One of the most straightforward ways to customize or add globals is by providing your own `global.vars.sh` file in current project instance's `scripts` folder, however any extension can provide its own - be it in the folder of the extension directly, or inside any of its subfolder (called *subjects*).
 
@@ -171,22 +171,19 @@ global PROVISION_USING "[default]=docker-compose [help]='Generic differenciator 
 global HOST_TYPE "[default]=local [help]='Idem. E.g. local, remote...'"
 global HOST_OS "$(u_host_os)"
 
-global PROJECT_SCRIPTS "[default]=scripts [help]='Path to custom scripts folder. CWT will also use this path to look for extensions, and also overrides and complements (alteration mecanisms).'"
-global INSTANCE_LOCAL_FILES "[default]='$PROJECT_SCRIPTS/cwt/local' [help]='Path to local, git-ignored files. Contains generated files specific to current project instance, such as global env. vars and Makefile includes.'"
-
 # [optional] Provide additional custom makefile includes, and short subjects
 # or actions replacements used for generating Makefile task names.
 # @see u_instance_write_mk()
 # @see u_instance_task_name()
 # @see Makefile
-global CWT_MAKE_INC "[append]='$PROJECT_SCRIPTS/cwt/extend/make.mk'"
+global CWT_MAKE_INC "[append]='$(u_cwt_extensions_get_makefiles)'"
 global CWT_MAKE_TASKS_SHORTER "[append]='registry/reg lookup-path/lp'"
 ```
 
 Once *instance init* has been run, every global env. vars aggregated are (over)written in 2 files :
 
 - `.env` file in `$PROJECT_DOCROOT`, which is meant for Makefile and other programs like `docker-compose` (see the `cwt/extensions/docker-compose` extension, disabled by default)
-- `$INSTANCE_LOCAL_FILES/global.vars.sh` (`scripts/cwt/local/global.vars.sh` by default), which is exporting the resulting read-only shell variables and get loaded on every command that "bootstraps" CWT (see `cwt/bootstrap.sh`).
+- `scripts/cwt/local/global.vars.sh`, which is exporting the resulting read-only shell variables and get loaded on every command that "bootstraps" CWT (see `cwt/bootstrap.sh`).
 
 ### Hooks
 
@@ -229,7 +226,7 @@ cwt/test/self_test.sh         - shortcut*** $ make self-test
 
 - `*` : Shortening rules can be defined using the `CWT_MAKE_TASKS_SHORTER` global. Ex : `global CWT_MAKE_TASKS_SHORTER "[append]='something_too_long_for_make_shortcut/stlfms'"`
 - `**` : The `instance` is implicit and omitted for default CWT actions' `make` shortcuts.
-- `***` : Some exceptions are hardcoded in this repo's `./Makefile`. Others can be added using the `CWT_MAKE_INC` global. Ex : `global CWT_MAKE_INC "[append]='$PROJECT_SCRIPTS/cwt/extend/make.mk'"`
+- `***` : Some exceptions are hardcoded in this repo's `./Makefile`. Others can be added using the `CWT_MAKE_INC` global. Ex : `global CWT_MAKE_INC "[append]='path/to/make_include.mk'"`
 
 Additional rules for *subject / action* pairs :
 
@@ -275,7 +272,7 @@ mysql:https://github.com/Paulmicha/cwt.mysql.git
 
 ### Overrides
 
-If the "counterpart" of a given script exists in the folder `$PROJECT_SCRIPTS/cwt/override` (`scripts/cwt/override` by default), it will be used *instead* of the original file.
+If the "counterpart" of a given script exists in the folder `scripts/cwt/override`, it will be used *instead* of the original file.
 
 This allows to replace any includes or hook implementations.
 

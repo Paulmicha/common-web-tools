@@ -52,7 +52,6 @@ u_instance_init() {
   # Configurable CWT internals.
   local p_cwtii_host_type=''
   local p_cwtii_provision_using=''
-  local p_cwtii_project_scripts_dir=''
 
   local p_cwtii_yes=0
   local p_cwtii_dry_run=0
@@ -68,7 +67,6 @@ u_instance_init() {
 
       -h) p_cwtii_host_type="$2"; shift 2;;
       -p) p_cwtii_provision_using="$2"; shift 2;;
-      -c) p_cwtii_project_scripts_dir="$2"; shift 2;;
 
       -y) p_cwtii_yes=1; shift 1;;
       -r) p_cwtii_dry_run=1; shift 1;;

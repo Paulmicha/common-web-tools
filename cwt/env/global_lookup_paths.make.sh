@@ -30,16 +30,4 @@ if [ -n "$CWT_EXTENSIONS" ]; then
   done
 fi
 
-# Allow extra lookup path at the root of project's scripts, *after* all
-# dynamic lookups above.
-global_lookup_project_scripts_path='scripts'
-if [[ -n "$PROJECT_SCRIPTS" ]]; then
-  global_lookup_project_scripts_path="$PROJECT_SCRIPTS"
-fi
-
-echo "$global_lookup_project_scripts_path/global.vars.sh"
-if [ -f "$global_lookup_project_scripts_path/global.vars.sh" ]; then
-  echo "  exists"
-fi
-
 echo
