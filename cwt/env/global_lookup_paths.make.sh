@@ -23,8 +23,10 @@ hook -a 'global' -c 'vars.sh' -v 'PROVISION_USING' -t -d
 # Allow extra lookup paths at the root of extensions.
 if [ -n "$CWT_EXTENSIONS" ]; then
   for extension in $CWT_EXTENSIONS; do
-    echo "cwt/extensions/$extension/global.vars.sh"
-    if [ -f "cwt/extensions/$extension/global.vars.sh" ]; then
+    ext_path=''
+    u_cwt_extension_path "$extension"
+    echo "$ext_path/$extension/global.vars.sh"
+    if [ -f "$ext_path/$extension/global.vars.sh" ]; then
       echo "  exists"
     fi
   done

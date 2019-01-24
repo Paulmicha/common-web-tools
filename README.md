@@ -241,7 +241,7 @@ make hook-debug a:start
 cwt/instance/hook.make.sh -d -t a:start
 ```
 
-Given the example call above, here are the resulting lookup paths that will be output by default (will differ when more extensions are enabled or created):
+Given the example call above, here are the resulting lookup paths that will be output by default (will differ when more extensions are enabled or added):
 
 ```txt
 cwt/app/start.hook.sh

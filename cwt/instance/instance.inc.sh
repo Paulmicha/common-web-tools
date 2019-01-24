@@ -382,6 +382,7 @@ u_instance_write_mk() {
 
   local task
   local sa_pair
+  local ext_path
 
   # No need to check for collisions in CWT core (we know there aren't any).
   for sa_pair in $CWT_ACTIONS; do
@@ -423,7 +424,9 @@ u_instance_write_mk() {
         fi
 
         mk_tasks+=("$task")
-        mk_entry_points+=("cwt/extensions/$extension/$sa_pair.sh")
+        ext_path=''
+        u_cwt_extension_path "$extension"
+        mk_entry_points+=("$ext_path/$extension/$sa_pair.sh")
       done
 
     fi

@@ -42,11 +42,13 @@
 #   have the same role as the 'subjects' ones described in 1 but must be placed
 #   inside relevant subject's folder.
 #
-# 3. CWT_EXTENSIONS contains a list of folders using the same structure as
-#   the 'cwt' folder. The primitive mecanisms explained in 1 & 2 above apply
-#   to each one of these extensions.
+# 3. CWT_EXTENSIONS contains a list of all active extensions' folder names. Each
+#   one uses the same structure as the 'cwt' folder. The primitive mecanisms
+#   explained in 1 & 2 above apply to each one of these extensions.
 #   Important notes : extensions' folder names can only contain the following
 #   characters : A-Z a-z 0-9 dots . underscores _ dashes -
+#   Exception : the name 'extend' is reserved for project-specific
+#   implementations.
 #
 # 4. The 'CWT_INC' values are a simple list of files to be sourced in
 #   cwt/bootstrap.sh scope directly. They are meant to contain bash functions
@@ -170,16 +172,32 @@ u_cwt_extensions() {
   # project-specific operations (non-reusable).
   custom_extend_path="scripts/cwt/extend"
   if [[ -d "$custom_extend_path" ]]; then
-
-    # TODO [wip] Workaround by using reserved keyword ? -> adapt everywhere ?
     CWT_EXTENSIONS+="extend "
-
     u_cwt_extend "$custom_extend_path"
-    inc="$custom_extend_path/custom.inc.sh"
+    inc="$custom_extend_path/extend.inc.sh"
     if [[ -f "$inc" ]]; then
       CWT_INC+="$inc "
     fi
   fi
+}
+
+##
+# Get extension path by name.
+#
+# @requires local var $ext_path in calling scope.
+# This function modifies an existing variable for performance reasons (in order
+# to avoid using a subshell).
+#
+# @example
+#   ext_path=''
+#   u_cwt_extension_path 'extend'
+#   echo "$ext_path" # Yields 'scripts/cwt'
+#
+u_cwt_extension_path() {
+  ext_path='cwt/extensions'
+  case "$1" in 'extend')
+    ext_path='scripts/cwt'
+  esac
 }
 
 ##
@@ -425,6 +443,7 @@ u_cwt_get_actions() {
   local bp
   local extension
   local uppercase
+  local ext_path
 
   cwt_action_names=()
   cwt_action_scripts=()
@@ -435,7 +454,9 @@ u_cwt_get_actions() {
     u_str_uppercase "$uppercase"
     eval "subjects+=\" \$${uppercase}_SUBJECTS\""
     eval "actions+=\" \$${uppercase}_ACTIONS\""
-    base_paths+=("cwt/extensions/$extension")
+    ext_path=''
+    u_cwt_extension_path "$extension"
+    base_paths+=("$ext_path/$extension")
   done
 
   for s in $subjects; do

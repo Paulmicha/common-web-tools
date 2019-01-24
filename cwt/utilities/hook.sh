@@ -159,6 +159,7 @@ hook() {
   local base_paths=("cwt")
   local extension
   local uppercase
+  local ext_path
 
   # Allow using only a particular extension (see the '-p' argument).
   if [ -n "$p_extensions_filter" ]; then
@@ -169,7 +170,9 @@ hook() {
       eval "subjects=\"\$${uppercase}_SUBJECTS\""
       eval "actions=\"\$${uppercase}_ACTIONS\""
       # Override base path for lookups.
-      base_paths=("cwt/extensions/$extension")
+      ext_path=''
+      u_cwt_extension_path "$extension"
+      base_paths=("$ext_path/$extension")
     done
 
   # By default, any extension can append its own "primitives".
@@ -184,7 +187,9 @@ hook() {
       eval "subjects+=\" \$${uppercase}_SUBJECTS\""
       eval "actions+=\" \$${uppercase}_ACTIONS\""
       # Every extension defines an additional base path for lookups.
-      base_paths+=("cwt/extensions/$extension")
+      ext_path=''
+      u_cwt_extension_path "$extension"
+      base_paths=("$ext_path/$extension")
     done
   fi
 
