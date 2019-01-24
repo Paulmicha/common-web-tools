@@ -1,10 +1,5 @@
-ansible
 db
 docker-compose
 docker4drupal
-docker4php
-docker4wordpress
-lando
 mysql
-postgresql
 remote

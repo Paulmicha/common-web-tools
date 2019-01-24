@@ -462,3 +462,17 @@ u_cwt_get_actions() {
     done
   done
 }
+
+##
+# Prints a list of Makefiles includes.
+#
+# The default location is a file called 'make.mk' inside the extension folder.
+# This function merely lists these locations (separated by a space) for each
+# currently active extensions.
+#
+# @example
+#   u_cwt_extensions_get_makefiles
+#
+u_cwt_extensions_get_makefiles() {
+  # TODO [wip]
+}

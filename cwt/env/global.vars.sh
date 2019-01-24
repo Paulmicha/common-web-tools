@@ -48,5 +48,5 @@ global INSTANCE_LOCAL_FILES "[default]='$PROJECT_SCRIPTS/cwt/local' [help]='Path
 # @see u_instance_write_mk()
 # @see u_instance_task_name()
 # @see Makefile
-global CWT_MAKE_INC "[append]='$PROJECT_SCRIPTS/cwt/extend/make.mk'"
+global CWT_MAKE_INC "[append]='$(u_cwt_extensions_get_makefiles)'"
 global CWT_MAKE_TASKS_SHORTER "[append]='registry/reg lookup-path/lp'"
