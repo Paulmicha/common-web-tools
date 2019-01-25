@@ -487,8 +487,19 @@ u_cwt_get_actions() {
 # currently active extensions.
 #
 # @example
-#   u_cwt_extensions_get_makefiles
+#   lookup_paths="$(u_cwt_extensions_get_makefiles)"
+#   echo "$lookup_paths"
 #
 u_cwt_extensions_get_makefiles() {
-  # TODO [wip]
+  local mk_includes_lp
+  local cwt_gm_ext
+  local ext_path
+
+  for cwt_gm_ext in $CWT_EXTENSIONS; do
+    ext_path=''
+    u_cwt_extension_path "$cwt_gm_ext"
+    mk_includes_lp+="$ext_path/$cwt_gm_ext/make.mk "
+  done
+
+  echo "$mk_includes_lp"
 }

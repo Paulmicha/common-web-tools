@@ -58,5 +58,8 @@ hook-debug:
 globals-lp:
 	@ cwt/env/global_lookup_paths.make.sh
 
+list-actions:
+	@ cwt/instance/list_actions.make.sh
+
 self-test:
 	@ cwt/test/self_test.sh

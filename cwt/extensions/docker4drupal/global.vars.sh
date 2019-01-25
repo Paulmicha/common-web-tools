@@ -19,12 +19,6 @@ global D4D_USE_CRONTAB "[default]=false"
 # @see u_instance_task_name() in cwt/instance/instance.inc.sh
 global CWT_MAKE_TASKS_SHORTER "[append]='docker4drupal/d4d'"
 
-# Add custom 'make' entry points (CLI shortcuts).
-# @see cwt/extensions/docker4drupal/cli/drush.make.sh
-# @see cwt/extensions/docker4drupal/cli/drupal.make.sh
-# @see cwt/extensions/docker4drupal/cli/composer.make.sh
-global CWT_MAKE_INC "[append]='cwt/extensions/docker4drupal/make.mk'"
-
 # Customizable list of global env vars automatically replaceable in generated
 # local settings file for Drupal.
 # @see u_d4d_write_local_settings() in cwt/extensions/docker4drupal/docker4drupal.inc.sh

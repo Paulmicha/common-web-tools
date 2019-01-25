@@ -43,8 +43,9 @@ By providing some abstractions to complement, combine, replace or add any operat
 CWT relies on **file structure**, **naming conventions**, and a few concepts :
 
 - **Globals** are the environment variables related to current project instance. They may be declared using the `global` function in files named `env.vars.sh` aggregated during initialization.
-- **Bootstrap** is the entry point of any task's execution. It deals with the inclusion of all the relevant scripts and loads global variables (e.g. host type, instance type, etc). Relies on sourcing shell scripts and the fact that *all* commands run from the folder $PROJECT_DOCROOT.
-- **Hooks** are function calls mimicking events where "listening" or implementing entails creating some specific file(s) in certain path(s) corresponding to its arguments.
+- **Bootstrap** deals with the inclusion of all the relevant source files and loads global variables (e.g. host type, instance type, etc) and functions. Any script that includes the file `cwt/bootstrap.sh` can use these. This depends on sourcing shell scripts using relative paths, which is made possible by the fact that *all* scripts (or `make` "shortcut" commands) must be run from the folder `$PROJECT_DOCROOT`.
+- **Actions** - also referred to as *entry points*, *operations*, *tasks*, or just *commands* - are scoped by subject, e.g. *instance init*, *app compile*, etc. CWT determines a list of available actions by looking up folders and shell scripts matching certain rules.
+- **Hooks** are function calls mimicking events where "listening" or implementing entails creating some specific file(s) in certain path(s) corresponding to filters specified in arguments.
 
 ## Preprequisites
 
@@ -91,10 +92,10 @@ These steps are mere indications : in real life, you probably want to "wrap" the
   │   ├── utilities/    ← CWT internal functions (hides complexity)
   │   └── vendor/       ← Bundled third-party dependencies (only shunit2 by default)
   ├── scripts/          ← Current project specific scripts
-  │   └── cwt/          ← CWT-related project-specific alterations and/or extension
-  │       ├── extend/   ← [optional] Custom, project-specific CWT extension
-  │       ├── local/    ← Generated files specific to this instance
-  │       └── override/ ← [optional] Allows to replace virtually any bash file used by CWT
+  │   └── cwt/          ← CWT-related project-specific extension, local files and overrides
+  │       ├── extend/   ← [optional] Custom project-specific CWT extension
+  │       ├── local/    ← [git-ignored] Generated files specific to this local instance
+  │       └── override/ ← [optional] Allows to replace virtually any file sourced in CWT scripts
   ├── web/              ← [optional+configurable] Application dir ($APP_DOCROOT or $APP_GIT_WORK_TREE*)
   │   └── dist/         ← [optional+configurable] Publicly accessible application dir ($APP_DOCROOT*)
   └── .gitignore        ← Replace with your own and/or edit
@@ -139,7 +140,7 @@ global VALUES_WILL_CONCAT "[append]=path/to/file-3.txt"
 global VALUES_WILL_CONCAT "[append]='(if value has space or special characters, use quotes)'"
 
 # Example usage elsewhere, once "instance init" has run :
-for value in "$VALUES_WILL_CONCAT"; do
+for value in $VALUES_WILL_CONCAT; do
   echo "$value"
 done
 ```
@@ -185,18 +186,26 @@ Once *instance init* has been run, every global env. vars aggregated are (over)w
 - `.env` file in `$PROJECT_DOCROOT`, which is meant for Makefile and other programs like `docker-compose` (see the `cwt/extensions/docker-compose` extension, disabled by default)
 - `scripts/cwt/local/global.vars.sh`, which is exporting the resulting read-only shell variables and get loaded on every command that "bootstraps" CWT (see `cwt/bootstrap.sh`).
 
-### Hooks
+### Actions
 
-CWT provides basic functions most projects usually need such as instance-specific settings setup and preset commands designed to trigger common tasks (compilation, git hooks, etc).
-
-Some of these tasks expose entry points for extensions to react and implement their own operations. The convention used allows to predict filepaths to use for reacting to given hooks.
-
-It follows the logic behind CWT folder structure, consisting in organizing `actions` by `subject` :
+CWT orders `actions` by `subject` :
 
 - **folders** represent **subjects**,
 - and their **files** represent **actions**.
 
-Excepted files using double extensions (e.g. `my_file.inc.sh`) or beginning with a dot (e.g. `.cwt_actions_ignore`), CWT generates the following *subject / action* pairs - also called *entry points* - by default during *instance init* , here shown with their corresponding *make* shortcut :
+Exceptions : folders beginning with a dot (e.g. `.git`), and files using double extensions (e.g. `my_file.inc.sh`) or beginning with a dot (e.g. `.cwt_actions_ignore`).
+
+CWT will look in `./cwt` to determine default CWT actions, then it will do the samefor every folders in `cwt/extensions` and `scripts/cwt/extend`. For detailed explanations and examples, see `u_cwt_extend()` in `cwt/utilities/cwt.sh`.
+
+To print the list of available actions in current project instance, you can use the following convenience command :
+
+```sh
+make list-actions
+# Or :
+cwt/instance/list_actions.make.sh
+```
+
+By default, CWT generates the following *make* shortcuts correponding to these *subject / action* pairs - also called *entry points* - during *instance init* :
 
 ```txt
 cwt/app/compile.sh            - shortcut    $ make app-compile
@@ -233,7 +242,11 @@ Additional rules for *subject / action* pairs :
 - Dirnames starting with a dot in `cwt/extensions` are excluded from extensions list
 - Manual exclusion is possible for either subjects or actions using gitignore-like files (`.cwt_subjects_ignore` inside an extension folder, and `.cwt_actions_ignore` inside a subject dir).
 
-Like for globals, to verify which files can be used (and will be sourced if they exist) when a hook is triggered, you can use the following convenience command :
+### Hooks
+
+CWT provides basic actions most projects usually need such as instance-specific settings setup and preset commands designed to trigger common tasks (compilation, git hooks, etc).
+
+Some of the default actions CWT provides out of the box use hooks so that extensions can react and implement their own operations. The convention used allows to predict which filepaths to use for implementing given hooks. To verify which files can be used (and will be sourced if they exist) when a hook is triggered, you can use the following convenience command :
 
 ```sh
 make hook-debug a:start
@@ -241,7 +254,7 @@ make hook-debug a:start
 cwt/instance/hook.make.sh -d -t a:start
 ```
 
-Given the example call above, here are the resulting lookup paths that will be output by default (will differ when more extensions are enabled or added):
+Given the example call above, here are the resulting lookup paths out of the box :
 
 ```txt
 cwt/app/start.hook.sh
@@ -252,6 +265,8 @@ cwt/instance/start.hook.sh
 cwt/extensions/file_registry/instance/start.hook.sh
 cwt/test/start.hook.sh
 ```
+
+This result will differ when more extensions are enabled, added and/or removed.
 
 Additional parameters allow to target specific subjects and/or actions. See `cwt/utilities/hook.sh` for detailed examples on using the `hook()` function.
 
