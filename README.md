@@ -284,10 +284,38 @@ hook -s 'app instance' \
 make hook-debug s:app instance a:fs_perms_set v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
 ```
 
-The example above would output :
+Given the following globals values (previously set during *instance init*) : `PROVISION_USING='docker-compose-3'`, `HOST_TYPE='local'`, and `INSTANCE_TYPE='dev'`, the example above would output :
 
 ```txt
-TODO [wip]
+cwt/app/fs_perms_set.hook.sh
+  exists
+cwt/app/fs_perms_set.docker-compose.hook.sh
+cwt/app/fs_perms_set.docker-compose-3.hook.sh
+cwt/app/fs_perms_set.docker-compose-3.local.hook.sh
+cwt/app/fs_perms_set.docker-compose-3.local.dev.hook.sh
+cwt/app/fs_perms_set.docker-compose-3.dev.hook.sh
+cwt/app/fs_perms_set.local.hook.sh
+cwt/app/fs_perms_set.local.dev.hook.sh
+cwt/app/fs_perms_set.dev.hook.sh
+cwt/instance/fs_perms_set.hook.sh
+  exists
+cwt/instance/fs_perms_set.docker-compose.hook.sh
+cwt/instance/fs_perms_set.docker-compose-3.hook.sh
+cwt/instance/fs_perms_set.docker-compose-3.local.hook.sh
+cwt/instance/fs_perms_set.docker-compose-3.local.dev.hook.sh
+cwt/instance/fs_perms_set.docker-compose-3.dev.hook.sh
+cwt/instance/fs_perms_set.local.hook.sh
+cwt/instance/fs_perms_set.local.dev.hook.sh
+cwt/instance/fs_perms_set.dev.hook.sh
+cwt/extensions/file_registry/instance/fs_perms_set.hook.sh
+cwt/extensions/file_registry/instance/fs_perms_set.docker-compose.hook.sh
+cwt/extensions/file_registry/instance/fs_perms_set.docker-compose-3.hook.sh
+cwt/extensions/file_registry/instance/fs_perms_set.docker-compose-3.local.hook.sh
+cwt/extensions/file_registry/instance/fs_perms_set.docker-compose-3.local.dev.hook.sh
+cwt/extensions/file_registry/instance/fs_perms_set.docker-compose-3.dev.hook.sh
+cwt/extensions/file_registry/instance/fs_perms_set.local.hook.sh
+cwt/extensions/file_registry/instance/fs_perms_set.local.dev.hook.sh
+cwt/extensions/file_registry/instance/fs_perms_set.dev.hook.sh
 ```
 
 ### Extensions
