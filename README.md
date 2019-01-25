@@ -44,8 +44,9 @@ CWT relies on **file structure**, **naming conventions**, and a few concepts :
 
 - **Globals** are the environment variables related to current project instance. They may be declared using the `global` function in files named `env.vars.sh` aggregated during initialization.
 - **Bootstrap** deals with the inclusion of all the relevant source files and loads global variables (e.g. host type, instance type, etc) and functions. Any script that includes the file `cwt/bootstrap.sh` can use these. This depends on sourcing shell scripts using relative paths, which is made possible by the fact that *all* scripts (or `make` "shortcut" commands) must be run from the folder `$PROJECT_DOCROOT`.
+- **Instance init** is a preliminary step that will setup current project instance. Among other things, it will aggregate and write local values for globals, optionally write application git hooks (opt-in by using the corresponding GIT-related globals - see `cwt/git/init.hook.sh`), and trigger some hooks in order to let extensions implement their own additional setup tasks. See `u_instance_init()` in `cwt/instance/instance.inc.sh` for details and usage example.
 - **Actions** - also referred to as *entry points*, *operations*, *tasks*, or just *commands* - are scoped by subject, e.g. *instance init*, *app compile*, etc. CWT determines a list of available actions by looking up folders and shell scripts matching certain rules.
-- **Hooks** are function calls mimicking events where "listening" or implementing entails creating some specific file(s) in certain path(s) corresponding to filters specified in arguments.
+- **Hooks** are function calls mimicking events where "listening" or implementing entails creating some specific file(s) in certain path(s) corresponding to filters specified in arguments. They match actions by subjects and provide additional variants - which can use any global, and can either load all matching includes found, or only the most specific. See `hook()` and `u_hook_most_specific` in `cwt/utilities/hook.sh` for details and usage examples.
 
 ## Preprequisites
 
@@ -205,32 +206,32 @@ make list-actions
 cwt/instance/list_actions.make.sh
 ```
 
-By default, CWT generates the following *make* shortcuts correponding to these *subject / action* pairs - also called *entry points* - during *instance init* :
+CWT provides basic actions most projects usually need such as instance-specific settings setup and preset commands designed to trigger common tasks (compilation, git hooks, etc). By default, CWT generates the following *make* shortcuts correponding to these *subject / action* pairs - also called *entry points* - during *instance init* (this will differ when extensions are enabled, added and/or removed) :
 
 ```txt
-cwt/app/compile.sh            - shortcut    $ make app-compile
-cwt/app/git.sh                - shortcut    $ make app-git
-cwt/app/install.sh            - shortcut    $ make app-install
-cwt/app/lint.sh               - shortcut    $ make app-lint
-cwt/app/watch.sh              - shortcut    $ make app-watch
-cwt/app/watch_stop.sh         - shortcut    $ make app-watch-stop
-cwt/git/write_hooks.sh        - shortcut    $ make git-write-hooks
-cwt/host/provision.sh         - shortcut    $ make host-provision
-cwt/host/registry_del.sh      - shortcut*   $ make host-reg-del
-cwt/host/registry_get.sh      - shortcut*   $ make host-reg-get
-cwt/host/registry_set.sh      - shortcut*   $ make host-reg-set
-cwt/instance/build.sh         - shortcut**  $ make build
-cwt/instance/destroy.sh       - shortcut**  $ make destroy
-cwt/instance/fix_ownership.sh - shortcut**  $ make fix-ownership
-cwt/instance/fix_perms.sh     - shortcut**  $ make fix-perms
-cwt/instance/init.sh          - shortcut*** $ make init # (or just "make")
-cwt/instance/rebuild.sh       - shortcut**  $ make rebuild
-cwt/instance/registry_del.sh  - shortcut**  $ make reg-del
-cwt/instance/registry_get.sh  - shortcut**  $ make reg-get
-cwt/instance/registry_set.sh  - shortcut**  $ make reg-set
-cwt/instance/start.sh         - shortcut**  $ make start
-cwt/instance/stop.sh          - shortcut**  $ make stop
-cwt/test/self_test.sh         - shortcut*** $ make self-test
+app/compile             (cwt/app/compile.sh)            - shortcut    $ make app-compile
+app/git                 (cwt/app/git.sh)                - shortcut    $ make app-git
+app/install             (cwt/app/install.sh)            - shortcut    $ make app-install
+app/lint                (cwt/app/lint.sh)               - shortcut    $ make app-lint
+app/watch               (cwt/app/watch.sh)              - shortcut    $ make app-watch
+app/watch_stop          (cwt/app/watch_stop.sh)         - shortcut    $ make app-watch-stop
+git/write_hooks         (cwt/git/write_hooks.sh)        - shortcut    $ make git-write-hooks
+host/provision          (cwt/host/provision.sh)         - shortcut    $ make host-provision
+host/registry_del       (cwt/host/registry_del.sh)      - shortcut*   $ make host-reg-del
+host/registry_get       (cwt/host/registry_get.sh)      - shortcut*   $ make host-reg-get
+host/registry_set       (cwt/host/registry_set.sh)      - shortcut*   $ make host-reg-set
+instance/build          (cwt/instance/build.sh)         - shortcut**  $ make build
+instance/destroy        (cwt/instance/destroy.sh)       - shortcut**  $ make destroy
+instance/fix_ownership  (cwt/instance/fix_ownership.sh) - shortcut**  $ make fix-ownership
+instance/fix_perms      (cwt/instance/fix_perms.sh)     - shortcut**  $ make fix-perms
+instance/init           (cwt/instance/init.sh)          - shortcut*** $ make init # (or just "make")
+instance/rebuild        (cwt/instance/rebuild.sh)       - shortcut**  $ make rebuild
+instance/registry_del   (cwt/instance/registry_del.sh)  - shortcut**  $ make reg-del
+instance/registry_get   (cwt/instance/registry_get.sh)  - shortcut**  $ make reg-get
+instance/registry_set   (cwt/instance/registry_set.sh)  - shortcut**  $ make reg-set
+instance/start          (cwt/instance/start.sh)         - shortcut**  $ make start
+instance/stop           (cwt/instance/stop.sh)          - shortcut**  $ make stop
+test/self_test          (cwt/test/self_test.sh)         - shortcut*** $ make self-test
 ```
 
 - `*` : Shortening rules can be defined using the `CWT_MAKE_TASKS_SHORTER` global. Ex : `global CWT_MAKE_TASKS_SHORTER "[append]='something_too_long_for_make_shortcut/stlfms'"`
@@ -243,8 +244,6 @@ Additional rules for *subject / action* pairs :
 - Manual exclusion is possible for either subjects or actions using gitignore-like files (`.cwt_subjects_ignore` inside an extension folder, and `.cwt_actions_ignore` inside a subject dir). These files contain 1 name per line - the name of the subject or action to exclude (folder name or file name without extension).
 
 ### Hooks
-
-CWT provides basic actions most projects usually need such as instance-specific settings setup and preset commands designed to trigger common tasks (compilation, git hooks, etc).
 
 Some of the default actions CWT provides out of the box use hooks so that extensions can react and implement their own operations. The convention used allows to predict which filepaths to use for implementing given hooks. To verify which files can be used (and will be sourced if they exist) when a hook is triggered, you can use the following convenience command :
 
@@ -266,7 +265,7 @@ cwt/extensions/file_registry/instance/start.hook.sh
 cwt/test/start.hook.sh
 ```
 
-This result will differ when more extensions are enabled, added and/or removed.
+This result will differ when extensions are enabled, added and/or removed.
 
 Additional parameters allow to target specific subjects and/or actions. See `cwt/utilities/hook.sh` for detailed examples on using the `hook()` function.
 
@@ -317,6 +316,8 @@ cwt/extensions/file_registry/instance/fs_perms_set.local.hook.sh
 cwt/extensions/file_registry/instance/fs_perms_set.local.dev.hook.sh
 cwt/extensions/file_registry/instance/fs_perms_set.dev.hook.sh
 ```
+
+TODO [wip] illustrate the "most specific match" use case.
 
 ### Extensions
 
