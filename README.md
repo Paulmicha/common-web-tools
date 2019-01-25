@@ -98,7 +98,7 @@ These steps are mere indications : in real life, you probably want to "wrap" the
   │       └── override/ ← [optional] Allows to replace virtually any file sourced in CWT scripts
   ├── web/              ← [optional+configurable] Application dir ($APP_DOCROOT or $APP_GIT_WORK_TREE*)
   │   └── dist/         ← [optional+configurable] Publicly accessible application dir ($APP_DOCROOT*)
-  └── .gitignore        ← Replace with your own and/or edit
+  └── .gitignore        ← Don't forget to review and edit to suit project needs
 ```
 
 `*` : if using the multi-repo pattern, which is the default assumption.
@@ -153,7 +153,7 @@ make globals-lp
 cwt/env/global_lookup_paths.make.sh
 ```
 
-CWT provides the followig globals by default (see `cwt/env/global.vars.sh`). These exemplify the syntax to declare default values and optional help text that will be displayed when user input is prompted in terminal during *instance init* when the `-y` flag is not set (otherwise it won't prompt for anything and just use the default value) :
+CWT provides the followig globals by default (see `cwt/env/global.vars.sh`). These illustrate the syntax to declare default values and optional help text that will be displayed when user input is prompted in terminal during *instance init* when the `-y` flag is not set (otherwise it won't prompt for anything and just use the default value) :
 
 ```sh
 global PROJECT_DOCROOT "[default]='$PWD' [help]='Absolute path to project instance. All scripts using CWT *must* be run from this dir. No trailing slash.'"
@@ -240,7 +240,7 @@ cwt/test/self_test.sh         - shortcut*** $ make self-test
 Additional rules for *subject / action* pairs :
 
 - Dirnames starting with a dot in `cwt/extensions` are excluded from extensions list
-- Manual exclusion is possible for either subjects or actions using gitignore-like files (`.cwt_subjects_ignore` inside an extension folder, and `.cwt_actions_ignore` inside a subject dir).
+- Manual exclusion is possible for either subjects or actions using gitignore-like files (`.cwt_subjects_ignore` inside an extension folder, and `.cwt_actions_ignore` inside a subject dir). These files contain 1 name per line - the name of the subject or action to exclude (folder name or file name without extension).
 
 ### Hooks
 
@@ -270,20 +270,37 @@ This result will differ when more extensions are enabled, added and/or removed.
 
 Additional parameters allow to target specific subjects and/or actions. See `cwt/utilities/hook.sh` for detailed examples on using the `hook()` function.
 
-### Extensions
-
-TODO [wip] provide global + hook implementations examples + mention special custom extension in `scripts/cwt/extend`.
-
-CWT Extensions can provide additional entry points and react to any hook. Any folder present in the `cwt/extensions` dir is considered a CWT extension. Their structure and functions follows that of the `cwt` dir (see *Hooks*).
-
-TODO [WIP] Provide ability to declare dependencies (i.e. other extensions required to use the current one) by providing a dotfile named `.cwt_requires` at the root of the extension dir.
-
-I.e. for `cwt/extensions/docker4drupal/.cwt_requires` :
+Here's an example illustrating some of the most commonly used filters :
 
 ```sh
-docker-compose:https://github.com/Paulmicha/cwt.docker-compose.git
-mysql:https://github.com/Paulmicha/cwt.mysql.git
+# Triggers the 'fs_perms_set' action, filtered by subject ('app' and 'instance')
+# and allowing variants based on 3 different globals :
+hook -s 'app instance' \
+  -a 'fs_perms_set' \
+  -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+
+# To verify which files can be used (and will be sourced) when this hook is
+# triggered :
+make hook-debug s:app instance a:fs_perms_set v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
 ```
+
+The example above would output :
+
+```txt
+TODO [wip]
+```
+
+### Extensions
+
+CWT Extensions can provide additional actions and react to hooks. Any folder present in the `cwt/extensions` dir is recognized as a CWT extension, as well as `scripts/cwt/extend` which is meant for non-reusable, project-psecific implementations.
+
+Extensions in `cwt/extensions` can be enabled or disabled by editing the file `cwt/extensions/.cwt_extensions_ignore` (use 1 folder name per line to disable, or delete the line to enable).
+
+Additional rules :
+
+- Once *instance init* has run, any file named `make.mk` inside the extension folder will be included when `make` commands are executed - e.g. `cwt/extensions/docker4drupal/make.mk`.
+- Any file named `global.vars.sh` inside the extension folder will be aggregated during *instance init*.
+- TODO [evol] CWT could also provide some minimalistic way to declare extensions' dependencies, i.e. as in `cwt/extensions/docker4drupal/.cwt_requires` for example.
 
 ### Overrides
 
