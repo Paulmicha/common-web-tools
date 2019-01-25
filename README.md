@@ -189,7 +189,9 @@ Once *instance init* has been run, every global env. vars aggregated are (over)w
 
 ### Actions
 
-CWT orders `actions` by `subject` :
+CWT provides generic actions most projects usually need. Some preset commands designed to trigger common tasks (compilation, git hooks, etc) are in place, but except for *instance init* and some permission and ownership generic operations, these are merely "abstract" entry points : they exist so that extensions implement them in a modular way. They do nothing on their own.
+
+`actions` are ordered by `subject`, which is expressed in the file structure like so :
 
 - **folders** represent **subjects**,
 - and their **files** represent **actions**.
@@ -245,7 +247,7 @@ Additional rules for *subject / action* pairs :
 
 ### Hooks
 
-Some of the default actions CWT provides out of the box use hooks so that extensions can react and implement their own operations. The convention used allows to predict which filepaths to use for implementing given hooks. To verify which files can be used (and will be sourced if they exist) when a hook is triggered, you can use the following convenience command :
+Most default actions CWT provides out of the box use hooks so that extensions can react and implement their own operations. The convention used allows to predict which filepaths to use for implementing given hooks. To verify which files can be used (and will be sourced if they exist) when a hook is triggered, you can use the following convenience command :
 
 ```sh
 make hook-debug a:start
@@ -283,7 +285,7 @@ hook -s 'app instance' \
 make hook-debug s:app instance a:fs_perms_set v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
 ```
 
-Given the following globals values (previously set during *instance init*) : `PROVISION_USING='docker-compose-3'`, `HOST_TYPE='local'`, and `INSTANCE_TYPE='dev'`, the example above would output :
+Given the following globals values (which get set during *instance init*) : `PROVISION_USING='docker-compose-3'`, `HOST_TYPE='local'`, and `INSTANCE_TYPE='dev'`, the example above would output :
 
 ```txt
 cwt/app/fs_perms_set.hook.sh
@@ -317,7 +319,26 @@ cwt/extensions/file_registry/instance/fs_perms_set.local.dev.hook.sh
 cwt/extensions/file_registry/instance/fs_perms_set.dev.hook.sh
 ```
 
-TODO [wip] illustrate the "most specific match" use case.
+Another hook function exists when we need to only source the "most specific" match.
+
+The notion of specificity uses the file having the deepest path and the highest number of dots in its path. In case of equality, the first match will be used. This "score" - a simple addition of slash & dot count in the filepath - allows to differenciate CWT's file-name-based implementations (hooks, globals, etc.) because of the way its patterns work :
+
+- multiple extension (i.e. variants : `pre_bootstrap.docker-compose.hook.sh`)
+- complements (e.g. `scripts/complements/test/self_test.hook.sh`)
+- overrides (e.g. `scripts/cwt/overrides/extensions/docker-compose/instance/init.docker-compose.hook.sh`)
+
+NB : some "artificial" advantage is given to the project-specific `./scripts` path in comparison to generic CWT extensions so that the custom implementations always take precedence over extensions'. Here's an example :
+
+```sh
+# Basic usage - only sources 1 match (the "most specific") :
+u_hook_most_specific -s 'instance' -a 'registry_get' -v 'HOST_TYPE'
+
+# Dry run example.
+# @see u_stack_template() in cwt/extensions/docker-compose/stack/stack.inc.sh
+local hook_most_specific_dry_run_match
+u_hook_most_specific 'dry-run' -s 'stack' -a 'docker-compose' -c "yml" -v 'DC_YML_VARIANTS' -t
+echo "$local hook_most_specific_dry_run_match" # <- Prints the most specific "docker-compose.yml" found.
+```
 
 ### Extensions
 
@@ -333,9 +354,9 @@ Additional rules :
 
 ### Overrides
 
-If the "counterpart" of a given script exists in the folder `scripts/cwt/override`, it will be used *instead* of the original file.
+This mecanism exists so that when some existing functionality or extension from CWT impedes anything specific to a project, we can entirely skip that file and replace it with our own version.
 
-This allows to replace any includes or hook implementations.
+If the "counterpart" of a given script exists in the folder `scripts/cwt/override`, it will be used *instead* of the original file. This allows to replace any includes or hook implementations.
 
 Example : if we want to override `cwt/git/init.hook.sh` - effectively bypassing the existing implementation, we'll create the following file :
 
@@ -343,7 +364,7 @@ Example : if we want to override `cwt/git/init.hook.sh` - effectively bypassing 
 scripts/cwt/override/git/init.hook.sh
 ```
 
-The matching is done by by replacing the leading `cwt/` in filepaths with `scripts/cwt/override/`. It works for extensions too. Here's an example using an include instead of a hook implementation for a change :
+The matching is done by by replacing the leading `cwt/` in filepaths with `scripts/cwt/override/`. It works for extensions too. Here's an example using an include instead of a hook implementation :
 
 ```txt
 cwt/extensions/docker-compose/docker-compose.inc.sh
