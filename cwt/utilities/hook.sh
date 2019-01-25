@@ -189,7 +189,7 @@ hook() {
       # Every extension defines an additional base path for lookups.
       ext_path=''
       u_cwt_extension_path "$extension"
-      base_paths=("$ext_path/$extension")
+      base_paths+=("$ext_path/$extension")
     done
   fi
 
