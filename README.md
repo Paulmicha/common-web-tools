@@ -71,8 +71,8 @@ So the first step will always be to clone or download / copy / paste the files f
 
 1. Review the `.gitignore` file and adapt it to suit your needs.
 1. Launch *instance init* action (e.g. run `make` or `make init`) - this will generate `readonly` global env vars and optional Makefile by default. See `cwt/instance/instance.inc.sh` and `cwt/utilities/global.sh` for details.
-1. [optional] launch *host provision* action (e.g. run `make-host-provision`) - this is not implemented in CWT, but this "entry point" exists to streamline host-level software installation in extensions.
-1. [optional] launch *instance start* action (e.g. run `make-instance-start`) - this is meant to run any service required to use or work on current project instance.
+1. [optional] launch *host provision* action (e.g. run `make host-provision`) - this is not implemented in CWT, but this "entry point" exists to streamline host-level software installation in extensions.
+1. [optional] launch *instance start* action (e.g. run `make start`) - this is meant to run any service required to use or work on current project instance.
 
 These steps are mere indications : in real life, you probably want to "wrap" these calls in your own scripts (e.g. to preset some arguments, etc), usually in the `./scripts` folder. Examples and detailed explanations are provided in CWT source code comments.
 
@@ -245,6 +245,20 @@ Additional rules for *subject / action* pairs :
 - Dirnames starting with a dot in `cwt/extensions` are excluded from extensions list
 - Manual exclusion is possible for either subjects or actions using gitignore-like files (`.cwt_subjects_ignore` inside an extension folder, and `.cwt_actions_ignore` inside a subject dir). These files contain 1 name per line - the name of the subject or action to exclude (folder name or file name without extension).
 
+### Automatic includes
+
+During CWT bootstrap, bash shell files named like their containing folder and using the double extension `*.inc.sh` will automatically be sourced. This rule applies to extension folders (i.e. `cwt/extensions/*` and `scripts/cwt/extend`), and all `subjects` folders.
+
+By default, the following includes are detected (this result will change depending on extensions enabled, added or removed) :
+
+```txt
+cwt/git/git.inc.sh
+cwt/host/host.inc.sh
+cwt/instance/instance.inc.sh
+cwt/test/test.inc.sh
+cwt/extensions/file_registry/file_registry.inc.sh
+```
+
 ### Hooks
 
 Most default actions CWT provides out of the box use hooks so that extensions can react and implement their own operations. The convention used allows to predict which filepaths to use for implementing given hooks. To verify which files can be used (and will be sourced if they exist) when a hook is triggered, you can use the following convenience command :
@@ -324,10 +338,9 @@ Another hook function exists when we need to only source the "most specific" mat
 The notion of specificity uses the file having the deepest path and the highest number of dots in its path. In case of equality, the first match will be used. This "score" - a simple addition of slash & dot count in the filepath - allows to differenciate CWT's file-name-based implementations (hooks, globals, etc.) because of the way its patterns work :
 
 - multiple extension (i.e. variants : `pre_bootstrap.docker-compose.hook.sh`)
-- complements (e.g. `scripts/complements/test/self_test.hook.sh`)
 - overrides (e.g. `scripts/cwt/overrides/extensions/docker-compose/instance/init.docker-compose.hook.sh`)
 
-NB : some "artificial" advantage is given to the project-specific `./scripts` path in comparison to generic CWT extensions so that the custom implementations always take precedence over extensions'. Here's an example :
+NB : some "artificial" advantage is given to the project-specific `./scripts` path in comparison to generic CWT extensions so that the custom implementations always take precedence over extensions'.
 
 ```sh
 # Basic usage - only sources 1 match (the "most specific") :
@@ -335,9 +348,8 @@ u_hook_most_specific -s 'instance' -a 'registry_get' -v 'HOST_TYPE'
 
 # Dry run example.
 # @see u_stack_template() in cwt/extensions/docker-compose/stack/stack.inc.sh
-local hook_most_specific_dry_run_match
 u_hook_most_specific 'dry-run' -s 'stack' -a 'docker-compose' -c "yml" -v 'DC_YML_VARIANTS' -t
-echo "$local hook_most_specific_dry_run_match" # <- Prints the most specific "docker-compose.yml" found.
+echo "$hook_most_specific_dry_run_match" # <- Prints the most specific "docker-compose.yml" found.
 ```
 
 ### Extensions
