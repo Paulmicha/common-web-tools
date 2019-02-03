@@ -369,7 +369,7 @@ global() {
             depending_var="${depending_var_split_arr[1]}"
 
             u_str_sanitize_var_name "$depending_var" 'depending_var'
-            depending_value=$(eval "echo \"\$$depending_var\"")
+            depending_value=${!depending_var}
 
             case "$key" in
               ifnot-*)

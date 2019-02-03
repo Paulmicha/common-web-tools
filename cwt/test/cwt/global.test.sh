@@ -103,11 +103,11 @@ test_cwt_global_aggregate() {
 
   local s
   local s_upper
-  local s_test_val
+  local s_varname
   for s in $CWT_SUBJECTS; do
     u_str_uppercase "$s" 's_upper'
-    eval "s_test_val=\"\$NFTCWTGEVHNC_VAR_CWT_$s_upper\""
-    assertEquals "Value of NFTCWTGEVHNC_VAR_CWT_$s_upper is missing or incorrect." "test" "$s_test_val"
+    s_varname="NFTCWTGEVHNC_VAR_CWT_${s_upper}"
+    assertEquals "Value of NFTCWTGEVHNC_VAR_CWT_$s_upper is missing or incorrect." "test" "${!s_varname}"
   done
 
   assertEquals 'Value of NFTCWTGEVHNC_VAR_1 is missing or incorrect.' "test" "$NFTCWTGEVHNC_VAR_1"
