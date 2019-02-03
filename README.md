@@ -16,7 +16,18 @@ CWT is not a program; it's the "glue" between programs. Third-party tools integr
 
 CWT "core" - this repo - contains common utilities related to managing global environment variables, some minimal local and remote host operations, optional git hooks intergration, and project instance self-tests.
 
-CWT is *not* meant to be used in production. It was designed to assist the production of diverse projects for individual developers or teams.
+CWT is *not* meant to be used in production. It was designed to assist the making of diverse projects for individual developers or teams.
+
+Here's the list of extensions included :
+
+| Path | Enabled by default ? | Description |
+|------|----------------------|-------------|
+| cwt/extensions/db |  | Abstract hooks and entry points for database-related tasks. See the 'mysql' extension for an implementation example. |
+| cwt/extensions/docker-compose |  | Implements instance start, stop, build, and destroy actions. Can be used in different ways : see `DC_MODE` help text (`cwt/extensions/docker-compose/global.vars.sh`). |
+| cwt/extensions/docker4drupal |  | Uses the `docker-compose` and provides Drupal-related tasks. |
+| cwt/extensions/file_registry | ✔ | Default storage for CWT "registry" (minimal key/value store by scope - instance and host). |
+| cwt/extensions/mysql |  | Implementations of the abstractions provided by the `db` extension. |
+| cwt/extensions/remote |  | Utilities to synchronize local instance with remote instance(s). Uses SSH keys loaded in current terminal session. |
 
 ## PURPOSE
 
@@ -198,7 +209,7 @@ CWT provides generic actions most projects usually need. Some preset commands de
 
 Exceptions : folders beginning with a dot (e.g. `.git`), and files using double extensions (e.g. `my_file.inc.sh`) or beginning with a dot (e.g. `.cwt_actions_ignore`).
 
-CWT will look in `./cwt` to determine default CWT actions, then it will do the samefor every folders in `cwt/extensions` and `scripts/cwt/extend`. For detailed explanations and examples, see `u_cwt_extend()` in `cwt/utilities/cwt.sh`.
+CWT will look in `./cwt` to determine default CWT actions, then it will do the same for every folders in `cwt/extensions` and `scripts/cwt/extend`. For detailed explanations and examples, see `u_cwt_extend()` in `cwt/utilities/cwt.sh`.
 
 To print the list of available actions in current project instance, you can use the following convenience command :
 

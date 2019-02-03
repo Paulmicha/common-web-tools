@@ -4,9 +4,11 @@
 # using Common Web Tools.
 #
 
+
 # [customizable] Local environment global variables and other generated files.
 /scripts/cwt/local/*
 !/scripts/cwt/local/README.md
+/.env
 
 # [optional] Public web dir or application docroot.
 # See $APP_DOCROOT global var help in cwt/env/global.vars.sh.
@@ -21,21 +23,14 @@
 /web
 /www
 
-# [optional] Private files, outside of public (web) dir.
-/private/*
-!/private/README.md
-!/private/.htaccess
-
-# [optional] Folders for persisting DB data (volume) + DB dumps of the following
-# optional extensions :
-# @see cwt/extensions/db
-# @see cwt/extensions/mysql
-/db
-/dumps
-
-# [optional] Docker-compose env file.
-# @see cwt/extensions/docker-compose
-/.env
+# [optional] # Instance data.
+/data/db/*
+!/data/db/README.md
+/data/db-dumps/*
+!/data/db-dumps/README.md
+/data/private/*
+!/data/private/README.md
+!/data/private/.htaccess
 
 # Misc.
 docker-runtime
