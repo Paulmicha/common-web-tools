@@ -100,9 +100,8 @@ u_instance_init() {
   # written and hooks are replaced by a prefixed variant.
   if [[ $p_cwtii_dry_run -eq 1 ]]; then
     u_global_debug
-    hook -s 'app instance' -a 'ensure_dirs_exist' -p 'dry_run'
-    hook -s 'app instance' -a 'set_fsop' -p 'dry_run'
     hook -a 'init' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE' -p 'dry_run'
+    hook -s 'app instance' -a 'ensure_dirs_exist' -p 'dry_run'
     return
   fi
 

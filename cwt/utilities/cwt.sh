@@ -130,11 +130,20 @@ u_cwt_extensions() {
   local exclusions
   local excl
   local custom_extend_path
+  local extensions_ignore_filepath
 
   # ALlow to deactivate some extensions using dotfile '.cwt_extensions_ignore'.
+  # This file can be overridden in project-specific scripts/cwt/override folder.
   exclusions_arr=()
-  if [[ -f 'cwt/extensions/.cwt_extensions_ignore' ]]; then
-    u_fs_get_file_contents 'cwt/extensions/.cwt_extensions_ignore' 'exclusions'
+  extensions_ignore_filepath='cwt/extensions/.cwt_extensions_ignore'
+  if [[ -f 'scripts/cwt/override/.cwt_extensions_ignore' ]]; then
+    extensions_ignore_filepath='scripts/cwt/override/.cwt_extensions_ignore'
+  fi
+  if [[ -f 'scripts/cwt/override/extensions/.cwt_extensions_ignore' ]]; then
+    extensions_ignore_filepath='scripts/cwt/override/extensions/.cwt_extensions_ignore'
+  fi
+  if [[ -f "$extensions_ignore_filepath" ]]; then
+    u_fs_get_file_contents "$extensions_ignore_filepath" 'exclusions'
     if [[ -n "$exclusions" ]]; then
       for excl in $exclusions; do
         exclusions_arr+=("$excl")

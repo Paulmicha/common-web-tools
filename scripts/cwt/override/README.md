@@ -16,3 +16,5 @@ The matching is done by by replacing the leading `cwt/` in filepaths with `scrip
 cwt/extensions/docker-compose/docker-compose.inc.sh
 -> scripts/cwt/override/extensions/docker-compose/docker-compose.inc.sh
 ```
+
+For convenience, `cwt/extensions/.cwt_extensions_ignore` can be overridden using `scripts/cwt/override/.cwt_extensions_ignore` (instead of `scripts/cwt/override/extensions/.cwt_extensions_ignore`).
