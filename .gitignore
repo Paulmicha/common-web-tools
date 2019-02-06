@@ -4,7 +4,6 @@
 # using Common Web Tools.
 #
 
-
 # [customizable] Local environment global variables and other generated files.
 /scripts/cwt/local/*
 !/scripts/cwt/local/README.md
@@ -23,7 +22,7 @@
 /web
 /www
 
-# [optional] # Instance data.
+# [optional] Instance data.
 /data/db/*
 !/data/db/README.md
 /data/db-dumps/*

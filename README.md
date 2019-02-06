@@ -25,7 +25,7 @@ Here's the list of extensions included (in folder `cwt/extensions`) :
 | `db` |  | Abstract hooks and entry points for database-related tasks. See the 'mysql' extension for an implementation example. |
 | `docker-compose` |  | Implements instance start, stop, build, and destroy actions. Can be used in different ways : see `DC_MODE` help text (`cwt/extensions/docker-compose/global.vars.sh`). |
 | `docker4drupal` |  | Uses the `docker-compose` and provides Drupal-related tasks. |
-| `file_registry` | ✔ | Default storage for CWT "registry" (minimal key/value store by scope - instance and host). |
+| `file_registry` | ✔ | Default storage for CWT "registry" (minimal file-based key/value store scoped by project instance or host). |
 | `mysql` |  | Provides mysql implementations of the abstractions provided by the `db` extension such as database creation, dumps import/export, etc. |
 | `remote` |  | Utilities to synchronize local instance with remote instance(s). Uses SSH keys loaded in current terminal session. |
 
@@ -316,29 +316,26 @@ Given the following globals values (which get set during *instance init*) : `PRO
 cwt/app/fs_perms_set.hook.sh
   exists
 cwt/app/fs_perms_set.docker-compose.hook.sh
-cwt/app/fs_perms_set.docker-compose-3.hook.sh
-cwt/app/fs_perms_set.docker-compose-3.local.hook.sh
-cwt/app/fs_perms_set.docker-compose-3.local.dev.hook.sh
-cwt/app/fs_perms_set.docker-compose-3.dev.hook.sh
+cwt/app/fs_perms_set.docker-compose.local.hook.sh
+cwt/app/fs_perms_set.docker-compose.local.dev.hook.sh
+cwt/app/fs_perms_set.docker-compose.dev.hook.sh
 cwt/app/fs_perms_set.local.hook.sh
 cwt/app/fs_perms_set.local.dev.hook.sh
 cwt/app/fs_perms_set.dev.hook.sh
 cwt/instance/fs_perms_set.hook.sh
   exists
 cwt/instance/fs_perms_set.docker-compose.hook.sh
-cwt/instance/fs_perms_set.docker-compose-3.hook.sh
-cwt/instance/fs_perms_set.docker-compose-3.local.hook.sh
-cwt/instance/fs_perms_set.docker-compose-3.local.dev.hook.sh
-cwt/instance/fs_perms_set.docker-compose-3.dev.hook.sh
+cwt/instance/fs_perms_set.docker-compose.local.hook.sh
+cwt/instance/fs_perms_set.docker-compose.local.dev.hook.sh
+cwt/instance/fs_perms_set.docker-compose.dev.hook.sh
 cwt/instance/fs_perms_set.local.hook.sh
 cwt/instance/fs_perms_set.local.dev.hook.sh
 cwt/instance/fs_perms_set.dev.hook.sh
 cwt/extensions/file_registry/instance/fs_perms_set.hook.sh
 cwt/extensions/file_registry/instance/fs_perms_set.docker-compose.hook.sh
-cwt/extensions/file_registry/instance/fs_perms_set.docker-compose-3.hook.sh
-cwt/extensions/file_registry/instance/fs_perms_set.docker-compose-3.local.hook.sh
-cwt/extensions/file_registry/instance/fs_perms_set.docker-compose-3.local.dev.hook.sh
-cwt/extensions/file_registry/instance/fs_perms_set.docker-compose-3.dev.hook.sh
+cwt/extensions/file_registry/instance/fs_perms_set.docker-compose.local.hook.sh
+cwt/extensions/file_registry/instance/fs_perms_set.docker-compose.local.dev.hook.sh
+cwt/extensions/file_registry/instance/fs_perms_set.docker-compose.dev.hook.sh
 cwt/extensions/file_registry/instance/fs_perms_set.local.hook.sh
 cwt/extensions/file_registry/instance/fs_perms_set.local.dev.hook.sh
 cwt/extensions/file_registry/instance/fs_perms_set.dev.hook.sh
@@ -393,3 +390,9 @@ The matching is done by by replacing the leading `cwt/` in filepaths with `scrip
 cwt/extensions/docker-compose/docker-compose.inc.sh
 -> scripts/cwt/override/extensions/docker-compose/docker-compose.inc.sh
 ```
+
+For convenience, `cwt/extensions/.cwt_extensions_ignore` can be overridden using `scripts/cwt/override/.cwt_extensions_ignore` (instead of `scripts/cwt/override/extensions/.cwt_extensions_ignore`).
+
+## License
+
+The MIT license.

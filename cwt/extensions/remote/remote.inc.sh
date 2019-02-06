@@ -361,15 +361,15 @@ u_remote_instance_add() {
     p_app_docroot="$p_project_docroot/web"
   fi
 
-  if [[ ! -d 'cwt/env/current/remote-instances' ]]; then
+  if [[ ! -d 'scripts/cwt/local/remote-instances' ]]; then
     echo >&2
-    echo "Error in u_remote_instance_add() - $BASH_SOURCE line $LINENO: dir cwt/env/current/remote-instances is missing." >&2
+    echo "Error in u_remote_instance_add() - $BASH_SOURCE line $LINENO: dir scripts/cwt/local/remote-instances is missing." >&2
     echo "-> Aborting (1)." >&2
     echo >&2
     return 1
   fi
 
-  local conf="cwt/env/current/remote-instances/${p_id}.sh"
+  local conf="scripts/cwt/local/remote-instances/${p_id}.sh"
 
   # Confirm overwriting existing config if the file already exists.
   if [[ -f "$conf" ]]; then
@@ -449,7 +449,7 @@ EOF
 #
 u_remote_instance_load() {
   local p_id="$1"
-  local conf="cwt/env/current/remote-instances/${p_id}.sh"
+  local conf="scripts/cwt/local/remote-instances/${p_id}.sh"
 
   if [[ ! -f "$conf" ]]; then
     echo >&2

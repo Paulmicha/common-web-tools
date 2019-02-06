@@ -14,7 +14,7 @@
 #
 # Resulting generated files (git-ignored) :
 #   - .env
-#   - cwt/env/current/global.vars.sh
+#   - scripts/cwt/local/global.vars.sh
 #
 # @see u_instance_init()
 #
@@ -27,11 +27,11 @@ u_global_write() {
     return 1
   fi
 
-  echo "Writing global (env) vars to cwt/env/current/global.vars.sh ..."
+  echo "Writing global (env) vars to scripts/cwt/local/global.vars.sh ..."
 
   # (Re)init destination files (make empty).
   echo -n '' > .env
-  cat > cwt/env/current/global.vars.sh <<'EOF'
+  cat > scripts/cwt/local/global.vars.sh <<'EOF'
 #!/usr/bin/env bash
 
 ##
@@ -50,8 +50,8 @@ EOF
   for global_name in ${GLOBALS['.sorting']}; do
     u_str_split1 'evn_arr' "$global_name" '|'
     global_name="${evn_arr[1]}"
-    eval "[[ -z \"\$$global_name\" ]] && echo \"readonly $global_name\"=\'\' >> cwt/env/current/global.vars.sh"
-    eval "[[ -n \"\$$global_name\" ]] && echo \"readonly $global_name=\\\"\$$global_name\\\"\" >> cwt/env/current/global.vars.sh"
+    eval "[[ -z \"\$$global_name\" ]] && echo \"readonly $global_name\"=\'\' >> scripts/cwt/local/global.vars.sh"
+    eval "[[ -n \"\$$global_name\" ]] && echo \"readonly $global_name=\\\"\$$global_name\\\"\" >> scripts/cwt/local/global.vars.sh"
 
     # Also write globals to git-ignored '.env' file for Makefile and other tools
     # like docker-compose.
@@ -59,7 +59,7 @@ EOF
     eval "[[ -n \"\$$global_name\" ]] && echo \"$global_name=\$$global_name\" >> .env"
   done
 
-  echo "Writing global (env) vars to cwt/env/current/global.vars.sh : done."
+  echo "Writing global (env) vars to scripts/cwt/local/global.vars.sh : done."
   echo
 }
 
