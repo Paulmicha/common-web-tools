@@ -22,6 +22,9 @@
 
 if [[ -n "$WRITEABLE_FILES" ]]; then
   for writeable_file in $WRITEABLE_FILES; do
+    if [[ ! -f "$writeable_file" ]]; then
+      continue
+    fi
     chown "$FS_W_OWNER:$FS_W_GROUP" "$writeable_file"
     check_chown=$?
     if [ $check_chown -ne 0 ]; then
@@ -36,6 +39,9 @@ fi
 
 if [[ -n "$WRITEABLE_DIRS" ]]; then
   for writeable_dir in $WRITEABLE_DIRS; do
+    if [[ ! -d "$writeable_dir" ]]; then
+      continue
+    fi
     chown "$FS_W_OWNER:$FS_W_GROUP" "$writeable_dir" -R
     check_chown=$?
     if [ $check_chown -ne 0 ]; then

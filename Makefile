@@ -19,8 +19,9 @@
 # @see cwt/default.mk
 .DEFAULT_GOAL := init
 
-# This '.env' file is generated during instance init.
+# These files are automatically generated during instance init.
 -include .env
+-include scripts/cwt/local/default.mk
 
 # Project-specific tasks.
 ifdef CWT_MAKE_INC

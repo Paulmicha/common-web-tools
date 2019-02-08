@@ -22,6 +22,9 @@
 
 if [[ -n "$WRITEABLE_FILES" ]]; then
   for writeable_file in $WRITEABLE_FILES; do
+    if [[ ! -f "$writeable_file" ]]; then
+      continue
+    fi
     chmod "$FS_W_FILES" "$writeable_file"
     check_chmod=$?
     if [ $check_chmod -ne 0 ]; then
@@ -36,6 +39,9 @@ fi
 
 if [[ -n "$WRITEABLE_DIRS" ]]; then
   for writeable_dir in $WRITEABLE_DIRS; do
+    if [[ ! -d "$writeable_dir" ]]; then
+      continue
+    fi
     find "$writeable_dir" -type f -exec chmod "$FS_W_FILES" {} +
     find "$writeable_dir" -type d -exec chmod "$FS_W_DIRS" {} +
   done
@@ -43,6 +49,9 @@ fi
 
 if [[ -n "$PROTECTED_FILES" ]]; then
   for protected_file in $PROTECTED_FILES; do
+    if [[ ! -f "$protected_file" ]]; then
+      continue
+    fi
     chmod "$FS_P_FILES" "$protected_file"
     check_chmod=$?
     if [ $check_chmod -ne 0 ]; then
@@ -57,6 +66,9 @@ fi
 
 if [[ -n "$EXECUTABLE_FILES" ]]; then
   for executable_file in $EXECUTABLE_FILES; do
+    if [[ ! -f "$executable_file" ]]; then
+      continue
+    fi
     chmod "$FS_E_FILES" "$executable_file"
     check_chmod=$?
     if [ $check_chmod -ne 0 ]; then
