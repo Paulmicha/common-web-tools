@@ -81,11 +81,16 @@ The files contained in CWT core - this repo - may be placed either inside the ap
 So the first step will always be to clone or download / copy / paste the files from this repo to desired location (in relation to your choice for this project instance source files organization described above), then :
 
 1. Review the `.gitignore` file and adapt it to suit your needs.
-1. Launch *instance init* action (e.g. run `make` or `make init`) - this will generate `readonly` global env vars and optional Makefile by default. See `cwt/instance/instance.inc.sh` and `cwt/utilities/global.sh` for details.
+1. Override `cwt/extensions/.cwt_extensions_ignore` to enable and/or disable CWT extensions (i.e. copy/paste to `scripts/cwt/override/.cwt_extensions_ignore` and edit).
+1. [optional] Implement your own alterations and/or extensions (see the *Adapt / Alter / Extend CWT* section below).
+1. Launch *instance init* action (e.g. run `make` or `make init`).
 1. [optional] launch *host provision* action (e.g. run `make host-provision`) - this is not implemented in CWT, but this "entry point" exists to streamline host-level software installation in extensions.
 1. [optional] launch *instance start* action (e.g. run `make start`) - this is meant to run any service required to use or work on current project instance.
+1. [optional] launch *app install* action (e.g. run `make app-install`) if your project application requires some initial setup tasks like creating a database, importing a DB dump, generating local settings, etc.
 
-These steps are mere indications : in real life, you probably want to "wrap" these calls in your own scripts (e.g. to preset some arguments, etc), usually in the `./scripts` folder. Examples and detailed explanations are provided in CWT source code comments.
+These steps are mere indications. It may be useful to "wrap" some of these tasks in custom scripts (e.g. to preset some arguments, etc), usually in the `./scripts` folder.
+
+Finally, example code snippets and detailed explanations are provided in CWT source code comments.
 
 ## File structure
 
