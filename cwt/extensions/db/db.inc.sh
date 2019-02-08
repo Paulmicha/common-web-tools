@@ -76,7 +76,7 @@ u_db_get_credentials() {
     # if cwt/extensions/file_registry is used as registry storage backend.
     if [[ -z "$INSTANCE_DOMAIN" ]]; then
       echo >&2
-      echo "Error in u_db_routine_backup() - $BASH_SOURCE line $LINENO: the required global 'INSTANCE_DOMAIN' is undefined." >&2
+      echo "Error in u_db_get_credentials() - $BASH_SOURCE line $LINENO: the required global 'INSTANCE_DOMAIN' is undefined." >&2
       echo "-> Aborting (2)." >&2
       echo >&2
       exit 2
@@ -89,7 +89,25 @@ u_db_get_credentials() {
 
   case "$CWT_DB_MODE" in
     # Some environments do not require CWT to handle DB credentials at all.
+    # In these cases, the following local env vars should be manually provided :
+    # - $DB_NAME
+    # - $DB_USERNAME
+    # - $DB_PASSWORD
+    # - $DB_HOST
+    # These fallback values are provided if not set :
+    # - $DB_PORT defaults to 3306
+    # - $DB_ADMIN_USERNAME defaults to $DB_USERNAME
+    # - $DB_ADMIN_PASSWORD defaults to $DB_PASSWORD
     none)
+      if [[ -z "$DB_PORT" ]]; then
+        export DB_PORT=3306
+      fi
+      if [[ -z "$DB_ADMIN_USERNAME" ]]; then
+        export DB_ADMIN_USERNAME="$DB_USERNAME"
+      fi
+      if [[ -z "$DB_ADMIN_PASSWORD" ]]; then
+        export DB_ADMIN_PASSWORD="$DB_PASSWORD"
+      fi
       return
       ;;
 

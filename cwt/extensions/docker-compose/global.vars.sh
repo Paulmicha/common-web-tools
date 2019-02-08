@@ -18,6 +18,8 @@
 # file in the right path (i.e. in PROJECT_DOCROOT).
 global DC_MODE "[default]=none [help]='Specifies if and how docker-compose will choose a specific YAML declaration file for current project instance. Possible values are none = leave docker-compose calls untouched, auto = automatically try to choose the most specific YAML file based on the DC_YML_VARIANTS global (which provides hook variants for lookup paths), manual = use the path provided in the DC_YML global, or generate = creates the file PROJECT_DOCROOT/docker-compose.yml during instance init using the most specific match. Defaults to none.'"
 
+# TODO [wip] These should be deferred to allow applying defaults when DC_MODE is
+# set in another global.vars.sh file.
 case "$DC_MODE" in
   auto|generate)
     global DC_YML_VARIANTS "[default]='$INSTANCE_TYPE $HOST_TYPE' [help]='Determines which docker-compose.yml \"template\" will be used for current project instance.'"

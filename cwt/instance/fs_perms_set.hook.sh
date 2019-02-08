@@ -67,8 +67,20 @@ for f in "${cwt_action_scripts[@]}"; do
   fi
 done
 
-# CWT "self-tests" files need to be executable.
-find './cwt/test/cwt' -type f -exec chmod "$FS_E_FILES" {} +
+# Test files need to be executable.
+file_list=''
+u_fs_file_list './' '*.test.sh' 32
+for f in $file_list; do
+  chmod "$FS_E_FILES" "./$f"
+  check_chmod=$?
+  if [ $check_chmod -ne 0 ]; then
+    echo >&2
+    echo "Error in $BASH_SOURCE line $LINENO: chmod exited with non-zero status ($check_chmod)." >&2
+    echo "-> Aborting (5)." >&2
+    echo >&2
+    exit 5
+  fi
+done
 
 # CWT make shortcut scripts as well.
 file_list=''
@@ -79,9 +91,9 @@ for f in $file_list; do
   if [ $check_chmod -ne 0 ]; then
     echo >&2
     echo "Error in $BASH_SOURCE line $LINENO: chmod exited with non-zero status ($check_chmod)." >&2
-    echo "-> Aborting (5)." >&2
+    echo "-> Aborting (6)." >&2
     echo >&2
-    exit 5
+    exit 6
   fi
 done
 
@@ -100,9 +112,9 @@ if [[ -d './scripts' ]]; then
   if [ $check_chmod -ne 0 ]; then
     echo >&2
     echo "Error in $BASH_SOURCE line $LINENO: chmod exited with non-zero status ($check_chmod)." >&2
-    echo "-> Aborting (6)." >&2
+    echo "-> Aborting (7)." >&2
     echo >&2
-    exit 6
+    exit 7
   fi
   find './scripts' -type d -exec chmod "$FS_NW_DIRS" {} +
   find './scripts' -type f -exec chmod "$FS_E_FILES" {} +
