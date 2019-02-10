@@ -11,6 +11,15 @@
 # @see cwt/bootstrap.sh
 #
 
+# Path to public web directory (where index resides) inside web server + php
+# containers. Used in docker-compose.yml file.
+global D4D_PUBLIC_DOCROOT "[default]=/var/www/html"
+
+# Default aliases need container names for php and database containers.
+# @see cwt/extensions/docker4drupal/cwt/bootstrap.docker-compose.hook.sh
+global D4D_PHP_SNAME "[default]=php"
+global D4D_DB_SNAME "[default]=mariadb"
+
 # Make the automatic crontab setup for Drupal cron on local host during 'app
 # install' opt-in.
 global D4D_USE_CRONTAB "[default]=false"

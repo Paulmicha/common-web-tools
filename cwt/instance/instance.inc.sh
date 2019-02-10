@@ -425,7 +425,9 @@ u_instance_write_mk() {
         mk_tasks+=("$task")
         ext_path=''
         u_cwt_extension_path "$extension"
-        mk_entry_points+=("$ext_path/$extension/$sa_pair.sh")
+        # TODO [minor] Figure out why this can produce duplicate entries.
+        # mk_entry_points+=("$ext_path/$extension/$sa_pair.sh")
+        u_array_add_once "$ext_path/$extension/$sa_pair.sh" mk_entry_points
       done
 
     fi

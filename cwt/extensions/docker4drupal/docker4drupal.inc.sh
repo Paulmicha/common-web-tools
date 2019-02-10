@@ -35,6 +35,8 @@ u_d4d_write_local_settings() {
   local var_name
   local hook_most_specific_dry_run_match=''
 
+  echo "Rewrite Drupal local settings file ..."
+
   u_hook_most_specific 'dry-run' \
     -s 'app' \
     -a 'drupal_settings' \
@@ -46,8 +48,10 @@ u_d4d_write_local_settings() {
   # @see cwt/extensions/docker4drupal/global.vars.sh
   if [[ -n "$hook_most_specific_dry_run_match" ]]; then
     if [[ -f "$DRUPAL_LOCAL_SETTINGS" ]]; then
-      rm "$DRUPAL_LOCAL_SETTINGS"
+      rm -f "$DRUPAL_LOCAL_SETTINGS"
     fi
+
+    echo "... using template : '$hook_most_specific_dry_run_match' ..."
 
     cp "$hook_most_specific_dry_run_match" "$DRUPAL_LOCAL_SETTINGS"
 
@@ -59,4 +63,7 @@ u_d4d_write_local_settings() {
       done
     fi
   fi
+
+  echo "Rewrite Drupal local settings file : done."
+  echo
 }

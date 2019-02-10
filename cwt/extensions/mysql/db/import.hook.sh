@@ -27,6 +27,7 @@ mysql --default_character_set="$DB_CHARSET" \
   --password="$DB_PASSWORD" \
   --host="$DB_HOST" \
   --port="$DB_PORT" \
+  -B \
   "$DB_NAME" < "$db_dump_file"
 
 if [[ $? -ne 0 ]]; then

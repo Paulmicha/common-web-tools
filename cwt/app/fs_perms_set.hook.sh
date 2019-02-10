@@ -25,6 +25,7 @@ if [[ -n "$WRITEABLE_FILES" ]]; then
     if [[ ! -f "$writeable_file" ]]; then
       continue
     fi
+    echo "Setting writeable file permissions $FS_W_FILES to '$writeable_file'"
     chmod "$FS_W_FILES" "$writeable_file"
     check_chmod=$?
     if [ $check_chmod -ne 0 ]; then
@@ -42,7 +43,9 @@ if [[ -n "$WRITEABLE_DIRS" ]]; then
     if [[ ! -d "$writeable_dir" ]]; then
       continue
     fi
+    echo "Setting writeable file permissions $FS_W_FILES to files inside '$writeable_dir'"
     find "$writeable_dir" -type f -exec chmod "$FS_W_FILES" {} +
+    echo "Setting writeable dir permissions $FS_W_DIRS to '$writeable_dir'"
     find "$writeable_dir" -type d -exec chmod "$FS_W_DIRS" {} +
   done
 fi
@@ -52,6 +55,7 @@ if [[ -n "$PROTECTED_FILES" ]]; then
     if [[ ! -f "$protected_file" ]]; then
       continue
     fi
+    echo "Setting protected file permissions $FS_P_FILES to '$protected_file'"
     chmod "$FS_P_FILES" "$protected_file"
     check_chmod=$?
     if [ $check_chmod -ne 0 ]; then
@@ -69,6 +73,7 @@ if [[ -n "$EXECUTABLE_FILES" ]]; then
     if [[ ! -f "$executable_file" ]]; then
       continue
     fi
+    echo "Setting executable file permissions $FS_E_FILES to '$executable_file'"
     chmod "$FS_E_FILES" "$executable_file"
     check_chmod=$?
     if [ $check_chmod -ne 0 ]; then

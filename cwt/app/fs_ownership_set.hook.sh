@@ -25,6 +25,7 @@ if [[ -n "$WRITEABLE_FILES" ]]; then
     if [[ ! -f "$writeable_file" ]]; then
       continue
     fi
+    echo "Setting writeable file ownership $FS_W_OWNER:$FS_W_GROUP to '$writeable_file'"
     chown "$FS_W_OWNER:$FS_W_GROUP" "$writeable_file"
     check_chown=$?
     if [ $check_chown -ne 0 ]; then
@@ -42,6 +43,7 @@ if [[ -n "$WRITEABLE_DIRS" ]]; then
     if [[ ! -d "$writeable_dir" ]]; then
       continue
     fi
+    echo "Setting writeable dir ownership $FS_W_OWNER:$FS_W_GROUP to '$writeable_dir'"
     chown "$FS_W_OWNER:$FS_W_GROUP" "$writeable_dir" -R
     check_chown=$?
     if [ $check_chown -ne 0 ]; then

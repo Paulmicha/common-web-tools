@@ -7,7 +7,7 @@
 # @see cwt/instance/fs_perms_set.hook.sh
 #
 # @example
-#   make fix_perms
+#   make fix-perms
 #   # Or :
 #   cwt/instance/fix_perms.sh
 #

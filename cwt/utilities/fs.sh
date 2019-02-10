@@ -406,3 +406,213 @@ u_fs_change_line() {
 
   sed "/$p_existing_line_match/c $new" -i "$p_file"
 }
+
+##
+# Compresses given path to a *.tgz archive file (customizable).
+#
+# Inside the archive, the path is relative to the input path - i.e. if I
+# request path/to/folder the resulting archive will contain the contents of that
+# folder (and NOT path/to/folder).
+#
+# @param 1 String : the path to compress.
+# @param 2 [optional] String : the destination folder. Defaults to current dir.
+# @param 3 [optional] String : preferred extension. Defaults to 'tgz'.
+#
+# @example
+#   # Will compress given path to arhive file in current dir :
+#   u_fs_compress path/to/file.ext
+#   # -> Result : ./file.ext.tgz
+#   u_fs_compress path/to/folder
+#   # -> Result : ./folder.tgz
+#
+#   # Will compress given path to arhive file inside dir 'path/to' :
+#   u_fs_compress path/to/file.ext path/to
+#   # -> Result : path/to/file.ext.tgz
+#   u_fs_compress path/to/folder path/to
+#   # -> Result : path/to/folder.tgz
+#
+#   # Custom extension.
+#   u_fs_compress path/to/folder path/to tar.gz
+#   # -> Result : path/to/folder.tar.gz
+#
+u_fs_compress() {
+  local p_path="$1"
+  local p_folder="$2"
+  local p_preferred_extension="$3"
+
+  if [[ ! -f "$p_path" ]] && [[ ! -d "$p_path" ]]; then
+    echo >&2
+    echo "Notice in u_fs_compress() - $BASH_SOURCE line $LINENO: directory or file '$p_folder' was not found." >&2
+    echo "Aborting (1)." >&2
+    echo >&2
+    return 1
+  fi
+
+  if [[ -n "$p_folder" ]] && [[ ! -d "$p_folder" ]]; then
+    echo >&2
+    echo "Notice in u_fs_compress() - $BASH_SOURCE line $LINENO: directory '$p_folder' was not found." >&2
+    echo "Aborting (2)." >&2
+    echo >&2
+    return 2
+  fi
+
+  # TODO adapt tar parameters below depending on chosen extension.
+  # TODO [evol] support other compression programs ?
+  local extension='tgz'
+  if [[ -n "$p_preferred_extension" ]]; then
+    extension="$p_preferred_extension"
+  fi
+
+  if [[ -n "$p_folder" ]]; then
+    p_path="${p_path##*/}"
+    tar -C "$p_folder" -czf "$p_folder/$p_path.$extension" "$p_path"
+  else
+    tar -czf "$p_path.$extension" "$p_path"
+  fi
+
+  return $?
+}
+
+##
+# Same as u_fs_compress() but presetting folder to compress in place.
+#
+# @param 1 String : the path to compress.
+#
+# @see u_fs_compress()
+#
+# @example
+#   # Will compress given path to arhive file inside dir 'path/to' :
+#   u_fs_compress_in_place path/to/file.ext
+#   # -> Result : path/to/file.ext.tgz
+#   u_fs_compress_in_place path/to/folder
+#   # -> Result : path/to/folder.tgz
+#
+u_fs_compress_in_place() {
+  local p_path_to_compress_in_place="$1"
+  local leaf="${p_path_to_compress_in_place##*/}"
+  local base_path="${p_path_to_compress_in_place%/$leaf}"
+
+  u_fs_compress \
+    "$p_path_to_compress_in_place" \
+    "$base_path"
+
+  return $?
+}
+
+##
+# Extracts given archive file(s). Supports various formats.
+#
+# This function uses a return value to indicate wether the file was uncompressed
+# or not.
+#
+# @param 1 String : the archive file to extract.
+# @param 2 [optional] String : the destination folder. Defaults to current dir.
+#   TODO [wip] Only tested with tar program. We need to check other programs
+#   behaviors (if they uncompress files in place or inside current folder).
+#
+# See https://github.com/xvoland/Extract
+#
+# This function deliberately does nothing if it does not detect a file extension
+# matching some archive format whitelisted below.
+#
+# @example
+#   # Will extract given archive file in current dir :
+#   u_fs_extract path/to/file.zip
+#
+#   # Will extract given archive file to folder 'path/to' :
+#   u_fs_extract path/to/file.tar.gz path/to
+#
+#   # Will leave the file untouched because it is not an archive file :
+#   u_fs_extract path/to/file.txt
+#   echo $? # Will print '1' (indicates that the file was untouched).
+#
+u_fs_extract() {
+  local p_file="$1"
+  local p_folder="$2"
+
+  if [[ ! -f "$p_file" ]]; then
+    echo >&2
+    echo "Notice in u_fs_extract() - $BASH_SOURCE line $LINENO: file '$p_file' was not found." >&2
+    echo "Aborting (2)." >&2
+    echo >&2
+    return 2
+  fi
+
+  if [[ -n "$p_folder" ]] && [[ ! -d "$p_folder" ]]; then
+    echo >&2
+    echo "Notice in u_fs_extract() - $BASH_SOURCE line $LINENO: directory '$p_folder' was not found." >&2
+    echo "Aborting (3)." >&2
+    echo >&2
+    return 3
+  fi
+
+  local untouched=0
+  local needs_copy='y'
+  local original_file="$p_file"
+
+  # In order to correctly handle the 2nd parameter (destination folder), we
+  # process the 'tar' command separately.
+  case "$p_file" in *.cbt|*.tar.bz2|*.tar.gz|*.tar.xz|*.tbz2|*.tgz|*.txz|*.tar)
+    needs_copy='n'
+    if [[ -n "$p_folder" ]]; then
+      tar -xf "$p_file" -C "$p_folder"
+    else
+      tar -xf "$p_file"
+    fi
+    return
+  esac
+
+  # TODO [wip] check other programs behaviors (if they uncompress in place or
+  # inside current folder).
+  # if [[ -n "$p_folder" ]] && [[ "$needs_copy" == 'y' ]]; then
+  #   cp "$p_file" "$p_folder/"
+  #   p_file="$p_folder/${p_file##*/}"
+  # fi
+
+  # TODO [wip] untested.
+  # See https://github.com/xvoland/Extract
+  case "$p_file" in
+    *.7z|*.arj|*.cab|*.cb7|*.chm|*.deb|*.dmg|*.iso|*.lzh|*.msi|*.pkg|*.rpm|*.udf|*.wim|*.xar)
+                        7z x "$p_file" ;;
+    *.gz)               gunzip -k "$p_file" ;;
+    *.cbz|*.epub|*.zip) unzip "$p_file" ;;
+    *.bz2)              bunzip2 "$p_file" ;;
+    *.cbr|*.rar)        unrar x -ad "$p_file" ;;
+    *.z)                uncompress "$p_file" ;;
+    *.lzma)             unlzma "$p_file" ;;
+    *.xz)               unxz "$p_file" ;;
+    *.exe)              cabextract "$p_file" ;;
+    *.cpio)             cpio -id < "$p_file" ;;
+    *.cba|*.ace)        unace x "$p_file" ;;
+    *)                  untouched=1 ;;
+  esac
+
+  # if [[ -n "$p_folder" ]] && [[ "$needs_copy" == 'y' ]]; then
+  #   rm "$p_file"
+  # fi
+
+  return $untouched
+}
+
+##
+# Same as u_fs_extract() but presetting folder to extract in place.
+#
+# @param 1 String : the archive file to extract.
+#
+# @see u_fs_extract()
+#
+# @example
+#   # Will extract given archive file in its folder :
+#   u_fs_extract_in_place path/to/file.ext.tgz
+#
+u_fs_extract_in_place() {
+  local p_file_to_extract_in_place="$1"
+  local leaf="${p_file_to_extract_in_place##*/}"
+  local base_path="${p_file_to_extract_in_place%/$leaf}"
+
+  u_fs_extract \
+    "$p_file_to_extract_in_place" \
+    "$base_path"
+
+  return $?
+}

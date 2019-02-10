@@ -7,7 +7,7 @@
 # @see cwt/instance/fs_ownership_set.hook.sh
 #
 # @example
-#   sudo make fix_ownership
+#   sudo make fix-ownership
 #   # Or :
 #   sudo cwt/instance/fix_ownership.sh
 #

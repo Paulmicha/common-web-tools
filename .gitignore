@@ -9,6 +9,9 @@
 !/scripts/cwt/local/README.md
 /.env
 
+# [optional] Locally generated docker-compose.yml file.
+/docker-compose.yml
+
 # [optional] Public web dir or application docroot.
 # See $APP_DOCROOT global var help in cwt/env/global.vars.sh.
 # There are 2 implementation approaches for using common web tools in a project :
@@ -29,7 +32,8 @@
 !/data/db-dumps/README.md
 /data/private/*
 !/data/private/README.md
-!/data/private/.htaccess
+/data/tmp/*
+!/data/tmp/README.md
 
 # Misc.
 docker-runtime

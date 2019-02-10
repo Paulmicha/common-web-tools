@@ -268,13 +268,11 @@ u_db_destroy() {
 # it always checks if it must be previously uncompressed (detects the ".tgz"
 # extension).
 #
-# TODO [evol] handle other compression formats ?
-#
 # @param 1 String : the dump file path.
 # @param 2 [optional] String : $DB_NAME override.
 #
 # @example
-#   u_db_import '/path/to/dump/file.sql'
+#   u_db_import '/path/to/dump/file.sql.tgz'
 #   u_db_import '/path/to/dump/file.sql' 'custom_db_name'
 #
 u_db_import() {
@@ -282,8 +280,7 @@ u_db_import() {
   local p_db_name_override="$2"
   local db_dump_dir
   local db_dump_file
-  local db_dump_file_ext
-  local db_dump_is_compressed=0
+  local leaf
 
   if [[ ! -f "$p_dump_file_path" ]]; then
     echo >&2
@@ -299,59 +296,52 @@ u_db_import() {
     DB_NAME="$p_db_name_override"
   fi
 
-  # TODO [minor] sanitize $p_dump_file_path ?
   db_dump_file="$p_dump_file_path"
-  db_dump_file_ext="${db_dump_file##*.}"
 
-  # If we detect the 'tgz' extension, uncompress the dump file before triggering
-  # the "import" action.
-  # @see u_db_backup()
-  case "$db_dump_file_ext" in 'tgz')
-    db_dump_is_compressed=1
+  u_fs_extract_in_place "$db_dump_file"
+  file_was_uncompressed=$?
 
-    tar xzf "$db_dump_file" -C "$db_dump_dir"
-    if [[ $? -ne 0 ]]; then
-      echo >&2
-      echo "Error in u_db_import() - $BASH_SOURCE line $LINENO: failed to uncompress dump file '$db_dump_file'." >&2
-      echo "-> Aborting (2)." >&2
-      echo >&2
-      exit 2
-    fi
+  # When input file is an archive, we assume the uncompressed file will be
+  # named exactly like the archive without its extension, e.g. :
+  # - my-dump.sql.tgz -> my-dump.sql
+  # - my-dump.sql.tar.gz -> my-dump.sql
+  if [[ $file_was_uncompressed -eq 0 ]]; then
 
-    # Decompressed file MUST be stored in the $db_dump_file var, as expected by
-    # implementations of the hook -s 'db' -a 'import' below.
-    db_dump_file="${db_dump_file%.$db_dump_file_ext}"
+    # Deal with some compression formats using a double extension.
+    case "$db_dump_file" in *.tar.bz2|*.tar.gz|*.tar.xz)
+      leaf="${db_dump_file##*.}"
+      db_dump_file="${db_dump_file%.$leaf}"
+      leaf="${db_dump_file##*.}"
+      db_dump_file="${db_dump_file%.$leaf}"
+    esac
 
-    # In this case, we would have for ex. :
-    # db_dump_dir = '/path/to/dumps/local/2018/07/09'
-    # db_dump_file = '/path/to/dumps/local/2018/07/09/10-32-42.my_project.sql.tgz'
-    # db_dump_file_ext = 'tgz'
-    # db_dump_file_dc = '/path/to/dumps/local/2018/07/09/10-32-42.my_project.sql'
+    # Deal with some compression formats using a single extension.
+    case "$db_dump_file" in *.cbt|*.tbz2|*.tgz|*.txz|*.tar|*.gz|*.zip|*.bz2|*.z)
+      leaf="${db_dump_file##*.}"
+      db_dump_file="${db_dump_file%.$leaf}"
+    esac
 
     if [[ ! -f "$db_dump_file" ]]; then
       echo >&2
       echo "Error in u_db_import() - $BASH_SOURCE line $LINENO: missing uncompressed dump file '$db_dump_file'." >&2
-      echo "-> Aborting (3)." >&2
+      echo "-> Aborting (2)." >&2
       echo >&2
-      exit 3
+      exit 2
     fi
-  esac
-
-  # TODO should we trigger the hook that resets all filesystem ownership and
-  # permissions here ?
+  fi
 
   # Implementations MUST use var $db_dump_file as input path (source file).
   u_hook_most_specific -s 'db' -a 'import' -v 'PROVISION_USING'
 
   # Remove uncompressed version of the dump when we're done.
-  if [[ $db_dump_is_compressed -eq 1 ]]; then
+  if [[ $file_was_uncompressed -eq 0 ]]; then
     rm "$db_dump_file"
     if [[ $? -ne 0 ]]; then
       echo >&2
       echo "Error in u_db_import() - $BASH_SOURCE line $LINENO: failed to remove uncompressed dump file '$db_dump_file'." >&2
-      echo "-> Aborting (4)." >&2
+      echo "-> Aborting (3)." >&2
       echo >&2
-      exit 4
+      exit 3
     fi
   fi
 }
