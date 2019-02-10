@@ -21,8 +21,6 @@
 # @requires the following globals in calling scope :
 #   - DRUPAL_VERSION
 #   - DRUPAL_LOCAL_SETTINGS
-#   - D4D_SETTINGS_GLOBALS
-#   - and all the globals listed in D4D_SETTINGS_GLOBALS
 #
 # To list all the possible paths that can be used, use :
 # $ make hook-debug s:app a:drupal_settings c:tpl.php v:DRUPAL_VERSION HOST_TYPE INSTANCE_TYPE
@@ -32,7 +30,10 @@
 #
 u_d4d_write_local_settings() {
   local f
+  local line
   local var_name
+  local token_prefix='__replace_this_'
+  local token_suffix='_value__'
   local hook_most_specific_dry_run_match=''
 
   echo "Rewrite Drupal local settings file ..."
@@ -55,13 +56,15 @@ u_d4d_write_local_settings() {
 
     cp "$hook_most_specific_dry_run_match" "$DRUPAL_LOCAL_SETTINGS"
 
-    # Replaces strings in settings file using our custom token naming convention.
-    if [[ -n "$D4D_SETTINGS_GLOBALS" ]]; then
-      for var_name in $D4D_SETTINGS_GLOBALS; do
-        u_str_sanitize_var_name "$var_name" 'var_name'
-        eval "sed -e \"s,__replace_this_${var_name}_value__,\$${var_name},g\" -i $DRUPAL_LOCAL_SETTINGS"
-      done
-    fi
+    # Replaces strings in settings file using our custom token naming
+    # convention. Works with any global variable name.
+    u_global_list
+    for var_name in "${cwt_globals_var_names[@]}"; do
+      if grep -Fq "${token_prefix}${var_name}${token_suffix}" "$DRUPAL_LOCAL_SETTINGS"; then
+        sed -e "s,${token_prefix}${var_name}${token_suffix},${!var_name},g" -i "$DRUPAL_LOCAL_SETTINGS"
+        # echo "  replaced '${token_prefix}${var_name}${token_suffix}' by '${!var_name}'"
+      fi
+    done
   fi
 
   echo "Rewrite Drupal local settings file : done."

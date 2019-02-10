@@ -10,6 +10,60 @@
 #
 
 ##
+# Gets the list of all globals variable names and their values.
+#
+# For performance reasons (to avoid using a subshell), this function writes its
+# result to local variables subject to collision in calling scope :
+#
+# @var cwt_globals_var_names
+# @var cwt_globals_values
+#
+# @example
+#   u_global_list
+#
+#   # Print all var names :
+#   for var_name in "${cwt_globals_var_names[@]}"; do
+#     echo "$var_name"
+#   done
+#
+#   # Print all values :
+#   for value in "${cwt_globals_values[@]}"; do
+#     echo "$value"
+#   done
+#
+#   # Print both :
+#   for i in "${!cwt_globals_var_names[@]}"; do
+#     var_name="${cwt_globals_var_names[$i]}"
+#     value="${cwt_globals_values[$i]}"
+#     echo "the global $var_name = '$value'"
+#   done
+#
+u_global_list() {
+  cwt_globals_values=()
+  cwt_globals_var_names=()
+
+  # During instance init, the $GLOBALS associative array already exists.
+  # Otherwise, we re-aggregate globals to get all supported variable names (in
+  # "dry run" mode, cf. the GLOBALS_DRY_RUN switch).
+  if [[ $GLOBALS_COUNT -eq 0 ]]; then
+    declare -A GLOBALS
+    GLOBALS_COUNT=0
+    GLOBALS_UNIQUE_NAMES=()
+    GLOBALS_UNIQUE_KEYS=()
+    GLOBALS_DRY_RUN=1
+    . cwt/env/global.vars.sh
+    u_global_aggregate
+  fi
+
+  local global_var_name
+
+  for global_var_name in "${GLOBALS_UNIQUE_NAMES[@]}"; do
+    cwt_globals_var_names+=("$global_var_name")
+    cwt_globals_values+=("${!global_var_name}")
+  done
+}
+
+##
 # Writes global vars readonly declarations for current instance.
 #
 # Resulting generated files (git-ignored) :
@@ -186,6 +240,7 @@ u_global_foreach() {
 #
 # @requires or uses the following globals in calling scope :
 # - $GLOBALS
+# - $GLOBALS_DRY_RUN
 # - $p_cwtii_yes
 # - $p_cwtii_my_var_name (replacing 'MY_VAR_NAME' with the actual var name)
 # - $test_cwt_global_aggregate
@@ -198,6 +253,10 @@ u_global_foreach() {
 u_global_assign_value() {
   local p_var="$1"
   local multi_values=''
+
+  if [[ $GLOBALS_DRY_RUN -eq 1 ]]; then
+    return
+  fi
 
   u_str_sanitize_var_name "$p_var" 'p_var'
 
@@ -293,10 +352,11 @@ u_global_assign_value() {
 #   # - 'default'
 #   # - 'value'
 #   # - 'values'
-#   # - 'no_prompt'
 #   # - 'append'
 #   # - 'if-VAR_NAME'
 #   # - 'ifnot-VAR_NAME'
+#   # - 'no_prompt'
+#   # - 'index'
 #   global MY_VAR_NAME3 "[key]=value [key2]='value 2' [key3]='$(my_callback_function)'"
 #
 # @examples (append)
@@ -321,6 +381,15 @@ u_global_assign_value() {
 #
 # @example (read)
 #   u_global_debug
+#
+# @example (deferred assignment)
+#   # This is used so that globals may depend on others declared or
+#   # overridden in other includes. It functions like CSS z-index : higher
+#   # values get assigned later. It eliminates the need to control aggregation
+#   # order : instead, it guarantees the order of values assignment.
+#   global ANOTHER_VAR 'test'
+#   global MY_DEFERRED_VAR "[index]=1 [if-ANOTHER_VAR]=test [value]='my value'"
+#   global MY_DEFERRED_VAR_2 "[index]=2 [value]='${MY_DEFERRED_VAR} can be used here without worrying if it was already assigned or not.'"
 #
 global() {
   local p_var_name="$1"

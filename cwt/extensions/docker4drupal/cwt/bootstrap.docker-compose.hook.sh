@@ -17,8 +17,8 @@ alias php="docker-compose exec $DC_TTY ${D4D_PHP_SNAME:=php} php"
 alias composer="docker-compose exec $DC_TTY ${D4D_PHP_SNAME:=php} composer"
 alias composersu="docker-compose exec $DC_TTY --user root ${D4D_PHP_SNAME:=php} composer"
 
-alias drush="docker-compose exec $DC_TTY ${D4D_PHP_SNAME:=php} drush --root=${D4D_PUBLIC_DOCROOT:=/var/www/html}"
-alias drupal="docker-compose exec $DC_TTY ${D4D_PHP_SNAME:=php} ./vendor/drupal/console/bin/drupal --root=${D4D_PUBLIC_DOCROOT:=/var/www/html}"
+alias drush="docker-compose exec $DC_TTY ${D4D_PHP_SNAME:=php} drush --root=${DRUPAL_PUBLIC_DOCROOT:=/var/www/html}"
+alias drupal="docker-compose exec $DC_TTY ${D4D_PHP_SNAME:=php} ./vendor/drupal/console/bin/drupal --root=${DRUPAL_PUBLIC_DOCROOT:=/var/www/html}"
 
 alias mysql="docker-compose exec $DC_TTY ${D4D_DB_SNAME:=mariadb} mysql"
 alias mysqldump="docker-compose exec $DC_TTY ${D4D_DB_SNAME:=mariadb} mysqldump"
