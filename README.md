@@ -88,76 +88,7 @@ So the first step will always be to clone or download / copy / paste the files f
 1. [optional] launch *instance start* action (e.g. run `make start`) - this is meant to run any service required to use or work on current project instance.
 1. [optional] launch *app install* action (e.g. run `make app-install`) if your project application requires some initial setup tasks like creating a database, importing a DB dump, generating local settings, etc.
 
-These steps are mere indications. It may be useful to "wrap" some of these tasks in custom scripts (e.g. to preset some arguments, etc), usually in the `./scripts` folder to encapsulate what doesn't vary between all project instances.
-
-Here's an example wrapper script for *instance init* (that would be placed in `scripts/init.sh`) :
-
-```sh
-#!/usr/bin/env bash
-
-##
-# Usage examples :
-#
-#   # Init instance locally using defaults.
-#   scripts/init.sh
-#
-#   # Init instance locally using production config.
-#   scripts/init.sh prod
-#
-#   # Init remote instance using production config.
-#   scripts/init.sh prod remote my-instance.my-project.tld
-#
-
-# Defaults (overridable using parameters to this script).
-instance_type='dev'
-host_type='local'
-provision_using='docker-compose'
-
-if [[ -n "$1" ]]; then
-  instance_type="$1"
-fi
-
-if [[ -n "$2" ]]; then
-  host_type="$2"
-fi
-
-if [[ -n "$3" ]]; then
-  instance_domain="$3"
-else
-  # Generates a default domain name based on current dir name and local host IP.
-  . cwt/host/host.inc.sh
-  . cwt/instance/instance.inc.sh
-  instance_domain=$(u_instance_domain)
-fi
-
-if [[ -n "$4" ]]; then
-  provision_using="$4"
-fi
-
-echo
-echo "(Re)initializing $host_type instance (type : $instance_type) using $provision_using ..."
-
-cwt/instance/init.sh \
-  -t "$instance_type" \
-  -d "$instance_domain" \
-  -a "$PWD/web" \
-  -h "$host_type" \
-  -p "$provision_using" \
-  -g 'git@my-git-host.tld:account-name/project-name.git' \
-  -i "$PWD/web" \
-  -y
-
-if [[ $? -ne 0 ]]; then
-  echo >&2
-  echo "Error in $BASH_SOURCE line $LINENO: 'instance init' failed." >&2
-  echo "-> Aborting (1)." >&2
-  echo >&2
-  exit 1
-fi
-
-echo "(re)initializing local instance : done."
-echo
-```
+These steps are mere indications. It may be useful to "wrap" some of these tasks in custom scripts (e.g. to preset some arguments, etc), usually in the `./scripts` folder - i.e. to encapsulate what doesn't vary between all project instances.
 
 Finally, example code snippets and detailed explanations are provided in CWT source code comments.
 
