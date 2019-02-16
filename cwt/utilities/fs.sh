@@ -105,13 +105,18 @@ u_fs_get_file_contents() {
 #   u_fs_dir_list
 #   echo "$dir_list"
 #
-#   # List '*.sh' dirs in current folder.
-#   u_fs_dir_list . '*.sh'
+#   # List all dirs whose name starts with '_' in current folder.
+#   u_fs_dir_list . '_*'
 #   echo "$dir_list"
 #
 #   # List all dirs in the "/path/to/dir" folder up to 3 levels deep.
 #   u_fs_dir_list /path/to/dir '' 3
 #   echo "$dir_list"
+#
+#   # Looping example :
+#   for dir in $dir_list; do
+#     echo "$dir"
+#   done
 #
 u_fs_dir_list() {
   local p_path="$1"
@@ -200,6 +205,11 @@ u_fs_dir_list() {
 #   # List all files in the "/path/to/dir" folder up to 3 levels deep.
 #   u_fs_file_list /path/to/dir '' 3
 #   echo "$file_list"
+#
+#   # Looping example :
+#   for file in $file_list; do
+#     echo "$file"
+#   done
 #
 u_fs_file_list() {
   local p_path="$1"
