@@ -81,6 +81,9 @@ u_global_write() {
     return 1
   fi
 
+  local global_name
+  local global_value
+
   echo "Writing global (env) vars to scripts/cwt/local/global.vars.sh ..."
 
   # (Re)init destination files (make empty).
@@ -101,16 +104,20 @@ u_global_write() {
 EOF
 
   # Write every aggregated globals.
+  # Also write globals to git-ignored '.env' file for Makefile and other tools
+  # like docker-compose.
   for global_name in ${GLOBALS['.sorting']}; do
     u_str_split1 'evn_arr' "$global_name" '|'
     global_name="${evn_arr[1]}"
-    eval "[[ -z \"\$$global_name\" ]] && echo \"readonly $global_name\"=\'\' >> scripts/cwt/local/global.vars.sh"
-    eval "[[ -n \"\$$global_name\" ]] && echo \"readonly $global_name=\\\"\$$global_name\\\"\" >> scripts/cwt/local/global.vars.sh"
+    global_value="${!global_name}"
 
-    # Also write globals to git-ignored '.env' file for Makefile and other tools
-    # like docker-compose.
-    eval "[[ -z \"\$$global_name\" ]] && echo \"$global_name\"= >> .env"
-    eval "[[ -n \"\$$global_name\" ]] && echo \"$global_name=\$$global_name\" >> .env"
+    if [[ -z "$global_value" ]]; then
+      echo "readonly $global_name=''" >> scripts/cwt/local/global.vars.sh
+      echo "$global_name=" >> .env
+    else
+      echo "readonly $global_name=\"$global_value\"" >> scripts/cwt/local/global.vars.sh
+      echo "$global_name=$global_value" >> .env
+    fi
   done
 
   echo "Writing global (env) vars to scripts/cwt/local/global.vars.sh : done."
@@ -263,27 +270,26 @@ u_global_assign_value() {
   # Support tests.
   # @see cwt/test/cwt/global.test.sh
   if [[ $test_cwt_global_aggregate -ne 1 ]]; then
-    eval "export $p_var"
-    eval "unset $p_var"
+    export $p_var
+    unset $p_var
   fi
 
   local arg_val_var_name="p_cwtii_$p_var"
   u_str_lowercase "$arg_val_var_name" 'arg_val_var_name'
-  eval "local arg_val=\"\$$arg_val_var_name\""
-
+  local arg_val="${!arg_val_var_name}"
   local default_val="${GLOBALS[$p_var|default]}"
 
   if [[ -n "$arg_val" ]]; then
-    eval "$p_var='$arg_val'"
+    printf -v "$p_var" '%s' "$arg_val"
 
   # Non-configurable vars.
   elif [[ "${GLOBALS[$p_var|no_prompt]}" == 1 ]]; then
-    eval "$p_var='${GLOBALS[$p_var|value]}'"
+    printf -v "$p_var" '%s' "${GLOBALS[$p_var|value]}"
 
   # List or "pile" of values (space-separated string).
   elif [[ -n "${GLOBALS[$p_var|values]}" ]] && [[ $test_cwt_global_aggregate -ne 1 ]]; then
     multi_values=$(u_str_trim "${GLOBALS[$p_var|values]}")
-    eval "$p_var='$multi_values'"
+    printf -v "$p_var" '%s' "$multi_values"
 
   # Skippable default value assignment.
   elif [[ $p_cwtii_yes -eq 0 ]]; then
@@ -303,9 +309,9 @@ u_global_assign_value() {
 
   # Assign default value fallback if the value is empty (e.g. may have been the
   # result of entering empty value in prompt).
-  local empty_test=$(eval "echo \"\$$p_var\"")
+  local empty_test="${!p_var}"
   if [[ -z "$empty_test" ]] && [[ -n "$default_val" ]]; then
-    eval "$p_var='$default_val'"
+    printf -v "$p_var" '%s' "$default_val"
   fi
 
   # Once prompt has been made, prevent repeated calls for this var (recursion).
@@ -315,7 +321,7 @@ u_global_assign_value() {
   if [[ $p_cwtii_yes -eq 0 ]]; then
     if [[ ${GLOBALS[$p_var|no_prompt]} -ne 1 ]] && [[ -z "$multi_values" ]]; then
       GLOBALS[$p_var|no_prompt]=1
-      GLOBALS[$p_var|value]=$(eval "echo \"\$$p_var\"")
+      GLOBALS[$p_var|value]="${!p_var}"
     fi
   fi
 }
