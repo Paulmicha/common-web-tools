@@ -250,7 +250,6 @@ u_global_foreach() {
 # - $GLOBALS_DRY_RUN
 # - $p_cwtii_yes
 # - $p_cwtii_my_var_name (replacing 'MY_VAR_NAME' with the actual var name)
-# - $test_cwt_global_aggregate
 #
 # @see global()
 #
@@ -267,12 +266,8 @@ u_global_assign_value() {
 
   u_str_sanitize_var_name "$p_var" 'p_var'
 
-  # Support tests.
-  # @see cwt/test/cwt/global.test.sh
-  if [[ $test_cwt_global_aggregate -ne 1 ]]; then
-    export $p_var
-    unset $p_var
-  fi
+  # Make sure the variable is empty in calling scope before starting.
+  unset $p_var
 
   local arg_val_var_name="p_cwtii_$p_var"
   u_str_lowercase "$arg_val_var_name" 'arg_val_var_name'
@@ -287,7 +282,7 @@ u_global_assign_value() {
     printf -v "$p_var" '%s' "${GLOBALS[$p_var|value]}"
 
   # List or "pile" of values (space-separated string).
-  elif [[ -n "${GLOBALS[$p_var|values]}" ]] && [[ $test_cwt_global_aggregate -ne 1 ]]; then
+  elif [[ -n "${GLOBALS[$p_var|values]}" ]]; then
     multi_values=$(u_str_trim "${GLOBALS[$p_var|values]}")
     printf -v "$p_var" '%s' "$multi_values"
 

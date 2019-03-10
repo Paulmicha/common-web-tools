@@ -19,6 +19,11 @@
 #   cwt/test/cwt/global.test.sh
 #
 
+# We cannot have 'readonly' variables automatically loaded during CWT bootstrap
+# for this test to run properly.
+# @see cwt/bootstrap.sh
+CWT_BS_SKIP_GLOBALS=1
+
 . cwt/bootstrap.sh
 . cwt/test/self_test.inc.sh
 
@@ -90,7 +95,6 @@ test_cwt_global_aggregate() {
   local global_lookup_paths=''
   local p_cwtii_dry_run=1
   local p_cwtii_yes=1
-  local test_cwt_global_aggregate=1
 
   unset GLOBALS
   declare -A GLOBALS
