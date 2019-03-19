@@ -389,7 +389,7 @@ u_remote_instance_add() {
   if [[ -z "$p_connect_cmd" ]]; then
 
     # NB : the '-A' flag allows to forward currently loaded SSH keys from
-    # the local terminal session. The '-T' flag requests an non-interactive
+    # the local terminal session. The '-T' flag requests a non-interactive
     # tty (= opens a non-interactive terminal session on remote).
     connection_cmd="ssh -T -A ${p_ssh_user}@${p_host}"
 
@@ -411,22 +411,14 @@ u_remote_instance_add() {
 
 EOF
 
-  printf "%s" "export REMOTE_INSTANCE_ID='$p_id'" >> "$conf"
-  echo '' >> "$conf"
-  printf "%s" "export REMOTE_INSTANCE_HOST='$p_host'" >> "$conf"
-  echo '' >> "$conf"
-  printf "%s" "export REMOTE_INSTANCE_TYPE='$p_type'" >> "$conf"
-  echo '' >> "$conf"
-  printf "%s" "export REMOTE_INSTANCE_SSH_USER='$p_ssh_user'" >> "$conf"
-  echo '' >> "$conf"
-  printf "%s" "export REMOTE_INSTANCE_SSH_PORT='$p_ssh_port'" >> "$conf"
-  echo '' >> "$conf"
-  printf "%s" "export REMOTE_INSTANCE_CONNECT_CMD='$connection_cmd'" >> "$conf"
-  echo '' >> "$conf"
-  printf "%s" "export REMOTE_INSTANCE_PROJECT_DOCROOT='$p_project_docroot'" >> "$conf"
-  echo '' >> "$conf"
-  printf "%s" "export REMOTE_INSTANCE_APP_DOCROOT='$p_app_docroot'" >> "$conf"
-  echo '' >> "$conf"
+  printf "%s\n" "export REMOTE_INSTANCE_ID='$p_id'" >> "$conf"
+  printf "%s\n" "export REMOTE_INSTANCE_HOST='$p_host'" >> "$conf"
+  printf "%s\n" "export REMOTE_INSTANCE_TYPE='$p_type'" >> "$conf"
+  printf "%s\n" "export REMOTE_INSTANCE_SSH_USER='$p_ssh_user'" >> "$conf"
+  printf "%s\n" "export REMOTE_INSTANCE_SSH_PORT='$p_ssh_port'" >> "$conf"
+  printf "%s\n" "export REMOTE_INSTANCE_CONNECT_CMD='$connection_cmd'" >> "$conf"
+  printf "%s\n" "export REMOTE_INSTANCE_PROJECT_DOCROOT='$p_project_docroot'" >> "$conf"
+  printf "%s\n" "export REMOTE_INSTANCE_APP_DOCROOT='$p_app_docroot'" >> "$conf"
 }
 
 ##
@@ -434,7 +426,7 @@ EOF
 #
 # @param 1 [optional] String : remote instance's id (short name, no space,
 #   _a-zA-Z0-9 only). Defaults to the first *.sh file found in folder :
-#   cwt/extensions/remote/remote/instances.
+#   scripts/cwt/local/remote-instances.
 #
 # @exports REMOTE_INSTANCE_ID
 # @exports REMOTE_INSTANCE_HOST
