@@ -54,7 +54,7 @@ u_remote_download() {
     p_remote_path="$REMOTE_INSTANCE_PROJECT_DOCROOT/$p_remote_path"
   fi
 
-  scp "${REMOTE_USER}@${REMOTE_INSTANCE_HOST}:$p_remote_path" "$p_local_path" "$@"
+  scp "${REMOTE_INSTANCE_SSH_USER}@${REMOTE_INSTANCE_HOST}:$p_remote_path" "$p_local_path" "$@"
 
   if [[ $? -ne 0 ]]; then
     echo >&2
@@ -111,7 +111,7 @@ u_remote_upload() {
     p_remote_path="$REMOTE_INSTANCE_PROJECT_DOCROOT/$p_remote_path"
   fi
 
-  scp "$p_local_path" "${REMOTE_USER}@${REMOTE_INSTANCE_HOST}:${p_remote_path}" "$@"
+  scp "$p_local_path" "${REMOTE_INSTANCE_SSH_USER}@${REMOTE_INSTANCE_HOST}:${p_remote_path}" "$@"
 
   if [[ $? -ne 0 ]]; then
     echo >&2
@@ -170,20 +170,6 @@ u_remote_authorize_ssh_key() {
     return 2
   fi
 
-  # Prevent running this more than once per host + user + key path.
-  # TODO use variable in calling scope instead of subshell (because currently,
-  # given the use of the condition in examples below, anything printed out to
-  # stdin would be evaluated).
-  # @see u_host_once()
-  if ! u_host_once "u_remote_authorize_ssh_key.${REMOTE_INSTANCE_HOST}.${USER}.${public_key_path}" ; then
-    echo
-    echo "Notice in $BASH_SOURCE line $LINENO: it appears that key was already sent to that remote host."
-    echo "There is no need to send it again."
-    echo "-> Aborting (0)."
-    echo
-    return 0
-  fi
-
   # Ensures SSH agent is running with the key loaded.
   if [ -z "$SSH_AUTH_SOCK" ]; then
     echo "SSH agent is not running (or not detected in $BASH_SOURCE line $LINENO)"
@@ -209,6 +195,10 @@ u_remote_authorize_ssh_key() {
   echo "Note : this may prompt for confirmation for adding the remote host to the local 'known_hosts' file if it's the first time a connexion is made."
   echo
 
+  # SSH users on the remote may not already have an .ssh dir in their $HOME dir.
+  u_remote_exec_wrapper "$p_id" '[ ! -d ~/.ssh ] && mkdir -p ~/.ssh'
+
+  # TODO make idempotent.
   eval "cat $public_key_path | $REMOTE_INSTANCE_CONNECT_CMD 'cat >> .ssh/authorized_keys'"
 
   echo "Ok, now the following call should not prompt for password, and should print the IP address of the remote host '$REMOTE_INSTANCE_HOST' :"
