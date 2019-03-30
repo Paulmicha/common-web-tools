@@ -207,8 +207,9 @@ u_fs_dir_list() {
 #   echo "$file_list"
 #
 #   # Looping example :
+#   u_fs_file_list 'scripts/cwt/local/remote-instances'
 #   for file in $file_list; do
-#     echo "$file"
+#     rm "scripts/cwt/local/remote-instances/$file"
 #   done
 #
 u_fs_file_list() {

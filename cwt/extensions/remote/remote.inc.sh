@@ -296,67 +296,56 @@ u_remote_exec_wrapper() {
 #
 # @param 1 String : remote instance's id (short name, no space, _a-zA-Z0-9 only).
 # @param 2 String : remote instance's host domain.
-# @param 3 String : remote instance's type (dev, production, etc).
+# @param 3 String : remote instance's PROJECT_DOCROOT value.
 # @param 4 String : remote SSH user.
-# @param 5 String : remote instance's PROJECT_DOCROOT value.
-# @param 6 [optional] String : remote instance's APP_DOCROOT value. Defaults to:
-#   "$p_project_docroot/web"
-# @param 7 [optional] Number : SSH port. Defaults to: not specified.
-# @param 8 [optional] String : raw command used to connect (including args).
-#   Defaults to: 'ssh username@example.com' (or 'ssh -p123 username@example.com'
-#   if param 7 is specified).
-#
-# TODO [evol] convert to named args.
+# @param 5 [optional] String : raw command used to connect (including args).
+#   Defaults to: 'ssh username@example.com'.
 #
 # @example
-#   # Basic example with only mandatory params :
+#   # Basic example with only mandatory params (defaults to current user) :
 #   u_remote_instance_add \
 #     'my_short_id' \
 #     'remote.instance.example.com' \
-#     'stage' \
-#     'my_ssh_user' \
 #     '/path/to/remote/instance/docroot'
 #
-#   # Example with custom port :
+#   # Example specifying user to use on remote :
 #   u_remote_instance_add \
 #     'my_short_id' \
 #     'remote.instance.example.com' \
-#     'stage' \
-#     'my_ssh_user' \
 #     '/path/to/remote/instance/docroot' \
-#     '10050'
+#     'my_ssh_user'
 #
-#   # Example removing the SSH agent forwarding (i.e. prevents remote commands
-#   # such as 'git pull') - illustrates SSH connection cmd override :
+#   # Example with user + SSH connection cmd override (using
+#   # ssh-agent-filter) :
 #   u_remote_instance_add \
 #     'my_short_id' \
 #     'remote.instance.example.com' \
-#     'stage' \
-#     'my_ssh_user' \
 #     '/path/to/remote/instance/docroot' \
-#     '' \
-#     'ssh -T my_ssh_user@remote.instance.example.com'
+#     'remote_user' \
+#     'afssh -c /home/local_user/.ssh/id_project_name -- -T remote_user@remote.instance.example.com'
 #
 u_remote_instance_add() {
   local p_id="$1"
   local p_host="$2"
-  local p_type="$3"
+  local p_project_docroot="$3"
   local p_ssh_user="$4"
-  local p_project_docroot="$5"
-  local p_app_docroot="$6"
-  local p_ssh_port="$7"
-  local p_connect_cmd="$8"
+  local p_connect_cmd="$5"
 
-  if [[ -z "$p_app_docroot" ]]; then
-    p_app_docroot="$p_project_docroot/web"
+  if [[ -z "$p_ssh_user" ]]; then
+    # Get current user even if sudoing.
+    # See https://stackoverflow.com/questions/1629605/getting-user-inside-shell-script-when-running-with-sudo
+    p_ssh_user="$(logname 2>/dev/null || echo $SUDO_USER)"
   fi
 
   if [[ ! -d 'scripts/cwt/local/remote-instances' ]]; then
-    echo >&2
-    echo "Error in u_remote_instance_add() - $BASH_SOURCE line $LINENO: dir scripts/cwt/local/remote-instances is missing." >&2
-    echo "-> Aborting (1)." >&2
-    echo >&2
-    return 1
+    mkdir -p 'scripts/cwt/local/remote-instances'
+    if [[ $? -ne 0 ]]; then
+      echo >&2
+      echo "Error in u_remote_instance_add() - $BASH_SOURCE line $LINENO: failed to create missing required dir scripts/cwt/local/remote-instances." >&2
+      echo "-> Aborting (1)." >&2
+      echo >&2
+      return 1
+    fi
   fi
 
   local conf="scripts/cwt/local/remote-instances/${p_id}.sh"
@@ -403,12 +392,9 @@ EOF
 
   printf "%s\n" "export REMOTE_INSTANCE_ID='$p_id'" >> "$conf"
   printf "%s\n" "export REMOTE_INSTANCE_HOST='$p_host'" >> "$conf"
-  printf "%s\n" "export REMOTE_INSTANCE_TYPE='$p_type'" >> "$conf"
   printf "%s\n" "export REMOTE_INSTANCE_SSH_USER='$p_ssh_user'" >> "$conf"
-  printf "%s\n" "export REMOTE_INSTANCE_SSH_PORT='$p_ssh_port'" >> "$conf"
   printf "%s\n" "export REMOTE_INSTANCE_CONNECT_CMD='$connection_cmd'" >> "$conf"
   printf "%s\n" "export REMOTE_INSTANCE_PROJECT_DOCROOT='$p_project_docroot'" >> "$conf"
-  printf "%s\n" "export REMOTE_INSTANCE_APP_DOCROOT='$p_app_docroot'" >> "$conf"
 }
 
 ##
@@ -420,10 +406,8 @@ EOF
 #
 # @exports REMOTE_INSTANCE_ID
 # @exports REMOTE_INSTANCE_HOST
-# @exports REMOTE_INSTANCE_TYPE
 # @exports REMOTE_INSTANCE_CONNECT_CMD
 # @exports REMOTE_INSTANCE_PROJECT_DOCROOT
-# @exports REMOTE_INSTANCE_APP_DOCROOT
 #
 # @example
 #   # Only need to call the function for exporting globals in current shell :
@@ -442,4 +426,24 @@ u_remote_instance_load() {
   fi
 
   . "$conf"
+}
+
+##
+# Purges all local generated remotes.
+#
+# @example
+#   u_remote_purge_instances
+#
+u_remote_purge_instances() {
+  u_fs_file_list 'scripts/cwt/local/remote-instances'
+  for file in $file_list; do
+    rm "scripts/cwt/local/remote-instances/$file"
+    if [[ $? -ne 0 ]]; then
+      echo >&2
+      echo "Error in u_remote_purge_instances() - $BASH_SOURCE line $LINENO: failed to remove locally generated instance '$file' (in scripts/cwt/local/remote-instances)." >&2
+      echo "-> Aborting (1)." >&2
+      echo >&2
+      return 1
+    fi
+  done
 }
