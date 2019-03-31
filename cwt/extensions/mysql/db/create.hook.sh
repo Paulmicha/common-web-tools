@@ -14,10 +14,6 @@
 
 echo "Creating database '$DB_NAME' ..."
 
-# TODO [wip] handle DB_ADMIN_USERNAME + DB_ADMIN_PASSWORD separately from base
-# extension ?
-# @see u_db_get_credentials() in cwt/extensions/db/db.inc.sh
-
 echo "CREATE DATABASE IF NOT EXISTS $DB_NAME;
 GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USERNAME'@'$DB_HOST' IDENTIFIED BY '$DB_PASSWORD';" \
   | mysql \

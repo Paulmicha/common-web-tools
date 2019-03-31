@@ -11,4 +11,6 @@
 # @see u_instance_init() in cwt/instance/instance.inc.sh
 #
 
-u_db_get_credentials
+for CWT_DB_ID in $CWT_DB_IDS; do
+  u_db_get_credentials
+done

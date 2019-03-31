@@ -97,7 +97,7 @@ u_remote_upload() {
 
   if [[ -z "$REMOTE_INSTANCE_CONNECT_CMD" ]]; then
     echo >&2
-    echo "EFFFLINENO: no conf found for remote id '$p_id'." >&2
+    echo "Error in u_remote_upload() - $BASH_SOURCE line $LINENO: no conf found for remote id '$p_id'." >&2
     echo "-> Aborting (1)." >&2
     echo >&2
     return 1
@@ -115,9 +115,9 @@ u_remote_upload() {
 
   if [[ $? -ne 0 ]]; then
     echo >&2
-    echo "Error in $BASH_SOURCE line $LINENO: the command 'scp' exited with a non-zero status." >&2
+    echo "Error in u_remote_upload() - $BASH_SOURCE line $LINENO: the command 'scp' exited with a non-zero status." >&2
     echo >&2
-    exit 1
+    exit 2
   else
     echo "Upload successfully completed."
   fi
@@ -297,9 +297,11 @@ u_remote_exec_wrapper() {
 # @param 1 String : remote instance's id (short name, no space, _a-zA-Z0-9 only).
 # @param 2 String : remote instance's host domain.
 # @param 3 String : remote instance's PROJECT_DOCROOT value.
-# @param 4 String : remote SSH user.
+# @param 4 [optional] String : remote SSH user.
+#   Defaults to: current user, even if sudoing.
 # @param 5 [optional] String : raw command used to connect (including args).
-#   Defaults to: 'ssh username@example.com'.
+#   Defaults to: 'ssh -T -A username@example.com' (request a non-interactive TTY
+#   and enable ssh-agent forwarding).
 #
 # @example
 #   # Basic example with only mandatory params (defaults to current user) :
@@ -406,6 +408,7 @@ EOF
 #
 # @exports REMOTE_INSTANCE_ID
 # @exports REMOTE_INSTANCE_HOST
+# @exports REMOTE_INSTANCE_SSH_USER
 # @exports REMOTE_INSTANCE_CONNECT_CMD
 # @exports REMOTE_INSTANCE_PROJECT_DOCROOT
 #

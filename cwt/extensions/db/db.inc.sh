@@ -44,7 +44,11 @@
 #   u_db_get_credentials
 #
 #   # Explicitly set DB_ID (TODO [wip] test multi-db projects).
+#   # Alternatively, a local variable $CWT_DB_ID may be used in calling scope.
 #   u_db_get_credentials my_custom_db_id
+#   # Or :
+#   CWT_DB_ID='my_custom_db_id'
+#   u_db_get_credentials
 #
 #   # If called in current shell scope once, exported values will prevent
 #   # re-loading values. TODO [wip] implement "static" keyed sets of vars ?
@@ -63,29 +67,25 @@ u_db_get_credentials() {
 
   local p_db_id="$1"
   local p_force_reload="$2"
+  local db_id
   local reg_val
+
+  if [[ -z "$p_db_id" ]]; then
+    if [[ -n "$CWT_DB_ID" ]]; then
+      db_id="$CWT_DB_ID"
+    else
+      db_id='default'
+    fi
+  fi
+
+  u_str_sanitize_var_name "$db_id" 'db_id'
 
   # If DB credentials vars are already exported in current shell scope, no need
   # to carry on.
-  if [[ -n "$DB_ID" ]] && [[ -z "$p_force_reload" ]]; then
+  if [[ -n "$DB_ID" ]] && [[ "$DB_ID" == "$db_id" ]] && [[ -z "$p_force_reload" ]]; then
     return
   fi
-
-  if [[ -z "$p_db_id" ]]; then
-    # Note : assumes every instance has a distinct domain, even "local dev" ones
-    # if cwt/extensions/file_registry is used as registry storage backend.
-    if [[ -z "$INSTANCE_DOMAIN" ]]; then
-      echo >&2
-      echo "Error in u_db_get_credentials() - $BASH_SOURCE line $LINENO: the required global 'INSTANCE_DOMAIN' is undefined." >&2
-      echo "-> Aborting (2)." >&2
-      echo >&2
-      exit 2
-    fi
-    p_db_id="$INSTANCE_DOMAIN";
-  fi
-
-  u_str_sanitize_var_name "$p_db_id" 'p_db_id'
-  export DB_ID="$p_db_id"
+  export DB_ID="$db_id"
 
   case "$CWT_DB_MODE" in
     # Some environments do not require CWT to handle DB credentials at all.
@@ -111,12 +111,21 @@ u_db_get_credentials() {
       return
       ;;
 
-    # The 'auto' mode means we only store the password, which gets generated once
-    # on first call (and read otherwise).
-    # Other values will be assigned to DB_ID for radical simplification.
+    # The 'auto' mode means we only store the password, which gets generated
+    # once on first call (and read otherwise).
+    # Other values will be assigned default values unless the following local
+    # env vars are already set in calling scope :
+    # - $DB_NAME defaults to $DB_ID
+    # - $DB_USERNAME defaults to $DB_ID
+    # - $DB_HOST defaults to localhost
+    # - $DB_PORT defaults to 3306
+    # - $DB_ADMIN_USERNAME defaults to $DB_USERNAME
+    # - $DB_ADMIN_PASSWORD defaults to $DB_PASSWORD
     auto)
-      export DB_NAME="$DB_ID"
-      export DB_USERNAME="$DB_ID"
+      export DB_NAME="${DB_NAME:=$DB_ID}"
+      export DB_USERNAME="${DB_USERNAME:=$DB_ID}"
+      export DB_HOST="${DB_HOST:=localhost}"
+      export DB_PORT="${DB_PORT:=3306}"
 
       # Prevent MySQL ERROR 1470 (HY000) String is too long for user name - should
       # be no longer than 16 characters.
@@ -136,10 +145,12 @@ u_db_get_credentials() {
       if [[ -z "$reg_val" ]]; then
         export DB_PASSWORD=`< /dev/urandom tr -dc A-Za-z0-9 | head -c14; echo`
         u_instance_registry_set "${p_db_id}.DB_PASSWORD" "$DB_PASSWORD"
+      else
+        export DB_PASSWORD="$reg_val"
       fi
 
-      export DB_ADMIN_USERNAME="$DB_USERNAME"
-      export DB_ADMIN_PASSWORD="$DB_PASSWORD"
+      export DB_ADMIN_USERNAME="${DB_ADMIN_USERNAME:=$DB_USERNAME}"
+      export DB_ADMIN_PASSWORD="${DB_ADMIN_PASSWORD:=$DB_PASSWORD}"
     ;;
 
     # 'manual' mode requires terminal (prompts) on first call.
@@ -525,23 +536,72 @@ u_db_restore_last() {
 #   backups.
 # @param 2 [optional] String : $DB_NAME override.
 #
+# NB : for performance reasons (to avoid using a subshell), this function
+# writes its result to a variable subject to collision in calling scope.
+#
+# @var routine_dump_file
+#
 # @example
-#   u_db_restore_last
-#   u_db_restore_last 'no-purge'
-#   u_db_restore_last '' 'custom_db_name'
-#   u_db_restore_last 'no-purge' 'custom_db_name'
+#   u_db_routine_backup
+#   u_db_routine_backup 'no-purge'
+#   u_db_routine_backup '' 'custom_db_name'
+#   u_db_routine_backup 'no-purge' 'custom_db_name'
 #
 u_db_routine_backup() {
   local p_no_purge="$1"
   local p_db_name_override="$2"
   local db_routine_new_backup_file
 
+  # TODO [wip] Allow setting dump file extension in DB settings ?
+  # Using generic extension 'dump' for now.
   u_db_get_credentials
-  db_routine_new_backup_file="${CWT_DB_DUMPS_BASE_PATH}/local/$(date +"%Y/%m/%d/%H-%M-%S").$DB_ID.sql"
+  db_routine_new_backup_file="$CWT_DB_DUMPS_BASE_PATH/local/$DB_ID/$(date +"%Y/%m/%d/%H-%M-%S").dump"
 
   u_db_backup "$db_routine_new_backup_file"
 
   # TODO [wip] unless 'no-purge' option is set, implement old dumps cleanup.
   # If we had time, this could be implemented with something like :
   # global CWT_DB_BAK_ROUTINE_PURGE "[default]='1m:5,3m:3,6m:2,1y:1' [help]='Custom syntax specifying how many dump files to keep by age. Comma-separated list of quotas - ex: 1m:5 = for backups older than 1 month, keep max 5 files in that month.'"
+
+  # Some tasks need the generated dump file path.
+  routine_dump_file="$db_routine_new_backup_file"
+}
+
+##
+# Gets the most recent local instance DB dump.
+#
+# Optionally creates a new routine dump first.
+#
+# @param 1 [optional] String : pass 'new' to create new dump instead of
+#   returning most recent among existing local DB dump files.
+#
+# @example
+#   most_recent_dump_file="$(u_db_get_dump)"
+#   echo "Result = '$most_recent_dump_file'"
+#
+#   new_routine_dump_file="$(u_db_get_dump 'new')"
+#   echo "Result = '$new_routine_dump_file'"
+#
+u_db_get_dump() {
+  local p_option="$1"
+  local dump_to_return
+
+  if [[ -n "$p_option" ]]; then
+    case "$p_option" in new)
+      u_db_routine_backup
+      dump_to_return="$routine_dump_file"
+    esac
+  else
+    dump_to_return="$(u_fs_get_most_recent $CWT_DB_DUMPS_BASE_PATH)"
+  fi
+
+  if [[ ! -f "$dump_to_return" ]]; then
+    echo >&2
+    echo "Error in u_db_get_dump() - $BASH_SOURCE line $LINENO: no DB dump file was found." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    exit 1
+  fi
+
+  echo "$dump_to_return"
 }

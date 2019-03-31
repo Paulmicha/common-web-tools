@@ -118,6 +118,9 @@ u_instance_init() {
 
   # (Re)set file system permissions.
   u_instance_set_permissions
+
+  # Trigger post-init (optional) extra processes.
+  hook -p 'post' -a 'init'
 }
 
 ##

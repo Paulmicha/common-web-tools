@@ -11,4 +11,4 @@
 # @see cwt/bootstrap.sh
 #
 
-global FILE_REGISTRY_PATH "[default]='/opt/cwt-registry' [help]='Specifies where the files used as key/value store backend should be written. Important note : when hosting multiple CWT projects and/or project instances on the same host, if this value differs, the host-level values won’t be shared (which defeats their purpose).'"
+global FILE_REGISTRY_HOST_LEVEL_PATH "[default]='/opt/cwt-registry' [help]='Specifies where the files used as key/value store backend should be written. Important note : when hosting multiple CWT projects and/or project instances on the same host, if this value differs, the host-level values won’t be shared (which defeats their purpose).'"

@@ -8,6 +8,11 @@
 # @param 2 [optional] String : $DB_NAME override.
 #
 # @example
+#   make db-routine-backup
+#   make db-routine-backup 'no-purge'
+#   make db-routine-backup '' 'custom_db_name'
+#   make db-routine-backup 'no-purge' 'custom_db_name'
+#   # Or :
 #   cwt/extensions/db/db/routine_backup.sh
 #   cwt/extensions/db/db/routine_backup.sh 'no-purge'
 #   cwt/extensions/db/db/routine_backup.sh '' 'custom_db_name'

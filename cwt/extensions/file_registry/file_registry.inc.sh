@@ -15,10 +15,10 @@
 # @param 1 String : the key identifying a registry entry.
 # @param 2 String [optional] : the namespace to use for this registry entry.
 #   Can be 'host' or any string. Default: $INSTANCE_DOMAIN.
+#   Leave empty to get per-instance registry.
 #
-# @requires the following globals in calling scope :
-#   - $INSTANCE_DOMAIN
-#   - $FILE_REGISTRY_PATH
+# @uses the following globals in calling scope :
+#   - $FILE_REGISTRY_HOST_LEVEL_PATH
 #
 # If the directory used to store files doesn't exist, it will be created.
 #
@@ -41,22 +41,13 @@ u_file_registry_get_path() {
   local p_namespace="$2"
   local slug
 
-  slug=$(u_str_slug_u "$p_key")
-  reg_file_path="$FILE_REGISTRY_PATH/$INSTANCE_DOMAIN"
+  u_str_sanitize_var_name "$p_key" 'slug'
+  reg_file_path="scripts/cwt/local/registry"
 
   if [[ -n "$p_namespace" ]]; then
     local namespace
-    namespace=$(u_str_slug "$p_namespace")
-    reg_file_path="$FILE_REGISTRY_PATH/$namespace"
-
-  # Cannot carry on without an INSTANCE_DOMAIN value here.
-  elif [[ -z "$INSTANCE_DOMAIN" ]]; then
-    echo >&2
-    echo "Error in $BASH_SOURCE line $LINENO: the global 'INSTANCE_DOMAIN' cannot be empty." >&2
-    echo "Have you run instance init (make) ?" >&2
-    echo "-> Aborting (1)." >&2
-    echo >&2
-    exit 1
+    u_str_sanitize_var_name "$p_namespace" 'namespace'
+    reg_file_path="${FILE_REGISTRY_HOST_LEVEL_PATH:=/opt/cwt-registry}/$namespace"
   fi
 
   if [[ ! -d "$reg_file_path" ]]; then
