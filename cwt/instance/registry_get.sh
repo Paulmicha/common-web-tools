@@ -12,7 +12,7 @@
 # @see cwt/extensions/file_registry
 #
 # @example
-#   make reg-get
+#   make reg-get my_key
 #   # Or :
 #   cwt/instance/registry_get.sh my_key
 #

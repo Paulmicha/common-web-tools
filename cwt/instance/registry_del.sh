@@ -12,7 +12,7 @@
 # @see cwt/extensions/file_registry
 #
 # @example
-#   make reg-del
+#   make reg-del my_key
 #   # Or :
 #   cwt/instance/registry_del.sh my_key
 #

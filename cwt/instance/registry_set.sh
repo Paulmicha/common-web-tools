@@ -12,7 +12,7 @@
 # @see cwt/extensions/file_registry
 #
 # @example
-#   make reg-set
+#   make reg-set my_key 'my value'
 #   # Or :
 #   cwt/instance/registry_set.sh my_key 'my value'
 #

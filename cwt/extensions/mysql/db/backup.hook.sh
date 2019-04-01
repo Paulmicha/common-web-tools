@@ -22,8 +22,13 @@ if [[ -z "$db_dump_file" ]]; then
   exit 1
 fi
 
+# Prevent MySQL ERROR 1470 (HY000) String is too long for user name - should
+# be no longer than 16 characters.
+# Warning : this creates naming collision risks (considered edge case).
+mysql_db_username="${DB_USERNAME:0:16}"
+
 mysqldump \
-  --user="$DB_USERNAME" \
+  --user="$mysql_db_username" \
   --password="$DB_PASSWORD" \
   --host="$DB_HOST" \
   --port="$DB_PORT" \

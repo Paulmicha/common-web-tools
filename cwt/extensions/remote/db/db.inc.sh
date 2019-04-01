@@ -69,7 +69,7 @@ u_remote_sync_db_to() {
   fi
 
   # The dump file path on the remote must be placed inside a subfolder named
-  # after this local instance domain in order to avoid any risks of collision.
+  # after this local instance id in order to avoid any risks of collision.
   rst_leaf="${rst_dump_file##*/}"
   rst_dump_local_base_path="$CWT_DB_DUMPS_BASE_PATH/local/$DB_ID"
   rst_dump_remote_base_path="$CWT_DB_DUMPS_BASE_PATH/$p_id/$DB_ID"
@@ -138,7 +138,7 @@ u_remote_sync_db_from() {
   fi
 
   # The local dump file path must be placed inside a subfolder named
-  # after the remote instance domain in order to avoid any risks of collision.
+  # after the remote instance id in order to avoid any risks of collision.
   rsf_leaf="${rsf_remote_dump_file##*/}"
   rsf_dump_local_base_path="$CWT_DB_DUMPS_BASE_PATH/$p_id/$DB_ID"
   rsf_dump_remote_base_path="$CWT_DB_DUMPS_BASE_PATH/local/$DB_ID"

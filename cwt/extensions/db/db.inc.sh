@@ -93,12 +93,15 @@ u_db_get_credentials() {
     # - $DB_NAME
     # - $DB_USERNAME
     # - $DB_PASSWORD
-    # - $DB_HOST
     # These fallback values are provided if not set :
+    # - $DB_HOST defaults to localhost
     # - $DB_PORT defaults to 3306
     # - $DB_ADMIN_USERNAME defaults to $DB_USERNAME
     # - $DB_ADMIN_PASSWORD defaults to $DB_PASSWORD
     none)
+      if [[ -z "$DB_HOST" ]]; then
+        export DB_HOST='localhost'
+      fi
       if [[ -z "$DB_PORT" ]]; then
         export DB_PORT=3306
       fi
@@ -122,15 +125,18 @@ u_db_get_credentials() {
     # - $DB_ADMIN_USERNAME defaults to $DB_USERNAME
     # - $DB_ADMIN_PASSWORD defaults to $DB_PASSWORD
     auto)
-      export DB_NAME="${DB_NAME:=$DB_ID}"
-      export DB_USERNAME="${DB_USERNAME:=$DB_ID}"
-      export DB_HOST="${DB_HOST:=localhost}"
-      export DB_PORT="${DB_PORT:=3306}"
-
-      # Prevent MySQL ERROR 1470 (HY000) String is too long for user name - should
-      # be no longer than 16 characters.
-      # Warning : this creates naming collision risks (considered edge case).
-      DB_USERNAME="${DB_USERNAME:0:16}"
+      if [[ -z "$DB_NAME" ]]; then
+        export DB_NAME="$DB_ID"
+      fi
+      if [[ -z "$DB_USERNAME" ]]; then
+        export DB_USERNAME="$DB_ID"
+      fi
+      if [[ -z "$DB_HOST" ]]; then
+        export DB_HOST='localhost'
+      fi
+      if [[ -z "$DB_PORT" ]]; then
+        export DB_PORT=3306
+      fi
 
       # Attempts to load password from registry (secrets store).
       # Warning : if cwt/extensions/file_registry is used as registry storage
@@ -219,6 +225,10 @@ u_db_get_credentials() {
 # "Abstract" means that this extension doesn't provide any actual implementation
 # for this functionality. It is necessary to use an extension which does. E.g. :
 # @see cwt/extensions/mysql
+#
+# To list all the possible paths that can be used - among which existing files
+# will be sourced when the hook is triggered, use :
+# $ make hook-debug ms s:db a:create v:PROVISION_USING
 #
 # @param 1 [optional] String : $DB_NAME override.
 #
@@ -568,12 +578,13 @@ u_db_routine_backup() {
 }
 
 ##
-# Gets the most recent local instance DB dump.
+# Gets local instance DB dump filepaths.
 #
 # Optionally creates a new routine dump first.
 #
 # @param 1 [optional] String : pass 'new' to create new dump instead of
 #   returning most recent among existing local DB dump files.
+#   Pass 'initial' to get a dump file whose name matches 'initial.*'.
 #
 # @example
 #   most_recent_dump_file="$(u_db_get_dump)"
@@ -582,14 +593,26 @@ u_db_routine_backup() {
 #   new_routine_dump_file="$(u_db_get_dump 'new')"
 #   echo "Result = '$new_routine_dump_file'"
 #
+#   initial_dump_file="$(u_db_get_dump 'initial')"
+#   echo "Result = '$initial_dump_file'"
+#
 u_db_get_dump() {
   local p_option="$1"
   local dump_to_return
 
   if [[ -n "$p_option" ]]; then
-    case "$p_option" in new)
-      u_db_routine_backup
-      dump_to_return="$routine_dump_file"
+    case "$p_option" in
+      new)
+        u_db_routine_backup
+        dump_to_return="$routine_dump_file"
+        ;;
+      initial)
+        local initial_dump_match
+        u_fs_file_list "$CWT_DB_DUMPS_BASE_PATH" 'initial.*'
+        for initial_dump_match in $file_list; do
+          dump_to_return="$CWT_DB_DUMPS_BASE_PATH/$initial_dump_match"
+        done
+        ;;
     esac
   else
     dump_to_return="$(u_fs_get_most_recent $CWT_DB_DUMPS_BASE_PATH)"

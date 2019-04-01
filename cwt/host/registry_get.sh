@@ -12,7 +12,7 @@
 # @see cwt/extensions/file_registry
 #
 # @example
-#   make host-reg-get
+#   make host-reg-get my_key
 #   # Or :
 #   cwt/host/registry_get.sh my_key
 #
