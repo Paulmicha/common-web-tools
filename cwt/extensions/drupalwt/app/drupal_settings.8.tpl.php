@@ -33,7 +33,8 @@ $settings['file_public_path'] = '{{ DRUPAL_FILES_DIR }}';
 $settings['file_private_path'] = '{{ DRUPAL_PRIVATE_DIR }}';
 $config['system.file']['path']['temporary'] = '{{ DRUPAL_TMP_DIR }}';
 
-// Redis cache backend is always present in IEB stack.
+// Redis cache backend (contrib) is included by default. Requires the PhpRedis
+// extension.
 $settings['redis.connection']['interface'] = 'PhpRedis';
 $settings['redis.connection']['host'] = 'redis';
 $settings['cache']['default'] = 'cache.backend.redis';

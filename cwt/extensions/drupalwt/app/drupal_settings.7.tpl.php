@@ -27,6 +27,8 @@ $conf['file_public_path'] = '{{ DRUPAL_FILES_DIR }}';
 $conf['file_temporary_path'] = '{{ DRUPAL_TMP_DIR }}';
 $conf['file_private_path'] = '{{ DRUPAL_PRIVATE_DIR }}';
 
+// Redis cache backend (contrib) is included by default. Requires the PhpRedis
+// extension.
 $conf['redis_client_host'] = '{{ REDIS_CLIENT_HOST }}';
 $conf['redis_client_port'] = '{{ REDIS_CLIENT_PORT }}';
 // $conf['redis_client_base'] = {{ REDIS_CLIENT_BASE }};
