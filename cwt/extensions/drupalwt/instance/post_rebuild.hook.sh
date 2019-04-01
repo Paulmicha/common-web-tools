@@ -6,7 +6,7 @@
 # Rewrite Drupal local settings file.
 #
 # @see cwt/instance/rebuild.sh
-# @see cwt/extensions/docker4drupal/docker4drupal.inc.sh
+# @see cwt/extensions/drupalwt/drupalwt.inc.sh
 #
 
-u_d4d_write_local_settings
+u_dwt_write_local_settings

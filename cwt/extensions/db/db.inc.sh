@@ -138,13 +138,13 @@ u_db_get_credentials() {
       # in temporary virtual machines inaccessible to the outside world, but
       # it is obviously a security risk.
       reg_val=''
-      u_instance_registry_get "${p_db_id}.DB_PASSWORD"
+      u_instance_registry_get "${db_id}.DB_PASSWORD"
 
       # Generate random local instance DB password and store it for subsequent
       # calls.
       if [[ -z "$reg_val" ]]; then
         export DB_PASSWORD=`< /dev/urandom tr -dc A-Za-z0-9 | head -c14; echo`
-        u_instance_registry_set "${p_db_id}.DB_PASSWORD" "$DB_PASSWORD"
+        u_instance_registry_set "${db_id}.DB_PASSWORD" "$DB_PASSWORD"
       else
         export DB_PASSWORD="$reg_val"
       fi
@@ -164,7 +164,7 @@ u_db_get_credentials() {
         val=''
         val_default=''
         reg_val=''
-        u_instance_registry_get "${p_db_id}.${var}"
+        u_instance_registry_get "${db_id}.${var}"
 
         # Value is not found in registry (secrets store)
         # -> init & store.
@@ -197,10 +197,10 @@ u_db_get_credentials() {
 
           if [[ -z "$val" ]]; then
             eval "export $var=\"$val_default\""
-            u_instance_registry_set "${p_db_id}.${var}" "$val_default"
+            u_instance_registry_set "${db_id}.${var}" "$val_default"
           else
             eval "export $var=\"$val\""
-            u_instance_registry_set "${p_db_id}.${var}" "$val"
+            u_instance_registry_set "${db_id}.${var}" "$val"
           fi
 
         # Value was previously stored in registry (secrets store)

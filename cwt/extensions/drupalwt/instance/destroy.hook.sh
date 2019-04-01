@@ -18,7 +18,7 @@
 
 echo "Cleanup any potential Drupal cron job for instance $INSTANCE_DOMAIN on local host ..."
 
-# @see cwt/extensions/docker4drupal/app/install.hook.sh
+# @see cwt/extensions/drupalwt/app/install.hook.sh
 u_host_crontab_remove "cd $PROJECT_DOCROOT && make drush cron"
 
 echo "Cleanup any potential Drupal cron job for instance $INSTANCE_DOMAIN on local host : done."

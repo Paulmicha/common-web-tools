@@ -28,12 +28,13 @@
 # To check the most specific match (if any is found) :
 # $ make hook-debug ms s:app a:drupal_settings c:tpl.php v:DRUPAL_VERSION HOST_TYPE INSTANCE_TYPE
 #
-u_d4d_write_local_settings() {
+u_dwt_write_local_settings() {
   local f
   local line
   local var_name
-  local token_prefix='__replace_this_'
-  local token_suffix='_value__'
+  local var_name_c
+  local token_prefix='{{ '
+  local token_suffix=' }}'
   local hook_most_specific_dry_run_match=''
 
   echo "Rewrite Drupal local settings file ..."
@@ -46,7 +47,7 @@ u_d4d_write_local_settings() {
     -t
 
   # When we have found a match, (over)write in place + replace its "token" values.
-  # @see cwt/extensions/docker4drupal/global.vars.sh
+  # @see cwt/extensions/drupalwt/global.vars.sh
   if [[ -n "$hook_most_specific_dry_run_match" ]]; then
     if [[ -f "$DRUPAL_LOCAL_SETTINGS" ]]; then
       rm -f "$DRUPAL_LOCAL_SETTINGS"
@@ -61,6 +62,19 @@ u_d4d_write_local_settings() {
     u_global_list
     for var_name in "${cwt_globals_var_names[@]}"; do
       if grep -Fq "${token_prefix}${var_name}${token_suffix}" "$DRUPAL_LOCAL_SETTINGS"; then
+
+        # Docker-compose specific : container paths are different, and CWT needs
+        # both -> use variable name convention : if a variable named like the
+        # current one with a '_C' suffix, it will automatically be used instead.
+        # TODO [evol] Caveat : does not work if suffixed var value is empty.
+        # @see cwt/extensions/drupalwt/app/global.docker-compose.vars.sh
+        case "$PROVISION_USING" in docker-compose)
+          var_name_c="${var_name}_C"
+          if [[ -n "${!var_name_c}" ]]; then
+            var_name="$var_name_c"
+          fi
+        esac
+
         sed -e "s,${token_prefix}${var_name}${token_suffix},${!var_name},g" -i "$DRUPAL_LOCAL_SETTINGS"
         # echo "  replaced '${token_prefix}${var_name}${token_suffix}' by '${!var_name}'"
       fi

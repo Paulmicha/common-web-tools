@@ -24,7 +24,7 @@ Here's the list of extensions included (in folder `cwt/extensions`) :
 |------|:--------------------:|-------------|
 | `db` |  | Abstract hooks and entry points for database-related tasks. See the 'mysql' extension for an implementation example. |
 | `docker-compose` |  | Implements instance start, stop, build, and destroy actions. Can be used in different ways : see `DC_MODE` help text (`cwt/extensions/docker-compose/global.vars.sh`). |
-| `docker4drupal` |  | Uses the `docker-compose` and provides Drupal-related tasks. |
+| `drupalwt` |  | Provides generic Drupal-related tasks (with or without `docker-compose`). |
 | `file_registry` | ✔ | Default storage for CWT "registry" (minimal file-based key/value store scoped by project instance or host). |
 | `mysql` |  | Provides mysql implementations of the abstractions provided by the `db` extension such as database creation, dumps import/export, etc. |
 | `remote` |  | Utilities to synchronize local instance with remote instance(s). Uses SSH keys loaded in current terminal session. |
@@ -57,7 +57,7 @@ CWT relies on **file structure**, **naming conventions**, and a few concepts :
 - **Bootstrap** deals with the inclusion of all the relevant source files and loads global variables (e.g. host type, instance type, etc) and functions. Any script that includes the file `cwt/bootstrap.sh` can use these. This depends on sourcing shell scripts using relative paths, which is made possible by the fact that *all* scripts (or `make` "shortcut" commands) must be run from the folder `$PROJECT_DOCROOT`.
 - **Instance init** is a preliminary step that will setup current project instance. Among other things, it will aggregate and write local values for globals, optionally write application git hooks (opt-in by using the corresponding GIT-related globals - see `cwt/git/init.hook.sh`), and trigger some hooks in order to let extensions implement their own additional setup tasks. See `u_instance_init()` in `cwt/instance/instance.inc.sh` for details and usage example.
 - **Actions** - also referred to as *entry points*, *operations*, *tasks*, or just *commands* - are scoped by subject, e.g. *instance init*, *app compile*, etc. CWT determines a list of available actions by looking up folders and shell scripts matching certain rules.
-- **Hooks** are function calls mimicking events where "listening" or implementing entails creating some specific file(s) in certain path(s) corresponding to filters specified in arguments. They match actions by subjects and provide additional variants - which can use any global, and can either load all matching includes found, or only the most specific. See `hook()` and `u_hook_most_specific` in `cwt/utilities/hook.sh` for details and usage examples.
+- **Hooks** are function calls mimicking events where "listening" or implementing entails creating some specific file(s) in certain path(s) corresponding to filters specified in arguments. They match actions by subjects and provide additional variants - which can use any global, and can either load all matching includes found, or only the most specific. See `hook()` and `u_hook_most_specific()` in `cwt/utilities/hook.sh` for details and usage examples.
 
 ## Preprequisites
 
@@ -369,13 +369,13 @@ echo "$hook_most_specific_dry_run_match" # <- Prints the most specific "docker-c
 
 CWT Extensions can provide additional actions and react to hooks. Any folder present in the `cwt/extensions` dir is recognized as a CWT extension, as well as `scripts/cwt/extend` which is meant for non-reusable, project-specific implementations.
 
-Extensions in `cwt/extensions` can be enabled or disabled by overriding the file `cwt/extensions/.cwt_extensions_ignore` : copy/paste to `scripts/cwt/override/.cwt_extensions_ignore` and edit it (use 1 folder name per line to disable, or delete the line to enable).
+Extensions in `cwt/extensions` can be enabled or disabled by overriding the file `cwt/extensions/.cwt_extensions_ignore` : copy/paste to `scripts/cwt/override/.cwt_extensions_ignore` and edit it (use 1 folder name per line to disable, or delete the line to enable). Also, if `scripts/cwt/override/.${PROVISION_USING}.cwt_extensions_ignore` or `scripts/cwt/override/.${INSTANCE_DOMAIN}.cwt_extensions_ignore` exist, they will take precendence (in this order). This allows to have different extensions enabled across different instances of the project.
 
 Additional rules :
 
-- Once *instance init* has run, any file named `make.mk` inside the extension folder will be included when `make` commands are executed - e.g. `cwt/extensions/docker4drupal/make.mk`.
+- Once *instance init* has run, any file named `make.mk` inside the extension folder will be included when `make` commands are executed - e.g. `cwt/extensions/drupalwt/make.mk`.
 - Any file named `global.vars.sh` inside the extension folder will be aggregated during *instance init*.
-- TODO [evol] CWT could also provide some minimalistic way to declare extensions' dependencies, i.e. as in `cwt/extensions/docker4drupal/.cwt_requires` for example.
+- TODO [evol] CWT could also provide some minimalistic way to declare extensions' dependencies, i.e. as in `cwt/extensions/drupalwt/.cwt_requires` for example.
 
 ### Overrides
 

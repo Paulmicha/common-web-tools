@@ -11,7 +11,7 @@
 
 required_dirs="$DRUPAL_FILES_DIR $DRUPAL_TMP_DIR $DRUPAL_PRIVATE_DIR"
 
-if [ $DRUPAL_VERSION -eq 8 ]; then
+if [ $DRUPAL_VERSION -ne 7 ]; then
   required_dirs+=" $DRUPAL_CONFIG_SYNC_DIR"
 fi
 

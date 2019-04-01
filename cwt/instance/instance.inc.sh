@@ -333,7 +333,7 @@ u_instance_get_ownership() {
 #   - registry -> reg
 #   - lookup-path -> lp
 #   - docker-compose -> dc
-#   - docker4drupal -> d4d
+#   - drupalwt -> dwt
 #
 # @param 1 String : input to convert.
 # @param 2 [optional] String : the variable name in calling scope which will be

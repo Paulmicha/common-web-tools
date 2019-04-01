@@ -17,11 +17,11 @@
 . cwt/bootstrap.sh
 
 # Provide default cron job implementation for this Drupal instance on local host
-# using crontab. This setup is opt-in, i.e. the D4D_USE_CRONTAB global.
-# @see cwt/extensions/docker4drupal/global.vars.sh
-# @see cwt/extensions/docker4drupal/app/global.vars.sh
+# using crontab. This setup is opt-in, i.e. the DWT_USE_CRONTAB global.
+# @see cwt/extensions/drupalwt/global.vars.sh
+# @see cwt/extensions/drupalwt/app/global.vars.sh
 # @see u_host_crontab_add() in cwt/host/host.inc.sh
-case "$D4D_USE_CRONTAB" in 1|y|yes|true)
+case "$DWT_USE_CRONTAB" in 1|y|yes|true)
   echo "Setup Drupal cron job for instance $INSTANCE_DOMAIN on local host ..."
 
   u_host_crontab_add "cd $PROJECT_DOCROOT && make drush cron" "$DRUPAL_CRON_FREQ"

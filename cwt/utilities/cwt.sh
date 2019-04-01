@@ -143,16 +143,16 @@ u_cwt_extensions() {
   # precedence) :
   # - scripts/cwt/override/.cwt_extensions_ignore (convenience default path)
   # - scripts/cwt/override/extensions/.cwt_extensions_ignore (normal override)
-  # - scripts/cwt/override/${PROVISION_USING}.cwt_extensions_ignore
-  # - scripts/cwt/override/${INSTANCE_DOMAIN}.cwt_extensions_ignore
+  # - scripts/cwt/override/.${PROVISION_USING}.cwt_extensions_ignore
+  # - scripts/cwt/override/.${INSTANCE_DOMAIN}.cwt_extensions_ignore
   ei_override_lookup_arr=()
   ei_override_lookup_arr+=('scripts/cwt/override/.cwt_extensions_ignore')
   ei_override_lookup_arr+=('scripts/cwt/override/extensions/.cwt_extensions_ignore')
   if [[ -n "$PROVISION_USING" ]]; then
-    ei_override_lookup_arr+=("scripts/cwt/override/${PROVISION_USING}.cwt_extensions_ignore")
+    ei_override_lookup_arr+=("scripts/cwt/override/.${PROVISION_USING}.cwt_extensions_ignore")
   fi
   if [[ -n "$INSTANCE_DOMAIN" ]]; then
-    ei_override_lookup_arr+=("scripts/cwt/override/${INSTANCE_DOMAIN}.cwt_extensions_ignore")
+    ei_override_lookup_arr+=("scripts/cwt/override/.${INSTANCE_DOMAIN}.cwt_extensions_ignore")
   fi
   for ei_override in "${ei_override_lookup_arr[@]}"; do
     if [[ -f "$ei_override" ]]; then
