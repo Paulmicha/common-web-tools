@@ -226,31 +226,31 @@ cwt/instance/list_actions.make.sh
 
 CWT provides basic actions most projects usually need such as instance-specific settings setup and preset commands designed to trigger common tasks (compilation, git hooks, etc). By default, CWT generates the following *make* shortcuts correponding to these *subject / action* pairs - also called *entry points* - during *instance init* (this will differ when extensions are enabled, added and/or removed) :
 
-```txt
-app/compile             (cwt/app/compile.sh)            - shortcut    $ make app-compile
-app/git                 (cwt/app/git.sh)                - shortcut    $ make app-git
-app/install             (cwt/app/install.sh)            - shortcut    $ make app-install
-app/lint                (cwt/app/lint.sh)               - shortcut    $ make app-lint
-app/watch               (cwt/app/watch.sh)              - shortcut    $ make app-watch
-app/watch_stop          (cwt/app/watch_stop.sh)         - shortcut    $ make app-watch-stop
-git/write_hooks         (cwt/git/write_hooks.sh)        - shortcut    $ make git-write-hooks
-host/provision          (cwt/host/provision.sh)         - shortcut    $ make host-provision
-host/registry_del       (cwt/host/registry_del.sh)      - shortcut*   $ make host-reg-del
-host/registry_get       (cwt/host/registry_get.sh)      - shortcut*   $ make host-reg-get
-host/registry_set       (cwt/host/registry_set.sh)      - shortcut*   $ make host-reg-set
-instance/build          (cwt/instance/build.sh)         - shortcut**  $ make build
-instance/destroy        (cwt/instance/destroy.sh)       - shortcut**  $ make destroy
-instance/fix_ownership  (cwt/instance/fix_ownership.sh) - shortcut**  $ make fix-ownership
-instance/fix_perms      (cwt/instance/fix_perms.sh)     - shortcut**  $ make fix-perms
-instance/init           (cwt/instance/init.sh)          - shortcut*** $ make init # (or just "make")
-instance/rebuild        (cwt/instance/rebuild.sh)       - shortcut**  $ make rebuild
-instance/registry_del   (cwt/instance/registry_del.sh)  - shortcut**  $ make reg-del
-instance/registry_get   (cwt/instance/registry_get.sh)  - shortcut**  $ make reg-get
-instance/registry_set   (cwt/instance/registry_set.sh)  - shortcut**  $ make reg-set
-instance/start          (cwt/instance/start.sh)         - shortcut**  $ make start
-instance/stop           (cwt/instance/stop.sh)          - shortcut**  $ make stop
-test/self_test          (cwt/test/self_test.sh)         - shortcut*** $ make self-test
-```
+| Name | Script | Shortcut |
+|------|--------|-----------------|
+| `app/compile` | `cwt/app/compile.sh` | `make app-compile` |
+| `app/git` | `cwt/app/git.sh` | `make app-git` |
+| `app/install` | `cwt/app/install.sh` | `make app-install` |
+| `app/lint` | `cwt/app/lint.sh` | `make app-lint` |
+| `app/watch` | `cwt/app/watch.sh` | `make app-watch` |
+| `app/watch_stop` | `cwt/app/watch_stop.sh` | `make app-watch-stop` |
+| `git/write_hooks` | `cwt/git/write_hooks.sh` | `make git-write-hooks` |
+| `host/provision` | `cwt/host/provision.sh` | `make host-provision` |
+| `host/registry_del` | `cwt/host/registry_del.sh` | `make host-reg-del` * |
+| `host/registry_get` | `cwt/host/registry_get.sh` | `make host-reg-get` * |
+| `host/registry_set` | `cwt/host/registry_set.sh` | `make host-reg-set` * |
+| `instance/build` | `cwt/instance/build.sh` | `make build` ** |
+| `instance/destroy` | `cwt/instance/destroy.sh` | `make destroy` ** |
+| `instance/fix_ownership` | `cwt/instance/fix_ownership.sh` | `make fix-ownership` ** |
+| `instance/fix_perms` | `cwt/instance/fix_perms.sh` | `make fix-perms` ** |
+| `instance/init` | `cwt/instance/init.sh` | `make init` (or just `make`) *** |
+| `instance/rebuild` | `cwt/instance/rebuild.sh` | `make rebuild` ** |
+| `instance/registry_del` | `cwt/instance/registry_del.sh` | `make reg-del` ** |
+| `instance/registry_get` | `cwt/instance/registry_get.sh` | `make reg-get` ** |
+| `instance/registry_set` | `cwt/instance/registry_set.sh` | `make reg-set` ** |
+| `instance/start` | `cwt/instance/start.sh` | `make start` ** |
+| `instance/stop` | `cwt/instance/stop.sh` | `make stop` ** |
+| `test/self_test` | `cwt/test/self_test.sh` | `make self-test` *** |
 
 - `*` : Shortening rules can be defined using the `CWT_MAKE_TASKS_SHORTER` global. Ex : `global CWT_MAKE_TASKS_SHORTER "[append]='something_too_long_for_make_shortcut/stlfms'"`
 - `**` : The `instance` is implicit and omitted for default CWT actions' `make` shortcuts.
@@ -369,7 +369,9 @@ echo "$hook_most_specific_dry_run_match" # <- Prints the most specific "docker-c
 
 CWT Extensions can provide additional actions and react to hooks. Any folder present in the `cwt/extensions` dir is recognized as a CWT extension, as well as `scripts/cwt/extend` which is meant for non-reusable, project-specific implementations.
 
-Extensions in `cwt/extensions` can be enabled or disabled by overriding the file `cwt/extensions/.cwt_extensions_ignore` : copy/paste to `scripts/cwt/override/.cwt_extensions_ignore` and edit it (use 1 folder name per line to disable, or delete the line to enable). Also, if `scripts/cwt/override/.${PROVISION_USING}.cwt_extensions_ignore` or `scripts/cwt/override/.${INSTANCE_DOMAIN}.cwt_extensions_ignore` exist, they will take precendence (in this order). This allows to have different extensions enabled across different instances of the project.
+Extensions in `cwt/extensions` can be enabled or disabled by overriding the file `cwt/extensions/.cwt_extensions_ignore` : copy/paste to `scripts/cwt/override/.cwt_extensions_ignore` and edit it (use 1 folder name per line to disable, or delete the line to enable). Leaving that file empty thus means "enable all extensions".
+
+Also, if `scripts/cwt/override/.${PROVISION_USING}.cwt_extensions_ignore` or `scripts/cwt/override/.${INSTANCE_DOMAIN}.cwt_extensions_ignore` exist, they will take precendence (in this order). This allows to have different extensions enabled across different instances of the project.
 
 Additional rules :
 
@@ -389,7 +391,7 @@ Example : if we want to override `cwt/git/init.hook.sh` - effectively bypassing 
 scripts/cwt/override/git/init.hook.sh
 ```
 
-The matching is done by by replacing the leading `cwt/` in filepaths with `scripts/cwt/override/`. It works for extensions too. Here's an example using an include instead of a hook implementation :
+The matching is done by replacing the leading `cwt/` in filepaths with `scripts/cwt/override/`. It works for extensions too. Here's an example using an include instead of a hook implementation :
 
 ```txt
 cwt/extensions/docker-compose/docker-compose.inc.sh
@@ -398,6 +400,15 @@ cwt/extensions/docker-compose/docker-compose.inc.sh
 
 For convenience, `cwt/extensions/.cwt_extensions_ignore` can be overridden using `scripts/cwt/override/.cwt_extensions_ignore` (instead of `scripts/cwt/override/extensions/.cwt_extensions_ignore`).
 
+## Roadmap
+
+The following improvements or ideas crossed my mind. Who knows, maybe one day I'll give it a go :
+
+- Use YAML or JSON files instead of the current `global` utility, i.e. with [yq](https://github.com/mikefarah/yq) or [jq](https://github.com/stedolan/jq) bundled in `vendor`
+- Generally, look for ways to offload more tasks to third-party projects
+- Remove bashisms / make POSIX-compliant for extending compatibility
+- So bash was fun. Use Python - or Rust / C / [Wasm+Wasi](https://twitter.com/solomonstre/status/1111004913222324225) instead
+
 ## License
 
-The MIT license.
+The MIT license (see [LICENSE](LICENSE)).
