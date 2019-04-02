@@ -214,7 +214,7 @@ CWT provides generic actions most projects usually need. Some preset commands de
 
 Exceptions : folders beginning with a dot (e.g. `.git`), and files using double extensions (e.g. `my_file.inc.sh`) or beginning with a dot (e.g. `.cwt_actions_ignore`).
 
-CWT will look in `./cwt` to determine default CWT actions, then it will do the same for every folders in `cwt/extensions` and `scripts/cwt/extend`. For detailed explanations and examples, see `u_cwt_extend()` in `cwt/utilities/cwt.sh`.
+CWT will look in `./cwt` to determine default CWT actions, then it will do the same for every *enabled* extension folder (in `cwt/extensions`) and `scripts/cwt/extend`. For detailed explanations and examples, see `u_cwt_extend()` in `cwt/utilities/cwt.sh`.
 
 To print the list of available actions in current project instance, you can use the following convenience command :
 
@@ -224,33 +224,33 @@ make list-actions
 cwt/instance/list_actions.make.sh
 ```
 
-CWT provides basic actions most projects usually need such as instance-specific settings setup and preset commands designed to trigger common tasks (compilation, git hooks, etc). By default, CWT generates the following *make* shortcuts correponding to these *subject / action* pairs - also called *entry points* - during *instance init* (this will differ when extensions are enabled, added and/or removed) :
+By default, CWT generates the following *make* shortcuts correponding to these *subject / action* pairs - also called *entry points* - during *instance init* (this will differ when extensions are enabled, added and/or removed) :
 
 | Name | Script | Shortcut |
 |------|--------|-----------------|
-| `app/compile` | `cwt/app/compile.sh` | `make app-compile` |
-| `app/git` | `cwt/app/git.sh` | `make app-git` |
-| `app/install` | `cwt/app/install.sh` | `make app-install` |
-| `app/lint` | `cwt/app/lint.sh` | `make app-lint` |
-| `app/watch` | `cwt/app/watch.sh` | `make app-watch` |
-| `app/watch_stop` | `cwt/app/watch_stop.sh` | `make app-watch-stop` |
-| `git/write_hooks` | `cwt/git/write_hooks.sh` | `make git-write-hooks` |
-| `host/provision` | `cwt/host/provision.sh` | `make host-provision` |
-| `host/registry_del` | `cwt/host/registry_del.sh` | `make host-reg-del` * |
-| `host/registry_get` | `cwt/host/registry_get.sh` | `make host-reg-get` * |
-| `host/registry_set` | `cwt/host/registry_set.sh` | `make host-reg-set` * |
-| `instance/build` | `cwt/instance/build.sh` | `make build` ** |
-| `instance/destroy` | `cwt/instance/destroy.sh` | `make destroy` ** |
-| `instance/fix_ownership` | `cwt/instance/fix_ownership.sh` | `make fix-ownership` ** |
-| `instance/fix_perms` | `cwt/instance/fix_perms.sh` | `make fix-perms` ** |
-| `instance/init` | `cwt/instance/init.sh` | `make init` (or just `make`) *** |
-| `instance/rebuild` | `cwt/instance/rebuild.sh` | `make rebuild` ** |
-| `instance/registry_del` | `cwt/instance/registry_del.sh` | `make reg-del` ** |
-| `instance/registry_get` | `cwt/instance/registry_get.sh` | `make reg-get` ** |
-| `instance/registry_set` | `cwt/instance/registry_set.sh` | `make reg-set` ** |
-| `instance/start` | `cwt/instance/start.sh` | `make start` ** |
-| `instance/stop` | `cwt/instance/stop.sh` | `make stop` ** |
-| `test/self_test` | `cwt/test/self_test.sh` | `make self-test` *** |
+| *app compile* | `cwt/app/compile.sh` | `make app-compile` |
+| *app git* | `cwt/app/git.sh` | `make app-git` |
+| *app install* | `cwt/app/install.sh` | `make app-install` |
+| *app lint* | `cwt/app/lint.sh` | `make app-lint` |
+| *app watch* | `cwt/app/watch.sh` | `make app-watch` |
+| *app watch-stop* | `cwt/app/watch_stop.sh` | `make app-watch-stop` |
+| *git write-hooks* | `cwt/git/write_hooks.sh` | `make git-write-hooks` |
+| *host provision* | `cwt/host/provision.sh` | `make host-provision` |
+| *host registry-del* | `cwt/host/registry_del.sh` | `make host-reg-del` * |
+| *host registry-get* | `cwt/host/registry_get.sh` | `make host-reg-get` * |
+| *host registry-set* | `cwt/host/registry_set.sh` | `make host-reg-set` * |
+| *instance build* | `cwt/instance/build.sh` | `make build` ** |
+| *instance destroy* | `cwt/instance/destroy.sh` | `make destroy` ** |
+| *instance fix-ownership* | `cwt/instance/fix_ownership.sh` | `make fix-ownership` ** |
+| *instance fix-perms* | `cwt/instance/fix_perms.sh` | `make fix-perms` ** |
+| *instance init* | `cwt/instance/init.sh` | `make init` (or just `make`) *** |
+| *instance rebuild* | `cwt/instance/rebuild.sh` | `make rebuild` ** |
+| *instance registry-del* | `cwt/instance/registry_del.sh` | `make reg-del` ** |
+| *instance registry-get* | `cwt/instance/registry_get.sh` | `make reg-get` ** |
+| *instance registry-set* | `cwt/instance/registry_set.sh` | `make reg-set` ** |
+| *instance start* | `cwt/instance/start.sh` | `make start` ** |
+| *instance stop* | `cwt/instance/stop.sh` | `make stop` ** |
+| *test self-test* | `cwt/test/self_test.sh` | `make self-test` *** |
 
 - `*` : Shortening rules can be defined using the `CWT_MAKE_TASKS_SHORTER` global. Ex : `global CWT_MAKE_TASKS_SHORTER "[append]='something_too_long_for_make_shortcut/stlfms'"`
 - `**` : The `instance` is implicit and omitted for default CWT actions' `make` shortcuts.
