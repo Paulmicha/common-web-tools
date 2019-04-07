@@ -31,6 +31,7 @@
 u_dwt_write_local_settings() {
   local f
   local line
+  local var_val
   local var_name
   local var_name_c
   local token_prefix='{{ '
@@ -62,6 +63,7 @@ u_dwt_write_local_settings() {
     u_global_list
     for var_name in "${cwt_globals_var_names[@]}"; do
       if grep -Fq "${token_prefix}${var_name}${token_suffix}" "$DRUPAL_LOCAL_SETTINGS"; then
+        var_val="${!var_name}"
 
         # Docker-compose specific : container paths are different, and CWT needs
         # both -> use variable name convention : if a variable named like the
@@ -71,12 +73,12 @@ u_dwt_write_local_settings() {
         case "$PROVISION_USING" in docker-compose)
           var_name_c="${var_name}_C"
           if [[ -n "${!var_name_c}" ]]; then
-            var_name="$var_name_c"
+            var_val="${!var_name_c}"
           fi
         esac
 
-        sed -e "s,${token_prefix}${var_name}${token_suffix},${!var_name},g" -i "$DRUPAL_LOCAL_SETTINGS"
-        # echo "  replaced '${token_prefix}${var_name}${token_suffix}' by '${!var_name}'"
+        sed -e "s,${token_prefix}${var_name}${token_suffix},${var_val},g" -i "$DRUPAL_LOCAL_SETTINGS"
+        # echo "  replaced '${token_prefix}${var_name}${token_suffix}' by '${var_val}'"
       fi
     done
 
