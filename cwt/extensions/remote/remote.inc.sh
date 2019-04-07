@@ -450,3 +450,26 @@ u_remote_purge_instances() {
     fi
   done
 }
+
+##
+# Gets given SSH public key's hex-encoded md5 fingerprint.
+#
+# See https://superuser.com/questions/1088165/get-ssh-key-fingerprint-in-old-hex-format-on-new-version-of-openssh
+# + https://github.com/tiwe-de/ssh-agent-filter
+#
+# @example
+#   connect_cmd="afssh -f $(u_remote_get_pubkey_hex_md5_fingerprint $HOME/.ssh/id_rsa.pub) -- -T my_user@my_host"
+#
+u_remote_get_pubkey_hex_md5_fingerprint() {
+  local p_public_key_file="$1"
+
+  if [[ ! -f "$p_public_key_file" ]]; then
+    echo >&2
+    echo "Error in u_remote_get_pubkey_hex_md5_fingerprint() - $BASH_SOURCE line $LINENO: public key not found or not accessible." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    return 1
+  fi
+
+  awk '{print $2}' "$p_public_key_file" | base64 -d | md5sum | sed 's/../&:/g; s/: .*$//'
+}
