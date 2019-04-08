@@ -278,28 +278,37 @@ u_fs_file_list() {
 ##
 # Makes given absolute path relative to another, or $PROJECT_DOCROOT (default).
 #
-# @requires $PROJECT_DOCROOT global in calling scope.
+# NB : for performance reasons (to avoid using a subshell), this function
+# writes its result to a variable subject to collision in calling scope.
+#
+# @var relative_path
 #
 # @param 1 String absolute path to convert to relative path (must start with '/').
 # @param 2 [optional] String absolute reference path (must start with '/').
-#   Defaults to PROJECT_DOCROOT value.
+#   Defaults to "$PROJECT_DOCROOT" or "$PWD".
 #
 # @example
-#   u_fs_relative_path "$PROJECT_DOCROOT/yetetets/testtset/fdsf.fd"  # -> 'yetetets/testtset/fdsf.fd'
-#   u_fs_relative_path "/"                                           # -> '../../'
-#   u_fs_relative_path "/var/www/yetetets/testtset/fdsf.fd"          # -> '../../var/www/yetetets/testtset/fdsf.fd'
+#   u_fs_relative_path "$PROJECT_DOCROOT/yetetets/testtset/fdsf.fd"
+#   echo "$relative_path" # <- Prints : yetetets/testtset/fdsf.fd
+#
+#   u_fs_relative_path / /var/www/html
+#   echo "$relative_path" # <- Prints : ../../../
+#
+#   u_fs_relative_path /var/www/yetetets/testtset/fdsf.fd /opt/app
+#   echo "$relative_path" # <- Prints : ../../var/www/yetetets/testtset/fdsf.fd
 #
 u_fs_relative_path() {
-  local target="$1"
-  local source="$2"
-  if [[ -z "$source" ]]; then
-    source="$PROJECT_DOCROOT"
+  local p_target="$1"
+  local p_source="$2"
+
+  if [[ -z "$p_source" ]]; then
+    p_source="${PROJECT_DOCROOT:=$PWD}"
   fi
 
   local result=""
-  local common_part="$source"
+  local common_part="$p_source"
 
-  while [[ "${target#$common_part}" == "${target}" ]]; do
+  while [[ "${p_target#$common_part}" == "${p_target}" ]]; do
     # no match, means that candidate common part is not correct
     # go up one level (reduce common part)
     common_part="$(dirname $common_part)"
@@ -318,7 +327,7 @@ u_fs_relative_path() {
 
   # since we now have identified the common part,
   # compute the non-common part
-  forward_part="${target#$common_part}"
+  forward_part="${p_target#$common_part}"
 
   # and now stick all parts together
   if [[ -n $result ]] && [[ -n $forward_part ]]; then
@@ -328,7 +337,7 @@ u_fs_relative_path() {
     result="${forward_part:1}"
   fi
 
-  echo "$result"
+  relative_path="$result"
 }
 
 ##

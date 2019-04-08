@@ -22,6 +22,9 @@ if [[ -z "$db_dump_file" ]]; then
   exit 1
 fi
 
+u_fs_relative_path "$db_dump_file"
+echo "Creating MySQL dump '$relative_path' ..."
+
 # Prevent MySQL ERROR 1470 (HY000) String is too long for user name - should
 # be no longer than 16 characters.
 # Warning : this creates naming collision risks (considered edge case).
@@ -41,3 +44,5 @@ if [[ $? -ne 0 ]]; then
   echo >&2
   exit 2
 fi
+
+echo "Creating MySQL dump '$relative_path' : done."

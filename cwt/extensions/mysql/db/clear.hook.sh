@@ -29,11 +29,12 @@ mysqldump --no-data --add-drop-table \
     --user="$mysql_db_username" \
     --password="$DB_PASSWORD" \
     --host="$DB_HOST" \
-    --port="$DB_PORT"
+    --port="$DB_PORT" \
+    "$DB_NAME"
 
 if [[ $? -ne 0 ]]; then
   echo >&2
-  echo "Error in $BASH_SOURCE line $LINENO: unable to empty (= clear = flush) all existing data in DB '$DB_NAME'." >&2
+  echo "Error in $BASH_SOURCE line $LINENO: unable to clear existing data in DB '$DB_NAME'." >&2
   echo "-> Aborting (1)." >&2
   echo >&2
   exit 1

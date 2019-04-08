@@ -29,10 +29,12 @@ u_remote_sync_db_to() {
   local p_option="$2"
 
   local rst_dump_file
+  local rst_dump_file_relative_path
   local rst_dump_local_base_path
   local rst_dump_remote_base_path
   local rst_leaf
-  local rst_dump_filepath_on_remote
+  local rst_dump_dir_on_remote
+  local rst_dump_file_on_remote
 
   u_remote_instance_load "$p_id"
 
@@ -68,22 +70,39 @@ u_remote_sync_db_to() {
     return 2
   fi
 
-  # The dump file path on the remote must be placed inside a subfolder named
-  # after this local instance id in order to avoid any risks of collision.
+  # The dump file path on the remote will be placed inside an 'incoming-sync'
+  # subfolder in order to avoid collisions risks while limiting fragmentation.
+
+  # 1. Get the dump file relative path.
+  relative_path=''
+  u_fs_relative_path "$rst_dump_file"
+  rst_dump_file_relative_path="$relative_path"
+
+  # 2. Transform its path for use on the remote.
+  relative_path=''
+  u_fs_relative_path "$CWT_DB_DUMPS_BASE_PATH"
+  rst_dump_local_base_path="$relative_path/local/$DB_ID"
+  rst_dump_remote_base_path="$relative_path/incoming-sync/$DB_ID"
+  rst_dump_file_on_remote="${rst_dump_file_relative_path//$rst_dump_local_base_path/$rst_dump_remote_base_path}"
+
+  # 3. Create the containing folder on the remote (if it doesn't exist yet).
   rst_leaf="${rst_dump_file##*/}"
-  rst_dump_local_base_path="$CWT_DB_DUMPS_BASE_PATH/local/$DB_ID"
-  rst_dump_remote_base_path="$CWT_DB_DUMPS_BASE_PATH/$p_id/$DB_ID"
-  rst_dump_filepath_on_remote="${rst_dump_file//$rst_dump_local_base_path/$rst_dump_remote_base_path}"
-
-  # TODO [wip] Create dir on remote if non existing (or update utility).
-  echo "Sending dump file '$rst_dump_file' to remote '$p_id' ..."
-  u_remote_upload "$p_id" "$rst_dump_file" "$rst_dump_filepath_on_remote"
-  echo "Sending dump file '$rst_dump_file' to remote '$p_id' : done."
-
-  echo "Restoring it on remote '$p_id' ..."
+  rst_dir_on_remote="${rst_dump_file_on_remote%/$rst_leaf}"
+  echo "Ensure dir '$rst_dir_on_remote' exists on remote '$p_id' ..."
   u_remote_exec_wrapper "$p_id" \
-    make db-restore "$rst_dump_filepath_on_remote"
-  echo "Restoring it on remote '$p_id' : done."
+    mkdir -p "$rst_dir_on_remote"
+  echo "Ensure dir '$rst_dir_on_remote' exists on remote '$p_id' : done."
+
+  # 4. Send the file.
+  echo "Sending dump file '$rst_dump_file_relative_path' to remote '$p_id' ..."
+  u_remote_upload "$p_id" "$rst_dump_file_relative_path" "$rst_dump_file_on_remote"
+  echo "Sending dump file '$rst_dump_file_relative_path' to remote '$p_id' : done."
+
+  # 5. Restore it on the remote.
+  echo "Restoring '$rst_dump_file_on_remote' on remote '$p_id' ..."
+  u_remote_exec_wrapper "$p_id" \
+    make db-restore "$rst_dump_file_on_remote"
+  echo "Restoring '$rst_dump_file_on_remote' on remote '$p_id' : done."
   echo
 }
 

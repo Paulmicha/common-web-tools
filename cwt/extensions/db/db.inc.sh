@@ -396,6 +396,7 @@ u_db_backup() {
   local p_db_name_override="$2"
   local db_dump_dir
   local db_dump_file
+  local db_dump_file_name
 
   u_db_get_credentials
 
@@ -445,7 +446,8 @@ u_db_backup() {
   fi
 
   # Compress & remove uncompressed dump file.
-  tar czf "$db_dump_file.tgz" -C "$db_dump_dir" "$db_dump_file"
+  db_dump_file_name="${db_dump_file##*/}"
+  tar czf "$db_dump_file.tgz" -C "$db_dump_dir" "$db_dump_file_name"
   if [[ $? -ne 0 ]]; then
     echo >&2
     echo "Error in u_db_backup() - $BASH_SOURCE line $LINENO: failed to compress dump file '$db_dump_file'." >&2
@@ -574,7 +576,7 @@ u_db_routine_backup() {
   # global CWT_DB_BAK_ROUTINE_PURGE "[default]='1m:5,3m:3,6m:2,1y:1' [help]='Custom syntax specifying how many dump files to keep by age. Comma-separated list of quotas - ex: 1m:5 = for backups older than 1 month, keep max 5 files in that month.'"
 
   # Some tasks need the generated dump file path.
-  routine_dump_file="$db_routine_new_backup_file"
+  routine_dump_file="${db_routine_new_backup_file}.tgz"
 }
 
 ##
