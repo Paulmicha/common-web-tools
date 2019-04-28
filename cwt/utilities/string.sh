@@ -10,6 +10,44 @@
 #
 
 ##
+# Transforms a YAML file into a series of shell variables declarations.
+#
+# See https://github.com/georgetown-university/druml/blob/master/druml-inc-yaml.sh
+#
+# @param 1 String : the string to trim.
+# @param 2 String : the variables prefix.
+#
+# @example
+#   # Given this input file contents :
+#   list:
+#     all: default-sites.txt
+#     new: new-sites.txt
+#   alias:
+#     nickname: default
+#   # Calling this :
+#   u_str_yaml_parse path/to/file.yml "conf_"
+#   # -> outputs :
+#   CONF_LIST_ALL="default-sites.txt"
+#   CONF_LIST_NEW="new-sites.txt"
+#   CONF_ALIAS_NICKNAME="default"
+#
+u_str_yaml_parse() {
+  local prefix=$(echo "$2" | tr [:lower:] [:upper:])
+  local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+  sed -ne "s|^\($s\)\($w\)$s:$s\"\(.*\)\"$s\$|\1$fs\2$fs\3|p" \
+       -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p" $1 |
+  awk -F$fs '{
+     indent = length($1)/2;
+     vname[indent] = $2;
+     for (i in vname) {if (i > indent) {delete vname[i]}}
+     if (length($3) > 0) {
+       vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+       printf("%s%s%s=\"%s\"\n", "'$prefix'",str toupper(vn), str toupper($2), $3);
+     }
+  }'
+}
+
+##
 # Sanitizes a string to be used as a variable name (for 'eval').
 #
 # This function is a "preset" of the more generic string sanitizing utility.
