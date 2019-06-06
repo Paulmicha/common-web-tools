@@ -14,8 +14,8 @@
 #
 # See https://github.com/georgetown-university/druml/blob/master/druml-inc-yaml.sh
 #
-# @param 1 String : the string to trim.
-# @param 2 String : the variables prefix.
+# @param 1 String : path to YAML file.
+# @param 2 [optional] String : the resulting variables prefix. Defaults to 'Y_'.
 #
 # @example
 #   # Given this input file contents :
@@ -25,26 +25,39 @@
 #   alias:
 #     nickname: default
 #   # Calling this :
-#   u_str_yaml_parse path/to/file.yml "conf_"
+#   u_str_yaml_parse path/to/file.yml 'conf_'
 #   # -> outputs :
 #   CONF_LIST_ALL="default-sites.txt"
 #   CONF_LIST_NEW="new-sites.txt"
 #   CONF_ALIAS_NICKNAME="default"
 #
 u_str_yaml_parse() {
-  local prefix=$(echo "$2" | tr [:lower:] [:upper:])
-  local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+  local p_yml_file="$1"
+  local p_prefix="$2"
+
+  if [[ -z "$p_prefix" ]]; then
+    p_prefix='Y_'
+  else
+    u_str_sanitize_var_name "$p_prefix" p_prefix
+    u_str_uppercase "$p_prefix" p_prefix
+  fi
+
+  local s='[[:space:]]*'
+  local w='[a-zA-Z0-9_]*'
+  local fs=$(echo @|tr @ '\034')
+
   sed -ne "s|^\($s\)\($w\)$s:$s\"\(.*\)\"$s\$|\1$fs\2$fs\3|p" \
-       -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p" $1 |
-  awk -F$fs '{
-     indent = length($1)/2;
-     vname[indent] = $2;
-     for (i in vname) {if (i > indent) {delete vname[i]}}
-     if (length($3) > 0) {
-       vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
-       printf("%s%s%s=\"%s\"\n", "'$prefix'",str toupper(vn), str toupper($2), $3);
-     }
-  }'
+       -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p" \
+    "$p_yml_file" \
+    | awk -F$fs '{
+        indent = length($1)/2;
+        vname[indent] = $2;
+        for (i in vname) {if (i > indent) {delete vname[i]}}
+        if (length($3) > 0) {
+          vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+          printf("%s%s%s=\"%s\"\n", "'$p_prefix'",str toupper(vn), str toupper($2), $3);
+        }
+      }'
 }
 
 ##

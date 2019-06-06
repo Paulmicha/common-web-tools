@@ -292,10 +292,10 @@ u_remote_exec_wrapper() {
 }
 
 ##
-# TODO [wip] Setup all remote instances at once using YAML declarations.
+# Setup all remote instances at once using YAML declarations.
 #
-# @evol Aggregate multiple source files ?
-# @evol evaluate support for non-CWT targets ?
+# TODO [evol] Aggregate multiple source files ?
+# TODO [evol] Evaluate support for non-CWT targets ?
 #
 u_remote_instances_setup() {
   hook_most_specific_dry_run_match=''
@@ -308,12 +308,12 @@ u_remote_instances_setup() {
 
   # When we have found a match, (over)write in place + replace its "token" values.
   # @see cwt/extensions/drupalwt/global.vars.sh
-  if [[ -n "$hook_most_specific_dry_run_match" ]] && [[ -f "$hook_most_specific_dry_run_match" ]]; then
+  if [[ -f "$hook_most_specific_dry_run_match" ]]; then
     # Purge existing remotes first.
     u_remote_purge_instances
 
     # (Re)init destination file (make empty).
-    cat > scripts/cwt/local/remote-instances.sh <<'EOF'
+    cat > 'scripts/cwt/local/remote-instances.sh' <<'EOF'
 #!/usr/bin/env bash
 
 ##
@@ -328,7 +328,7 @@ EOF
 
     # Write remotes definitions.
     u_str_yaml_parse "$hook_most_specific_dry_run_match" 'cwtr_' \
-      >> scripts/cwt/local/remote-instances.sh
+      >> 'scripts/cwt/local/remote-instances.sh'
   fi
 }
 
