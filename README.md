@@ -27,7 +27,9 @@ Here's the list of extensions included (in folder `cwt/extensions`) :
 | `drupalwt` |  | Provides generic Drupal-related tasks (with or without `docker-compose`). |
 | `file_registry` | ✔ | Default storage for CWT "registry" (minimal file-based key/value store scoped by project instance or host). |
 | `mysql` |  | Provides mysql implementations of the abstractions provided by the `db` extension such as database creation, dumps import/export, etc. |
+| `pgsql` |  | Same as `mysql` but for Postgres. |
 | `remote` |  | Utilities to synchronize local instance with remote instance(s). Uses SSH keys loaded in current terminal session. |
+| `remote_db` |  | Uses the `db` and `remote` extensions to provide DB dumps 2-way sync capabilities. |
 
 ## PURPOSE
 

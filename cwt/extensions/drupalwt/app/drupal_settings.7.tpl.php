@@ -17,8 +17,8 @@
 $databases['default']['default'] = [
   'driver' => 'mysql',
   'database' => '{{ DB_NAME }}',
-  'username' => '{{ DB_USERNAME }}',
-  'password' => '{{ DB_PASSWORD }}',
+  'username' => '{{ DB_USER }}',
+  'password' => '{{ DB_PASS }}',
   'host' => '{{ DB_HOST }}',
   'prefix' => '',
 ];
@@ -27,10 +27,9 @@ $conf['file_public_path'] = '{{ DRUPAL_FILES_DIR }}';
 $conf['file_temporary_path'] = '{{ DRUPAL_TMP_DIR }}';
 $conf['file_private_path'] = '{{ DRUPAL_PRIVATE_DIR }}';
 
-// Redis cache backend (contrib) is included by default. Requires the PhpRedis
-// extension.
-$conf['redis_client_host'] = '{{ REDIS_CLIENT_HOST }}';
-$conf['redis_client_port'] = '{{ REDIS_CLIENT_PORT }}';
+// Redis cache backend (contrib) requiring the PhpRedis extension.
+// $conf['redis_client_host'] = '{{ REDIS_CLIENT_HOST }}';
+// $conf['redis_client_port'] = '{{ REDIS_CLIENT_PORT }}';
 // $conf['redis_client_base'] = {{ REDIS_CLIENT_BASE }};
 // $conf['redis_client_password'] = '{{ REDIS_CLIENT_PASSWORD }}';
 

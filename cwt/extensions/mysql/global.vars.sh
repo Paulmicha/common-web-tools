@@ -11,4 +11,6 @@
 # @see cwt/bootstrap.sh
 #
 
-global DB_CHARSET "[default]=utf8 [help]='Some DB operations like import (a db dump) require that we specify the default DB charset, i.e. the --default_character_set argument of the mysql program.'"
+global SQL_CHARSET "[default]=utf8mb4 [help]='Some DB operations like import (a db dump) require that we specify the default DB charset, i.e. the --default_character_set argument of the mysql program.'"
+
+global SQL_COLLATION "[default]=utf8mb4_general_ci [help]='SQL collation setting required by some language-specific implementations.'"

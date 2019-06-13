@@ -34,6 +34,7 @@ global DRUPAL_CONFIG_SYNC_DIR "[ifnot-DRUPAL_VERSION]=7 [default]=${APP_GIT_WORK
 global WRITEABLE_DIRS "[append]=$DRUPAL_FILES_DIR"
 global WRITEABLE_DIRS "[append]=$DRUPAL_TMP_DIR"
 global WRITEABLE_DIRS "[append]=$DRUPAL_PRIVATE_DIR"
+global EXECUTABLE_DIRS "[ifnot-DRUPAL_VERSION]=7 [append]=${APP_GIT_WORK_TREE:=$APP_DOCROOT}/vendor"
 global PROTECTED_FILES "[append]=$APP_DOCROOT/sites/default/settings.php"
 global PROTECTED_FILES "[append]=$DRUPAL_LOCAL_SETTINGS"
 

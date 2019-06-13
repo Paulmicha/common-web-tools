@@ -7,6 +7,7 @@
 # defined in the following globals (env vars) :
 # - PROTECTED_FILES : e.g. path to sensitive settings file(s).
 # - EXECUTABLE_FILES : e.g. custom app-related scripts.
+# - EXECUTABLE_DIRS : same but applies to entire dir (+ sub-dirs).
 # - WRITEABLE_DIRS : e.g. path to folders (files, tmp, private) that must be
 #     writeable by the application.
 # - WRITEABLE_FILES : additional files (outside of WRITEABLE_DIRS) that must be
@@ -83,5 +84,17 @@ if [[ -n "$EXECUTABLE_FILES" ]]; then
       echo >&2
       exit 3
     fi
+  done
+fi
+
+if [[ -n "$EXECUTABLE_DIRS" ]]; then
+  for executable_dir in $EXECUTABLE_DIRS; do
+    if [[ ! -d "$executable_dir" ]]; then
+      continue
+    fi
+    echo "Setting executable file permissions $FS_E_FILES to files inside '$executable_dir'"
+    find "$executable_dir" -type f -exec chmod "$FS_E_FILES" {} +
+    echo "Setting executable dir permissions $FS_NW_DIRS to '$executable_dir'"
+    find "$executable_dir" -type d -exec chmod "$FS_NW_DIRS" {} +
   done
 fi

@@ -12,16 +12,10 @@
 # @see cwt/extensions/docker-compose/cwt/pre_bootstrap.docker-compose.hook.sh
 #
 
-alias php="docker-compose exec $DC_TTY ${DWT_PHP_SNAME:=php} php"
+php_sname="${PHP_SNAME:=php}"
+drupal_docroot="${APP_DOCROOT_C:=/var/www/html/web}"
 
-alias composer="docker-compose exec $DC_TTY ${DWT_PHP_SNAME:=php} composer"
-alias composersu="docker-compose exec $DC_TTY --user root ${DWT_PHP_SNAME:=php} composer"
-
-alias drush="docker-compose exec $DC_TTY ${DWT_PHP_SNAME:=php} drush --root=${APP_DOCROOT_C:=/var/www/html}"
-alias drupal="docker-compose exec $DC_TTY ${DWT_PHP_SNAME:=php} ./vendor/drupal/console/bin/drupal --root=${APP_DOCROOT_C:=/var/www/html}"
-
-alias mysql="docker-compose exec $DC_TTY ${DWT_DB_SNAME:=mariadb} mysql"
-alias mysqldump="docker-compose exec $DC_TTY ${DWT_DB_SNAME:=mariadb} mysqldump"
-
-# [debug] log current instance domain (check remote calls).
-# echo "Bash aliases loaded ($INSTANCE_DOMAIN)."
+alias php="docker-compose exec $DC_TTY $php_sname php"
+alias composer="docker-compose exec $DC_TTY $php_sname composer"
+alias drush="docker-compose exec $DC_TTY $php_sname drush --root=$drupal_docroot"
+alias drupal="docker-compose exec $DC_TTY $php_sname ./vendor/drupal/console/bin/drupal --root=$drupal_docroot"

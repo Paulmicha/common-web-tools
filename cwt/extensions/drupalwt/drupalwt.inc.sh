@@ -87,12 +87,14 @@ u_dwt_write_local_settings() {
     # @see u_db_get_credentials()
     # -> For projects using multiple databases, the distinction is made using
     # the following convention : prefix var names using $DB_ID, e.g. :
-    # in the settings template, use {{ default_DB_USERNAME }}.
-    local db_vars='DB_NAME DB_USERNAME DB_PASSWORD DB_HOST DB_PORT'
+    # in the settings template, use {{ DEFAULT_DB_USER }}.
+    local db_vars='DB_NAME DB_USER DB_PASS DB_HOST DB_PORT'
     local db_vars_backup="$db_vars"
-    for CWT_DB_ID in $CWT_DB_IDS; do
+    local cwt_db_id=""
+    for cwt_db_id in $CWT_DB_IDS; do
+      u_str_uppercase "$cwt_db_id" 'cwt_db_id'
       for var_name in $db_vars_backup; do
-        db_vars+=" ${CWT_DB_ID}_${var_name}"
+        db_vars+=" ${cwt_db_id}_${var_name}"
       done
     done
     for var_name in $db_vars; do

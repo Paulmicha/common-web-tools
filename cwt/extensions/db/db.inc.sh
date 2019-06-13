@@ -8,33 +8,32 @@
 #
 
 ##
-# Gets DB credentials (opt-out available when CWT_DB_MODE = 'none').
+# Gets and/or generates once DB credentials.
+#
+# @exports DB_ID - defaults to 'default'.
+# @exports DB_DRIVER - defaults to 'mysql'.
+# @exports DB_HOST - defaults to 'localhost'.
+# @exports DB_PORT - defaults to '3306' or '5432' if DB_DRIVER is 'pgsql'.
+# @exports DB_NAME - defaults to "$DB_ID".
+# @exports DB_USER - defaults to first 16 characters of DB_ID.
+# @exports DB_PASS - defaults to 14 random characters.
+# @exports DB_ADMIN_USER - defaults to DB_USER.
+# @exports DB_ADMIN_PASS - defaults to DB_PASS.
+# @exports DB_TABLES_SKIP_DATA - defaults to an empty string.
 #
 # @requires the following globals in calling scope :
 # - INSTANCE_DOMAIN
 # - CWT_DB_MODE
 # - CWT_DB_DUMPS_BASE_PATH
-#
 # @see cwt/extensions/db/global.vars.sh
 #
 # If CWT_DB_MODE is set to 'auto' or 'manual', the first call to this function
-# will generate *once* the following globals :
-#
-# @exports DB_ID - defaults to sanitized "$INSTANCE_DOMAIN".
-# @exports DB_NAME - defaults to "$DB_ID".
-# @exports DB_USERNAME - defaults to first 16 characters of DB_ID.
-# @exports DB_PASSWORD - defaults to 14 random characters.
-# @exports DB_ADMIN_USERNAME - defaults to DB_USERNAME.
-# @exports DB_ADMIN_PASSWORD - defaults to DB_PASSWORD.
-# @exports DB_HOST - defaults to 'localhost'.
-# @exports DB_PORT - defaults to '3306'.
-#
-# Subsequent calls to this function will read said values from registry.
+# will generate once the values for these globals.
+# Subsequent calls to this function will then read said values from registry.
 # @see cwt/instance/registry_set.sh
 # @see cwt/instance/registry_get.sh
 #
-# @param 1 [optional] String : unique identifier for requested DB (defaults to
-#   sanitized INSTANCE_DOMAIN global).
+# @param 1 [optional] String : unique DB identifier. Defaults to 'default'.
 # @param 2 [optional] String : force reload flag (bypasses optimization) if the
 #   DB credentials vars are already exported in current shell scope.
 #
@@ -89,53 +88,84 @@ u_db_get_credentials() {
 
   case "$CWT_DB_MODE" in
     # Some environments do not require CWT to handle DB credentials at all.
-    # In these cases, the following local env vars should be manually provided :
+    # In these cases, the following global env vars should be provided in
+    # calling scope :
     # - $DB_NAME
-    # - $DB_USERNAME
-    # - $DB_PASSWORD
+    # - $DB_USER
+    # - $DB_PASS
     # These fallback values are provided if not set :
+    # - $DB_DRIVER defaults to mysql
     # - $DB_HOST defaults to localhost
-    # - $DB_PORT defaults to 3306
-    # - $DB_ADMIN_USERNAME defaults to $DB_USERNAME
-    # - $DB_ADMIN_PASSWORD defaults to $DB_PASSWORD
+    # - $DB_PORT defaults to 3306 or 5432 if DB_DRIVER is 'pgsql'
+    # - $DB_ADMIN_USER defaults to $DB_USER
+    # - $DB_ADMIN_PASS defaults to $DB_PASS
+    # - $DB_TABLES_SKIP_DATA defaults to an empty string
     none)
+      if [[ -z "$DB_DRIVER" ]]; then
+        export DB_DRIVER='mysql'
+      fi
       if [[ -z "$DB_HOST" ]]; then
         export DB_HOST='localhost'
       fi
       if [[ -z "$DB_PORT" ]]; then
-        export DB_PORT=3306
+        case "$DB_DRIVER" in
+          pgsql) export DB_PORT='5432' ;;
+          *)        export DB_PORT='3306' ;;
+        esac
       fi
-      if [[ -z "$DB_ADMIN_USERNAME" ]]; then
-        export DB_ADMIN_USERNAME="$DB_USERNAME"
+      if [[ -z "$DB_ADMIN_USER" ]]; then
+        export DB_ADMIN_USER="$DB_USER"
       fi
-      if [[ -z "$DB_ADMIN_PASSWORD" ]]; then
-        export DB_ADMIN_PASSWORD="$DB_PASSWORD"
+      if [[ -z "$DB_ADMIN_PASS" ]]; then
+        export DB_ADMIN_PASS="$DB_PASS"
+      fi
+      if [[ -z "$DB_TABLES_SKIP_DATA" ]]; then
+        export DB_TABLES_SKIP_DATA=""
       fi
       return
       ;;
 
     # The 'auto' mode means we only store the password, which gets generated
     # once on first call (and read otherwise).
-    # Other values will be assigned default values unless the following local
+    # Other values will be assigned default values unless the following global
     # env vars are already set in calling scope :
+    # - $DB_DRIVER defaults to mysql
     # - $DB_NAME defaults to $DB_ID
-    # - $DB_USERNAME defaults to $DB_ID
+    # - $DB_USER defaults to $DB_ID
     # - $DB_HOST defaults to localhost
-    # - $DB_PORT defaults to 3306
-    # - $DB_ADMIN_USERNAME defaults to $DB_USERNAME
-    # - $DB_ADMIN_PASSWORD defaults to $DB_PASSWORD
+    # - $DB_PORT defaults to 3306 or 5432 if DB_DRIVER is 'pgsql'
+    # - $DB_ADMIN_USER defaults to $DB_USER
+    # - $DB_ADMIN_PASS defaults to $DB_PASS
+    # - $DB_TABLES_SKIP_DATA defaults to an empty string
     auto)
+      if [[ -z "$DB_DRIVER" ]]; then
+        export DB_DRIVER='mysql'
+      fi
       if [[ -z "$DB_NAME" ]]; then
         export DB_NAME="$DB_ID"
       fi
-      if [[ -z "$DB_USERNAME" ]]; then
-        export DB_USERNAME="$DB_ID"
+      if [[ -z "$DB_USER" ]]; then
+        export DB_USER="$DB_ID"
+        # Limit automatically generated user name to 16 or 32 characters,
+        # depending on the driver used by current database ID. Prevents errors
+        # like "MySQL ERROR 1470 (HY000) String is too long for user name".
+        # Warning : this creates naming collision risks (considered edge case).
+        case "$DB_DRIVER" in
+          pgsql) DB_USER="${DB_USER:0:32}" ;;
+          mysql) DB_USER="${DB_USER:0:16}" ;;
+        esac
       fi
       if [[ -z "$DB_HOST" ]]; then
         export DB_HOST='localhost'
       fi
       if [[ -z "$DB_PORT" ]]; then
-        export DB_PORT=3306
+        case "$DB_DRIVER" in
+          pgsql) export DB_PORT='5432' ;;
+          *)        export DB_PORT='3306' ;;
+        esac
+      fi
+      if [[ -z "$DB_TABLES_SKIP_DATA" ]]; then
+        export DB_TABLES_SKIP_DATA=""
       fi
 
       # Attempts to load password from registry (secrets store).
@@ -144,19 +174,19 @@ u_db_get_credentials() {
       # in temporary virtual machines inaccessible to the outside world, but
       # it is obviously a security risk.
       reg_val=''
-      u_instance_registry_get "${db_id}.DB_PASSWORD"
+      u_instance_registry_get "${db_id}.DB_PASS"
 
       # Generate random local instance DB password and store it for subsequent
       # calls.
       if [[ -z "$reg_val" ]]; then
-        export DB_PASSWORD=`< /dev/urandom tr -dc A-Za-z0-9 | head -c14; echo`
-        u_instance_registry_set "${db_id}.DB_PASSWORD" "$DB_PASSWORD"
+        export DB_PASS=`< /dev/urandom tr -dc A-Za-z0-9 | head -c14; echo`
+        u_instance_registry_set "${db_id}.DB_PASS" "$DB_PASS"
       else
-        export DB_PASSWORD="$reg_val"
+        export DB_PASS="$reg_val"
       fi
 
-      export DB_ADMIN_USERNAME="${DB_ADMIN_USERNAME:=$DB_USERNAME}"
-      export DB_ADMIN_PASSWORD="${DB_ADMIN_PASSWORD:=$DB_PASSWORD}"
+      export DB_ADMIN_USER="${DB_ADMIN_USER:=$DB_USER}"
+      export DB_ADMIN_PASS="${DB_ADMIN_PASS:=$DB_PASS}"
     ;;
 
     # 'manual' mode requires terminal (prompts) on first call.
@@ -164,7 +194,7 @@ u_db_get_credentials() {
       local var
       local val
       local val_default
-      local vars_to_getset='DB_NAME DB_USERNAME DB_PASSWORD DB_ADMIN_USERNAME DB_ADMIN_PASSWORD DB_HOST DB_PORT'
+      local vars_to_getset='DB_DRIVER DB_HOST DB_PORT DB_NAME DB_USER DB_PASS DB_ADMIN_USER DB_ADMIN_PASS'
 
       for var in $vars_to_getset; do
         val=''
@@ -176,26 +206,43 @@ u_db_get_credentials() {
         # -> init & store.
         if [[ -z "$reg_val" ]]; then
           case "$var" in
-            DB_NAME)
-              val_default="$DB_ID"
-              ;;
-            DB_USERNAME)
-              val_default="${DB_ID:0:16}"
-              ;;
-            DB_PASSWORD)
-              val_default=`< /dev/urandom tr -dc A-Za-z0-9 | head -c14; echo`
-              ;;
-            DB_ADMIN_USERNAME)
-              val_default="$DB_USERNAME"
-              ;;
-            DB_ADMIN_PASSWORD)
-              val_default="$DB_PASSWORD"
+            DB_DRIVER)
+              val_default='mysql'
               ;;
             DB_HOST)
               val_default='localhost'
               ;;
             DB_PORT)
               val_default='3306'
+              case "$DB_DRIVER" in pgsql)
+                val_default='5432'
+              esac
+              ;;
+            DB_NAME)
+              val_default="$DB_ID"
+              ;;
+            DB_USER)
+              val_default="${DB_ID:0:16}"
+              # Limit automatically generated user name to 16 or 32 characters,
+              # depending on the driver used by current database ID. Prevents errors
+              # like "MySQL ERROR 1470 (HY000) String is too long for user name".
+              # Warning : this creates naming collision risks (considered edge case).
+              case "$DB_DRIVER" in
+                pgsql) val_default="${val_default:0:32}" ;;
+                mysql)    val_default="${val_default:0:16}" ;;
+              esac
+              ;;
+            DB_PASS)
+              val_default=`< /dev/urandom tr -dc A-Za-z0-9 | head -c14; echo`
+              ;;
+            DB_ADMIN_USER)
+              val_default="$DB_USER"
+              ;;
+            DB_ADMIN_PASS)
+              val_default="$DB_PASS"
+              ;;
+            DB_TABLES_SKIP_DATA)
+              val_default=""
               ;;
           esac
 
@@ -225,27 +272,24 @@ u_db_get_credentials() {
 # "Abstract" means that this extension doesn't provide any actual implementation
 # for this functionality. It is necessary to use an extension which does. E.g. :
 # @see cwt/extensions/mysql
+# @see cwt/extensions/pgsql
 #
-# To list all the possible paths that can be used - among which existing files
-# will be sourced when the hook is triggered, use :
-# $ make hook-debug ms s:db a:create v:PROVISION_USING
+# To list all the possible paths that can be used, use :
+# $ make hook-debug s:db a:create v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
 #
-# @param 1 [optional] String : $DB_NAME override.
+# To check the most specific match (if any is found) :
+# $ make hook-debug ms s:db a:create v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
+#
+# @param 1 [optional] String : unique DB identifier. Defaults to 'default'.
+# @param 2 [optional] String : force reload flag (bypasses optimization) if the
+#   DB credentials vars are already exported in current shell scope.
 #
 # @example
 #   u_db_create
-#   u_db_create 'custom_db_name'
 #
 u_db_create() {
-  local p_db_name_override="$1"
-
-  u_db_get_credentials
-
-  if [[ -n "$p_db_name_override" ]]; then
-    DB_NAME="$p_db_name_override"
-  fi
-
-  u_hook_most_specific -s 'db' -a 'create' -v 'PROVISION_USING'
+  u_db_get_credentials $@
+  u_hook_most_specific -s 'db' -a 'create' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
 }
 
 ##
@@ -254,23 +298,24 @@ u_db_create() {
 # "Abstract" means that this extension doesn't provide any actual implementation
 # for this functionality. It is necessary to use an extension which does. E.g. :
 # @see cwt/extensions/mysql
+# @see cwt/extensions/pgsql
 #
-# @param 1 [optional] String : $DB_NAME override.
+# To list all the possible paths that can be used, use :
+# $ make hook-debug s:db a:destroy v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
+#
+# To check the most specific match (if any is found) :
+# $ make hook-debug ms s:db a:destroy v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
+#
+# @param 1 [optional] String : unique DB identifier. Defaults to 'default'.
+# @param 2 [optional] String : force reload flag (bypasses optimization) if the
+#   DB credentials vars are already exported in current shell scope.
 #
 # @example
 #   u_db_destroy
-#   u_db_destroy 'custom_db_name'
 #
 u_db_destroy() {
-  local p_db_name_override="$1"
-
-  u_db_get_credentials
-
-  if [[ -n "$p_db_name_override" ]]; then
-    DB_NAME="$p_db_name_override"
-  fi
-
-  u_hook_most_specific -s 'db' -a 'destroy' -v 'PROVISION_USING'
+  u_db_get_credentials $@
+  u_hook_most_specific -s 'db' -a 'destroy' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
 }
 
 ##
@@ -279,6 +324,13 @@ u_db_destroy() {
 # "Abstract" means that this extension doesn't provide any actual implementation
 # for this functionality. It is necessary to use an extension which does. E.g. :
 # @see cwt/extensions/mysql
+# @see cwt/extensions/pgsql
+#
+# To list all the possible paths that can be used, use :
+# $ make hook-debug s:db a:import v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
+#
+# To check the most specific match (if any is found) :
+# $ make hook-debug ms s:db a:import v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
 #
 # Important notes : implementations of the hook -s 'db' -a 'import' MUST use the
 # following variable in calling scope as input path (source file) :
@@ -290,15 +342,15 @@ u_db_destroy() {
 # extension).
 #
 # @param 1 String : the dump file path.
-# @param 2 [optional] String : $DB_NAME override.
+# @param 2 [optional] String : unique DB identifier. Defaults to 'default'.
+# @param 3 [optional] String : force reload flag (bypasses optimization) if the
+#   DB credentials vars are already exported in current shell scope.
 #
 # @example
 #   u_db_import '/path/to/dump/file.sql.tgz'
-#   u_db_import '/path/to/dump/file.sql' 'custom_db_name'
 #
 u_db_import() {
   local p_dump_file_path="$1"
-  local p_db_name_override="$2"
   local db_dump_dir
   local db_dump_file
   local leaf
@@ -311,11 +363,7 @@ u_db_import() {
     exit 1
   fi
 
-  u_db_get_credentials
-
-  if [[ -n "$p_db_name_override" ]]; then
-    DB_NAME="$p_db_name_override"
-  fi
+  u_db_get_credentials $2 $3
 
   db_dump_file="$p_dump_file_path"
 
@@ -352,7 +400,7 @@ u_db_import() {
   fi
 
   # Implementations MUST use var $db_dump_file as input path (source file).
-  u_hook_most_specific -s 'db' -a 'import' -v 'PROVISION_USING'
+  u_hook_most_specific -s 'db' -a 'import' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
 
   # Remove uncompressed version of the dump when we're done.
   if [[ $file_was_uncompressed -eq 0 ]]; then
@@ -373,6 +421,13 @@ u_db_import() {
 # "Abstract" means that this extension doesn't provide any actual implementation
 # for this functionality. It is necessary to use an extension which does. E.g. :
 # @see cwt/extensions/mysql
+# @see cwt/extensions/pgsql
+#
+# To list all the possible paths that can be used, use :
+# $ make hook-debug s:db a:backup v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
+#
+# To check the most specific match (if any is found) :
+# $ make hook-debug ms s:db a:backup v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
 #
 # Important notes : implementations of the hook -s 'db' -a 'backup' MUST use the
 # following variable in calling scope as output path (resulting file) :
@@ -382,29 +437,23 @@ u_db_import() {
 # This function does not implement the creation of the "raw" DB dump file, but
 # it always compresses it immediately (appends ".tgz" to given file path).
 #
-# TODO [evol] make compression optional ?
-#
 # @param 1 String : the dump file path.
-# @param 2 [optional] String : $DB_NAME override.
+# @param 2 [optional] String : unique DB identifier. Defaults to 'default'.
+# @param 3 [optional] String : force reload flag (bypasses optimization) if the
+#   DB credentials vars are already exported in current shell scope.
 #
 # @example
 #   u_db_backup '/path/to/dump/file.sql'
-#   u_db_backup '/path/to/dump/file.sql' 'custom_db_name'
 #
 u_db_backup() {
   local p_dump_file_path="$1"
-  local p_db_name_override="$2"
+
   local db_dump_dir
   local db_dump_file
   local db_dump_file_name
 
-  u_db_get_credentials
+  u_db_get_credentials $2 $3
 
-  if [[ -n "$p_db_name_override" ]]; then
-    DB_NAME="$p_db_name_override"
-  fi
-
-  # TODO [minor] sanitize $p_dump_file_path ?
   db_dump_file="$p_dump_file_path"
   db_dump_dir="${db_dump_file%/${db_dump_file##*/}}"
 
@@ -431,11 +480,8 @@ u_db_backup() {
     fi
   fi
 
-  # TODO should we trigger the hook that resets all filesystem ownership and
-  # permissions here ?
-
   # Implementations MUST use var $db_dump_file as output path (resulting file).
-  u_hook_most_specific -s 'db' -a 'backup' -v 'PROVISION_USING'
+  u_hook_most_specific -s 'db' -a 'backup' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
 
   if [ ! -f "$db_dump_file" ]; then
     echo >&2
@@ -472,38 +518,39 @@ u_db_backup() {
 # "Abstract" means that this extension doesn't provide any actual implementation
 # for this functionality. It is necessary to use an extension which does. E.g. :
 # @see cwt/extensions/mysql
+# @see cwt/extensions/pgsql
 #
-# @param 1 [optional] String : $DB_NAME override.
+# To list all the possible paths that can be used, use :
+# $ make hook-debug s:db a:clear v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
+#
+# To check the most specific match (if any is found) :
+# $ make hook-debug ms s:db a:clear v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
+#
+# @param 1 [optional] String : unique DB identifier. Defaults to 'default'.
+# @param 2 [optional] String : force reload flag (bypasses optimization) if the
+#   DB credentials vars are already exported in current shell scope.
 #
 # @example
 #   u_db_clear
-#   u_db_clear 'custom_db_name'
 #
 u_db_clear() {
-  local p_db_name_override="$1"
-
-  u_db_get_credentials
-
-  if [[ -n "$p_db_name_override" ]]; then
-    DB_NAME="$p_db_name_override"
-  fi
-
-  u_hook_most_specific -s 'db' -a 'clear' -v 'PROVISION_USING'
+  u_db_get_credentials $@
+  u_hook_most_specific -s 'db' -a 'clear' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
 }
 
 ##
 # Empties database + imports given dump file.
 #
 # @param 1 String : the dump file path.
-# @param 2 [optional] String : $DB_NAME override.
+# @param 2 [optional] String : unique DB identifier. Defaults to 'default'.
+# @param 3 [optional] String : force reload flag (bypasses optimization) if the
+#   DB credentials vars are already exported in current shell scope.
 #
 # @example
 #   u_db_restore '/path/to/dump/file.sql'
-#   u_db_restore '/path/to/dump/file.sql' 'custom_db_name'
 #
 u_db_restore() {
   local p_dump_file_path="$1"
-  local p_db_name_override="$2"
 
   if [[ ! -f "$p_dump_file_path" ]]; then
     echo >&2
@@ -513,13 +560,7 @@ u_db_restore() {
     exit 1
   fi
 
-  u_db_get_credentials
-
-  if [[ -n "$p_db_name_override" ]]; then
-    DB_NAME="$p_db_name_override"
-  fi
-
-  u_db_clear
+  u_db_clear $2 $3
   u_db_import "$p_dump_file_path"
 }
 
@@ -529,24 +570,25 @@ u_db_restore() {
 # @see u_fs_get_most_recent()
 # @requires globals CWT_DB_DUMPS_BASE_PATH in calling scope.
 #
-# @param 1 [optional] String : $DB_NAME override.
+# @param 1 [optional] String : unique DB identifier. Defaults to 'default'.
+# @param 2 [optional] String : force reload flag (bypasses optimization) if the
+#   DB credentials vars are already exported in current shell scope.
 #
 # @example
 #   u_db_restore_last
-#   u_db_restore_last 'custom_db_name'
 #
 u_db_restore_last() {
-  u_db_restore "$(u_fs_get_most_recent $CWT_DB_DUMPS_BASE_PATH)" "$@"
+  u_db_restore "$(u_fs_get_most_recent $CWT_DB_DUMPS_BASE_PATH)" $@
 }
 
 ##
-# Creates a routine DB dump backup + progressively deletes old DB dumps.
+# Creates a routine DB dump backup.
 #
 # @requires globals CWT_DB_DUMPS_BASE_PATH in calling scope.
 #
-# @param 1 [optional] String : 'no-purge' to prevent automatic deletion of old
-#   backups.
-# @param 2 [optional] String : $DB_NAME override.
+# @param 1 [optional] String : unique DB identifier. Defaults to 'default'.
+# @param 2 [optional] String : force reload flag (bypasses optimization) if the
+#   DB credentials vars are already exported in current shell scope.
 #
 # NB : for performance reasons (to avoid using a subshell), this function
 # writes its result to a variable subject to collision in calling scope.
@@ -555,25 +597,16 @@ u_db_restore_last() {
 #
 # @example
 #   u_db_routine_backup
-#   u_db_routine_backup 'no-purge'
-#   u_db_routine_backup '' 'custom_db_name'
-#   u_db_routine_backup 'no-purge' 'custom_db_name'
 #
 u_db_routine_backup() {
-  local p_no_purge="$1"
-  local p_db_name_override="$2"
   local db_routine_new_backup_file
 
   # TODO [wip] Allow setting dump file extension in DB settings ?
   # Using generic extension 'dump' for now.
-  u_db_get_credentials
+  u_db_get_credentials $@
   db_routine_new_backup_file="$CWT_DB_DUMPS_BASE_PATH/local/$DB_ID/$(date +"%Y/%m/%d/%H-%M-%S").dump"
 
-  u_db_backup "$db_routine_new_backup_file"
-
-  # TODO [wip] unless 'no-purge' option is set, implement old dumps cleanup.
-  # If we had time, this could be implemented with something like :
-  # global CWT_DB_BAK_ROUTINE_PURGE "[default]='1m:5,3m:3,6m:2,1y:1' [help]='Custom syntax specifying how many dump files to keep by age. Comma-separated list of quotas - ex: 1m:5 = for backups older than 1 month, keep max 5 files in that month.'"
+  u_db_backup "$db_routine_new_backup_file" $@
 
   # Some tasks need the generated dump file path.
   routine_dump_file="${db_routine_new_backup_file}.tgz"
@@ -587,6 +620,9 @@ u_db_routine_backup() {
 # @param 1 [optional] String : pass 'new' to create new dump instead of
 #   returning most recent among existing local DB dump files.
 #   Pass 'initial' to get a dump file whose name matches 'initial.*'.
+# @param 2 [optional] String : unique DB identifier. Defaults to 'default'.
+# @param 3 [optional] String : force reload flag (bypasses optimization) if the
+#   DB credentials vars are already exported in current shell scope.
 #
 # @example
 #   most_recent_dump_file="$(u_db_get_dump)"
@@ -605,7 +641,7 @@ u_db_get_dump() {
   if [[ -n "$p_option" ]]; then
     case "$p_option" in
       new)
-        u_db_routine_backup
+        u_db_routine_backup $2 $3
         dump_to_return="$routine_dump_file"
         ;;
       initial)

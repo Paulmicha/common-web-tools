@@ -2,4 +2,6 @@ db
 docker-compose
 drupalwt
 mysql
+pgsql
 remote
+remote_db

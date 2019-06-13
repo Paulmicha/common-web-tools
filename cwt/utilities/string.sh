@@ -10,8 +10,9 @@
 #
 
 ##
-# Transforms a YAML file into a series of shell variables declarations.
+# Transforms a basic YAML file into a series of shell variables declarations.
 #
+# Only works for very simple YAML declarations.
 # See https://github.com/georgetown-university/druml/blob/master/druml-inc-yaml.sh
 #
 # @param 1 String : path to YAML file.
@@ -30,6 +31,12 @@
 #   CONF_LIST_ALL="default-sites.txt"
 #   CONF_LIST_NEW="new-sites.txt"
 #   CONF_ALIAS_NICKNAME="default"
+#   CONF__ROOTS=()
+#   CONF__ROOTS+="list"
+#   CONF__ROOTS+="alias"
+#
+#   # For a comprehensive usage example,
+#   # @see u_remote_instances_setup() in cwt/extensions/remote/remote.inc.sh
 #
 u_str_yaml_parse() {
   local p_yml_file="$1"
@@ -52,10 +59,26 @@ u_str_yaml_parse() {
     | awk -F$fs '{
         indent = length($1)/2;
         vname[indent] = $2;
-        for (i in vname) {if (i > indent) {delete vname[i]}}
+        for (i in vname) {
+          if (i > indent) {
+            delete vname[i]
+          }
+        }
         if (length($3) > 0) {
-          vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
-          printf("%s%s%s=\"%s\"\n", "'$p_prefix'",str toupper(vn), str toupper($2), $3);
+          rk=""
+          vn=""
+          for (i=0; i<indent; i++) {
+            rk=(vn)(vname[i])
+            vn=(vn)(vname[i])("_")
+          }
+          root_keys[rk]=rk
+          printf("%s%s%s=\"%s\"\n", "'$p_prefix'", str toupper(vn), str toupper($2), $3);
+        }
+      }
+      END {
+        printf("%s%s=()\n", "'$p_prefix'", "_ROOTS");
+        for (i in root_keys) {
+          printf("%s%s+=(\"%s\")\n", "'$p_prefix'", "_ROOTS", i);
         }
       }'
 }

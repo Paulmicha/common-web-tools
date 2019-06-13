@@ -11,6 +11,7 @@
 
 # [optional] Locally generated docker-compose.yml file.
 /docker-compose.yml
+/docker-compose.override.yml
 
 # [optional] Public web dir or application docroot.
 # See $APP_DOCROOT global var help in cwt/env/global.vars.sh.
@@ -30,6 +31,8 @@
 !/data/db/README.md
 /data/db-dumps/*
 !/data/db-dumps/README.md
+/data/files/*
+!/data/files/README.md
 /data/private/*
 !/data/private/README.md
 /data/tmp/*

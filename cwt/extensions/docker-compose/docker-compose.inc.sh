@@ -10,6 +10,21 @@
 #
 
 ##
+# Generates the default value used for container names to match traefik labels.
+#
+# @see cwt/extensions/docker-compose/global.vars.sh
+#
+# @example
+#   default_namespace=$(u_dc_default_namespace)
+#   echo "$default_namespace" # <- prints instance domain stripped of all non-alphanumerical characters.
+#
+u_dc_default_namespace() {
+  local namespace="$INSTANCE_DOMAIN"
+  u_str_sanitize_var_name "$namespace" 'namespace'
+  echo "${namespace//_/''}"
+}
+
+##
 # (re)Writes the docker-compose.yml file to use in current project instance.
 #
 # Creates or override the docker-compose.yml file for local project instance
@@ -20,6 +35,7 @@
 #
 # To list all the possible paths that can be used, use :
 # $ make hook-debug s:stack a:docker-compose c:yml v:DC_YML_VARIANTS
+# $ make hook-debug s:stack a:docker-compose.override c:yml v:DC_YML_VARIANTS
 #
 u_dc_write_yml() {
   local f

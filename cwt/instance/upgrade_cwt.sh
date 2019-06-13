@@ -64,7 +64,7 @@ case "$proceed_with_download" in y*|Y*)
     rm -rf "$tmp_dir"
   fi
 
-  git clone "${CWT_REPO:=https://github.com/Paulmicha/common-web-tools.git}" "$tmp_dir"
+  git clone --depth 1 "${CWT_REPO:=https://github.com/Paulmicha/common-web-tools.git}" "$tmp_dir"
 
   if [[ $? -ne 0 ]]; then
     echo >&2

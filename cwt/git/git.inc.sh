@@ -115,11 +115,14 @@ u_git_write_hooks() {
     if u_in_array "$git_hook" 'git_hooks_whitelist'; then
       git_hook_script_path="$p_git_hook_dir/$git_hook"
 
+      relative_path=''
+      u_fs_relative_path "$git_hook_script_path"
+
       # When Git triggers its hook, the path in which the script runs is either
       # APP_GIT_WORK_TREE or PROJECT_DOCROOT.
       # -> Since CWT requires to be run from PROJECT_DOCROOT, we need to force the
       # execution path from within the generated scripts.
-      echo "(over)Writing git hook $git_hook_script_path ..."
+      echo "(over)Writing git hook $relative_path ..."
       cat > "$git_hook_script_path" <<EOF
 #!/usr/bin/env bash
 
@@ -139,7 +142,7 @@ cd $PROJECT_DOCROOT && \
 
 EOF
       chmod +x "$git_hook_script_path"
-      echo "(over)Writing git hook $git_hook_script_path : done."
+      echo "(over)Writing git hook $relative_path : done."
 
     else
       echo >&2
