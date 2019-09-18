@@ -25,10 +25,13 @@ if [[ -n "$APP_GIT_WORK_TREE" ]] && [[ -d "$APP_GIT_WORK_TREE" ]]; then
 fi
 
 if [[ -n "$app_files_path" ]]; then
+  # HACK : docker-compose projects may have subdirs where this returns many
+  # errors we don't care about, so we prevent errors from polluting output.
+  # (See docker-compose ownership issues).
   # Sets 'normal' file permissions (644 by default) to every single file in
   # application dir. Applies to files in subfolders.
-  find "$app_files_path" -type f -exec chmod $FS_NW_FILES {} +
+  (find "$app_files_path" -type f -exec chmod $FS_NW_FILES {} +) 2> /dev/null
   # Sets 'normal' dir permissions (755 by default) to every single folder in
   # application dir. Applies to subfolders.
-  find "$app_files_path" -type d -exec chmod $FS_NW_DIRS {} +
+  (find "$app_files_path" -type d -exec chmod $FS_NW_DIRS {} +) 2> /dev/null
 fi

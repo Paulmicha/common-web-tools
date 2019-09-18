@@ -7,6 +7,7 @@
 # during this action - e.g. docker-compose.
 #
 # @see cwt/instance/rebuild.sh
+# @see cwt/extensions/docker-compose/instance/rebuild.docker-compose.hook.sh
 #
 
 u_db_get_credentials

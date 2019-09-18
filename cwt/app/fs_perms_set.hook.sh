@@ -44,10 +44,15 @@ if [[ -n "$WRITEABLE_DIRS" ]]; then
     if [[ ! -d "$writeable_dir" ]]; then
       continue
     fi
-    echo "Setting writeable file permissions $FS_W_FILES to files inside '$writeable_dir'"
-    find "$writeable_dir" -type f -exec chmod "$FS_W_FILES" {} +
-    echo "Setting writeable dir permissions $FS_W_DIRS to '$writeable_dir'"
-    find "$writeable_dir" -type d -exec chmod "$FS_W_DIRS" {} +
+    # HACK : docker-compose projects may have subdirs where this returns many
+    # errors we don't care about, so we prevent errors from polluting output.
+    # (See docker-compose ownership issues).
+    (\
+      echo "Setting writeable file permissions $FS_W_FILES to files inside '$writeable_dir'" \
+      & find "$writeable_dir" -type f -exec chmod "$FS_W_FILES" {} + \
+      & echo "Setting writeable dir permissions $FS_W_DIRS to '$writeable_dir'" \
+      & find "$writeable_dir" -type d -exec chmod "$FS_W_DIRS" {} + \
+    ) 2> /dev/null
   done
 fi
 
@@ -92,9 +97,14 @@ if [[ -n "$EXECUTABLE_DIRS" ]]; then
     if [[ ! -d "$executable_dir" ]]; then
       continue
     fi
-    echo "Setting executable file permissions $FS_E_FILES to files inside '$executable_dir'"
-    find "$executable_dir" -type f -exec chmod "$FS_E_FILES" {} +
-    echo "Setting executable dir permissions $FS_NW_DIRS to '$executable_dir'"
-    find "$executable_dir" -type d -exec chmod "$FS_NW_DIRS" {} +
+    # HACK : docker-compose projects may have subdirs where this returns many
+    # errors we don't care about, so we prevent errors from polluting output.
+    # (See docker-compose ownership issues).
+    (\
+      echo "Setting executable file permissions $FS_E_FILES to files inside '$executable_dir'" \
+      & find "$executable_dir" -type f -exec chmod "$FS_E_FILES" {} + \
+      & echo "Setting executable dir permissions $FS_NW_DIRS to '$executable_dir'" \
+      & find "$executable_dir" -type d -exec chmod "$FS_NW_DIRS" {} + \
+    ) 2> /dev/null
   done
 fi
