@@ -25,7 +25,6 @@ global DRUPAL_PRIVATE_DIR_C "[default]='/mnt/files/private'"
 
 # Default settings for commonly used Redis cache backend.
 global REDIS_CLIENT_HOST "${REDIS_SNAME:=redis}"
-global REDIS_CLIENT_PORT '6379'
 
 # Drupal settings specific to version 8+.
 global DRUPAL_CONFIG_SYNC_DIR_C "[ifnot-DRUPAL_VERSION]=7 [default]=/var/www/html/config/sync"

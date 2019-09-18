@@ -23,7 +23,9 @@ global DRUPAL_PRIVATE_DIR "[default]=$PROJECT_DOCROOT/data/private"
 global DRUPAL_HASH_SALT "$(u_str_random)"
 
 # Default settings for commonly used Redis cache backend.
-global REDIS_CLIENT_HOST 'localhost'
+# Workaround globals overriding order (specific may get called before).
+# @see cwt/extensions/drupalwt/app/global.docker-compose.vars.sh
+global REDIS_CLIENT_HOST "[if-REDIS_CLIENT_HOST]='' [default]=localhost"
 global REDIS_CLIENT_PORT '6379'
 
 # Drupal settings specific to version 8+.
