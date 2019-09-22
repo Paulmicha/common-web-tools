@@ -1,0 +1,28 @@
+version: "3"
+services:
+
+  nginx:
+    ports:
+      - "80:80"
+
+  php:
+    environment:
+      PHP_SENDMAIL_PATH: /usr/sbin/sendmail -t -i -S mailhog:1025
+
+  # See https://github.com/wodby/adminer
+  adminer:
+    image: wodby/adminer:$ADMINER_TAG
+    container_name: "${DC_NS}_adminer"
+    environment:
+      ADMINER_DEFAULT_DB_DRIVER: $DB_DRIVER
+      ADMINER_DEFAULT_DB_HOST: $DB_HOST
+      ADMINER_DEFAULT_DB_NAME: $DB_NAME
+    ports:
+      - "9000:9000"
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: "${DC_NS}_mailhog"
+    ports:
+      - "8025:8025" # HTTP (UI)
+      # - "1025:1025" # SMTP (no exposition needed)

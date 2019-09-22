@@ -13,12 +13,17 @@
 # Instance initialization process ("instance init").
 #
 # This is the first action to execute in any project instance in order to make
-# CWT useful. It generates readonly global (env) vars, default Git hooks
+# CWT useful. It generates readonly global (env) vars, optional Git hooks
 # implementations, and convenience "make" shortcuts for all subjects & actions.
 #
 # @see u_global_aggregate()
 # @see u_global_write()
 # @see u_instance_write_mk()
+#
+# Gotcha : when calling this function in an already initialized instance, given
+# its design, every 'append' type globals values would pile-up, creating
+# duplicate values. Workaround :
+# @see cwt/instance/reinit.sh
 #
 # @example
 #   # Calling this script without any arguments will use prompts in terminal
@@ -56,6 +61,18 @@ u_instance_init() {
   local p_cwtii_yes=0
   local p_cwtii_dry_run=0
 
+  # Reads values optionally provided in YAML config file.
+  u_instance_load_yaml_config
+  if [[ -n "$YAML_APP_REPO" ]]; then
+    p_cwtii_app_git_origin="$YAML_APP_REPO"
+  fi
+  if [[ -n "$YAML_APP_WORKTREE" ]]; then
+    p_cwtii_app_git_work_tree="$YAML_APP_WORKTREE"
+  fi
+  if [[ -n "$YAML_APP_DOCROOT" ]]; then
+    p_cwtii_app_docroot="$YAML_APP_DOCROOT"
+  fi
+
   while [[ $# -gt 0 ]]; do
     case "$1" in
       -o) p_cwtii_project_docroot="$2"; shift 2;;
@@ -89,6 +106,8 @@ u_instance_init() {
   GLOBALS_COUNT=0
   GLOBALS_UNIQUE_NAMES=()
   GLOBALS_UNIQUE_KEYS=()
+  GLOBALS_DEFERRED=()
+  GLOBALS['.defer-max']=0
 
   # Load default CWT 'core' globals.
   # These contain paths required for aggregating env vars and services.
@@ -121,6 +140,51 @@ u_instance_init() {
 
   # Trigger post-init (optional) extra processes.
   hook -p 'post' -a 'init'
+}
+
+##
+# Detects cwt_config.yml if it exists and loads its values as defaults.
+#
+# This function writes its result in the following variables :
+# @var YAML_APP_REPO
+# @var YAML_APP_WORKTREE
+# @var YAML_APP_DOCROOT
+#
+# For details on the syntax used to determine variable names from the YAML file
+# contents :
+# @see u_str_yaml_parse() in cwt/utilities/string.sh
+#
+# To verify which files can be used (besides "cwt_config.yml" in this project
+# instance's docroot folder $PROJECT_DOCROOT), run :
+# $ make hook-debug s:instance a:.cwt c:yml v:HOST_TYPE INSTANCE_TYPE
+# In case of multiple existing matches, to check which one will be used, run :
+# $ make hook-debug ms s:instance a:.cwt c:yml v:HOST_TYPE INSTANCE_TYPE
+#
+# @example
+#   u_instance_load_yaml_config
+#   # Results :
+#   echo "$YAML_APP_REPO"
+#   echo "$YAML_APP_WORKTREE"
+#   echo "$YAML_APP_DOCROOT"
+#
+u_instance_load_yaml_config() {
+  local yaml_config_filepath='.cwt.yml'
+  hook_most_specific_dry_run_match=''
+
+  u_hook_most_specific 'dry-run' \
+    -s 'instance' \
+    -a '.cwt-config' \
+    -c 'yml' \
+    -v 'HOST_TYPE INSTANCE_TYPE' \
+    -t
+
+  if [[ -f "$hook_most_specific_dry_run_match" ]]; then
+    yaml_config_filepath="$hook_most_specific_dry_run_match"
+  fi
+
+  if [[ -f "$yaml_config_filepath" ]]; then
+    eval $(u_str_yaml_parse "$yaml_config_filepath" 'yaml_')
+  fi
 }
 
 ##

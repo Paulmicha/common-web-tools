@@ -195,14 +195,22 @@ u_global_aggregate() {
 
   # Support deferred value assignation.
   # @see global()
-  if [[ "${GLOBALS['.defer-max']}" -gt '0' ]]; then
+  if [[ ${GLOBALS['.defer-max']} -gt 0 ]]; then
     i=0
-    max="${GLOBALS['.defer-max']}"
+    max=${GLOBALS['.defer-max']}
     for (( i=1; i<=$max; i++ )); do
       for global_name in ${GLOBALS[".defer-$i"]}; do
+
+        # Debug
+        # echo
+        # echo "  ! level $i Deferred assign_value for $global_name (currently = '${!global_name}')"
+
         u_global_assign_value "$global_name"
       done
     done
+
+    # Debug
+    # echo
   fi
 }
 
@@ -263,29 +271,72 @@ u_global_assign_value() {
   # Support tests.
   # @see cwt/test/cwt/global.test.sh
   if [[ $test_cwt_global_aggregate -ne 1 ]]; then
-    eval "export $p_var"
     eval "unset $p_var"
   fi
 
-  local arg_val_var_name="p_cwtii_$p_var"
-  u_str_lowercase "$arg_val_var_name" 'arg_val_var_name'
-  eval "local arg_val=\"\$$arg_val_var_name\""
+  local arg_var_name="p_cwtii_$p_var"
+  u_str_lowercase "$arg_var_name" 'arg_var_name'
+  local arg_val="${!arg_var_name}"
 
   local default_val="${GLOBALS[$p_var|default]}"
 
+  # Conditions should also apply for deferred assignments. In fact, it's when
+  # they're most useful because it ensures depending vars are already assigned.
+  if [[ -n "${GLOBALS[$p_var|condition]}" ]]; then
+    local depending_var="${GLOBALS[$p_var|depending_var]}"
+    local depending_value="${!depending_var}"
+    local depending_match="${GLOBALS[$p_var|depending_match]}"
+
+    # For each condition type, deal with true/false fallback values. If none are
+    # set and the condition doesn't match, we return early (no assignment).
+    case "${GLOBALS[$p_var|condition]}" in
+      'ifnot')
+        if [[ "$depending_value" == "$depending_match" ]]; then
+          if [[ -n "${GLOBALS[$p_var|value_if_false]}" ]]; then
+            default_val="${GLOBALS[$p_var|value_if_false]}"
+          else
+            return
+          fi
+        elif [[ -n "${GLOBALS[$p_var|value_if_true]}" ]]; then
+          default_val="${GLOBALS[$p_var|value_if_true]}"
+        fi
+        ;;
+      'if')
+        if [[ "$depending_value" != "$depending_match" ]]; then
+          if [[ -n "${GLOBALS[$p_var|value_if_false]}" ]]; then
+            default_val="${GLOBALS[$p_var|value_if_false]}"
+          else
+            return
+          fi
+        elif [[ -n "${GLOBALS[$p_var|value_if_true]}" ]]; then
+          default_val="${GLOBALS[$p_var|value_if_true]}"
+        fi
+        ;;
+    esac
+  fi
+
   if [[ -n "$arg_val" ]]; then
-    eval "$p_var='$arg_val'"
+    printf -v "$p_var" '%s' "$arg_val"
+
+    # Debug.
+    # echo "    $p_var = '$arg_val' // Value directly passed by argument or YAML config file."
 
   # Non-configurable vars.
   elif [[ "${GLOBALS[$p_var|no_prompt]}" == 1 ]]; then
-    eval "$p_var='${GLOBALS[$p_var|value]}'"
+    printf -v "$p_var" '%s' "${GLOBALS[$p_var|value]}"
+
+    # Debug.
+    # echo "    $p_var = '${GLOBALS[$p_var|value]}' // Non-configurable var."
 
   # List or "pile" of values (space-separated string).
   elif [[ -n "${GLOBALS[$p_var|values]}" ]] && [[ $test_cwt_global_aggregate -ne 1 ]]; then
-    multi_values=$(u_str_trim "${GLOBALS[$p_var|values]}")
-    eval "$p_var='$multi_values'"
+    multi_values="${GLOBALS[$p_var|values]}"
+    printf -v "$p_var" '%s' "$multi_values"
 
-  # Skippable default value assignment.
+    # Debug.
+    # echo "    $p_var = '$multi_values' // 'Append' type list (space-separated string)."
+
+  # Skippable terminal prompts for manual user input ('-y' flag to disable).
   elif [[ $p_cwtii_yes -eq 0 ]]; then
     echo
     echo "Initializing $p_var value :"
@@ -303,19 +354,32 @@ u_global_assign_value() {
 
   # Assign default value fallback if the value is empty (e.g. may have been the
   # result of entering empty value in prompt).
-  local empty_test=$(eval "echo \"\$$p_var\"")
-  if [[ -z "$empty_test" ]] && [[ -n "$default_val" ]]; then
-    eval "$p_var='$default_val'"
+  local empty_test="${!p_var}"
+  if [[ -z "$empty_test" ]]; then
+
+    # If the same global is encountered more than once, then it can mean the
+    # deferred assignment is requested to replace the value (or append more
+    # values to it).
+    if [[ -z "$multi_values" ]] && [[ -n "${GLOBALS[$p_var|value]}" ]]; then
+      printf -v "$p_var" '%s' "${GLOBALS[$p_var|value]}"
+
+      # Debug.
+      # echo "    $p_var = '${GLOBALS[$p_var|value]}' // Deferred manual value assignment."
+
+    elif [[ -n "$default_val" ]]; then
+      printf -v "$p_var" '%s' "$default_val"
+
+      # Debug.
+      # echo "    $p_var = '$default_val' // Assign default value fallback because the value is empty."
+    fi
   fi
 
   # Once prompt has been made, prevent repeated calls for this var (recursion).
   # Except for 'append' vars (multiple values must pile-up on each call).
-  # TODO [wip] confirm workaround edge case (multiple declarations must override
-  # previous default value).
   if [[ $p_cwtii_yes -eq 0 ]]; then
     if [[ ${GLOBALS[$p_var|no_prompt]} -ne 1 ]] && [[ -z "$multi_values" ]]; then
       GLOBALS[$p_var|no_prompt]=1
-      GLOBALS[$p_var|value]=$(eval "echo \"\$$p_var\"")
+      GLOBALS[$p_var|value]="${!p_var}"
     fi
   fi
 }
@@ -329,7 +393,7 @@ u_global_assign_value() {
 # @param 1 String : global variable name.
 # @param 2 [optional] String : non-configurable value or key/value syntax (see
 #   examples below)
-# @param 3 Integer : flag to prevent automatic export.
+# @param 3 Integer : flag to prevent immediate value assignment.
 #
 # @requires the following globals in calling scope (main shell) :
 # - $GLOBALS
@@ -394,7 +458,7 @@ u_global_assign_value() {
 global() {
   local p_var_name="$1"
   local p_values="$2"
-  local p_prevent_export="$3"
+  local p_prevent_assignment="$3"
 
   local index='0'
 
@@ -438,17 +502,44 @@ global() {
             depending_var="${depending_var_split_arr[1]}"
 
             u_str_sanitize_var_name "$depending_var" 'depending_var'
-            depending_value=${!depending_var}
+            depending_value="${!depending_var}"
+
+            # Needed for deferred assignments.
+            # @see u_global_assign_value()
+            GLOBALS["$p_var_name|depending_var"]="$depending_var"
+            GLOBALS["$p_var_name|depending_match"]="${declaration_arr[$key]}"
+            GLOBALS["$p_var_name|value_if_true"]="${declaration_arr[true]}"
+            GLOBALS["$p_var_name|value_if_false"]="${declaration_arr[false]}"
 
             case "$key" in
               ifnot-*)
+                GLOBALS["$p_var_name|condition"]='ifnot'
+
+                # Debug.
+                # echo "$p_var_name ifnot : $depending_value == ${declaration_arr[$key]} ?"
+
                 if [[ "$depending_value" == "${declaration_arr[$key]}" ]]; then
-                  return 0
+                  # Debug.
+                  # echo "  -> yes (abort)"
+                  # echo "  default = ${GLOBALS[$p_var_name|default]}"
+
+                  # return 0
+                  p_prevent_assignment='1'
                 fi
               ;;
               if-*)
+                GLOBALS["$p_var_name|condition"]='if'
+
+                # Debug.
+                # echo "$p_var_name ifnot : $depending_value != ${declaration_arr[$key]} ?"
+
                 if [[ "$depending_value" != "${declaration_arr[$key]}" ]]; then
-                  return 0
+                  # Debug.
+                  # echo "  -> yes (abort)"
+                  # echo "  default = ${GLOBALS[$p_var_name|default]}"
+
+                  # return 0
+                  p_prevent_assignment='1'
                 fi
               ;;
             esac
@@ -491,6 +582,16 @@ global() {
     fi
   fi
 
+  # Prevent conditional assignment (and the rest of the processing below if no
+  # match was found above) if the global using a condition does not require
+  # deferred assignment.
+  if [[ ! $index -gt 0 ]] && [[ -n "${GLOBALS[$p_var_name|condition]}" ]]; then
+    unset GLOBALS["$p_var_name|condition"]
+    if [[ -n "$p_prevent_assignment" ]]; then
+      return 0
+    fi
+  fi
+
   # Because it's possible to call global() several times for the same variable
   # (e.g. to append values to a list), and because the declaration order may
   # matter, we need to keep a list (and count) of unique variable names.
@@ -504,15 +605,15 @@ global() {
   fi
 
   # Provide control over value assignation order. Higher = later.
-  if [[ "$index" -gt "${GLOBALS['.defer-max']}" ]]; then
-    GLOBALS[".defer-max"]="$index"
+  if [[ $index -gt ${GLOBALS['.defer-max']} ]]; then
+    GLOBALS['.defer-max']=$index
   fi
 
   # Always defer global var declaration weighting more than 0 (default).
   # NB : the 1st declaration of multiple 'append' global() calls for the same
   # variable determines the index for all subsequent calls.
-  if [[ "$index" -gt '0' ]]; then
-    p_prevent_export='1'
+  if [[ $index -gt 0 ]]; then
+    p_prevent_assignment='1'
     if ! u_in_array $p_var_name GLOBALS_DEFERRED; then
       GLOBALS_DEFERRED+=($p_var_name)
     fi
@@ -521,13 +622,13 @@ global() {
   # TODO when the 1st declaration does not trigger deferred assignation and
   # subsequent calls do, workaround : "unexport" ?
   elif u_in_array $p_var_name GLOBALS_DEFERRED; then
-    p_prevent_export='1'
+    p_prevent_assignment='1'
   fi
 
   # Immediately attempt to export that variable unless explicitly prevented.
   # This allows conditional declarations in them (i.e. useful for settings that
   # need to adapt/react to each other).
-  if [[ -z "$p_prevent_export" ]]; then
+  if [[ -z "$p_prevent_assignment" ]]; then
     u_global_assign_value "$p_var_name"
 
   # When global var declaration is deferred, append to 1 list per index.

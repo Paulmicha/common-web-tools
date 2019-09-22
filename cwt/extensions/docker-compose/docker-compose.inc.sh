@@ -37,6 +37,10 @@ u_dc_default_namespace() {
 # $ make hook-debug s:stack a:docker-compose c:yml v:DC_YML_VARIANTS
 # $ make hook-debug s:stack a:docker-compose.override c:yml v:DC_YML_VARIANTS
 #
+# To check which YAML file will actually be selected, use :
+# $ make hook-debug ms s:stack a:docker-compose c:yml v:DC_YML_VARIANTS
+# $ make hook-debug ms s:stack a:docker-compose.override c:yml v:DC_YML_VARIANTS
+#
 u_dc_write_yml() {
   local f
   local hook_most_specific_dry_run_match=''

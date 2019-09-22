@@ -24,11 +24,11 @@ global DC_NS "[default]='$(u_dc_default_namespace)' [help]='Docker-compose names
 # allow applying defaults when DC_MODE is set in another global.vars.sh file.
 case "$DC_MODE" in
   auto|generate)
-    global DC_YML_VARIANTS "[default]='$HOST_TYPE $INSTANCE_TYPE' [index]=1 [help]='Hook variants to determine which docker-compose.yml (and optionally docker-compose.override.yml) will be matched for use in current project instance. Defaults to ’HOST_TYPE INSTANCE_TYPE’.'"
+    global DC_YML_VARIANTS "[default]='$HOST_TYPE $INSTANCE_TYPE' [help]='Hook variants to determine which docker-compose.yml (and optionally docker-compose.override.yml) will be matched for use in current project instance. Defaults to ’HOST_TYPE INSTANCE_TYPE’.'"
     ;;
   manual)
-    global DC_YML "[default]='docker-compose.yml' [index]=1 [help]='Specifies where docker-compose will find the YAML declaration file to use for current project instance.'"
-    global DC_OVERRIDE_YML "[default]='docker-compose.override.yml' [index]=1 [help]='Specifies where docker-compose will find the docker-compose.override.yml file to use for current project instance.'"
+    global DC_YML "[default]='docker-compose.yml' [help]='Specifies where docker-compose will find the YAML declaration file to use for current project instance.'"
+    global DC_OVERRIDE_YML "[default]='docker-compose.override.yml' [help]='Specifies where docker-compose will find the docker-compose.override.yml file to use for current project instance.'"
     ;;
 esac
 

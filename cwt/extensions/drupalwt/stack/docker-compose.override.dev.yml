@@ -1,0 +1,27 @@
+version: "3"
+services:
+
+  php:
+    environment:
+      PHP_SENDMAIL_PATH: /usr/sbin/sendmail -t -i -S mailhog:1025
+
+  # See https://github.com/wodby/adminer
+  adminer:
+    image: wodby/adminer:$ADMINER_TAG
+    container_name: "${DC_NS}_adminer"
+    environment:
+      ADMINER_DEFAULT_DB_DRIVER: $DB_DRIVER
+      ADMINER_DEFAULT_DB_HOST: $DB_HOST
+      ADMINER_DEFAULT_DB_NAME: $DB_NAME
+    labels:
+      - 'traefik.backend=${DC_NS}_adminer'
+      - 'traefik.port=9000'
+      - 'traefik.frontend.rule=Host:adminer.${INSTANCE_DOMAIN}'
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: "${DC_NS}_mailhog"
+    labels:
+      - 'traefik.backend=${DC_NS}_mailhog'
+      - 'traefik.port=8025'
+      - 'traefik.frontend.rule=Host:mailhog.${INSTANCE_DOMAIN}'

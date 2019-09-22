@@ -8,3 +8,4 @@ This extension :
 - automatically generates local settings (during *instance init* and after *instance rebuild*) using minimal template syntax, see e.g. `cwt/extensions/drupalwt/app/drupal_settings.7.tpl.php`
 - provides Make shortcuts for `drush`, `composer`, and `drupal` commands (aliased during CWT bootstrap)
 - provides optional crontab setup during *app install* on current host (see the `DWT_USE_CRONTAB` global)
+- provides docker-compose stack presets, see `cwt/extensions/drupalwt/stack/*`

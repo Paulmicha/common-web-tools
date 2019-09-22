@@ -1,0 +1,69 @@
+version: "3"
+services:
+
+  # See https://github.com/wodby/nginx
+  nginx:
+    image: wodby/nginx:$NGINX_TAG
+    container_name: "${DC_NS}_nginx"
+    depends_on:
+      - php
+    environment:
+      NGINX_STATIC_OPEN_FILE_CACHE: "off"
+      NGINX_ERROR_LOG_LEVEL: debug
+      NGINX_BACKEND_HOST: php
+      NGINX_VHOST_PRESET: $NGINX_VHOST_PRESET
+      NGINX_STATIC_404_TRY_INDEX: 1
+      NGINX_SERVER_ROOT: $NGINX_SERVER_ROOT
+    restart: on-failure:5
+    volumes:
+      - ./$APP_DOCROOT:$APP_DOCROOT_C
+    labels:
+      - 'traefik.backend=${DC_NS}_nginx'
+      - 'traefik.port=80'
+      - 'traefik.frontend.rule=Host:${INSTANCE_DOMAIN}'
+
+  # See https://github.com/wodby/mariadb
+  mariadb:
+    image: wodby/mariadb:$MARIADB_TAG
+    container_name: "${DC_NS}_mariadb"
+    stop_grace_period: 30s
+    environment:
+      MYSQL_ROOT_PASSWORD: $DB_ADMIN_PASS
+      MYSQL_DATABASE: $DB_NAME
+      MYSQL_USER: $DB_USER
+      MYSQL_PASSWORD: $DB_PASS
+    restart: on-failure:5
+    volumes:
+      - ./data/db:/var/lib/mysql
+
+  # See https://github.com/wodby/php
+  # See https://github.com/wodby/drupal-php
+  php:
+    # image: wodby/php:$PHP_TAG
+    image: wodby/drupal-php:$PHP_TAG
+    container_name: "${DC_NS}_php"
+    depends_on:
+      - "mariadb"
+    environment:
+      DB_HOST: $DB_HOST
+      DB_DRIVER: $DB_DRIVER
+      DB_NAME: $DB_NAME
+      DB_USER: $DB_USER
+      DB_PASSWORD: $DB_PASS
+      COLUMNS: 80
+      # Custom CWT instance variants.
+      # Usage example in Php :
+      #   $host_type = getenv('HOST_TYPE');
+      HOST_TYPE: $HOST_TYPE
+      INSTANCE_TYPE: $INSTANCE_TYPE
+      INSTANCE_DOMAIN: $INSTANCE_DOMAIN
+    volumes:
+      - ./$APP_DOCROOT:$APP_DOCROOT_C
+      - $DRUPAL_TMP_DIR:$DRUPAL_TMP_DIR_C
+      - $DRUPAL_PRIVATE_DIR:$DRUPAL_PRIVATE_DIR_C
+
+  # See https://github.com/wodby/redis
+  redis:
+    image: wodby/redis:$REDIS_TAG
+    container_name: "${DC_NS}_redis"
+    restart: on-failure:5

@@ -1,0 +1,4 @@
+app:
+  repo: git@my-git-host.com:TheGitUserAccount/the.project.repo.git
+  worktree: web
+  docroot: web

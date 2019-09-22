@@ -15,6 +15,15 @@
 # @prereq stack services must be running (see 'instance start' action).
 # @see cwt/instance/start.sh
 #
+# This 'app install' action triggers a 'pre'-prefixed hook before triggering the
+# normal (unprefixed) hook. Same after ('post'-prefixed hook).
+#
+# To list all the possible paths that can be used among which existing files
+# will be sourced when the hook is triggered, run (in this order) :
+# $ make hook-debug s:app p:pre a:install v:PROVISION_USING INSTANCE_TYPE
+# $ make hook-debug s:app a:install v:PROVISION_USING INSTANCE_TYPE
+# $ make hook-debug s:app p:post a:install v:PROVISION_USING INSTANCE_TYPE
+#
 # @example
 #   make app-install
 #   # Or :
@@ -23,4 +32,6 @@
 
 . cwt/bootstrap.sh
 
+hook -s 'app' -p 'pre' -a 'install' -v 'PROVISION_USING INSTANCE_TYPE'
 hook -s 'app' -a 'install' -v 'PROVISION_USING INSTANCE_TYPE'
+hook -s 'app' -p 'post' -a 'install' -v 'PROVISION_USING INSTANCE_TYPE'

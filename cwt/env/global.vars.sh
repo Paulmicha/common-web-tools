@@ -24,7 +24,7 @@
 #
 
 global PROJECT_DOCROOT "[default]='$PWD' [help]='Absolute path to project instance. All scripts using CWT *must* be run from this dir. No trailing slash.'"
-global APP_DOCROOT "[default]='$PROJECT_DOCROOT/web' [help]='The path usually publicly exposed by web servers. Useful if it differs from the rest of current project sources.'"
+global APP_DOCROOT "[default]='web' [help]='The path usually publicly exposed by web servers. Useful if it differs from the rest of current project sources.'"
 
 # [optional] Set these values for applications having their own separate repo.
 # @see cwt/git/init.hook.sh
