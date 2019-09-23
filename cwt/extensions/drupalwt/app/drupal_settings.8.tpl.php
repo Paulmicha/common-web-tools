@@ -23,6 +23,7 @@ $databases['default']['default'] = [
   'port' => '{{ DB_PORT }}',
   'prefix' => '',
 ];
+
 if ($databases['default']['default']['driver'] == 'mysql') {
   $databases['default']['default']['collation'] = '{{ SQL_COLLATION }}';
 }

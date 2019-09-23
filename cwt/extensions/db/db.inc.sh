@@ -119,8 +119,8 @@ u_db_get_credentials() {
       fi
       if [[ -z "$DB_PORT" ]]; then
         case "$DB_DRIVER" in
-          pgsql) export DB_PORT='5432' ;;
-          *)        export DB_PORT='3306' ;;
+          pgsql)  export DB_PORT='5432' ;;
+          *)      export DB_PORT='3306' ;;
         esac
       fi
       if [[ -z "$DB_ADMIN_USER" ]]; then
@@ -170,8 +170,8 @@ u_db_get_credentials() {
       fi
       if [[ -z "$DB_PORT" ]]; then
         case "$DB_DRIVER" in
-          pgsql) export DB_PORT='5432' ;;
-          *)        export DB_PORT='3306' ;;
+          pgsql)  export DB_PORT='5432' ;;
+          *)      export DB_PORT='3306' ;;
         esac
       fi
       if [[ -z "$DB_TABLES_SKIP_DATA" ]]; then
@@ -238,8 +238,8 @@ u_db_get_credentials() {
               # like "MySQL ERROR 1470 (HY000) String is too long for user name".
               # Warning : this creates naming collision risks (considered edge case).
               case "$DB_DRIVER" in
-                pgsql) val_default="${val_default:0:32}" ;;
-                mysql)    val_default="${val_default:0:16}" ;;
+                pgsql)  val_default="${val_default:0:32}" ;;
+                mysql)  val_default="${val_default:0:16}" ;;
               esac
               ;;
             DB_PASS)

@@ -17,7 +17,7 @@ global CWT_DB_MODE "[default]=auto [help]='Specifies if CWT should handle DB cre
 
 global CWT_DB_DUMPS_BASE_PATH "[default]=$PROJECT_DOCROOT/data/db-dumps [help]='This folder will contain DB dump files from local instance, but it also may contain dumps from remote instances (used during sync operations, see remote extension). In this folder, it is recommended to follow a directory structure by instance and database ID - ex: ’data/db-dumps/local/default’, which is the convention used for automatic routine backup dump file paths. See u_db_routine_backup().'"
 
-global CWT_DB_INITIAL_IMPORT "[default]=true [help]='Set to true to import the first dump file whose name matches « initial.* » found in CWT_DB_DUMPS_BASE_PATH (i.e. $CWT_DB_DUMPS_BASE_PATH) during app install / instance setup. See u_instance_init() and cwt/instance/setup.sh'"
+global CWT_DB_INITIAL_IMPORT "[default]=true [help]='Set to true to import the first dump file whose name matches « initial.* » found in CWT_DB_DUMPS_BASE_PATH (i.e. $CWT_DB_DUMPS_BASE_PATH) during app install / instance setup. See cwt/app/install.sh and cwt/instance/setup.sh'"
 
 # Workaround minor issue when listing all paths for driver-specific hooks, e.g.
 # $ make hook-debug s:db a:exists v:DB_DRIVER HOST_TYPE INSTANCE_TYPE

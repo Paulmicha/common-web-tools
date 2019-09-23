@@ -15,13 +15,18 @@
  */
 
 $databases['default']['default'] = [
-  'driver' => 'mysql',
+  'driver' => '{{ DB_DRIVER }}',
   'database' => '{{ DB_NAME }}',
   'username' => '{{ DB_USER }}',
   'password' => '{{ DB_PASS }}',
   'host' => '{{ DB_HOST }}',
   'prefix' => '',
 ];
+
+if ($databases['default']['default']['driver'] == 'mysql') {
+  $databases['default']['default']['charset'] = '{{ SQL_CHARSET }}';
+  $databases['default']['default']['collation'] = '{{ SQL_COLLATION }}';
+}
 
 $conf['file_public_path'] = '{{ DRUPAL_FILES_DIR }}';
 $conf['file_temporary_path'] = '{{ DRUPAL_TMP_DIR }}';
