@@ -74,6 +74,8 @@ Disclaimer : CWT is currently only tested on Debian-based Linux distros.
 
 ## Usage / Getting started
 
+### Step by step
+
 There are 2 ways to use CWT in existing or new projects :
 
 1. Use a single, "monolothic" repo for the whole project
@@ -95,6 +97,44 @@ So the first step will always be to clone or download / copy / paste the files f
 These steps are mere indications. It may be useful to "wrap" some of these tasks in custom scripts (e.g. to preset some arguments, etc), usually in the `./scripts` folder - i.e. to encapsulate what doesn't vary between all project instances.
 
 Finally, example code snippets and detailed explanations are provided in CWT source code comments.
+
+### Getting started examples
+
+By default, the *instance setup* action will use the following values (overridable using parameters in the order shown below) :
+
+- `instance_type='dev'`
+- `host_type='local'`
+- `provision_using='docker-compose'`
+
+The arguments to the script are indicated directly in `cwt/instance/setup.sh` code comments - reproduced here for clarity ("docblock" extract) :
+
+- param 1 [optional] String : instance type (INSTANCE_TYPE global value). Defaults to `dev`.
+- param 2 [optional] String : HOST_TYPE global value (flags instance as remote). Defaults to `local`.
+- param 3 [optional] String : INSTANCE_DOMAIN global value. Defaults to a fictional local domain generated using PROJECT_DOCROOT's folder name. @see `u_instance_domain()` in `cwt/instance/instance.inc.sh`
+- param 4 [optional] String : PROVISION_USING global value. Defaults to `docker-compose`.
+
+Here are a few common setup examples (to run AFTER having copied/pasted `sample.cwt.yml` to `.cwt.yml` & edited it accordingly) :
+
+```sh
+# Init instance using defaults.
+cwt/instance/setup.sh
+# Or :
+make setup
+```
+
+```sh
+# Init instance using production config.
+cwt/instance/setup.sh prod
+# Or :
+make setup prod
+```
+
+```sh
+# Init instance using production + remote config provisionned manually (i.e. LAMP in this example).
+cwt/instance/setup.sh prod remote test.my-cwt-project.com lamp
+# Or :
+make setup prod remote test.my-cwt-project.com lamp
+```
 
 ## File structure
 

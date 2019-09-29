@@ -57,6 +57,17 @@ if [[ -n "$CWT_MAKE_INC" ]]; then
   exit 1
 fi
 
+# Also, calling cwt/instance/init.sh the way it is done below requires the YAML
+# file to be present in $PROJECT_DOCROOT.
+if [[ ! -f '.cwt.yml' ]]; then
+  echo >&2
+  echo "Error in $BASH_SOURCE line $LINENO: the '.cwt.yml' file is required." >&2
+  echo "Please copy/paste 'sample.cwt.yml' to '.cwt.yml' & edit accordingly, then retry." >&2
+  echo "-> Aborting (2)." >&2
+  echo >&2
+  exit 2
+fi
+
 # Defaults (overridable using parameters to this script).
 instance_type='dev'
 host_type='local'
@@ -97,9 +108,9 @@ cwt/instance/init.sh \
 if [[ $? -ne 0 ]]; then
   echo >&2
   echo "Error in $BASH_SOURCE line $LINENO: 'instance init' failed." >&2
-  echo "-> Aborting (2)." >&2
+  echo "-> Aborting (3)." >&2
   echo >&2
-  exit 2
+  exit 3
 fi
 
 # Step 2 : start services.
@@ -108,9 +119,9 @@ cwt/instance/start.sh
 if [[ $? -ne 0 ]]; then
   echo >&2
   echo "Error in $BASH_SOURCE line $LINENO: 'instance start' failed." >&2
-  echo "-> Aborting (3)." >&2
+  echo "-> Aborting (4)." >&2
   echo >&2
-  exit 3
+  exit 4
 fi
 
 # Step 3 : app install.
@@ -119,9 +130,9 @@ cwt/app/install.sh
 if [[ $? -ne 0 ]]; then
   echo >&2
   echo "Error in $BASH_SOURCE line $LINENO: 'app install' failed." >&2
-  echo "-> Aborting (4)." >&2
+  echo "-> Aborting (5)." >&2
   echo >&2
-  exit 4
+  exit 5
 fi
 
 echo "Setup $host_type instance '$instance_domain' (type : $instance_type) using $provision_using : done."
