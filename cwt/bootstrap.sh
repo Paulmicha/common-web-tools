@@ -16,6 +16,7 @@ if [[ $CWT_BS_FLAG -ne 1 ]]; then
   CWT_BS_FLAG=1
 
   # Include CWT core utilities.
+  . cwt/utilities/shell.sh
   . cwt/utilities/cwt.sh
   . cwt/utilities/global.sh
   . cwt/utilities/hook.sh
