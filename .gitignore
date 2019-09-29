@@ -3,30 +3,20 @@
 # Contains root .gitignore declarations for the current project instance
 # using Common Web Tools.
 #
+# See https://github.com/Paulmicha/common-web-tools
+#
 
-# [customizable] Local environment global variables and other generated files.
+# Application docroot using a separate Git repo.
+/web
+
+# Local environment global variables and other generated files.
 /scripts/cwt/local/*
 !/scripts/cwt/local/README.md
 /.env
-
-# [optional] Locally generated docker-compose.yml file.
 /docker-compose.yml
 /docker-compose.override.yml
 
-# [optional] Public web dir or application docroot.
-# See $APP_DOCROOT global var help in cwt/env/global.vars.sh.
-# There are 2 implementation approaches for using common web tools in a project :
-#   1 • Use a single, "monolothic" repo for everything
-#   2 • [default] Keep application code in a separate Git repo
-# → When using option 1, you may want to comment out the following lines.
-# Note: these are common suggestions to adapt to project needs (option 2).
-# The app docroot may also be located outside the project root dir.
-/docroot
-/public
-/web
-/www
-
-# [optional] Instance data.
+# Instance data.
 /data/db/*
 !/data/db/README.md
 /data/db-dumps/*
