@@ -22,6 +22,7 @@ Here's the list of extensions included (in folder `cwt/extensions`) :
 
 | Name | Enabled by default ? | Description |
 |------|:--------------------:|-------------|
+| `apache` |  | Apache web server VHost generation (and deletion) utilities. Very basic implementations for more traditional LAMP stacks (not using docker-compose). |
 | `db` |  | Abstract hooks and entry points for database-related tasks. See the 'mysql' extension for an implementation example. |
 | `docker-compose` |  | Implements instance start, stop, build, and destroy actions. Can be used in different ways : see `DC_MODE` help text (`cwt/extensions/docker-compose/global.vars.sh`). |
 | `drupalwt` |  | Provides generic Drupal-related tasks (with or without `docker-compose`). |
@@ -84,11 +85,12 @@ So the first step will always be to clone or download / copy / paste the files f
 
 1. Review the `.gitignore` file and adapt it to suit your needs.
 1. Override `cwt/extensions/.cwt_extensions_ignore` to enable and/or disable CWT extensions (i.e. copy/paste to `scripts/cwt/override/.cwt_extensions_ignore` and edit).
+1. Copy/paste `sample.cwt.yml` to `.cwt.yml` & edit for easier *instance (re)init* implementation
 1. [optional] Implement your own alterations and/or extensions (see the *Adapt / Alter / Extend CWT* section below).
-1. Launch *instance init* action (e.g. run `make` or `make init`).
-1. [optional] launch *host provision* action (e.g. run `make host-provision`) - this is not implemented in CWT, but this "entry point" exists to streamline host-level software installation in extensions.
-1. [optional] launch *instance start* action (e.g. run `make start`) - this is meant to run any service required to use or work on current project instance.
-1. [optional] launch *app install* action (e.g. run `make app-install`) if your project application requires some initial setup tasks like creating a database, importing a DB dump, generating local settings, etc.
+1. Launch *instance setup* action (e.g. run `make setup`) - executes in this order the following actions :
+    1. *instance init* - the first action to execute in any project instance in order to make CWT useful. It generates readonly global (env) vars, optional Git hooks implementations, convenience "make" shortcuts for all subjects & actions, and any (usually gitignored) dotfiles and/or local files specific to local instance
+    1. start services (if any are implemented) - i.e. *instance start*
+    1. *app install* (if any operations are implemented)
 
 These steps are mere indications. It may be useful to "wrap" some of these tasks in custom scripts (e.g. to preset some arguments, etc), usually in the `./scripts` folder - i.e. to encapsulate what doesn't vary between all project instances.
 
@@ -117,7 +119,9 @@ Finally, example code snippets and detailed explanations are provided in CWT sou
   │       └── override/ ← [optional] Allows to replace virtually any file sourced in CWT scripts
   ├── web/              ← [optional+configurable] Application dir ($APP_DOCROOT or $APP_GIT_WORK_TREE*)
   │   └── dist/         ← [optional+configurable] Publicly accessible application dir ($APP_DOCROOT*)
-  └── .gitignore        ← Don't forget to review and edit to suit project needs
+  ├── .gitignore        ← Don't forget to review and edit to suit project needs
+  ├── Makefile          ← The "make" entry point that loads all (optional) makefile includes
+  └── sample.cwt.yml    ← Copy/paste to ".cwt.yml" & edit for easier instance (re)init implementation
 ```
 
 `*` : if using the multi-repo pattern, which is the default assumption.
@@ -176,17 +180,17 @@ CWT provides the followig globals by default (see `cwt/env/global.vars.sh`). The
 
 ```sh
 global PROJECT_DOCROOT "[default]='$PWD' [help]='Absolute path to project instance. All scripts using CWT *must* be run from this dir. No trailing slash.'"
-global APP_DOCROOT "[default]='$PROJECT_DOCROOT/web' [help]='The path usually publicly exposed by web servers. Useful if it differs from the rest of current project sources.'"
+global APP_DOCROOT "[default]='web' [help]='*Relative* path to the directory usually publicly exposed by web servers (where the app « entry point » would normally reside, e.g. index.php). No prefix dot or slash.'"
 
 # [optional] Set these values for applications having their own separate repo.
 # @see cwt/git/init.hook.sh
 global APP_GIT_ORIGIN "[help]='Optional. Ex: git@my-git-origin.org:my-git-account/cwt.git. Allows projects to have their own separate repo.'"
 global APP_GIT_WORK_TREE "[ifnot-APP_GIT_ORIGIN]='' [default]='$APP_DOCROOT' [help]='Some applications might contain APP_DOCROOT in their versionned sources. This global is the path of the git work tree (if different).'"
 global APP_GIT_INIT_CLONE "[ifnot-APP_GIT_ORIGIN]='' [default]=yes [help]='(y/n) Specify if the APP_GIT_ORIGIN repo should automatically be cloned (once) during \"instance init\".'"
-global APP_GIT_INIT_HOOK "[ifnot-APP_GIT_ORIGIN]='' [default]=yes [help]='(y/n) Specify a default selection of Git hooks should automatically trigger corresponding CWT hooks. WARNING : will override any git hook script if previously created.'"
+global APP_GIT_INIT_HOOK "[ifnot-APP_GIT_ORIGIN]='' [default]=no [help]='(y/n) Specify if some Git hooks should automatically trigger corresponding CWT hooks. WARNING : will overwrite existing git hook scripts during instance init.'"
 
 global INSTANCE_TYPE "[default]=dev [help]='E.g. dev, stage, prod... It is used as the default variant for hook calls that do not pass any in args.'"
-global INSTANCE_DOMAIN "[default]='$(u_instance_domain)' [help]='This value is used to identify different project instances and MUST be unique per host.'"
+global INSTANCE_DOMAIN "[default]='$(u_instance_domain)' [help]='This value is used to identify different project instances and MUST be unique. Allowed characters : a-zA-Z0-9-._'"
 global PROVISION_USING "[default]=docker-compose [help]='Generic differenciator used by many hooks. It does not have to be explicitly named after the host provisioning tool used. It could be any distinction used as variants in hook implementations.'"
 global HOST_TYPE "[default]=local [help]='Idem. E.g. local, remote...'"
 global HOST_OS "$(u_host_os)"
@@ -250,8 +254,12 @@ By default, CWT generates the following *make* shortcuts correponding to these *
 | *instance registry-del* | `cwt/instance/registry_del.sh` | `make reg-del` ** |
 | *instance registry-get* | `cwt/instance/registry_get.sh` | `make reg-get` ** |
 | *instance registry-set* | `cwt/instance/registry_set.sh` | `make reg-set` ** |
+| *instance reinit* | `cwt/instance/reinit.sh` | `make reinit` ** |
+| *instance restart* | `cwt/instance/restart.sh` | `make restart` ** |
+| *instance setup* | `cwt/instance/setup.sh` | `make setup` ** |
 | *instance start* | `cwt/instance/start.sh` | `make start` ** |
 | *instance stop* | `cwt/instance/stop.sh` | `make stop` ** |
+| *instance upgrade-cwt* | `cwt/instance/upgrade_cwt.sh` | `make upgrade-cwt` ** |
 | *test self-test* | `cwt/test/self_test.sh` | `make self-test` *** |
 
 - `*` : Shortening rules can be defined using the `CWT_MAKE_TASKS_SHORTER` global. Ex : `global CWT_MAKE_TASKS_SHORTER "[append]='something_too_long_for_make_shortcut/stlfms'"`
@@ -406,7 +414,6 @@ For convenience, `cwt/extensions/.cwt_extensions_ignore` can be overridden using
 
 The following improvements or ideas crossed my mind. Who knows, maybe one day I'll give it a go :
 
-- Use YAML or JSON files instead of the current `global` utility, i.e. with [yq](https://github.com/mikefarah/yq) or [jq](https://github.com/stedolan/jq) bundled in `vendor`
 - Generally, look for ways to offload more tasks to third-party projects
 - Remove bashisms / make POSIX-compliant for extending compatibility
 - So bash was fun. Use Python - or Rust / C / [Wasm+Wasi](https://twitter.com/solomonstre/status/1111004913222324225) instead
