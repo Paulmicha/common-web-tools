@@ -135,12 +135,12 @@ EOF
 #   u_global_lookup_paths
 #   echo "$global_lookup_paths" # <- Yields the following lookup paths :
 #   # - cwt/<CWT_SUBJECTS>/global.vars.sh
-#   # - cwt/<CWT_SUBJECTS>/global.<PROVISION_USING>.vars.sh
 #   # - cwt/extensions/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/global.vars.sh
-#   # - cwt/extensions/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/global.<PROVISION_USING>.vars.sh
 #   # - cwt/extensions/<CWT_EXTENSIONS>/global.vars.sh
-#   # - cwt/extensions/<CWT_EXTENSIONS>/global.<PROVISION_USING>.vars.sh
 #   # - scripts/global.vars.sh
+#   # - cwt/<CWT_SUBJECTS>/global.<PROVISION_USING>.vars.sh
+#   # - cwt/extensions/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/global.<PROVISION_USING>.vars.sh
+#   # - cwt/extensions/<CWT_EXTENSIONS>/global.<PROVISION_USING>.vars.sh
 #   # - scripts/global.<PROVISION_USING>.vars.sh
 #   # -> Ex :
 #   # - cwt/app/global.vars.sh
@@ -151,13 +151,13 @@ u_global_lookup_paths() {
   local f
   local hook_dry_run_matches
 
-  hook -a 'global' -c 'vars.sh' -v 'PROVISION_USING' -t
-
+  # 1. Files named without variant (i.e. 'global.vars.sh')
+  hook_dry_run_matches=''
+  hook -a 'global' -c 'vars.sh' -t
   for f in $hook_dry_run_matches; do
     global_lookup_paths+="$f "
   done
-
-  # Allow extra lookup paths at the root of extensions.
+  # ... including extra lookup paths at the root of extensions' folders.
   if [ -n "$CWT_EXTENSIONS" ]; then
     local extension
     for extension in $CWT_EXTENSIONS; do
@@ -165,6 +165,24 @@ u_global_lookup_paths() {
       u_cwt_extension_path "$extension"
       if [ -f "$ext_path/$extension/global.vars.sh" ]; then
         global_lookup_paths+="$ext_path/$extension/global.vars.sh "
+      fi
+    done
+  fi
+
+  # 2. Files using variant in their name (i.e. 'global.docker-compose.vars.sh')
+  hook_dry_run_matches=''
+  hook -a 'global' -c "${PROVISION_USING}.vars.sh" -t
+  for f in $hook_dry_run_matches; do
+    global_lookup_paths+="$f "
+  done
+  # ... including extra lookup paths at the root of extensions' folders.
+  if [ -n "$CWT_EXTENSIONS" ]; then
+    local extension
+    for extension in $CWT_EXTENSIONS; do
+      ext_path=''
+      u_cwt_extension_path "$extension"
+      if [ -f "$ext_path/$extension/global.${PROVISION_USING}.vars.sh" ]; then
+        global_lookup_paths+="$ext_path/$extension/global.${PROVISION_USING}.vars.sh "
       fi
     done
   fi

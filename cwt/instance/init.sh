@@ -11,15 +11,15 @@
 #   # Initializes an instance of type 'dev', host type 'local', provisionned
 #   # using 'ansible', identified by domain 'dev.cwt.com', with git origin
 #   # 'git@my-git-origin.org:my-git-account/cwt.git', app sources cloned in 'dist',
-#   # and using 'dist/web' as app dir - without terminal prompts (-y flag).
+#   # and using 'dist/web' as server docroot - without terminal prompts (-y flag).
 #   cwt/instance/init.sh \
 #     -t 'dev' \
 #     -h 'local' \
 #     -p 'ansible' \
 #     -d 'dev.cwt.com' \
 #     -g 'git@my-git-origin.org:my-git-account/cwt.git' \
-#     -i 'dist' \
-#     -a 'dist/web' \
+#     -a 'dist' \
+#     -s 'dist/web' \
 #     -y
 #
 

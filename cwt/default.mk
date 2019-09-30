@@ -49,6 +49,9 @@ init:
 init-debug:
 	@ cwt/instance/init.make.sh -d -r $(filter-out $@,$(MAKECMDGOALS))
 
+setup:
+	@ cwt/instance/setup.sh $(filter-out $@,$(MAKECMDGOALS))
+
 hook:
 	@ cwt/instance/hook.make.sh $(filter-out $@,$(MAKECMDGOALS))
 

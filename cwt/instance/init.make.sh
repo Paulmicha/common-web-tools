@@ -17,9 +17,9 @@
 #     h:local \
 #     p:ansible \
 #     d:dev.cwt.com \
-#     a:dist/web \
 #     g:git@my-git-origin.org:my-git-account/cwt.git \
-#     i:dist \
+#     a:dist/web \
+#     s:dist \
 #     y:
 #
 
@@ -27,7 +27,7 @@ formatted_args=" $@"
 
 # Transform this script's arguments to the named arguments format expected by
 # u_instance_init().
-args_to_convert='o a g i t d h p c y r'
+args_to_convert='o a g s t d h p c y r'
 for a2c in $args_to_convert; do
   formatted_args="${formatted_args//" ${a2c}:"/" -${a2c} "}"
 done

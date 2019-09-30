@@ -663,7 +663,7 @@ u_db_routine_backup() {
 }
 
 ##
-# Gets local instance DB dump filepaths.
+# Gets local instance DB dump filepath.
 #
 # Optionally creates a new routine dump first.
 #
@@ -706,13 +706,7 @@ u_db_get_dump() {
     dump_to_return="$(u_fs_get_most_recent $CWT_DB_DUMPS_BASE_PATH)"
   fi
 
-  if [[ ! -f "$dump_to_return" ]]; then
-    echo >&2
-    echo "Error in u_db_get_dump() - $BASH_SOURCE line $LINENO: no DB dump file was found." >&2
-    echo "-> Aborting (1)." >&2
-    echo >&2
-    exit 1
+  if [[ -f "$dump_to_return" ]]; then
+    echo "$dump_to_return"
   fi
-
-  echo "$dump_to_return"
 }

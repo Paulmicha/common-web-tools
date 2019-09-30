@@ -13,7 +13,7 @@
 #
 
 php_sname="${PHP_SNAME:=php}"
-drupal_docroot="${APP_DOCROOT_C:=/var/www/html/web}"
+drupal_docroot="${SERVER_DOCROOT_C:=/var/www/html/web}"
 
 alias php="docker-compose exec $DC_TTY $php_sname php"
 alias composer="docker-compose exec $DC_TTY $php_sname composer"

@@ -3,7 +3,7 @@
 ##
 # (over)Writes Git hooks to use CWT hooks.
 #
-# Applies to folder "$APP_GIT_WORK_TREE/.git/hooks" if it exists, otherwise to
+# Applies to folder "$APP_DOCROOT/.git/hooks" if it exists, otherwise to
 # "$PROJECT_DOCROOT/.git/hooks".
 #
 # CWT hook triggers will have the following format :
@@ -37,7 +37,7 @@
 #     name and location of the destination remote, if a named remote is not
 #     being used both values will be the same.
 # @param 2 [optional] String : the Git hooks folder to use. Defaults to
-#   "$APP_GIT_WORK_TREE/.git/hooks" if it exists, otherwise to
+#   "$APP_DOCROOT/.git/hooks" if it exists, otherwise to
 #   "$PROJECT_DOCROOT/.git/hooks".
 #
 # @example

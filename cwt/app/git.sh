@@ -5,7 +5,7 @@
 #
 # Useful if the "dev stack" has its own separate Git repo.
 #
-# @requires APP_GIT_WORK_TREE global.
+# @requires APP_DOCROOT global.
 # @see cwt/env/global.vars.sh
 # @see u_git_wrapper() in cwt/git/git.inc.sh
 #

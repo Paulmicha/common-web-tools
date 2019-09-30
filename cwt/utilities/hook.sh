@@ -358,13 +358,6 @@ u_hook_build_lookup_by_subject() {
   local v_flag
   local v_fallback
 
-  # These comments illustrate possible changes for default variants (left here
-  # intentionally for potential future re-evaluation).
-  # local v_fallback_values='PROVISION_USING HOST_TYPE INSTANCE_TYPE'
-  # local v_fallback_values='PROVISION_USING INSTANCE_TYPE'
-  # local v_fallback_values='HOST_TYPE INSTANCE_TYPE'
-  local v_fallback_values='INSTANCE_TYPE'
-
   # By default, this function will produce lookup paths using the default
   # double-extension pattern "*.hook.sh". This can be altered when using the
   # custom filter argument (-c).
@@ -399,28 +392,12 @@ u_hook_build_lookup_by_subject() {
         done
 
         # Finally, add the variants suggestions.
-        # The "variants" primitive has overridable fallback value(s) used to
-        # generate extra lookup paths by default (v_fallback_values).
-        v_fallback=1
-
         for v_prim in $variants; do
-          v_fallback=0
           eval "v_val=\"\$$v_prim\""
           if [[ "$v_values" != *"$v_val"* ]]; then
             v_values+="$v_val "
           fi
         done
-
-        # If nothing specific was found by now, fallback to dynamic lookup
-        # generation for variants.
-        if [[ $v_fallback -eq 1 ]]; then
-          for v in $v_fallback_values; do
-            eval "v_val=\"\$$v\""
-            if [[ "$v_values" != *"$v_val"* ]]; then
-              v_values+="$v_val "
-            fi
-          done
-        fi
 
         # Now that we fetched variants actual values, add them as as suggestions
         # unless excluded (see prefixes). These are combinatory, e.g. :

@@ -24,6 +24,23 @@ echo "Making sure DB exists and credentials are properly set ..."
 
 u_db_get_credentials
 
+# TODO [wip] Find better workaround than to wait a few seconds for
+# docker-compose stacks. For now, using 5 attempts with 1 second delay before
+# considering the test accurate.
+case "$PROVISION_USING" in docker-compose)
+  if ! u_db_exists "$DB_NAME"; then
+    i=0
+    max_attempts=5
+    while (( i < max_attempts )); do
+      i=$(( i+1 ))
+      if ! u_db_exists "$DB_NAME"; then
+        remaining_attempts=$(( max_attempts-i ))
+        sleep 1
+      fi
+    done
+  fi
+esac
+
 if u_db_exists "$DB_NAME"; then
   echo "  '$DB_NAME' exists. Carry on."
 else

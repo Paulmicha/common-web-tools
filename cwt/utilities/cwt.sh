@@ -530,3 +530,23 @@ u_cwt_extensions_get_makefiles() {
 
   echo "$mk_includes_lp"
 }
+
+##
+# Tests if an extension is exists and is enabled.
+#
+# @param 1 String : the extension (folder) name.
+#
+# @example
+#   ext='db'
+#   if u_cwt_extension_exists "$ext"; then
+#     echo "The '$ext' extension exists and is enabled"
+#   else
+#     echo "The '$ext' extension is not enabled or doesn't exist"
+#   fi
+#
+u_cwt_extension_exists() {
+  case "$CWT_EXTENSIONS" in *" $1 "*|"$1 "*)
+    return 0
+  esac
+  return 1
+}

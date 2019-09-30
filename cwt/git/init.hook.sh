@@ -14,12 +14,12 @@
 # Only attempts to clone if it's not already done (idempotent).
 case "$APP_GIT_INIT_CLONE" in [Yy]*)
   if [[ -n "$APP_GIT_ORIGIN" ]] \
-    && [[ -n "$APP_GIT_WORK_TREE" ]] \
-    && [[ ! -d "$APP_GIT_WORK_TREE/.git" ]]
+    && [[ -n "$APP_DOCROOT" ]] \
+    && [[ ! -d "$APP_DOCROOT/.git" ]]
   then
 
-    if [[ ! -d "$APP_GIT_WORK_TREE" ]]; then
-      git clone "$APP_GIT_ORIGIN" "$APP_GIT_WORK_TREE"
+    if [[ ! -d "$APP_DOCROOT" ]]; then
+      git clone "$APP_GIT_ORIGIN" "$APP_DOCROOT"
 
       if [[ $? -ne 0 ]]; then
         echo >&2
@@ -31,7 +31,7 @@ case "$APP_GIT_INIT_CLONE" in [Yy]*)
 
     # See https://stackoverflow.com/questions/2411031/how-do-i-clone-into-a-non-empty-directory
     else
-      git init "$APP_GIT_WORK_TREE"
+      git init "$APP_DOCROOT"
       u_git_wrapper remote add origin "$APP_GIT_ORIGIN"
       u_git_wrapper fetch
       u_git_wrapper checkout -t origin/master -f

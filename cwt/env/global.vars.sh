@@ -23,13 +23,22 @@
 # @see cwt/bootstrap.sh
 #
 
+# Due to differences in some projects directory structures, we now use 3
+# variables to cover all cases. Some projects will never need to distinguish
+# them, others may only need APP_DOCROOT, and some will also require a different
+# path to the folder publicly exposed by the web server.
+# This used to be worked around by using a global named APP_GIT_WORK_TREE, but
+# for more clarity and flexibility - and to deal more explicitly with somewhat
+# convoluted docker-compose path conversion, the SERVER_DOCROOT global was
+# finally added (and its Docker volume equivalent SERVER_DOCROOT_C for use from
+# containers - see for ex. cwt/extensions/drupalwt/app/global.docker-compose.vars.sh).
 global PROJECT_DOCROOT "[default]='$PWD' [help]='Absolute path to project instance. All scripts using CWT *must* be run from this dir. No trailing slash.'"
-global APP_DOCROOT "[default]='web' [help]='*Relative* path to the directory usually publicly exposed by web servers (where the app « entry point » would normally reside, e.g. index.php). No prefix dot or slash.'"
+global APP_DOCROOT "[default]='app' [help]='*Relative* path to the directory containing the application source code. No prefix dot or slash, and no trailing slash.'"
+global SERVER_DOCROOT "[default]='$APP_DOCROOT/web' [help]='*Relative* path to the directory usually publicly exposed by web servers (where the app « entry point » would normally reside, e.g. index.php). No prefix dot or slash, and no trailing slash.'"
 
 # [optional] Set these values for applications having their own separate repo.
 # @see cwt/git/init.hook.sh
 global APP_GIT_ORIGIN "[help]='Optional. Ex: git@my-git-origin.org:my-git-account/cwt.git. Allows projects to have their own separate repo.'"
-global APP_GIT_WORK_TREE "[ifnot-APP_GIT_ORIGIN]='' [default]='$APP_DOCROOT' [help]='Some applications might contain APP_DOCROOT in their versionned sources. This global is the path of the git work tree (if different).'"
 global APP_GIT_INIT_CLONE "[ifnot-APP_GIT_ORIGIN]='' [default]=yes [help]='(y/n) Specify if the APP_GIT_ORIGIN repo should automatically be cloned (once) during \"instance init\".'"
 global APP_GIT_INIT_HOOK "[ifnot-APP_GIT_ORIGIN]='' [default]=no [help]='(y/n) Specify if some Git hooks should automatically trigger corresponding CWT hooks. WARNING : will overwrite existing git hook scripts during instance init.'"
 

@@ -24,7 +24,6 @@ global PHP_TAG "[if-DRUPAL_VERSION]=7 [true]='5.6-dev-4.13.10' [false]='7.3-dev-
 global MARIADB_TAG "[default]='10.3-3.6.4'"
 global NGINX_TAG "[default]='1.17-5.6.7'"
 global NGINX_VHOST_PRESET "[default]='drupal$DRUPAL_VERSION' [index]=1"
-global NGINX_SERVER_ROOT "[if-DRUPAL_VERSION]=7 [true]=/var/www/html [false]=/var/www/html/web [index]=1"
 global REDIS_TAG "[default]='4-3.1.2'"
 global ADMINER_TAG "[default]='4-3.6.10'"
 global VARNISH_TAG "[default]='4.1-4.3.4'"

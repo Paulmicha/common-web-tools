@@ -12,7 +12,7 @@
 ##
 # (over)Writes Git hooks to use CWT hooks.
 #
-# Applies to folder "$APP_GIT_WORK_TREE/.git/hooks" if it exists, otherwise to
+# Applies to folder "$APP_DOCROOT/.git/hooks" if it exists, otherwise to
 # "$PROJECT_DOCROOT/.git/hooks".
 #
 # CWT hook triggers will have the following format :
@@ -50,7 +50,7 @@
 #     have been updated. This hook does not affect the outcome of
 #     git-receive-pack, as it is called after the real work is done.
 # @param 2 [optional] String : the Git hooks folder to use. Defaults to
-#   "$APP_GIT_WORK_TREE/.git/hooks" if it exists, otherwise to
+#   "$APP_DOCROOT/.git/hooks" if it exists, otherwise to
 #   "$PROJECT_DOCROOT/.git/hooks".
 #
 # @example
@@ -69,8 +69,8 @@ u_git_write_hooks() {
   if [[ -z "$p_git_hook_dir" ]]; then
     p_git_hook_dir="$PROJECT_DOCROOT/.git/hooks"
 
-    if [[ -n "$APP_GIT_WORK_TREE" ]]; then
-      p_git_hook_dir="$APP_GIT_WORK_TREE/.git/hooks"
+    if [[ -n "$APP_DOCROOT" ]]; then
+      p_git_hook_dir="$APP_DOCROOT/.git/hooks"
     fi
 
     if [[ ! -d "$p_git_hook_dir" ]]; then
@@ -119,7 +119,7 @@ u_git_write_hooks() {
       u_fs_relative_path "$git_hook_script_path"
 
       # When Git triggers its hook, the path in which the script runs is either
-      # APP_GIT_WORK_TREE or PROJECT_DOCROOT.
+      # APP_DOCROOT or PROJECT_DOCROOT.
       # -> Since CWT requires to be run from PROJECT_DOCROOT, we need to force the
       # execution path from within the generated scripts.
       echo "(over)Writing git hook $relative_path ..."
@@ -157,7 +157,7 @@ EOF
 ##
 # List staged files only.
 #
-# @param 1 [optional] String : the git "working dir". Defaults to current dir.
+# @param 1 [optional] String : the git "working dir". Defaults to $APP_DOCROOT.
 # @param 2 [optional] String : the git dir. Defaults to "$1/.git".
 #
 # @example
@@ -178,7 +178,7 @@ u_git_get_staged_files() {
   local p_git_dir=''
 
   if [[ -z "$p_git_work_tree" ]]; then
-    p_git_work_tree='.'
+    p_git_work_tree="$APP_DOCROOT"
   fi
 
   if [[ -n "$2" ]]; then
@@ -195,7 +195,7 @@ u_git_get_staged_files() {
 #
 # @uses the following [optional] vars in calling scope :
 # - $p_git_work_tree - String : the git "working dir". Defaults to
-#   APP_GIT_WORK_TREE if it exists in calling scope, or none.
+#   APP_DOCROOT if it exists in calling scope, or none.
 # - $p_git_dir - String : the git dir. Defaults to none or
 #   "$p_git_work_tree/.git".
 #
@@ -210,8 +210,8 @@ u_git_wrapper() {
   local cmd=''
   local work_tree="$p_git_work_tree"
 
-  if [[ -z "$work_tree" ]] && [[ -n "$APP_GIT_WORK_TREE" ]]; then
-    work_tree="$APP_GIT_WORK_TREE"
+  if [[ -z "$work_tree" ]] && [[ -n "$APP_DOCROOT" ]]; then
+    work_tree="$APP_DOCROOT"
   fi
 
   if [[ -n "$work_tree" ]]; then

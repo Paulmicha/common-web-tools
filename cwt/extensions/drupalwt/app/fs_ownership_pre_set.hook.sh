@@ -19,15 +19,10 @@
 #
 
 # Handle projects using different Git repos for dev-stack and app.
-app_files_path="$APP_DOCROOT"
-if [[ -n "$APP_GIT_WORK_TREE" ]] && [[ -d "$APP_GIT_WORK_TREE" ]]; then
-  app_files_path="$APP_GIT_WORK_TREE"
-fi
-
-if [[ -n "$app_files_path" ]]; then
+if [[ -n "$APP_DOCROOT" ]]; then
   # Sets 'normal' file ownership to files and folders in application dir.
   # Applies subfolders.
-  chown "$FS_OWNER:$FS_GROUP" "$app_files_path" -R
+  chown "$FS_OWNER:$FS_GROUP" "$APP_DOCROOT" -R
   check_chown=$?
   if [ $check_chown -ne 0 ]; then
     echo >&2

@@ -12,4 +12,4 @@
 
 # Even for instances not using docker-compose (where drush must already be
 # installed), make an alias for execution from dev stack dir ($PROJECT_DOCROOT).
-alias drush="drush --root=${APP_DOCROOT:=/var/www/html}"
+alias drush="drush --root=${SERVER_DOCROOT:=/var/www/html}"

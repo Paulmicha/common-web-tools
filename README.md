@@ -81,13 +81,17 @@ There are 2 ways to use CWT in existing or new projects :
 1. Use a single, "monolothic" repo for the whole project
 1. Keep application code in a separate Git repo (this is the default assumption in the `.gitignore` config featured in this repo)
 
-The files contained in CWT core - this repo - may be placed either inside the application code (in this case `APP_DOCROOT` = `PROJECT_DOCROOT`), inside its parent folder (this is the default assumption and usually has its own separate "dev stack" Git repo), or even anywhere else on the host (see `APP_DOCROOT` and `APP_GIT_WORK_TREE` global env vars).
+The files contained in CWT core - this repo - may be placed either :
+
+- inside the application code (in this case `APP_DOCROOT` = `PROJECT_DOCROOT`),
+- inside its parent folder (this is the default assumption and usually has its own separate "dev stack" Git repo),
+- or even anywhere else on the host.
 
 So the first step will always be to clone or download / copy / paste the files from this repo to desired location (in relation to your choice for this project instance source files organization described above), then :
 
 1. Review the `.gitignore` file and adapt it to suit your needs.
 1. Override `cwt/extensions/.cwt_extensions_ignore` to enable and/or disable CWT extensions (i.e. copy/paste to `scripts/cwt/override/.cwt_extensions_ignore` and edit).
-1. Copy/paste `sample.cwt.yml` to `.cwt.yml` & edit for easier *instance (re)init* implementation
+1. Copy/paste `sample.cwt.yml` to `.cwt.yml` & edit for easier *instance (re)init* implementation. It is meant to contain settings that **do not vary** between the different types of instances (i.e. directory structure & app git remote).
 1. [optional] Implement your own alterations and/or extensions (see the *Adapt / Alter / Extend CWT* section below).
 1. Launch *instance setup* action (e.g. run `make setup`) - executes in this order the following actions :
     1. *instance init* - the first action to execute in any project instance in order to make CWT useful. It generates readonly global (env) vars, optional Git hooks implementations, convenience "make" shortcuts for all subjects & actions, and any (usually gitignored) dotfiles and/or local files specific to local instance
@@ -134,6 +138,8 @@ make setup prod remote test.my-cwt-project.com lamp
 
 ```txt
 /path/to/my-project/    ← Project root dir ($PROJECT_DOCROOT)
+  ├── app/              ← [optional+configurable] Application dir ($APP_DOCROOT)
+  │   └── web/          ← [optional+configurable] Publicly accessible web dir ($SERVER_DOCROOT)
   ├── cwt/              ← CWT "core" source files. Update = delete + replace entire folder
   │   ├── app/          ← App-level tasks (e.g. watch, compile, lint, etc.)
   │   ├── env/          ← Default generic global env. vars
@@ -151,14 +157,10 @@ make setup prod remote test.my-cwt-project.com lamp
   │       ├── extend/   ← [optional] Custom project-specific CWT extension
   │       ├── local/    ← [git-ignored] Generated files specific to this local instance
   │       └── override/ ← [optional] Allows to replace virtually any file sourced in CWT scripts
-  ├── web/              ← [optional+configurable] Application dir ($APP_DOCROOT or $APP_GIT_WORK_TREE*)
-  │   └── dist/         ← [optional+configurable] Publicly accessible application dir ($APP_DOCROOT*)
   ├── .gitignore        ← Don't forget to review and edit to suit project needs
   ├── Makefile          ← The "make" entry point that loads all (optional) makefile includes
-  └── sample.cwt.yml    ← Copy/paste to ".cwt.yml" & edit for easier instance (re)init implementation
+  └── sample.cwt.yml    ← Copy/paste to ".cwt.yml" & edit
 ```
-
-`*` : if using the multi-repo pattern, which is the default assumption.
 
 ## Adapt / Alter / Extend CWT
 
@@ -213,13 +215,22 @@ cwt/env/global_lookup_paths.make.sh
 CWT provides the followig globals by default (see `cwt/env/global.vars.sh`). These illustrate the syntax to declare default values and optional help text that will be displayed when user input is prompted in terminal during *instance init* when the `-y` flag is not set (otherwise it won't prompt for anything and just use the default value) :
 
 ```sh
+# Due to differences in some projects directory structures, we now use 3
+# variables to cover all cases. Some projects will never need to distinguish
+# them, others may only need APP_DOCROOT, and some will also require a different
+# path to the folder publicly exposed by the web server.
+# This used to be worked around by using a global named APP_GIT_WORK_TREE, but
+# for more clarity and flexibility - and to deal more explicitly with somewhat
+# convoluted docker-compose path conversion, the SERVER_DOCROOT global was
+# finally added (and its Docker volume equivalent SERVER_DOCROOT_C for use from
+# containers - see for ex. cwt/extensions/drupalwt/app/global.docker-compose.vars.sh).
 global PROJECT_DOCROOT "[default]='$PWD' [help]='Absolute path to project instance. All scripts using CWT *must* be run from this dir. No trailing slash.'"
-global APP_DOCROOT "[default]='web' [help]='*Relative* path to the directory usually publicly exposed by web servers (where the app « entry point » would normally reside, e.g. index.php). No prefix dot or slash.'"
+global APP_DOCROOT "[default]='app' [help]='*Relative* path to the directory containing the application source code. No prefix dot or slash, and no trailing slash.'"
+global SERVER_DOCROOT "[default]='$APP_DOCROOT/web' [help]='*Relative* path to the directory usually publicly exposed by web servers (where the app « entry point » would normally reside, e.g. index.php). No prefix dot or slash, and no trailing slash.'"
 
 # [optional] Set these values for applications having their own separate repo.
 # @see cwt/git/init.hook.sh
 global APP_GIT_ORIGIN "[help]='Optional. Ex: git@my-git-origin.org:my-git-account/cwt.git. Allows projects to have their own separate repo.'"
-global APP_GIT_WORK_TREE "[ifnot-APP_GIT_ORIGIN]='' [default]='$APP_DOCROOT' [help]='Some applications might contain APP_DOCROOT in their versionned sources. This global is the path of the git work tree (if different).'"
 global APP_GIT_INIT_CLONE "[ifnot-APP_GIT_ORIGIN]='' [default]=yes [help]='(y/n) Specify if the APP_GIT_ORIGIN repo should automatically be cloned (once) during \"instance init\".'"
 global APP_GIT_INIT_HOOK "[ifnot-APP_GIT_ORIGIN]='' [default]=no [help]='(y/n) Specify if some Git hooks should automatically trigger corresponding CWT hooks. WARNING : will overwrite existing git hook scripts during instance init.'"
 
@@ -267,7 +278,7 @@ cwt/instance/list_actions.make.sh
 By default, CWT generates the following *make* shortcuts correponding to these *subject / action* pairs - also called *entry points* - during *instance init* (this will differ when extensions are enabled, added and/or removed) :
 
 | Name | Script | Shortcut |
-|------|--------|-----------------|
+|------|--------|----------|
 | *app compile* | `cwt/app/compile.sh` | `make app-compile` |
 | *app git* | `cwt/app/git.sh` | `make app-git` |
 | *app install* | `cwt/app/install.sh` | `make app-install` |

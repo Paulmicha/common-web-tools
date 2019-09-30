@@ -50,7 +50,7 @@ u_instance_init() {
   local p_cwtii_project_docroot=''
   local p_cwtii_app_docroot=''
   local p_cwtii_app_git_origin=''
-  local p_cwtii_app_git_work_tree=''
+  local p_cwtii_server_docroot=''
   local p_cwtii_instance_type=''
   local p_cwtii_instance_domain=''
 
@@ -66,8 +66,8 @@ u_instance_init() {
   if [[ -n "$YAML_APP_REPO" ]]; then
     p_cwtii_app_git_origin="$YAML_APP_REPO"
   fi
-  if [[ -n "$YAML_APP_WORKTREE" ]]; then
-    p_cwtii_app_git_work_tree="$YAML_APP_WORKTREE"
+  if [[ -n "$YAML_SERVER_DOCROOT" ]]; then
+    p_cwtii_server_docroot="$YAML_SERVER_DOCROOT"
   fi
   if [[ -n "$YAML_APP_DOCROOT" ]]; then
     p_cwtii_app_docroot="$YAML_APP_DOCROOT"
@@ -77,8 +77,8 @@ u_instance_init() {
     case "$1" in
       -o) p_cwtii_project_docroot="$2"; shift 2;;
       -a) p_cwtii_app_docroot="$2"; shift 2;;
+      -s) p_cwtii_server_docroot="$2"; shift 2;;
       -g) p_cwtii_app_git_origin="$2"; shift 2;;
-      -i) p_cwtii_app_git_work_tree="$2"; shift 2;;
       -t) p_cwtii_instance_type="$2"; shift 2;;
       -d) p_cwtii_instance_domain="$2"; shift 2;;
 
@@ -463,7 +463,7 @@ u_instance_write_mk() {
     # @see cwt/instance/init.make.sh
     # @see Makefile (the one in PROJECT_DOCROOT path).
     case "$task" in instance-*)
-      case "$task" in instance-init)
+      case "$task" in instance-init|instance-setup)
         continue
       esac
       task="${task#*instance-}"
