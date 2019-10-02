@@ -80,3 +80,17 @@ More details can be found in the comments of the scripts - see :
 
 - `cwt/extensions/drupalwt/new/project.sh`
 - `cwt/extensions/drupalwt/new/site-install.sh`
+
+### 4. [optional] Adapt drupal settings
+
+The instance is already usable by now, but you may want to adapt the drupal settings file - e.g. to only keep the generic settings in `docroot/sites/default/settings.php` and have it in the Git repo, while using the local settings this extension generates by default in `docroot/sites/default/settings.local.php` :
+
+```sh
+# In docroot/sites/default/settings.php, uncomment the following lines and put
+# them at the very end of the file :
+#   if (file_exists($app_root . '/' . $site_path . '/settings.local.php')) {
+#     include $app_root . '/' . $site_path . '/settings.local.php';
+#   }
+# Then re-generate the local settings :
+make reinit
+```
