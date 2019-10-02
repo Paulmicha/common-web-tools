@@ -5,7 +5,7 @@
 #
 # @param 1 String : the composer project template (or "distro").
 # @param 2 [optional] String : the way to deal with a pre-existing destination
-#   folder if it already exists. Because composer create-project requires that
+#   folder if it already exists. Because 'composer create-project' requires that
 #   the folder $APP_DOCROOT be empty, the default behavior is to delete
 #   everything inside it before executing it. As it could contain the .git
 #   folder when we are creating a new project (i.e. cloned - even empty - during
@@ -16,14 +16,31 @@
 #   There are 2 values to distinguish between keeping or discarding the existing
 #   files during the merge : respectively 'keep' and 'discard'.
 #   Default value : 'delete'.
-# @param 3 [optional] String : composer create-project params override. When set,
-# this param replaces the following default arguments entirely :
+# @param 3 [optional] String : 'composer create-project' params override. When
+#   set, this param replaces the following default arguments entirely :
 #   --no-interaction --no-install --prefer-dist --remove-vcs
 #
 # @example
+#   # Create a new project based on the "Thunder" Drupal distribution. If the
+#   # $APP_DOCROOT folder exists, by default, its content is deleted first. And
+#   # if $APP_GIT_INIT_CLONE is set to 'yes', the git work tree will be
+#   # reinitialized :
 #   make new-project thunder/thunder-project
 #   # Or :
 #   cwt/extensions/drupalwt/new/project.sh thunder/thunder-project
+#
+#   # Same, but if the $APP_DOCROOT folder exists and is not empty, in case of
+#   # conflicts when merging the temporary backup copy, preserve its contents -
+#   # *overwriting* the conflicting files newly created by Composer :
+#   make new-project thunder/thunder-project 'keep'
+#   # Or :
+#   cwt/extensions/drupalwt/new/project.sh thunder/thunder-project 'keep'
+#
+#   # Same, but preserving the files newly created by Composer instead -
+#   # *disarding* any conflicting pre-existing files in $APP_DOCROOT folder :
+#   make new-project thunder/thunder-project 'discard'
+#   # Or :
+#   cwt/extensions/drupalwt/new/project.sh thunder/thunder-project 'discard'
 #
 
 . cwt/bootstrap.sh
@@ -52,19 +69,18 @@ fi
 echo "Creating new project based on '$1' ..."
 
 # Deal with pre-existing destination dir.
+merge_overwrite=''
 tmp_merge_dir="${APP_DOCROOT}.tmp.bak"
-merge_overwrite='yes'
 
 if [[ -d "$APP_DOCROOT" ]]; then
-  echo "  The command 'composer create-project' requires the folder "$APP_DOCROOT" to be empty."
-
+  echo "  The command 'composer create-project' requires the folder '$APP_DOCROOT' to be empty."
   case "$edd_decision" in
 
     # By default, we assume this would primarily be used to begin a new project.
     # Thus, if the folder exists, it would likely only contain an empty git work
     # tree - meaning just the "$APP_DOCROOT/.git" folder, and nothing else.
     'delete')
-      echo "  -> Removing all its contents, then re-executing the 'init' hook implementation in the 'git' subject from CWT core."
+      echo "  -> Remove all its contents, then re-execute the 'init' hook implementation in the 'git' subject from CWT core."
       rm -rf $APP_DOCROOT/*
       rm -rf $APP_DOCROOT/.* 2>/dev/null
       . cwt/git/init.hook.sh
@@ -74,25 +90,36 @@ if [[ -d "$APP_DOCROOT" ]]; then
     # (overwriting the newly created files) afterwards in order to preserve its
     # contents.
     'keep')
-      echo "  -> Making a temporary copy of the '$APP_DOCROOT' dir."
-      echo "  It will be merged back afterwards, and in case of conflict, the previously existing files will be kept intact (*not* preserving files newly created by Composer)."
       merge_overwrite='yes'
-      mv "$APP_DOCROOT" "$tmp_merge_dir"
+      echo "  -> Make a temporary copy of the '$APP_DOCROOT' dir."
+      echo "  It will be merged back afterwards, and in case of conflict, the previously existing files will be kept intact (*not* preserving files newly created by Composer)."
       ;;
 
     # Same, but discarding the old files to keep the newly created ones.
     'discard')
-      echo "  -> Making a temporary copy of the '$APP_DOCROOT' dir."
-      echo "  It will be merged back afterwards, and in case of conflict, the files newly created by Composer will be kept intact (*not* preserving previously existing files)."
       merge_overwrite='no'
-      mv "$APP_DOCROOT" "$tmp_merge_dir"
+      echo "  -> Make a temporary copy of the '$APP_DOCROOT' dir."
+      echo "  It will be merged back afterwards, and in case of conflict, the files newly created by Composer will be kept intact (*not* preserving previously existing files)."
       ;;
+  esac
+
+  # Temporarily move the $APP_DOCROOT folder for both these cases :
+  case "$edd_decision" in 'keep'|'discard')
+    mv "$APP_DOCROOT" "$tmp_merge_dir"
+
+    if [[ $? -ne 0 ]]; then
+      echo >&2
+      echo "Error in $BASH_SOURCE line $LINENO: unable to temporarily move the '$APP_DOCROOT' dir (to '$tmp_merge_dir')." >&2
+      echo "-> Aborting (2)." >&2
+      echo >&2
+      exit 2
+    fi
   esac
 fi
 
 # When using docker-compose, 'composer' is likely an alias running from a
 # container -> deal with path conversion.
-$destination_dir="$APP_DOCROOT"
+destination_dir="$APP_DOCROOT"
 case "$PROVISION_USING" in 'docker-compose')
   if [[ -n "$APP_DOCROOT_C" ]]; then
     destination_dir="$APP_DOCROOT_C"

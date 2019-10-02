@@ -25,7 +25,7 @@ Here's the list of extensions included (in folder `cwt/extensions`) :
 | `apache` |  | Apache web server VHost generation (and deletion) utilities. Very basic implementations for more traditional LAMP stacks (not using docker-compose). |
 | `db` |  | Abstract hooks and entry points for database-related tasks. See the 'mysql' extension for an implementation example. |
 | `docker-compose` |  | Implements instance start, stop, build, and destroy actions. Can be used in different ways : see `DC_MODE` help text (`cwt/extensions/docker-compose/global.vars.sh`). |
-| `drupalwt` |  | Provides generic Drupal-related tasks (with or without `docker-compose`). |
+| `drupalwt` |  | Provides generic Drupal-related tasks (with or without `docker-compose`). See [documentation with a "getting started" step-by-step example](cwt/extensions/drupalwt/README.md). |
 | `file_registry` | ✔ | Default storage for CWT "registry" (minimal file-based key/value store scoped by project instance or host). |
 | `mysql` |  | Provides mysql implementations of the abstractions provided by the `db` extension such as database creation, dumps import/export, etc. |
 | `pgsql` |  | Same as `mysql` but for Postgres. |
