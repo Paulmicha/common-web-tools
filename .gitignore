@@ -7,7 +7,7 @@
 #
 
 # Application docroot using a separate Git repo.
-/web
+/app
 
 # Local environment global variables and other generated files.
 /scripts/cwt/local/*
