@@ -83,7 +83,7 @@ More details can be found in the comments of the scripts - see :
 
 ### 4. [optional] Adapt drupal settings
 
-The instance is already usable by now, but you may want to adapt the drupal settings file - e.g. to only keep the generic settings in `docroot/sites/default/settings.php` and have it in the Git repo, while using the local settings this extension generates by default in `docroot/sites/default/settings.local.php` :
+The instance is already usable by now, but you may want to adapt the drupal settings file - e.g. to only keep the generic settings in `app/docroot/sites/default/settings.php` and have them versionned in the application Git repo, while using the local settings this extension generates by default in `app/docroot/sites/default/settings.local.php` (git-ignored) :
 
 ```sh
 # In docroot/sites/default/settings.php, uncomment the following lines and put

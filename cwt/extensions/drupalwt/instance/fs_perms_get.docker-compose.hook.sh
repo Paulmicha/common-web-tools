@@ -33,5 +33,5 @@
 
 # TODO [hack] Workaround docker-related ownership issue (make writeable dirs &
 # files world-writeable).
-FS_W_FILES='0777'
-FS_W_DIRS='1777'
+FS_W_FILES='777'
+FS_W_DIRS='777'
