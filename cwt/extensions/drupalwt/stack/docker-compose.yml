@@ -18,9 +18,7 @@ services:
     volumes:
       - ./$APP_DOCROOT:$APP_DOCROOT_C
     labels:
-      - 'traefik.backend=${DC_NS}_nginx'
-      - 'traefik.port=80'
-      - 'traefik.frontend.rule=Host:${INSTANCE_DOMAIN}'
+      - "traefik.http.routers.${DC_NS}_nginx.rule=Host(`${INSTANCE_DOMAIN}`)"
 
   # See https://github.com/wodby/mariadb
   mariadb:
@@ -50,6 +48,9 @@ services:
       DB_NAME: $DB_NAME
       DB_USER: $DB_USER
       DB_PASSWORD: $DB_PASS
+      # TODO [wip] write access to sources for local stacks ?
+      # PHP_FPM_USER: wodby
+      # PHP_FPM_GROUP: wodby
       COLUMNS: 80
       # Custom CWT instance variants.
       # Usage example in Php :
