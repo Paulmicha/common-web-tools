@@ -62,7 +62,12 @@ u_instance_init() {
   local p_cwtii_dry_run=0
 
   # Reads values optionally provided in YAML config file.
+  yaml_parsed_sp_init=''
+  yaml_parsed_globals=''
   u_instance_load_yaml_config
+  if [[ -n "$yaml_parsed_sp_init" ]]; then
+    eval "$yaml_parsed_sp_init"
+  fi
   if [[ -n "$YAML_APP_REPO" ]]; then
     p_cwtii_app_git_origin="$YAML_APP_REPO"
   fi
@@ -115,6 +120,18 @@ u_instance_init() {
 
   u_global_aggregate
 
+  # Any global vars defined in YAML takes precedence.
+  if [[ -n "$yaml_parsed_globals" ]]; then
+    eval "$yaml_parsed_globals"
+  fi
+  # Special paths (exceptions to make syntax easier in docker-compose projects).
+  if [[ -n "$YAML_SERVER_DOCROOT_C" ]]; then
+    global SERVER_DOCROOT_C "$YAML_SERVER_DOCROOT_C"
+  fi
+  if [[ -n "$YAML_APP_DOCROOT_C" ]]; then
+    global APP_DOCROOT_C "$YAML_APP_DOCROOT_C"
+  fi
+
   # If we want to test instance init (when "dry run" flag is set), nothing is
   # written and hooks are replaced by a prefixed variant.
   if [[ $p_cwtii_dry_run -eq 1 ]]; then
@@ -146,9 +163,8 @@ u_instance_init() {
 # Detects cwt_config.yml if it exists and loads its values as defaults.
 #
 # This function writes its result in the following variables :
-# @var YAML_APP_REPO
-# @var YAML_APP_WORKTREE
-# @var YAML_APP_DOCROOT
+# @var yaml_parsed_sp_init
+# @var yaml_parsed_globals
 #
 # For details on the syntax used to determine variable names from the YAML file
 # contents :
@@ -183,7 +199,24 @@ u_instance_load_yaml_config() {
   fi
 
   if [[ -f "$yaml_config_filepath" ]]; then
-    eval $(u_str_yaml_parse "$yaml_config_filepath" 'yaml_')
+    local parsed_yaml
+    local parsed_line
+    yaml_parsed_sp_init=''
+    yaml_parsed_globals=''
+    parsed_yaml="$(u_str_yaml_parse "$yaml_config_filepath" 'yaml_')"
+    for parsed_line in $parsed_yaml; do
+      case "${parsed_line:0:9}" in 'YAML_ENV_')
+        parsed_line="${parsed_line#'YAML_ENV_'}"
+        parsed_line="${parsed_line/'='/' '}"
+        yaml_parsed_globals+="global $parsed_line ; "
+        continue
+      esac
+      case "${parsed_line:0:11}" in 'YAML__ROOTS')
+        continue
+      esac
+      yaml_parsed_sp_init+="$parsed_line
+"
+    done
   fi
 }
 

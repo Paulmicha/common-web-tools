@@ -188,11 +188,13 @@ u_db_get_credentials() {
 
       # Generate random local instance DB password and store it for subsequent
       # calls.
-      if [[ -z "$reg_val" ]]; then
-        export DB_PASS=`< /dev/urandom tr -dc A-Za-z0-9 | head -c14; echo`
-        u_instance_registry_set "${db_id}.DB_PASS" "$DB_PASS"
-      else
-        export DB_PASS="$reg_val"
+      if [[ -z "$DB_PASS" ]]; then
+        if [[ -z "$reg_val" ]]; then
+          export DB_PASS=`< /dev/urandom tr -dc A-Za-z0-9 | head -c14; echo`
+          u_instance_registry_set "${db_id}.DB_PASS" "$DB_PASS"
+        else
+          export DB_PASS="$reg_val"
+        fi
       fi
 
       export DB_ADMIN_USER="${DB_ADMIN_USER:=$DB_USER}"
