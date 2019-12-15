@@ -61,21 +61,29 @@ u_instance_init() {
   local p_cwtii_yes=0
   local p_cwtii_dry_run=0
 
-  # Reads values optionally provided in YAML config file.
+  # Reads values optionally provided in YAML config file (for now, just the ones
+  # in PROJECT_DOCROOT dir).
   yaml_parsed_sp_init=''
   yaml_parsed_globals=''
-  u_instance_yaml_config_load
-  if [[ -n "$yaml_parsed_sp_init" ]]; then
-    eval "$yaml_parsed_sp_init"
-  fi
-  if [[ -n "$YAML_APP_GIT_ORIGIN" ]]; then
-    p_cwtii_app_git_origin="$YAML_APP_GIT_ORIGIN"
-  fi
-  if [[ -n "$YAML_SERVER_DOCROOT" ]]; then
-    p_cwtii_server_docroot="$YAML_SERVER_DOCROOT"
-  fi
-  if [[ -n "$YAML_APP_DOCROOT" ]]; then
-    p_cwtii_app_docroot="$YAML_APP_DOCROOT"
+  if [[ -f ".cwt.yml" ]] || [[ -f ".cwt-local.yml" ]]; then
+    if [[ -f ".cwt.yml" ]]; then
+      u_instance_yaml_config_parse ".cwt.yml"
+    fi
+    if [[ -f ".cwt-local.yml" ]]; then
+      u_instance_yaml_config_parse ".cwt-local.yml"
+    fi
+    if [[ -n "$yaml_parsed_sp_init" ]]; then
+      eval "$yaml_parsed_sp_init"
+    fi
+    if [[ -n "$YAML_APP_GIT_ORIGIN" ]]; then
+      p_cwtii_app_git_origin="$YAML_APP_GIT_ORIGIN"
+    fi
+    if [[ -n "$YAML_SERVER_DOCROOT" ]]; then
+      p_cwtii_server_docroot="$YAML_SERVER_DOCROOT"
+    fi
+    if [[ -n "$YAML_APP_DOCROOT" ]]; then
+      p_cwtii_app_docroot="$YAML_APP_DOCROOT"
+    fi
   fi
 
   while [[ $# -gt 0 ]]; do
@@ -120,16 +128,13 @@ u_instance_init() {
 
   u_global_aggregate
 
-  # Any global vars defined in YAML takes precedence.
+  # Any global vars defined in YAML takes precedence. Use the dynamic lookup now
+  # that we have values for HOST_TYPE and INSTANCE_TYPE (for variants).
+  yaml_parsed_sp_init=''
+  yaml_parsed_globals=''
+  u_instance_yaml_config_load
   if [[ -n "$yaml_parsed_globals" ]]; then
     eval "$yaml_parsed_globals"
-  fi
-  # Special paths (exceptions to make syntax easier in docker-compose projects).
-  if [[ -n "$YAML_SERVER_DOCROOT_C" ]]; then
-    global SERVER_DOCROOT_C "$YAML_SERVER_DOCROOT_C"
-  fi
-  if [[ -n "$YAML_APP_DOCROOT_C" ]]; then
-    global APP_DOCROOT_C "$YAML_APP_DOCROOT_C"
   fi
 
   # If we want to test instance init (when "dry run" flag is set), nothing is
@@ -197,7 +202,8 @@ u_instance_yaml_config_load() {
   done
 
   # Now load the declarations in PROJECT_DOCROOT (so that these take precedence).
-  instance_yaml_config_root_files=".cwt.yml
+  if [[ -n "$HOST_TYPE" ]] && [[ -n "$INSTANCE_TYPE" ]]; then
+    instance_yaml_config_root_files=".cwt.yml
 .cwt.$HOST_TYPE.yml
 .cwt.$INSTANCE_TYPE.yml
 .cwt.$HOST_TYPE.$INSTANCE_TYPE.yml
@@ -205,6 +211,10 @@ u_instance_yaml_config_load() {
 .cwt-local.$HOST_TYPE.yml
 .cwt-local.$INSTANCE_TYPE.yml
 .cwt-local.$HOST_TYPE.$INSTANCE_TYPE.yml"
+  else
+    instance_yaml_config_root_files=".cwt.yml
+.cwt-local.yml"
+  fi
   for instance_yaml_config_file in $instance_yaml_config_root_files; do
     if [[ -f "$instance_yaml_config_file" ]]; then
       u_instance_yaml_config_parse "$instance_yaml_config_file"

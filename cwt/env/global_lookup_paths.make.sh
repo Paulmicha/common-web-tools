@@ -38,22 +38,25 @@ if [ -n "$CWT_EXTENSIONS" ]; then
 fi
 
 # 2. Files using variant in their name (i.e. 'global.docker-compose.vars.sh')
-hook -a 'global' -c "${PROVISION_USING}.vars.sh" -t -d
-if [ -n "$CWT_EXTENSIONS" ]; then
-  for extension in $CWT_EXTENSIONS; do
-    ext_path=''
-    u_cwt_extension_path "$extension"
-    echo "$ext_path/$extension/global.${PROVISION_USING}.vars.sh "
-    if [ -f "$ext_path/$extension/global.${PROVISION_USING}.vars.sh" ]; then
-      echo "  exists"
-    fi
-  done
+if [[ -n "$PROVISION_USING" ]]; then
+  hook -a 'global' -c "${PROVISION_USING}.vars.sh" -t -d
+  if [ -n "$CWT_EXTENSIONS" ]; then
+    for extension in $CWT_EXTENSIONS; do
+      ext_path=''
+      u_cwt_extension_path "$extension"
+      echo "$ext_path/$extension/global.${PROVISION_USING}.vars.sh "
+      if [ -f "$ext_path/$extension/global.${PROVISION_USING}.vars.sh" ]; then
+        echo "  exists"
+      fi
+    done
+  fi
 fi
 
 # 3. Using the .cwt.yml method takes precedence.
-hook -s 'instance' -a '.cwt' -c 'yml' -v 'HOST_TYPE INSTANCE_TYPE' -d -t
-
-echo ".cwt.yml
+echo
+if [[ -n "$HOST_TYPE" ]] && [[ -n "$INSTANCE_TYPE" ]]; then
+  hook -s 'instance' -a '.cwt' -c 'yml' -v 'HOST_TYPE INSTANCE_TYPE' -d -t
+  echo ".cwt.yml
 .cwt.$HOST_TYPE.yml
 .cwt.$INSTANCE_TYPE.yml
 .cwt.$HOST_TYPE.$INSTANCE_TYPE.yml
@@ -61,5 +64,9 @@ echo ".cwt.yml
 .cwt-local.$HOST_TYPE.yml
 .cwt-local.$INSTANCE_TYPE.yml
 .cwt-local.$HOST_TYPE.$INSTANCE_TYPE.yml"
+else
+  echo ".cwt.yml
+.cwt-local.yml"
+fi
 
 echo
