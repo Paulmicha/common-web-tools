@@ -10,6 +10,7 @@
 /app
 
 # Local environment global variables and other generated files.
+.cwt-local.*
 /scripts/cwt/local/*
 !/scripts/cwt/local/README.md
 /.env

@@ -1,6 +1,9 @@
 app:
-  repo: git@my-git-host.com:TheGitUserAccount/the.project.repo.git
   docroot: app
+  docroot_c: /var/www/html
+  git:
+    origin: git@my-git-host.com:TheGitUserAccount/the.project.repo.git
 
 server:
   docroot: app/web
+  docroot_c: /var/www/html/web
