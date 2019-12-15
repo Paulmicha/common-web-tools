@@ -53,6 +53,16 @@ echo "Creating $DB_ID DB $DB_DRIVER dump '$relative_path' ..."
 # See https://www.postgresql.org/docs/current/libpq-envars.html
 PGPASSWORD="$DB_PASS"
 
+# TODO [wip] handle the case where the database is not specified.
+# See https://www.postgresql.org/docs/9.3/app-pg-dumpall.html
+case "$DB_NAME" in '*')
+  echo >&2
+  echo "Error in $BASH_SOURCE line $LINENO: multi-DB exports are not supported at this point." >&2
+  echo "-> Aborting (3)." >&2
+  echo >&2
+  exit 3
+esac
+
 # Use nice + ionice to tune down server ressources used for backup.
 # See https://github.com/wodby/postgres/blob/master/bin/backup
 # + https://github.com/wodby/postgres/blob/master/bin/actions.mk

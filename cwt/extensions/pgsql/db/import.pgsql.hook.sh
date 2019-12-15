@@ -39,6 +39,15 @@ fi
 # See https://www.postgresql.org/docs/current/libpq-envars.html
 PGPASSWORD="$DB_PASS"
 
+# TODO [wip] handle the case where the database is not specified.
+case "$DB_NAME" in '*')
+  echo >&2
+  echo "Error in $BASH_SOURCE line $LINENO: multi-DB imports or queries not targeting any particular database are not supported at this point." >&2
+  echo "-> Aborting (3)." >&2
+  echo >&2
+  exit 3
+esac
+
 psql \
   -U "$DB_USER" \
   -h "$DB_HOST" \

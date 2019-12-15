@@ -56,7 +56,7 @@ By providing some abstractions to complement, combine, replace or add any operat
 
 CWT relies on **file structure**, **naming conventions**, and a few concepts :
 
-- **Globals** are the environment variables related to current project instance. They may be declared using the `global` function in files named `env.vars.sh` aggregated during initialization.
+- **Globals** are the environment variables related to current project instance. They may be declared in `.cwt.yml` or using the `global` function in files named `env.vars.sh` aggregated during initialization.
 - **Bootstrap** deals with the inclusion of all the relevant source files and loads global variables (e.g. host type, instance type, etc) and functions. Any script that includes the file `cwt/bootstrap.sh` can use these. This depends on sourcing shell scripts using relative paths, which is made possible by the fact that *all* scripts (or `make` "shortcut" commands) must be run from the folder `$PROJECT_DOCROOT`.
 - **Instance init** is a preliminary step that will setup current project instance. Among other things, it will aggregate and write local values for globals, optionally write application git hooks (opt-in by using the corresponding GIT-related globals - see `cwt/git/init.hook.sh`), and trigger some hooks in order to let extensions implement their own additional setup tasks. See `u_instance_init()` in `cwt/instance/instance.inc.sh` for details and usage example.
 - **Actions** - also referred to as *entry points*, *operations*, *tasks*, or just *commands* - are scoped by subject, e.g. *instance init*, *app compile*, etc. CWT determines a list of available actions by looking up folders and shell scripts matching certain rules.
@@ -159,7 +159,7 @@ make setup prod remote test.my-cwt-project.com lamp
   │       └── override/ ← [optional] Allows to replace virtually any file sourced in CWT scripts
   ├── .gitignore        ← Don't forget to review and edit to suit project needs
   ├── Makefile          ← The "make" entry point that loads all (optional) makefile includes
-  └── sample.cwt.yml    ← Copy/paste to ".cwt.yml" & edit
+  └── sample.cwt.yml    ← [optional] Copy/paste to ".cwt.yml" (and/or ".cwt-local.yml") & edit
 ```
 
 ## Adapt / Alter / Extend CWT
