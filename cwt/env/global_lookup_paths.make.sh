@@ -50,4 +50,16 @@ if [ -n "$CWT_EXTENSIONS" ]; then
   done
 fi
 
+# 3. Using the .cwt.yml method takes precedence.
+hook -s 'instance' -a '.cwt' -c 'yml' -v 'HOST_TYPE INSTANCE_TYPE' -d -t
+
+echo ".cwt.yml
+.cwt.$HOST_TYPE.yml
+.cwt.$INSTANCE_TYPE.yml
+.cwt.$HOST_TYPE.$INSTANCE_TYPE.yml
+.cwt-local.yml
+.cwt-local.$HOST_TYPE.yml
+.cwt-local.$INSTANCE_TYPE.yml
+.cwt-local.$HOST_TYPE.$INSTANCE_TYPE.yml"
+
 echo

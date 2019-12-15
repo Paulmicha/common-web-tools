@@ -174,14 +174,39 @@ Here are the different ways to adapt CWT to current project needs :
 
 ### Globals
 
-Since every entry point sources `cwt/bootstrap.sh` to load CWT functions and globals, these (`readonly`) variables are available everywhere. Their values are assigned during *instance init* which generates a single, git-ignored script : `scripts/cwt/local/global.vars.sh`.
+Since every entry point sources `cwt/bootstrap.sh` to load CWT functions and globals, these (`readonly`) variables are available everywhere. Their values are assigned during *instance init* which generates (or overwrites) the following git-ignored files :
 
-One of the most straightforward ways to customize or add globals is by providing your own `global.vars.sh` file in current project instance's `scripts` folder, however any extension can provide its own - be it in the folder of the extension directly, or inside any of its subfolder (called *subjects*).
+- `.env`
+- `scripts/cwt/local/global.vars.sh`
+
+There are 2 ways to customize or add globals :
+
+1. by editing `.cwt.yml` configuration files. Various names can be used to allow overrides between different project instances, and the YAML syntax is then transformed into globals declarations (and/or `u_instance_init()` arguments override). You can see an example file in this repo's docroot : `sample.cwt.yml`, which you can rename to `.cwt.yml` (or `.cwt-local.yml`) to quickly get started.
+1. by providing your own `global.vars.sh` file in current project instance's `scripts` folder. Any extension can provide its own - be it in the folder of the extension directly, or inside any of its subfolder (called *subjects*).
+
+The `.cwt.yml` method is meant for simple declarations, while `global.vars.sh` allow things like deferred and/or conditional assignments, dynamic values, and plain bash scripting.
 
 If all you need is a constant, the following syntax will not prompt for user input in terminal during *instance init* :
 
 ```sh
 global MY_CONSTANT_VALUE "the value"
+```
+
+The same declaration using the `.cwt.yml` method can be done in the following *strictly equivalent* ways :
+
+```yaml
+my:
+  constant:
+    value: the value
+```
+
+```yaml
+my_constant:
+  value: the value
+```
+
+```yaml
+my_constant_value: the value
 ```
 
 And if you need to always prompt for input during *instance init* (when the `-y` flag is not set), use only the 1st argument :
@@ -204,7 +229,7 @@ for value in $VALUES_WILL_CONCAT; do
 done
 ```
 
-These declarations are to be placed inside files named `global.vars.sh`. To show where these files can be placed in order to get picked up for aggregation - and in which order - during *instance init* in current project, you can use the following convenience command :
+To show where the declarations can be placed in order to get picked up for aggregation - and in which order - during *instance init* in current project instance, you can use the following convenience command :
 
 ```sh
 make globals-lp
@@ -212,18 +237,19 @@ make globals-lp
 cwt/env/global_lookup_paths.make.sh
 ```
 
+Note that for convenience, if the above helper is run **after** *instance init*, more variants will appear for `.cwt.yml` files). This allows more specific targeting of overrides.
+
+The declarations found in `.cwt.yml` take precedence over `global.vars.sh` as they get loaded last during the aggregation process.
+
+Also, if you need local, "private" overrides that must NOT be checked out in any git repo, the following file can be used (+ variants, see convenience method above) :
+
+```txt
+.cwt-local.yml
+```
+
 CWT provides the followig globals by default (see `cwt/env/global.vars.sh`). These illustrate the syntax to declare default values and optional help text that will be displayed when user input is prompted in terminal during *instance init* when the `-y` flag is not set (otherwise it won't prompt for anything and just use the default value) :
 
 ```sh
-# Due to differences in some projects directory structures, we now use 3
-# variables to cover all cases. Some projects will never need to distinguish
-# them, others may only need APP_DOCROOT, and some will also require a different
-# path to the folder publicly exposed by the web server.
-# This used to be worked around by using a global named APP_GIT_WORK_TREE, but
-# for more clarity and flexibility - and to deal more explicitly with somewhat
-# convoluted docker-compose path conversion, the SERVER_DOCROOT global was
-# finally added (and its Docker volume equivalent SERVER_DOCROOT_C for use from
-# containers - see for ex. cwt/extensions/drupalwt/app/global.docker-compose.vars.sh).
 global PROJECT_DOCROOT "[default]='$PWD' [help]='Absolute path to project instance. All scripts using CWT *must* be run from this dir. No trailing slash.'"
 global APP_DOCROOT "[default]='app' [help]='*Relative* path to the directory containing the application source code. No prefix dot or slash, and no trailing slash.'"
 global SERVER_DOCROOT "[default]='$APP_DOCROOT/web' [help]='*Relative* path to the directory usually publicly exposed by web servers (where the app « entry point » would normally reside, e.g. index.php). No prefix dot or slash, and no trailing slash.'"
