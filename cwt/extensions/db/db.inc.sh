@@ -14,7 +14,7 @@
 # @exports DB_DRIVER - defaults to 'mysql'.
 # @exports DB_HOST - defaults to 'localhost'.
 # @exports DB_PORT - defaults to '3306' or '5432' if DB_DRIVER is 'pgsql'.
-# @exports DB_NAME - defaults to "$DB_ID".
+# @exports DB_NAME - defaults to '*' (meaning all databases at once, or global).
 # @exports DB_USER - defaults to first 16 characters of DB_ID.
 # @exports DB_PASS - defaults to 14 random characters.
 # @exports DB_ADMIN_USER - defaults to DB_USER.
@@ -100,11 +100,11 @@ u_db_get_credentials() {
     # Some environments do not require CWT to handle DB credentials at all.
     # In these cases, the following global env vars should be provided in
     # calling scope :
-    # - $DB_NAME
     # - $DB_USER
     # - $DB_PASS
     # These fallback values are provided if not set :
     # - $DB_DRIVER defaults to mysql
+    # - $DB_NAME defaults to *
     # - $DB_HOST defaults to localhost
     # - $DB_PORT defaults to 3306 or 5432 if DB_DRIVER is 'pgsql'
     # - $DB_ADMIN_USER defaults to $DB_USER
@@ -113,6 +113,9 @@ u_db_get_credentials() {
     none)
       if [[ -z "$DB_DRIVER" ]]; then
         export DB_DRIVER='mysql'
+      fi
+      if [[ -z "$DB_NAME" ]]; then
+        export DB_NAME='*'
       fi
       if [[ -z "$DB_HOST" ]]; then
         export DB_HOST='localhost'
@@ -152,7 +155,7 @@ u_db_get_credentials() {
         export DB_DRIVER='mysql'
       fi
       if [[ -z "$DB_NAME" ]]; then
-        export DB_NAME="$DB_ID"
+        export DB_NAME='*'
       fi
       if [[ -z "$DB_USER" ]]; then
         export DB_USER="$DB_ID"
@@ -231,7 +234,7 @@ u_db_get_credentials() {
               esac
               ;;
             DB_NAME)
-              val_default="$DB_ID"
+              val_default='*'
               ;;
             DB_USER)
               val_default="${DB_ID:0:16}"
@@ -652,11 +655,24 @@ u_db_restore_last() {
 #
 u_db_routine_backup() {
   local db_routine_new_backup_file
+  local db_backup_file_middle
+  local db_backup_file_ext
+
+  db_backup_file_middle="$DB_NAME"
+  case "$DB_NAME" in '*')
+    db_backup_file_middle="all-databases"
+  esac
 
   # TODO [wip] Allow setting dump file extension in DB settings ?
-  # Using generic extension 'dump' for now.
+  # Using generic extension 'dump' for now, with hardcoded extension for mysql
+  # and pgsql.
+  db_backup_file_ext='dump'
+  case "$DB_DRIVER" in mysql|pgsql)
+    db_backup_file_ext='sql'
+  esac
+
   u_db_get_credentials $@
-  db_routine_new_backup_file="$CWT_DB_DUMPS_BASE_PATH/local/$DB_ID/$(date +"%Y/%m/%d/%H-%M-%S").dump"
+  db_routine_new_backup_file="$CWT_DB_DUMPS_BASE_PATH/local/$DB_ID/$(date +"%Y/%m/%d/%H-%M-%S")_$db_backup_file_middle.$db_backup_file_ext"
 
   u_db_backup "$db_routine_new_backup_file" $@
 

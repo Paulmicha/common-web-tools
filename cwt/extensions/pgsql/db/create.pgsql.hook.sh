@@ -11,7 +11,7 @@
 #   - DB_DRIVER - defaults to 'mysql'.
 #   - DB_HOST - defaults to 'localhost'.
 #   - DB_PORT - defaults to '3306' or '5432' if DB_DRIVER is 'pgsql'.
-#   - DB_NAME - defaults to "$DB_ID".
+#   - DB_NAME - defaults to "*".
 #   - DB_USER - defaults to first 16 characters of DB_ID.
 #   - DB_PASS - defaults to 14 random characters.
 #   - DB_ADMIN_USER - defaults to DB_USER.

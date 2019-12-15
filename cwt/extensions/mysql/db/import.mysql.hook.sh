@@ -11,7 +11,7 @@
 #   - DB_DRIVER - defaults to 'mysql'.
 #   - DB_HOST - defaults to 'localhost'.
 #   - DB_PORT - defaults to '3306' or '5432' if DB_DRIVER is 'pgsql'.
-#   - DB_NAME - defaults to "$DB_ID".
+#   - DB_NAME - defaults to "*".
 #   - DB_USER - defaults to first 16 characters of DB_ID.
 #   - DB_PASS - defaults to 14 random characters.
 #   - DB_ADMIN_USER - defaults to DB_USER.
@@ -35,13 +35,18 @@ if [[ ! -f "$db_dump_file" ]]; then
   exit 1
 fi
 
+mysql_last_arg="$DB_NAME"
+case "$DB_NAME" in '*')
+  mysql_last_arg=""
+esac
+
 mysql --default_character_set="$SQL_CHARSET" \
   --user="$DB_USER" \
   --password="$DB_PASS" \
   --host="$DB_HOST" \
   --port="$DB_PORT" \
   -B \
-  "$DB_NAME" < "$db_dump_file"
+  "$mysql_last_arg" < "$db_dump_file"
 
 if [[ $? -ne 0 ]]; then
   echo >&2

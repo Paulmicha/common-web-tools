@@ -32,18 +32,13 @@ EOF
 
 # Create basic settings (server docroot folder name is 'web' by default, but
 # here we choose to use 'docroot' as in distributions like 'lightning' and
-# 'thunder'). The 'docroot_c' represents the path inside the containers (used
-# e.g. for "bind mount" volumes).
+# 'thunder').
 cat > '.cwt.yml' <<EOF
 app:
+  repo: git@my-git-host.com:TheGitUserAccount/the.project.repo.git
   docroot: app
-  docroot_c: /var/www/html
-  git:
-    origin: git@my-git-host.com:TheGitUserAccount/the.project.repo.git
-
 server:
   docroot: app/docroot
-  docroot_c: /var/www/html/docroot
 EOF
 ```
 

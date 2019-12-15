@@ -11,7 +11,7 @@
 #   - DB_DRIVER - defaults to 'mysql'.
 #   - DB_HOST - defaults to 'localhost'.
 #   - DB_PORT - defaults to '3306' or '5432' if DB_DRIVER is 'pgsql'.
-#   - DB_NAME - defaults to "$DB_ID".
+#   - DB_NAME - defaults to "*".
 #   - DB_USER - defaults to first 16 characters of DB_ID.
 #   - DB_PASS - defaults to 14 random characters.
 #   - DB_ADMIN_USER - defaults to DB_USER.
@@ -53,6 +53,11 @@ echo "Creating $DB_ID DB $DB_DRIVER dump '$relative_path' ..."
 # alone first, then the data (optionally excluding said tables).
 # See https://github.com/wodby/mariadb/blob/master/10/bin/backup
 
+mysqldump_last_arg="$DB_NAME"
+case "$DB_NAME" in '*')
+  mysqldump_last_arg="--all-databases"
+esac
+
 # 1. Structure.
 mysqldump \
   --user="$DB_USER" \
@@ -60,7 +65,7 @@ mysqldump \
   --host="$DB_HOST" \
   --port="$DB_PORT" \
   --single-transaction --no-data --allow-keywords --skip-triggers \
-  "$DB_NAME" > "$db_dump_file"
+  "$mysqldump_last_arg" > "$db_dump_file"
 
 if [[ $? -ne 0 ]]; then
   echo >&2
@@ -77,7 +82,7 @@ mysqldump \
   --host="$DB_HOST" \
   --port="$DB_PORT" \
   --single-transaction --no-create-info "$skip_data" --allow-keywords \
-  "$DB_NAME" >> "$db_dump_file"
+  "$mysqldump_last_arg" >> "$db_dump_file"
 
 if [[ $? -ne 0 ]]; then
   echo >&2

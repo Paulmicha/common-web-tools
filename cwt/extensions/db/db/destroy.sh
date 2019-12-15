@@ -3,7 +3,7 @@
 ##
 # [abstract] Destroys (deletes) database.
 #
-# @param 1 [optional] String : $DB_NAME override.
+# @param 1 [optional] String : $DB_ID override.
 #
 # This script provides an entry point for triggering a specific hook. "Abstract"
 # means that this extension doesn't provide any actual implementation for this
@@ -13,10 +13,10 @@
 #
 # @example
 #   make db-destroy
-#   make db-destroy 'custom_db_name'
+#   make db-destroy 'custom_db_id'
 #   # Or :
 #   cwt/extensions/db/db/destroy.sh
-#   cwt/extensions/db/db/destroy.sh 'custom_db_name'
+#   cwt/extensions/db/db/destroy.sh 'custom_db_id'
 #
 
 . cwt/bootstrap.sh

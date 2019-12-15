@@ -4,7 +4,7 @@
 # [abstract] Backs up (= exports = saves) database to a dump file.
 #
 # @param 1 String : the dump file path.
-# @param 2 [optional] String : $DB_NAME override.
+# @param 2 [optional] String : $DB_ID override.
 #
 # This script provides an entry point for triggering a specific hook. "Abstract"
 # means that this extension doesn't provide any actual implementation for this
@@ -18,10 +18,10 @@
 #
 # @example
 #   make db-backup '/path/to/dump/file.sql'
-#   make db-backup '/path/to/dump/file.sql' 'custom_db_name'
+#   make db-backup '/path/to/dump/file.sql' 'custom_db_id'
 #   # Or :
 #   cwt/extensions/db/db/backup.sh '/path/to/dump/file.sql'
-#   cwt/extensions/db/db/backup.sh '/path/to/dump/file.sql' 'custom_db_name'
+#   cwt/extensions/db/db/backup.sh '/path/to/dump/file.sql' 'custom_db_id'
 #
 
 . cwt/bootstrap.sh
