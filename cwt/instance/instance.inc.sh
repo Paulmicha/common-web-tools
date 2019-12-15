@@ -74,15 +74,15 @@ u_instance_init() {
     fi
     if [[ -n "$yaml_parsed_sp_init" ]]; then
       eval "$yaml_parsed_sp_init"
-    fi
-    if [[ -n "$YAML_APP_GIT_ORIGIN" ]]; then
-      p_cwtii_app_git_origin="$YAML_APP_GIT_ORIGIN"
-    fi
-    if [[ -n "$YAML_SERVER_DOCROOT" ]]; then
-      p_cwtii_server_docroot="$YAML_SERVER_DOCROOT"
-    fi
-    if [[ -n "$YAML_APP_DOCROOT" ]]; then
-      p_cwtii_app_docroot="$YAML_APP_DOCROOT"
+      if [[ -n "$YAML_APP_GIT_ORIGIN" ]]; then
+        p_cwtii_app_git_origin="$YAML_APP_GIT_ORIGIN"
+      fi
+      if [[ -n "$YAML_SERVER_DOCROOT" ]]; then
+        p_cwtii_server_docroot="$YAML_SERVER_DOCROOT"
+      fi
+      if [[ -n "$YAML_APP_DOCROOT" ]]; then
+        p_cwtii_app_docroot="$YAML_APP_DOCROOT"
+      fi
     fi
   fi
 
@@ -202,8 +202,7 @@ u_instance_yaml_config_load() {
   done
 
   # Now load the declarations in PROJECT_DOCROOT (so that these take precedence).
-  if [[ -n "$HOST_TYPE" ]] && [[ -n "$INSTANCE_TYPE" ]]; then
-    instance_yaml_config_root_files=".cwt.yml
+  instance_yaml_config_root_files=".cwt.yml
 .cwt.$HOST_TYPE.yml
 .cwt.$INSTANCE_TYPE.yml
 .cwt.$HOST_TYPE.$INSTANCE_TYPE.yml
@@ -211,10 +210,6 @@ u_instance_yaml_config_load() {
 .cwt-local.$HOST_TYPE.yml
 .cwt-local.$INSTANCE_TYPE.yml
 .cwt-local.$HOST_TYPE.$INSTANCE_TYPE.yml"
-  else
-    instance_yaml_config_root_files=".cwt.yml
-.cwt-local.yml"
-  fi
   for instance_yaml_config_file in $instance_yaml_config_root_files; do
     if [[ -f "$instance_yaml_config_file" ]]; then
       u_instance_yaml_config_parse "$instance_yaml_config_file"
