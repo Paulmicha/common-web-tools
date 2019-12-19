@@ -35,18 +35,25 @@ if [[ ! -f "$db_dump_file" ]]; then
   exit 1
 fi
 
-mysql_last_arg="$DB_NAME"
-case "$DB_NAME" in '*')
-  mysql_last_arg=""
+case "$DB_NAME" in
+  '*')
+    mysql --default_character_set="$SQL_CHARSET" \
+      --user="$DB_USER" \
+      --password="$DB_PASS" \
+      --host="$DB_HOST" \
+      --port="$DB_PORT" \
+      -B < "$db_dump_file"
+    ;;
+  *)
+    mysql --default_character_set="$SQL_CHARSET" \
+      --user="$DB_USER" \
+      --password="$DB_PASS" \
+      --host="$DB_HOST" \
+      --port="$DB_PORT" \
+      -B \
+      "$DB_NAME" < "$db_dump_file"
+    ;;
 esac
-
-mysql --default_character_set="$SQL_CHARSET" \
-  --user="$DB_USER" \
-  --password="$DB_PASS" \
-  --host="$DB_HOST" \
-  --port="$DB_PORT" \
-  -B \
-  "$mysql_last_arg" < "$db_dump_file"
 
 if [[ $? -ne 0 ]]; then
   echo >&2

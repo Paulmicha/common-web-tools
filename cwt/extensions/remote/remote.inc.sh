@@ -267,7 +267,7 @@ u_remote_exec_wrapper() {
   fi
 
   # Always execute remotely from REMOTE_INSTANCE_PROJECT_DOCROOT.
-  local cmd_prefix="$REMOTE_INSTANCE_CONNECT_CMD \"cd $REMOTE_INSTANCE_PROJECT_DOCROOT && "
+  local cmd_prefix="$REMOTE_INSTANCE_CONNECT_CMD \"cd $REMOTE_INSTANCE_PROJECT_DOCROOT &&"
   local cmd_suffix="\""
 
   if [[ -n "$@" ]]; then
@@ -360,6 +360,11 @@ EOF
 
       v="${var_prefix}_HOST"
       host="${!v}"
+
+      if [[ -z "$host" ]]; then
+        continue
+      fi
+
       # echo "$remote_id.host = '$host' ($v)"
       v="${var_prefix}_DOCROOT"
       docroot="${!v}"
@@ -390,12 +395,17 @@ EOF
           if [[ -z "$ssh_pubkey" ]]; then
             ssh_pubkey="$CWT_SSH_PUBKEY"
           fi
+          # Do not require a ssh_user.
+          local user_host="$ssh_user@$host"
+          if [[ -z "$ssh_user" ]]; then
+            user_host="$host"
+          fi
           u_remote_instance_add \
             "$remote_id" \
             "$host" \
             "$docroot" \
             "$ssh_user" \
-            "afssh -f $(u_remote_get_pubkey_hex_md5_fingerprint $ssh_pubkey) -- -T $ssh_user@$host"
+            "afssh -f $(u_remote_get_pubkey_hex_md5_fingerprint $ssh_pubkey) -- -T $user_host"
         fi
       else
         u_remote_instance_add \
@@ -453,11 +463,15 @@ u_remote_instance_add() {
   local p_ssh_user="$4"
   local p_connect_cmd="$5"
 
-  if [[ -z "$p_ssh_user" ]]; then
+  # Update : no longer require user to support custom ssh config.
+  # If dynamic fallback is wanted, use '<current-user>'.
+  # if [[ -z "$p_ssh_user" ]]; then
+  case "$p_ssh_user" in '<current-user>')
     # Get current user even if sudoing.
     # See https://stackoverflow.com/questions/1629605/getting-user-inside-shell-script-when-running-with-sudo
     p_ssh_user="$(logname 2>/dev/null || echo $SUDO_USER)"
-  fi
+  esac
+  # fi
 
   if [[ ! -d 'scripts/cwt/local/remote-instances' ]]; then
     mkdir -p 'scripts/cwt/local/remote-instances'
@@ -489,13 +503,19 @@ u_remote_instance_add() {
   local connection_cmd="$p_connect_cmd"
   if [[ -z "$p_connect_cmd" ]]; then
 
+    # Do not require a ssh_user.
+    local user_host="$p_ssh_user@$p_host"
+    if [[ -z "$p_ssh_user" ]]; then
+      user_host="$p_host"
+    fi
+
     # NB : the '-A' flag allows to forward currently loaded SSH keys from
     # the local terminal session. The '-T' flag requests a non-interactive
     # tty (= opens a non-interactive terminal session on remote).
-    connection_cmd="ssh -T -A ${p_ssh_user}@${p_host}"
+    connection_cmd="ssh -T -A $user_host"
 
     if [[ -n "$p_ssh_port" ]]; then
-      connection_cmd="ssh -T -A -p${p_ssh_port} ${p_ssh_user}@${p_host}"
+      connection_cmd="ssh -T -A -p$p_ssh_port $user_host"
     fi
   fi
 

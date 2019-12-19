@@ -274,6 +274,42 @@ u_str_uppercase() {
 }
 
 ##
+# Joins space-separated items by given separator.
+#
+# This function writes its result in the following variable in calling scope :
+# @var joined_str
+#
+# @param 1 String : separator.
+# @param ... String : values to join.
+#
+# @see https://stackoverflow.com/a/23673883
+# @see https://stackoverflow.com/a/17841619
+#
+# @example
+#   # Do not use quotes around the string argument
+#   joined_str=''
+#   input_str='one two three four five'
+#   u_str_join ', and ' $input_str
+#   echo "$joined_str" # <- outputs 'one, and two, and three, and four, and five'
+#
+#   # Works with arrays too :
+#   joined_str=''
+#   a=( one two "three three" four five )
+#   u_str_join '|' "${a[@]}"
+#   echo "$joined_str" # <- outputs 'one|two|three three|four|five'
+#
+u_str_join() {
+  local p_sep=$1
+  local IFS=
+  if [[ -z "$p_sep" ]]; then
+    p_sep='|'
+  fi
+  joined_str=$2
+  shift 2 || shift $(($#))
+  joined_str+="${*/#/$p_sep}"
+}
+
+##
 # Escapes all slashes for use in 'sed' calls.
 #
 # TODO [opti] Rewrite without subshell.
