@@ -10,6 +10,62 @@
 #
 
 ##
+# Periodically checks files for changes (by modif. time) and runs given command.
+#
+# TODO [evol] Error handling (break on error).
+#
+# @param 1 String : lookup dir.
+# @param 2 [optional] String : command to run. Has access to this function's
+#   local variables such as $files_recently_changed.
+#   Defaults to 'echo $files_recently_changed'.
+# @param 3 [optional] String : 'find' name filter pattern.
+# @param 4 [optional] Integer : number of seconds for the polling interval.
+#   Defaults to 2.
+#
+# See https://stackoverflow.com/a/24789597
+# See https://unix.stackexchange.com/a/238740/89774
+#
+# @example
+#   # Print the list of modified files every 2 seconds, if any :
+#   u_fs_watch_poll the/target/dir
+#
+#   # Run in parallel several file watcher polling (Ctrl+C to stop) :
+#   u_fs_watch_poll the/target/dir 'npm run build' &
+#   u_fs_watch_poll another/dir 'gulp build' &
+#   wait
+#
+u_fs_watch_poll() {
+  local p_path="$1"
+  local p_callback="$2"
+  local p_filter_pattern="$3"
+  local p_polling_interval="$4"
+  local name_arg=''
+  local files_recently_changed=''
+
+  if [[ -z "$p_callback" ]]; then
+    p_callback='echo $files_recently_changed'
+  fi
+  if [[ -n "$p_filter_pattern" ]]; then
+    name_arg="-name $p_filter_pattern"
+  fi
+  if [[ -z "$p_polling_interval" ]]; then
+    p_polling_interval='2'
+  fi
+
+  while [[ true ]]; do
+    files_recently_changed=$(find $p_path -type f $name_arg -newermt "-$p_polling_interval seconds")
+    if [[ -n $files_recently_changed ]] ; then
+      echo
+      echo "u_fs_watch_poll() : changes detected in the folling file(s) : $files_recently_changed"
+      echo "  -> calling '$p_callback' ..."
+      echo
+      eval "$p_callback"
+    fi
+    sleep $p_polling_interval
+  done
+}
+
+##
 # Recursively merges 2 folders together.
 #
 # @param 1 String : the source dir.
