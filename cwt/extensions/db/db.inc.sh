@@ -34,8 +34,8 @@
 # See also the first parameter to this function documented below.
 #
 # If CWT_DB_MODE is set to 'auto' or 'manual', the first call to this function
-# will generate once the values for these globals.
-# Subsequent calls to this function will then read said values from registry.
+# will generate or prompt once the values for these globals.
+# Subsequent calls to this function will then read these values from registry.
 # @see cwt/instance/registry_set.sh
 # @see cwt/instance/registry_get.sh
 #

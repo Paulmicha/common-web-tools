@@ -646,7 +646,7 @@ u_fs_compress() {
 
   if [[ ! -f "$p_path" ]] && [[ ! -d "$p_path" ]]; then
     echo >&2
-    echo "Notice in u_fs_compress() - $BASH_SOURCE line $LINENO: directory or file '$p_folder' was not found." >&2
+    echo "Notice in u_fs_compress() - $BASH_SOURCE line $LINENO: directory or file '$p_path' was not found." >&2
     echo "Aborting (1)." >&2
     echo >&2
     return 1
@@ -707,7 +707,13 @@ u_fs_compress_in_place() {
 # Extracts given archive file(s). Supports various formats.
 #
 # This function uses a return value to indicate wether the file was uncompressed
-# or not.
+# or not. It also sets the uncompressed file names to a variable
+# subject to collision in calling scope :
+# @var extracted_files
+#
+# If the archive contained a single file, it will set its name to the following
+# variable subject to collision in calling scope :
+# @var extracted_file
 #
 # @param 1 String : the archive file to extract.
 # @param 2 [optional] String : the destination folder. Defaults to current dir.
@@ -720,11 +726,15 @@ u_fs_compress_in_place() {
 # matching some archive format whitelisted below.
 #
 # @example
-#   # Will extract given archive file in current dir :
+#   # Extract given archive files in current dir :
+#   extracted_files=''
 #   u_fs_extract path/to/file.zip
+#   echo "$extracted_files" # <- Outputs list of extracted contents.
 #
-#   # Will extract given archive file to folder 'path/to' :
-#   u_fs_extract path/to/file.tar.gz path/to
+#   # Extract given archive containing a single file to folder 'path/to' :
+#   extracted_file=''
+#   u_fs_extract path/to/file.sql.tgz path/to
+#   echo "$extracted_file" # <- Outputs e.g. path/to/file.sql
 #
 #   # Will leave the file untouched because it is not an archive file :
 #   u_fs_extract path/to/file.txt
@@ -758,11 +768,44 @@ u_fs_extract() {
   # process the 'tar' command separately.
   case "$p_file" in *.cbt|*.tar.bz2|*.tar.gz|*.tar.xz|*.tbz2|*.tgz|*.txz|*.tar)
     needs_copy='n'
+
+    # Get archive contents.
+    # TODO Untested : *.tar.bz2 archives may need the '-j' flag.
+    # TODO Check relative paths are correct.
+    # TODO Too slow for big archives -> make optional ?
+    local contents_list_str=$(tar -tf "$p_file")
+    local contents_list_arr=($contents_list_str)
+    if [[ ${#contents_list_arr[@]} -gt 1 ]]; then
+      extracted_files="$contents_list_str"
+      if [[ -n "$p_folder" ]]; then
+        extracted_files=''
+        local i
+        for i in "${contents_list_arr[@]}"; do
+          extracted_files+="$p_folder/$i
+"
+        done
+      fi
+    else
+      extracted_file="$contents_list_str"
+      if [[ -n "$p_folder" ]]; then
+        extracted_file="$p_folder/$contents_list_str"
+      fi
+    fi
+
     if [[ -n "$p_folder" ]]; then
       tar -xf "$p_file" -C "$p_folder"
     else
       tar -xf "$p_file"
     fi
+
+    if [[ $? -ne 0 ]]; then
+      echo >&2
+      echo "Error in u_fs_extract() - $BASH_SOURCE line $LINENO: the tar command exited with non-zero code." >&2
+      echo "Aborting (4)." >&2
+      echo >&2
+      exit 4
+    fi
+
     return
   esac
 
@@ -773,7 +816,7 @@ u_fs_extract() {
   #   p_file="$p_folder/${p_file##*/}"
   # fi
 
-  # TODO [wip] untested.
+  # TODO [wip] untested + list contents.
   # See https://github.com/xvoland/Extract
   case "$p_file" in
     *.7z|*.arj|*.cab|*.cb7|*.chm|*.deb|*.dmg|*.iso|*.lzh|*.msi|*.pkg|*.rpm|*.udf|*.wim|*.xar)
