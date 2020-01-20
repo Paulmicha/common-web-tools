@@ -2,17 +2,17 @@
 
 This extension :
 
-- provides global environment variables specific to Drupal settings and drupalwt containers
-- implements permissions and ownership hooks
+- provides global environment variables specific to common Drupal settings
 - ensures gitignored folders exist (e.g. for private or public uploads)
-- automatically generates local settings (during *instance init* and after *instance rebuild*) using minimal template syntax, see e.g. `cwt/extensions/drupalwt/app/drupal_settings.7.tpl.php`
-- provides Make shortcuts for `drush`, `composer`, and `drupal` commands (aliased during CWT bootstrap)
+- implements permissions and ownership in application sources (i.e. applied during instance init)
+- can automatically generate settings files (after *instance init* and after *instance rebuild*) - e.g. using template for Drupal settings, for ex. `cwt/extensions/drupalwt/app/drupal_settings.8.tpl.php`
 - provides optional crontab setup during *app install* on current host (see the `DWT_USE_CRONTAB` global)
-- provides docker-compose stack presets, see `cwt/extensions/drupalwt/stack/*`
+
+This extension does not provide any "stack". There's a separate extension depending on `cwt/extensions/docker-compose` using [docker4drupal](https://github.com/wodby/docker4drupal) containers if needed, see `cwt/extensions/drupalwt_d4d`.
 
 ## Getting started ex. : creating a new Drupal 8 project
 
-These steps assume you will use a dedicated Git repo for the Drupal application source code, and `docker-compose` with the default stack preset provided in `cwt/extensions/drupalwt/stack`.
+These steps assume you will use a dedicated Git repo for the Drupal application source code, and `docker-compose` with the default stack preset provided in `cwt/extensions/drupalwt_d4d/stack`.
 
 ### 1. Prepare the dev stack
 
@@ -50,10 +50,10 @@ EOF
 make setup
 ```
 
-Fore details about the `docker-compose` "stack" that will be installed, see :
+If using the `drupalwt_d4d` extension, details about the `docker-compose` "stack" that will be installed can be found in :
 
-- `cwt/extensions/drupalwt/stack/docker-compose.yml`
-- `cwt/extensions/drupalwt/stack/docker-compose.override.local.dev.yml`
+- `cwt/extensions/drupalwt_d4d/stack/docker-compose.yml`
+- `cwt/extensions/drupalwt_d4d/stack/docker-compose.override.local.dev.yml`
 
 ### 3. Choose a Composer template and do the first install
 

@@ -271,8 +271,8 @@ u_remote_exec_wrapper() {
   local cmd_suffix="\""
 
   if [[ -n "$@" ]]; then
-    local args
-    printf -v args '%q ' "$@"
+    local p_args
+    printf -v p_args '%q ' "$@"
 
     if [[ $? -ne 0 ]]; then
       echo >&2
@@ -282,8 +282,8 @@ u_remote_exec_wrapper() {
       return 3
     fi
 
-    # echo "$cmd_prefix $cmd $args $cmd_suffix"
-    eval "$cmd_prefix $cmd $args $cmd_suffix"
+    # echo "$cmd_prefix $cmd $p_args $cmd_suffix"
+    eval "$cmd_prefix $cmd $p_args $cmd_suffix"
 
   else
     # echo "$cmd_prefix $cmd $cmd_suffix"
@@ -306,6 +306,7 @@ u_remote_exec_wrapper() {
 # $ make hook-debug a:remote_instances c:yml v:HOST_TYPE INSTANCE_TYPE
 #
 u_remote_instances_setup() {
+  local parsed_yaml_remotes=''
   hook_most_specific_dry_run_match=''
 
   u_hook_most_specific 'dry-run' \
@@ -337,8 +338,8 @@ u_remote_instances_setup() {
 EOF
 
     # Write remotes definitions.
-    u_str_yaml_parse "$hook_most_specific_dry_run_match" 'cwtri_' \
-      >> 'scripts/cwt/local/remote-instances.sh'
+    parsed_yaml_remotes="$(u_yaml_parse "$hook_most_specific_dry_run_match" 'cwtri_')"
+    echo "$parsed_yaml_remotes" >> 'scripts/cwt/local/remote-instances.sh'
   fi
 
   # Process & adapt parsed result for use with u_remote_instance_load().
@@ -354,11 +355,13 @@ EOF
     local ssh_use_agent_filter
     local ssh_pubkey
 
-    for remote_id in "${CWTRI__ROOTS[@]}"; do
-      var_prefix="CWTRI_${remote_id}"
-      u_str_uppercase "$var_prefix" var_prefix
+    u_yaml_get_keys "$parsed_yaml_remotes" 'cwtri_'
 
-      v="${var_prefix}_HOST"
+    for remote_id in "${yaml_keys[@]}"; do
+      var_prefix="cwtri_${remote_id}"
+      # u_str_uppercase "$var_prefix" var_prefix
+
+      v="${var_prefix}_host"
       host="${!v}"
 
       if [[ -z "$host" ]]; then
@@ -366,16 +369,16 @@ EOF
       fi
 
       # echo "$remote_id.host = '$host' ($v)"
-      v="${var_prefix}_DOCROOT"
+      v="${var_prefix}_docroot"
       docroot="${!v}"
       # echo "$remote_id.docroot = '$docroot' ($v)"
-      v="${var_prefix}_SSH_USER"
+      v="${var_prefix}_ssh_user"
       ssh_user="${!v}"
       # echo "$remote_id.ssh_user = '$ssh_user' ($v)"
-      v="${var_prefix}_SSH_USE_AGENT_FILTER"
+      v="${var_prefix}_ssh_use_agent_filter"
       ssh_use_agent_filter="${!v}"
       # echo "$remote_id.ssh_use_agent_filter = '$ssh_use_agent_filter' ($v)"
-      v="${var_prefix}_SSH_PUBKEY"
+      v="${var_prefix}_ssh_pubkey"
       ssh_pubkey="${!v}"
       # echo "$remote_id.ssh_pubkey = '$ssh_pubkey' ($v)"
 

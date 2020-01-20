@@ -12,6 +12,6 @@
 #
 
 . cwt/bootstrap.sh
-u_db_get_credentials $@
+u_db_set $@
 
 echo "CWT_DB_IDS = '$CWT_DB_IDS'"

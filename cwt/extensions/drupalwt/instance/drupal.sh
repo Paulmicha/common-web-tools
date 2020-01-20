@@ -8,9 +8,9 @@
 # @see cwt/extensions/drupalwt/make.mk
 #
 # @example
-#   make drupal 'config:import:single --file="../config/split/dev/config_split.config_split.dev.yml"'
+#   make drupal config:import:single -- --file="../config/split/dev/config_split.config_split.dev.yml"
 #   # Or :
-#   cwt/extensions/drupalwt/cli/drupal.make.sh config:import:single --file="../config/split/dev/config_split.config_split.dev.yml"
+#   cwt/extensions/drupalwt/instance/drupal.sh config:import:single --file="../config/split/dev/config_split.config_split.dev.yml"
 #
 
 . cwt/bootstrap.sh

@@ -22,7 +22,7 @@
 
 echo "Making sure DB exists and credentials are properly set ..."
 
-u_db_get_credentials
+u_db_set
 
 # TODO [wip] Find better workaround than to wait a few seconds for
 # docker-compose stacks. For now, using 5 attempts with 1 second delay before

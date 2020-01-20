@@ -109,6 +109,23 @@
 #   # - cwt/extensions/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/pre_bootstrap.hook.sh
 #   # - cwt/extensions/<CWT_EXTENSIONS>/<EXT_SUBJECTS>/pre_bootstrap.prod.hook.sh
 #
+#   # 6. Project root dir additional lookup :
+#   hook -s 'instance' -a 'cwt' -c 'yml' -v 'HOST_TYPE INSTANCE_TYPE' -t -r
+#   # Yields the following lookup paths (not sourcing matches because -t flag) :
+#   # (given HOST_TYPE='local' and INSTANCE_TYPE='dev')
+#   # - cwt/instance/cwt.yml
+#   # - cwt/instance/cwt.dev.yml
+#   # - cwt/instance/cwt.local.yml
+#   # - cwt/instance/cwt.dev.local.yml
+#   # - cwt/extensions/<CWT_EXTENSIONS>/instance/cwt.yml
+#   # - cwt/extensions/<CWT_EXTENSIONS>/instance/cwt.dev.yml
+#   # - cwt/extensions/<CWT_EXTENSIONS>/instance/cwt.local.yml
+#   # - cwt/extensions/<CWT_EXTENSIONS>/instance/cwt.dev.local.yml
+#   # - cwt.yml
+#   # - cwt.dev.yml
+#   # - cwt.local.yml
+#   # - cwt.dev.local.yml
+#
 # We exceptionally name that function without following the usual convention.
 #
 hook() {
@@ -120,6 +137,7 @@ hook() {
   local p_custom_filter
   local p_debug=0
   local p_dry_run=0
+  local p_root_lookup=0
 
   # Parse current function arguments.
   # See https://stackoverflow.com/a/31443098
@@ -135,6 +153,7 @@ hook() {
       # Flag (arg without any value).
       -d) p_debug=1; shift 1;;
       -t) p_dry_run=1; shift 1;;
+      -r) p_root_lookup=1; shift 1;;
       # Prevent unhandled arguments.
       -*) echo "Error in $BASH_SOURCE line $LINENO: unknown option: $1" >&2; return 1;;
       *) echo "Error in $BASH_SOURCE line $LINENO: unsupported unnamed argument: $1" >&2; return 2;;
@@ -150,6 +169,7 @@ hook() {
     return 1
   fi
 
+  local prim_var
   local subjects="$CWT_SUBJECTS"
   local actions="$CWT_ACTIONS"
   local extensions="$CWT_EXTENSIONS"
@@ -167,8 +187,10 @@ hook() {
       uppercase="$extension"
       u_str_sanitize_var_name "$uppercase" 'uppercase'
       u_str_uppercase "$uppercase"
-      eval "subjects=\"\$${uppercase}_SUBJECTS\""
-      eval "actions=\"\$${uppercase}_ACTIONS\""
+      prim_var="${uppercase}_SUBJECTS"
+      subjects="${!prim_var}"
+      prim_var="${uppercase}_ACTIONS"
+      actions="${!prim_var}"
       # Override base path for lookups.
       ext_path=''
       u_cwt_extension_path "$extension"
@@ -184,8 +206,10 @@ hook() {
       uppercase="$extension"
       u_str_sanitize_var_name "$uppercase" 'uppercase'
       u_str_uppercase "$uppercase"
-      eval "subjects+=\" \$${uppercase}_SUBJECTS\""
-      eval "actions+=\" \$${uppercase}_ACTIONS\""
+      prim_var="${uppercase}_SUBJECTS"
+      subjects+=" ${!prim_var}"
+      prim_var="${uppercase}_ACTIONS"
+      actions+=" ${!prim_var}"
       # Every extension defines an additional base path for lookups.
       ext_path=''
       u_cwt_extension_path "$extension"
@@ -206,6 +230,7 @@ hook() {
   local filters='subjects actions prefixes variants'
   local f
   local f_arg
+  local f_arg_var
   local s
   local a
   local arg_val
@@ -216,30 +241,31 @@ hook() {
   for f in $filters; do
 
     # Use the same loop to remove potential duplicate values (cf. extensions above).
-    eval "dedup=\"\$$f\""
+    dedup="${!f}"
     dedup_arr=()
     for dedup_val in $dedup; do
       u_array_add_once "$dedup_val" dedup_arr
     done
     eval "$f=\"${dedup_arr[@]}\""
 
-    eval "f_arg=\"\$p_${f}_filter\""
+    f_arg_var="p_${f}_filter"
+    f_arg="${!f_arg_var}"
     if [ -z "$f_arg" ]; then
       continue
     fi
 
-    eval "$f=''"
+    declare "$f"=''
 
     case "$f" in
       subjects|prefixes|variants)
         for arg_val in $f_arg; do
-          eval "$f+=\"$arg_val \""
+          declare "$f"+="$arg_val "
         done
       ;;
       actions)
         for arg_val in $f_arg; do
           for s in $subjects; do
-            eval "$f+=\"$s/$arg_val \""
+            declare "$f"+="$s/$arg_val "
           done
         done
       ;;
@@ -250,7 +276,8 @@ hook() {
   # if [ $p_debug -eq 1 ]; then
   #   echo
   #   echo "debug hook call :"
-  #   echo "  $(declare -p base_paths)"
+  #   echo "  base_paths :"
+  #   u_array_print 'base_paths'
   #   echo "  subjects = '$subjects'"
   #   echo "  actions = '$actions'"
   #   echo "  extensions = '$extensions'"
@@ -265,6 +292,11 @@ hook() {
   for lookup_subject in $subjects; do
     u_hook_build_lookup_by_subject "$lookup_subject" "$p_custom_filter"
   done
+
+  # Add support for project root lookup.
+  if [ $p_root_lookup -eq 1 ]; then
+    u_hook_build_project_root_dir_lookup "$p_custom_filter"
+  fi
 
   # Debug.
   if [ $p_debug -eq 1 ]; then
@@ -287,6 +319,9 @@ hook() {
     fi
     if [[ -n "$p_extensions_filter" ]]; then
       debug_msg+=" -e '$p_extensions_filter'"
+    fi
+    if [ $p_root_lookup -eq 1 ]; then
+      debug_msg+=" -r"
     fi
     u_autoload_print_lookup_paths lookup_paths "$debug_msg"
   fi
@@ -393,7 +428,7 @@ u_hook_build_lookup_by_subject() {
 
         # Finally, add the variants suggestions.
         for v_prim in $variants; do
-          eval "v_val=\"\$$v_prim\""
+          v_val="${!v_prim}"
           if [[ "$v_values" != *"$v_val"* ]]; then
             v_values+="$v_val "
           fi
@@ -419,6 +454,94 @@ u_hook_build_lookup_by_subject() {
           done
         done
       esac
+    done
+  done
+}
+
+##
+# Adds hook lookup paths in project root dir.
+#
+# @requires the following vars in calling scope :
+# - $lookup_paths
+# - $filters
+# - $actions
+#
+# @uses the following optional vars in calling scope if available :
+# - $prefixes
+# - $variants
+# - $p_prefixes_filter
+#
+# @see hook()
+# @see u_autoload_add_lookup_level()
+#
+u_hook_build_project_root_dir_lookup() {
+  local p_suffix_override="$1"
+
+  local a_path
+  local a_parts_arr
+  local a
+
+  local x_prim
+  local x_parts_arr
+  local x_val
+  local x_values
+
+  local v_prim
+  local v_parts_arr
+  local v
+  local v_values
+  local v_val
+  local v_flag
+  local v_fallback
+
+  # By default, this function will produce lookup paths using the default
+  # double-extension pattern "*.hook.sh". This can be altered when using the
+  # custom filter argument (-c).
+  local suffix='hook.sh'
+  if [[ -n "$p_suffix_override" ]]; then
+    suffix="$p_suffix_override"
+  fi
+
+  for a_path in $actions; do
+    u_str_split1 'a_parts_arr' "$a_path" '/'
+    a="${a_parts_arr[1]}"
+
+    # First, add "pure" actions suggestions - unless excluded (see prefixes).
+    if [[ -z "$p_prefixes_filter" ]]; then
+      lookup_paths+=("${a}.${suffix}")
+    fi
+
+    # Then add "prefixed" actions suggestions.
+    for x_val in $prefixes; do
+      lookup_paths+=("${x_val}_${a}.${suffix}")
+    done
+
+    # Finally, add the variants suggestions.
+    for v_prim in $variants; do
+      v_val="${!v_prim}"
+      if [[ "$v_values" != *"$v_val"* ]]; then
+        v_values+="$v_val "
+      fi
+    done
+
+    # Now that we fetched variants actual values, add them as as suggestions
+    # unless excluded (see prefixes). These are combinatory, e.g. :
+    # - init.dev.local.hook.sh
+    # - bootstrap.docker-compose.dev.hook.sh
+    # - bootstrap.docker-compose.prod.remote.hook.sh
+    u_str_subsequences "$v_values" '.'
+    if [[ -z "$p_prefixes_filter" ]]; then
+      for v_val in $str_subsequences; do
+        u_autoload_add_lookup_level "${a}." "$suffix" "$v_val" lookup_paths
+      done
+    fi
+
+    # Implement prefix + variant lookup paths, e.g. :
+    # pre_bootstrap.docker-compose.hook.sh
+    for x_val in $prefixes; do
+      for v_val in $str_subsequences; do
+        u_autoload_add_lookup_level "${x_val}_${a}." "$suffix" "$v_val" lookup_paths
+      done
     done
   done
 }
@@ -455,9 +578,9 @@ u_hook_build_lookup_by_subject() {
 #
 #   # Dry run example.
 #   # @see u_stack_template() in cwt/extensions/docker-compose/stack/stack.inc.sh
-#   local hook_most_specific_dry_run_match
+#   hook_most_specific_dry_run_match=''
 #   u_hook_most_specific 'dry-run' -s 'stack' -a 'docker-compose' -c "yml" -v 'DC_YML_VARIANTS' -t
-#   echo "$local hook_most_specific_dry_run_match" # <- Prints the most specific "docker-compose.yml" found.
+#   echo "$hook_most_specific_dry_run_match" # <- Prints the most specific "docker-compose.yml" found.
 #
 u_hook_most_specific() {
   local msdr_flag=0
@@ -490,14 +613,28 @@ u_hook_most_specific() {
     u_str_split1 'dot_arr' "$f" '.'
     u_str_split1 'slash_arr' "$f" '/'
 
+    # Debug
+    # echo "f.${#dot_arr[@]}.${#slash_arr[@]} : $f"
+    # u_array_print dot_arr
+    # u_array_print slash_arr
+
     depth=${#dot_arr[@]}
     depth=$(( depth + ${#slash_arr[@]} ))
 
-    # Apply score bonus to custom project immplementations so they take
+    # Apply score bonus to custom project implementations so they take
     # precedence over extensions'.
     case "$f" in "scripts/"*)
       depth=$(( depth + 4 ))
     esac
+
+    # Files in project root dir, when requested (-r), must have higher priority
+    # than the default, generic extensions' (even the ones in scripts/*).
+    if [[ ${#slash_arr[@]} -eq 1 ]]; then
+      depth=$(( depth + 10 ))
+    fi
+
+    # Debug
+    # echo "  -> adjusted depth = $depth"
 
     if [ $depth -gt $highest_depth ]; then
       most_specific_match="$f"

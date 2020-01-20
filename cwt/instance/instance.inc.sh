@@ -174,9 +174,14 @@ u_instance_init() {
 # @see u_instance_init()
 # @see u_instance_yaml_config_parse()
 #
-# To verify which files can be used (besides ".cwt.yml" in this project
-# instance's docroot folder $PROJECT_DOCROOT + its variants), run :
-# $ make hook-debug s:instance a:.cwt c:yml v:HOST_TYPE INSTANCE_TYPE
+# To verify which files can be used (besides ".cwt-local.yml" in this project
+# instance's docroot folder $PROJECT_DOCROOT + its variants) and check which one
+# will be used - the most specific, run :
+# $ hook -s 'instance' \
+#   -a 'cwt' \
+#   -c 'yml' \
+#   -v 'HOST_TYPE INSTANCE_TYPE' \
+#   -t -r -d
 #
 # @example
 #   yaml_parsed_sp_init=''
@@ -196,17 +201,14 @@ u_instance_yaml_config_load() {
 
   # Start by looking for any declarations in CWT dirs (with variants).
   hook_dry_run_matches=''
-  hook -s 'instance' -a '.cwt' -c 'yml' -v 'HOST_TYPE INSTANCE_TYPE' -t
+  hook -s 'instance' -a 'cwt' -c 'yml' -v 'HOST_TYPE INSTANCE_TYPE' -t -r
   for instance_yaml_config_file in $hook_dry_run_matches; do
     u_instance_yaml_config_parse "$instance_yaml_config_file"
   done
 
-  # Now load the declarations in PROJECT_DOCROOT (so that these take precedence).
-  instance_yaml_config_root_files=".cwt.yml
-.cwt.$HOST_TYPE.yml
-.cwt.$INSTANCE_TYPE.yml
-.cwt.$HOST_TYPE.$INSTANCE_TYPE.yml
-.cwt-local.yml
+  # Now load the local, git-ignored declarations in PROJECT_DOCROOT (so that
+  # these take precedence).
+  instance_yaml_config_root_files=".cwt-local.yml
 .cwt-local.$HOST_TYPE.yml
 .cwt-local.$INSTANCE_TYPE.yml
 .cwt-local.$HOST_TYPE.$INSTANCE_TYPE.yml"
@@ -220,6 +222,8 @@ u_instance_yaml_config_load() {
 ##
 # Converts given YAML config file into declarations code (for eval).
 #
+# Does not support lists for now.
+#
 # @requires the following variables in calling scope :
 # @var yaml_parsed_sp_init
 # @var yaml_parsed_globals
@@ -229,7 +233,7 @@ u_instance_yaml_config_load() {
 #
 # For details on the syntax used to determine variable names from the YAML file
 # contents :
-# @see u_str_yaml_parse() in cwt/utilities/string.sh
+# @see u_yaml_parse() in cwt/utilities/string.sh
 #
 # @example
 #   yaml_parsed_sp_init=''
@@ -247,6 +251,9 @@ u_instance_yaml_config_parse() {
   local yaml_config_filepath="$1"
   local parsed_yaml
   local parsed_line
+  local parsed_var
+  local parsed_var_leaf
+  local parsed_val
 
   if [[ ! -f "$yaml_config_filepath" ]]; then
     echo >&2
@@ -256,20 +263,22 @@ u_instance_yaml_config_parse() {
     return 1
   fi
 
-  parsed_yaml="$(u_str_yaml_parse "$yaml_config_filepath" 'yaml_')"
+  # TODO [evol] support lists (convert to [append] in globals declarations) ?
+  while IFS= read -r parsed_line _; do
+    parsed_val="$(echo "$parsed_line" | awk -F '[()]' '{print $2}')"
+    parsed_var_leaf="=${parsed_line##*=}"
+    parsed_var="${parsed_line%$parsed_var_leaf}"
+    u_str_uppercase "$parsed_var" 'parsed_var'
 
-  for parsed_line in $parsed_yaml; do
-    case "${parsed_line:0:11}" in 'YAML__ROOTS')
+    case "$parsed_var" in 'YAML_SERVER_DOCROOT'|'YAML_APP_DOCROOT'|'YAML_APP_GIT_ORIGIN')
+      yaml_parsed_sp_init+="$parsed_var=$parsed_val ; "
       continue
     esac
-    case "$parsed_line" in 'YAML_SERVER_DOCROOT'|'YAML_APP_DOCROOT'|'YAML_APP_GIT_ORIGIN')
-      yaml_parsed_sp_init+="$parsed_line ; "
-      continue
-    esac
-    parsed_line="${parsed_line#'YAML_'}"
-    parsed_line="${parsed_line/'='/' '}"
-    yaml_parsed_globals+="global $parsed_line ; "
-  done
+
+    parsed_var="${parsed_var#'YAML_'}"
+    yaml_parsed_globals+="global $parsed_var $parsed_val ; "
+
+  done < <(u_yaml_parse "$yaml_config_filepath" 'yaml_')
 }
 
 ##
@@ -306,7 +315,7 @@ u_instance_yaml_config_parse() {
 # There is also a convenience 'make' shortcut to reset all permissions.
 #
 # @example
-#   make fix_perms
+#   make fix-perms
 #   # Or :
 #   cwt/instance/fix_perms.sh
 #
@@ -411,7 +420,7 @@ u_instance_get_permissions() {
 # There is also a convenience 'make' shortcut to reset all permissions.
 #
 # @example
-#   make fix_ownership
+#   make fix-ownership
 #   # Or :
 #   cwt/instance/fix_ownership.sh
 #
@@ -519,8 +528,10 @@ u_instance_task_name() {
 #
 u_instance_write_mk() {
   local extension
+  local extension_var
   local extension_actions
   local extension_namespace
+  local extension_iteration
 
   # From our "entry point" scripts' path, we need to provide a unique task
   # name -> we use subject-action pairs while preventing potential collisions
@@ -540,9 +551,9 @@ u_instance_write_mk() {
     task=''
     u_instance_task_name "$sa_pair"
 
-    # The 'instance' subject is a special case : we remove it for CWT core tasks
-    # to explicitly make it the default subject. All actions belonging to the
-    # 'instance' subject from CWT core are transformed to the action part alone.
+    # The 'instance' subject is a special case : we remove it to explicitly make
+    # it the default subject. All actions belonging to the 'instance' subject
+    # are transformed to the action part alone.
     # Exception : instance-init -> init = already hardcoded, so prevent adding
     # it twice. Same for setup.
     # @see cwt/instance/init.make.sh
@@ -558,9 +569,22 @@ u_instance_write_mk() {
     mk_entry_points+=("cwt/$sa_pair.sh")
   done
 
+  # We need the custom 'extend' scripts folder to have priority for avoiding
+  # "prefixed" aliases in case of collision with generic CWT extensions (so that
+  # they get prefixed, not the project-specific implementation).
+  # -> Move it first in iteration below.
+  extension_iteration='extend'
   for extension in $CWT_EXTENSIONS; do
+    case "$extension" in 'extend')
+      continue
+    esac
+    extension_iteration+=" $extension"
+  done
+
+  for extension in $extension_iteration; do
     u_cwt_extension_namespace "$extension"
-    eval "extension_actions=\"\$${extension_namespace}_ACTIONS\""
+    extension_var="${extension_namespace}_ACTIONS"
+    extension_actions="${!extension_var}"
     if [[ -n "$extension_actions" ]]; then
 
       # Extensions' subject-action pairs must yield unique tasks -> check for

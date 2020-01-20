@@ -3,7 +3,7 @@
 ##
 # Gets local instance DB credentials.
 #
-# @see u_db_get_credentials()
+# @see u_db_set()
 #
 # Uses the following env. var. if it is defined in current shell scope to select
 # which database credentials to load :
@@ -37,7 +37,7 @@
 #
 
 . cwt/bootstrap.sh
-u_db_get_credentials $@
+u_db_set $@
 
 echo "Details for local database '$DB_ID' :"
 echo "  DB_DRIVER = '$DB_DRIVER'"

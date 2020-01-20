@@ -46,7 +46,7 @@ u_remote_sync_db_to() {
     return 1
   fi
 
-  u_db_get_credentials
+  u_db_set
 
   # Handle variants given 1st argument.
   if [[ -n "$p_option" ]]; then
@@ -141,7 +141,7 @@ u_remote_sync_db_from() {
     return 1
   fi
 
-  u_db_get_credentials
+  u_db_set
 
   # Handle variants given 1st argument.
   if [[ -n "$p_option" ]]; then

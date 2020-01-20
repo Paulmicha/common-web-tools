@@ -29,7 +29,7 @@
 #   # Print the list of modified files every 2 seconds, if any :
 #   u_fs_watch_poll the/target/dir
 #
-#   # Run in parallel several file watcher polling (Ctrl+C to stop) :
+#   # Run in parallel several file watcher polling (Ctrl+C to stop all at once) :
 #   u_fs_watch_poll the/target/dir 'npm run build' &
 #   u_fs_watch_poll another/dir 'gulp build' &
 #   wait
@@ -56,7 +56,7 @@ u_fs_watch_poll() {
     files_recently_changed=$(find $p_path -type f $name_arg -newermt "-$p_polling_interval seconds")
     if [[ -n $files_recently_changed ]] ; then
       echo
-      echo "u_fs_watch_poll() : changes detected in the folling file(s) : $files_recently_changed"
+      echo "u_fs_watch_poll() : changes detected in the following file(s) : $files_recently_changed"
       echo "  -> calling '$p_callback' ..."
       echo
       eval "$p_callback"
@@ -83,7 +83,7 @@ u_fs_watch_poll() {
 #   u_fs_merge_dirs my/src/dir the/target/dir 'no'
 #
 #   # Overwriting existing destination files in target dir + not deleting the
-#   # source dir : :
+#   # source dir :
 #   u_fs_merge_dirs my/src/dir the/target/dir 'yes' 'no'
 #
 #   # Preserving existing destination files in target dir + not deleting the

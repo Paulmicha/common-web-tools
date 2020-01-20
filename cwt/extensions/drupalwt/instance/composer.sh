@@ -10,7 +10,7 @@
 # @example
 #   make composer update nothing
 #   # Or :
-#   cwt/extensions/drupalwt/cli/composer.make.sh update nothing
+#   cwt/extensions/drupalwt/instance/composer.sh update nothing
 #
 
 . cwt/bootstrap.sh

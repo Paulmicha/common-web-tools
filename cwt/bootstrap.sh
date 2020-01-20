@@ -24,6 +24,7 @@ if [[ $CWT_BS_FLAG -ne 1 ]]; then
   . cwt/utilities/fs.sh
   . cwt/utilities/array.sh
   . cwt/utilities/string.sh
+  . cwt/utilities/yaml.sh
 
   # If instance init was run at least once, automatically load locally generated
   # global env vars.

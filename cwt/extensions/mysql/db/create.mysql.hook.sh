@@ -17,7 +17,7 @@
 #   - DB_ADMIN_USER - defaults to DB_USER.
 #   - DB_ADMIN_PASS - defaults to DB_PASS.
 #   - DB_TABLES_SKIP_DATA - defaults to an empty string.
-# @see u_db_get_credentials() in cwt/extensions/db/db.inc.sh
+# @see u_db_set() in cwt/extensions/db/db.inc.sh
 #
 # @example
 #   make db-create

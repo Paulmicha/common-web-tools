@@ -31,7 +31,9 @@ elseif ($databases['default']['default']['driver'] == 'pgsql') {
   $databases['default']['default']['namespace'] = 'Drupal\\Core\\Database\\Driver\\pgsql';
 }
 
-$config_directories[CONFIG_SYNC_DIRECTORY] = '{{ DRUPAL_CONFIG_SYNC_DIR }}';
+// Drupal > 8.8 : see https://www.drupal.org/node/3018145
+// $config_directories[CONFIG_SYNC_DIRECTORY] = '{{ DRUPAL_CONFIG_SYNC_DIR }}';
+$settings['config_sync_directory'] = '{{ DRUPAL_CONFIG_SYNC_DIR }}';
 
 $settings['hash_salt'] = '{{ DRUPAL_HASH_SALT }}';
 

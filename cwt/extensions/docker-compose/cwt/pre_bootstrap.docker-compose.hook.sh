@@ -28,5 +28,5 @@ esac
 # docker-compose.yml when unsign the 'db' extension and generating DB_PASS vars
 # i.e. in order to avoid leaving sensitive values in .env file.
 if u_cwt_extension_exists 'db'; then
-  u_db_get_credentials
+  u_db_set
 fi

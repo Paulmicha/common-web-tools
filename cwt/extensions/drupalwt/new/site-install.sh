@@ -5,6 +5,11 @@
 #
 # See https://drushcommands.com/drush-9x/site/site:install/
 #
+# Uses the following variable in calling scope if available :
+# @var dwt_site_to_install
+# This allows to support multi-site setups - i.e. when set, this variable
+# determines which site will be installed.
+#
 # @param 1 [optional] String : the site name (human readable). Defaults to :
 #   "Hello world".
 # @param 2 [optional] String : A Drupal install profile name. Defaults to
@@ -43,6 +48,26 @@
 
 . cwt/bootstrap.sh
 
+case "$DWT_MULTISITE" in
+
+  # Multi-site support :
+  # $dwt_site_to_install defaults to 'default',
+  # the default install profile comes from the corresponding site's YAML config.
+  true)
+    if [[ -z "$dwt_site_to_install" ]]; then
+      dwt_site_to_install='default'
+    fi
+    u_dwt_sites "$dwt_site_to_install"
+    multisite_install_profile_var="dwt_sites_${dwt_site_to_install}_install_profile"
+    u_dwt_db_set "$dwt_site_to_install"
+    ;;
+
+  # "Normal" setups.
+  *)
+    u_db_set
+    ;;
+esac
+
 # Default value for $1 : site name.
 site_name="Hello world"
 if [[ -n "$1" ]]; then
@@ -51,6 +76,11 @@ fi
 
 # Default value for $2 : Drupal install profile name.
 install_profile='standard'
+# If this is a multisite setup, the default value may come from chosen site's
+# YAML config. The $2 parameter to this script takes precedence.
+if [[ -n "${!multisite_install_profile_var}" ]]; then
+  install_profile="${!multisite_install_profile_var}"
+fi
 if [[ -n "$2" ]]; then
   install_profile="$2"
 fi
@@ -80,8 +110,6 @@ if [[ -n "$6" ]]; then
 fi
 
 echo "Installing a new project using 'drush site-install' ..."
-
-u_db_get_credentials
 
 drush site-install "$install_profile" --verbose --yes \
   --db-url="$DB_DRIVER://$DB_USER:$DB_PASS@$DB_HOST:$DB_PORT/$DB_NAME" \

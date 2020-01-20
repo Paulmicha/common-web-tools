@@ -13,5 +13,5 @@
 
 . cwt/bootstrap.sh
 
-u_db_get_credentials
-u_dwt_write_local_settings
+u_db_set
+u_dwt_write_settings

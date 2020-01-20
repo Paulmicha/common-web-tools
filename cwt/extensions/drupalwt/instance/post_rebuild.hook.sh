@@ -9,4 +9,4 @@
 # @see cwt/extensions/drupalwt/drupalwt.inc.sh
 #
 
-u_dwt_write_local_settings
+u_dwt_write_settings

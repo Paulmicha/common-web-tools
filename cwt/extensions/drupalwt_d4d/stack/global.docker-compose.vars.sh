@@ -16,6 +16,14 @@
 # @see cwt/bootstrap.sh
 #
 
+# TODO multi-site setups cannot deal with read-only globals for DB_* vars, but
+# docker-compose.yml files still need those values (from .env).
+# @see u_db_set()
+# @see u_dwt_db_set()
+# An attempt to load them in current shell scope is done in :
+# @see cwt/extensions/docker-compose/cwt/pre_bootstrap.docker-compose.hook.sh
+# BUT we still need to adapt the DB container for multiple DB (creation, and
+# possibly initial DB dump import).
 global DB_HOST "[default]='mariadb'"
 global DB_NAME "[default]='drupal'"
 global DB_USER "[default]='drupal'"

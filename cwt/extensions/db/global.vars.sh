@@ -22,5 +22,5 @@ global CWT_DB_INITIAL_IMPORT "[default]=true [help]='Set to true to import the f
 # Workaround minor issue when listing all paths for driver-specific hooks, e.g.
 # $ make hook-debug s:db a:exists v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
 # This does not affect the "real" call, only the debug utility (because these
-# hooks are called after u_db_get_credentials in the same scope).
+# hooks are called after u_db_set in the same scope).
 global DB_DRIVER "[default]='mysql'"

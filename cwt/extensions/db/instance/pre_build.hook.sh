@@ -10,4 +10,4 @@
 # @see cwt/extensions/docker-compose/instance/build.docker-compose.hook.sh
 #
 
-u_db_get_credentials
+u_db_set

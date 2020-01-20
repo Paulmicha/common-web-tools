@@ -81,7 +81,7 @@ u_apache_write_vhost_conf() {
 
     # DB credentials may not all be declared using (readonly) globals, and there
     # may be distinct databases using a "modifier" scoped variable.
-    # @see u_db_get_credentials()
+    # @see u_db_set()
     # -> For projects using multiple databases, the distinction is made using
     # the following convention : prefix var names using $DB_ID, e.g. :
     # in the settings template, use {{ DEFAULT_DB_USER }}.

@@ -8,7 +8,10 @@
 #
 
 ##
-# Gets and/or generates once DB credentials.
+# Exports the complete set of DB info by ID, and (re)sets corresponding values.
+#
+# Some values may be generated and stored once on first call, e.g. passwords
+# when CWT_DB_MODE is set to 'auto' (or prompted when set to 'manual').
 #
 # @exports DB_ID - defaults to 'default'.
 # @exports DB_DRIVER - defaults to 'mysql'.
@@ -20,6 +23,9 @@
 # @exports DB_ADMIN_USER - defaults to DB_USER.
 # @exports DB_ADMIN_PASS - defaults to DB_PASS.
 # @exports DB_TABLES_SKIP_DATA - defaults to an empty string.
+#
+# This function also exports a prefixed version of each variable with DB_ID.
+# @exports <DB_ID>_DB_* (ex: if DB_ID='default', will export DEFAULT_DB_NAME, etc.)
 #
 # @requires the following globals in calling scope :
 # - INSTANCE_DOMAIN
@@ -48,24 +54,36 @@
 # @example
 #   # Calling this funcion without arguments = use defaults mentionned above,
 #   # depending on CWT_DB_MODE (see cwt/extensions/db/global.vars.sh).
-#   u_db_get_credentials
+#   u_db_set
+#   # Result :
+#   # - all DB_* variables exported contain the 'default' DB values.
+#   # - a copy of every variable prefixed with DB_ID is exported. E.g. :
+#   echo "$DEFAULT_DB_NAME"
+#   echo "$DEFAULT_DB_USER"
+#   # Etc.
 #
 #   # Explicitly set DB_ID (TODO [wip] write tests for multi-db projects).
 #   # Alternatively, a local variable $CWT_DB_ID may be used in calling scope.
-#   u_db_get_credentials my_custom_db_id
+#   u_db_set id_example
 #   # Or :
-#   CWT_DB_ID='my_custom_db_id'
-#   u_db_get_credentials
+#   CWT_DB_ID='id_example'
+#   u_db_set
+#   # Result :
+#   echo "$ID_EXAMPLE_DB_NAME"
+#   echo "$ID_EXAMPLE_DB_USER"
+#   # Etc.
 #
-#   # If called in current shell scope once, exported values will prevent
-#   # re-loading values. TODO [wip] implement "static" keyed sets of vars ?
-#   # Meanwhile, the 2nd arg is a flag which can force re-loading these values.
-#   u_db_get_credentials my_custom_db_id 1
+#   # If multiple consecutive calls to this function are made in current shell
+#   # scope for the same DB_ID (or without - fallback to 'default'), previously
+#   # exported values will not be re-loaded.
+#   # The 2nd arg is a flag which can force re-loading these values. This allows
+#   # to support cases where some stored values (e.g. registry) might be updated.
+#   u_db_set id_example 1
 #
-u_db_get_credentials() {
+u_db_set() {
   if [[ -z "$CWT_DB_DUMPS_BASE_PATH" ]]; then
     echo >&2
-    echo "Error in u_db_get_credentials() - $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_BASE_PATH' is undefined." >&2
+    echo "Error in u_db_set() - $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_BASE_PATH' is undefined." >&2
     echo "Current instance must be (re)initialized with the 'db' extension enabled." >&2
     echo "-> Aborting (1)." >&2
     echo >&2
@@ -89,8 +107,8 @@ u_db_get_credentials() {
 
   u_str_sanitize_var_name "$db_id" 'db_id'
 
-  # If DB credentials vars are already exported in current shell scope, no need
-  # to carry on.
+  # If DB credentials vars are already exported in current shell scope for given
+  # db_id, no need to reload (unless explicitly asked).
   if [[ -n "$DB_ID" ]] && [[ "$DB_ID" == "$db_id" ]] && [[ -z "$p_force_reload" ]]; then
     return
   fi
@@ -264,21 +282,50 @@ u_db_get_credentials() {
           read -p "Enter $var value, or leave blank to use the default : $val_default : " val
 
           if [[ -z "$val" ]]; then
-            eval "export $var=\"$val_default\""
+            export "$var=$val_default"
             u_instance_registry_set "${db_id}.${var}" "$val_default"
           else
-            eval "export $var=\"$val\""
+            export "$var=$val"
             u_instance_registry_set "${db_id}.${var}" "$val"
           fi
 
         # Value was previously stored in registry (secrets store)
         # -> just export it.
         else
-          eval "export $var=\"$reg_val\""
+          export "$var=$reg_val"
         fi
       done
     ;;
   esac
+
+  # Finally, export prefixed DB_* vars.
+  local v
+  local db_var
+  local prefixed_db_var
+
+  u_db_vars_list
+
+  for v in $db_vars_list; do
+    db_var="DB_$v"
+    prefixed_db_var="${db_id}_${db_var}"
+    u_str_uppercase "$prefixed_db_var" 'prefixed_db_var'
+    export "$prefixed_db_var=${!db_var}"
+  done
+}
+
+##
+# Single source of truth : get the list of DB vars.
+#
+# This funtion writes its result to a variable subject to collision in calling
+# scope :
+# @var db_vars_list
+#
+# @example
+#   u_db_vars_list
+#   echo "$db_vars_list"
+#
+u_db_vars_list() {
+  db_vars_list='ID DRIVER HOST PORT NAME USER PASS ADMIN_USER ADMIN_PASS TABLES_SKIP_DATA'
 }
 
 ##
@@ -311,7 +358,7 @@ u_db_exists() {
   local p_db_name="$1"
   local db_exists=''
 
-  u_db_get_credentials "$2" "$3"
+  u_db_set "$2" "$3"
   u_hook_most_specific -s 'db' -a 'exists' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
 
   case "$db_exists" in true)
@@ -343,7 +390,7 @@ u_db_exists() {
 #   u_db_create
 #
 u_db_create() {
-  u_db_get_credentials $@
+  u_db_set $@
   u_hook_most_specific -s 'db' -a 'create' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
 }
 
@@ -369,7 +416,7 @@ u_db_create() {
 #   u_db_destroy
 #
 u_db_destroy() {
-  u_db_get_credentials $@
+  u_db_set $@
   u_hook_most_specific -s 'db' -a 'destroy' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
 }
 
@@ -418,7 +465,7 @@ u_db_import() {
     exit 1
   fi
 
-  u_db_get_credentials $2 $3
+  u_db_set $2 $3
 
   db_dump_file="$p_dump_file_path"
 
@@ -507,7 +554,7 @@ u_db_backup() {
   local db_dump_file
   local db_dump_file_name
 
-  u_db_get_credentials $2 $3
+  u_db_set $2 $3
 
   db_dump_file="$p_dump_file_path"
   db_dump_dir="${db_dump_file%/${db_dump_file##*/}}"
@@ -589,7 +636,7 @@ u_db_backup() {
 #   u_db_clear
 #
 u_db_clear() {
-  u_db_get_credentials $@
+  u_db_set $@
   u_hook_most_specific -s 'db' -a 'clear' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
 }
 
@@ -671,7 +718,7 @@ u_db_routine_backup() {
     db_backup_file_ext='sql'
   esac
 
-  u_db_get_credentials $@
+  u_db_set $@
   db_routine_new_backup_file="$CWT_DB_DUMPS_BASE_PATH/local/$DB_ID/$(date +"%Y/%m/%d/%H-%M-%S")_$db_backup_file_middle.$db_backup_file_ext"
 
   u_db_backup "$db_routine_new_backup_file" $@

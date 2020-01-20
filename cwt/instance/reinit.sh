@@ -23,7 +23,7 @@ env -i \
   # @see scripts/cwt/extend/remote/post_init.hook.sh
   CWT_SSH_PUBKEY="$CWT_SSH_PUBKEY" \
   # Also except CWT_DB_ID for the db extension.
-  # @see u_db_get_credentials() in cwt/extensions/db/db.inc.sh
+  # @see u_db_set() in cwt/extensions/db/db.inc.sh
   CWT_DB_ID="$CWT_DB_ID" \
   # Also except common shell env vars some programs use.
   HOME="$HOME" LC_CTYPE="${LC_ALL:-${LC_CTYPE:-$LANG}}" PATH="$PATH" USER="$USER" \
