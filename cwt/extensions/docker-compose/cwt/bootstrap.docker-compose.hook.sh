@@ -3,31 +3,11 @@
 ##
 # Implements hook -s 'cwt' -a 'bootstrap' -v 'PROVISION_USING'.
 #
-# Implement custom bash alias for the 'docker-compose' program given 'DC_MODE'
-# value, which specifies if and how docker-compose will choose a YAML
-# declaration file for current project instance.
-#
-# @see cwt/extensions/docker-compose/global.vars.sh
-# @see cwt/bootstrap.sh
+# TODO [evol] Find better workaround for warnings due to undefined env. var. in
+# docker-compose.yml when unsign the 'db' extension and generating DB_PASS vars
+# i.e. in order to avoid leaving sensitive values in .env file.
 #
 
-case "$DC_MODE" in
-
-  # Automatically try to choose the most specific YAML file based on the
-  # DC_YML_VARIANTS global (which provides hook variants for lookup paths).
-  'auto')
-    hook_most_specific_dry_run_match=''
-    u_hook_most_specific 'dry-run' -s 'stack' -a 'docker-compose' -c "yml" -v 'DC_YML_VARIANTS' -t
-
-    if [ -f "$hook_most_specific_dry_run_match" ]; then
-      alias docker-compose="docker-compose -f $hook_most_specific_dry_run_match"
-    fi
-    ;;
-
-  # Use the path provided in the DC_YML global.
-  'manual')
-    if [[ -f "$DC_YML" ]]; then
-      alias docker-compose="docker-compose -f $DC_YML"
-    fi
-    ;;
-esac
+if u_cwt_extension_exists 'db'; then
+  u_db_set
+fi

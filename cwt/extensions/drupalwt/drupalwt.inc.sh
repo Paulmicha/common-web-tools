@@ -43,10 +43,7 @@ u_dwt_write_settings() {
 
     # Multi-site support.
     true)
-      local var
       local site_id
-      local site_domain
-      local site_dir
 
       u_dwt_sites
 
@@ -66,22 +63,9 @@ u_dwt_write_settings() {
       done
 
       # (Re)write the multi-site declaration settings file (i.e. sites/sites.php).
-      echo '<?php' > "$SERVER_DOCROOT/sites/sites.php"
-      for site_id in "${dwt_sites_ids[@]}"; do
-        # Sites' dir :
-        var="dwt_sites_${site_id}_dir"
-        site_dir="${!var}"
-        # Sites' domain :
-        # TODO [evol] support multiple domains per site.
-        var="dwt_sites_${site_id}_domain"
-        site_domain="${!var}"
-        if [[ -z "$site_domain" ]]; then
-          site_domain="${site_id}.${INSTANCE_DOMAIN}"
-        fi
-        echo "\$sites['$site_domain'] = '$site_dir';" >> "$SERVER_DOCROOT/sites/sites.php"
-      done
-
-      return
+      # TODO [evol] Support custom output file (i.e. sites/sites_local.php)
+      # + base file ?
+      u_dwt_write_multisite_settings
       ;;
 
     # "Normal" setups : just write the Drupal settings file.
@@ -92,14 +76,14 @@ u_dwt_write_settings() {
 }
 
 ##
-# Prepares given site DB.
+# Presets site DB info.
 #
 # Loads the corresponding DB credentials in calling scope. If this is called for
 # the first time for given site DB, depending on the choice of DB credentials
 # handling method, calling this function may also generate a random password.
 # @see u_db_set()
 #
-# @requires the following variables in calling scope :
+# Uses the following variables in calling scope :
 # @var dwt_sites_<SITE_ID>_db_* (id, name, host, port, user, etc.)
 #
 # @exports CWT_DB_ID
@@ -546,4 +530,90 @@ u_dwt_site_data() {
       dwt_site_data[$key]="${!var}"
     fi
   done
+}
+
+##
+# (Re)writes the multi-site config file (i.e. sites/sites.php).
+#
+# @requires the variables from u_dwt_sites() in calling scope :
+# @var dwt_sites_ids
+# @var dwt_sites_<SITE_ID>_*
+#
+# @param 1 [optional] String : base file to use. Gets copied before being
+#   appended with the settings contents.
+#   Defaults to "$SERVER_DOCROOT/sites/example.sites.php".
+# @param 2 [optional] String : resulting file (output).
+#   Defaults to "$SERVER_DOCROOT/sites/sites.php".
+#
+# @example
+#   # Will use sites/example.sites.php as base, (re)writes sites/sites.php.
+#   u_dwt_write_multisite_settings
+#
+#   # Customize base file
+#   u_dwt_write_multisite_settings 'path/to/base/file'
+#
+#   # Customize resulting file.
+#   u_dwt_write_multisite_settings '' "$SERVER_DOCROOT/sites/sites_local.php"
+#
+u_dwt_write_multisite_settings() {
+  local base_file="$1"
+  local target_file="$2"
+
+  if [[ -z "$base_file" ]]; then
+    base_file="$SERVER_DOCROOT/sites/example.sites.php"
+  fi
+  if [[ -z "$target_file" ]]; then
+    target_file="$SERVER_DOCROOT/sites/sites.php"
+  fi
+
+  if [[ -f "$target_file" ]]; then
+    rm -f "$target_file"
+    if [[ $? -ne 0 ]]; then
+      echo >&2
+      echo "Error in u_dwt_write_multisite_settings() - $BASH_SOURCE line $LINENO: unable to remove the multisite settings file to recreate '$target_file'." >&2
+      echo "-> Aborting (1)." >&2
+      echo >&2
+      exit 1
+    fi
+  fi
+
+  if [[ -f "$base_file" ]]; then
+    cp "$base_file" "$target_file"
+    if [[ $? -ne 0 ]]; then
+      echo >&2
+      echo "Error in u_dwt_write_multisite_settings() - $BASH_SOURCE line $LINENO: unable to copy '$base_file' to '$target_file'." >&2
+      echo "-> Aborting (2)." >&2
+      echo >&2
+      exit 2
+    fi
+    echo "" >> "$target_file"
+  else
+    echo '<?php' > "$target_file"
+    echo "" >> "$target_file"
+  fi
+
+  echo "(Re)write the multi-site settings file (i.e. $target_file) ..."
+
+  local var
+  local site_id
+  local site_dir
+  local site_domain
+
+  for site_id in "${dwt_sites_ids[@]}"; do
+    # Sites' dir :
+    var="dwt_sites_${site_id}_dir"
+    site_dir="${!var}"
+    # Sites' domain :
+    var="dwt_sites_${site_id}_domain"
+    site_domain="${!var}"
+    if [[ -z "$site_domain" ]]; then
+      site_domain="${site_id}.${INSTANCE_DOMAIN}"
+    fi
+    echo "\$sites['$site_domain'] = '$site_dir';" >> "$target_file"
+  done
+
+  echo "" >> "$target_file"
+
+  echo "(Re)write the multi-site settings file (i.e. $target_file) : done."
+  echo
 }

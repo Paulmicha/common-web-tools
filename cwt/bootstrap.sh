@@ -15,6 +15,11 @@
 if [[ $CWT_BS_FLAG -ne 1 ]]; then
   CWT_BS_FLAG=1
 
+  # NB: aliases are not expanded when the shell is not interactive, unless the
+  # expand_aliases shell option is set using shopt.
+  # See https://unix.stackexchange.com/a/1498
+  shopt -s expand_aliases
+
   # Include CWT core utilities.
   . cwt/utilities/shell.sh
   . cwt/utilities/cwt.sh
@@ -41,6 +46,19 @@ if [[ $CWT_BS_FLAG -ne 1 ]]; then
   CWT_INC=''
   u_cwt_extend
 
+  # Because aliases are expanded when a function definition is read, *not* when
+  # the function is executed, we need to have the possibility to define aliases
+  # *before* the includes are sourced.
+  # And because aliases may depend on optionally preset variables, we trigger
+  # the "pre_bootstrap" hook before.
+  # To verify which files can be used (and will be sourced) when these hooks are
+  # triggered, use the following commands *in this order* :
+  # $ make hook-debug s:cwt a:pre_bootstrap v:PROVISION_USING
+  # $ make hook-debug s:cwt a:alias v:PROVISION_USING
+  # $ make hook-debug s:cwt a:bootstrap v:PROVISION_USING
+  hook -s 'cwt' -a 'pre_bootstrap' -v 'PROVISION_USING'
+  hook -s 'cwt' -a 'alias' -v 'PROVISION_USING'
+
   # Load additional includes (including extensions').
   if [[ -n "$CWT_INC" ]]; then
     for file in $CWT_INC; do
@@ -52,15 +70,6 @@ if [[ $CWT_BS_FLAG -ne 1 ]]; then
     done
   fi
 
-  # Allow extensions to implement custom global variables or aliases.
-  # To verify which files can be used (and will be sourced) when these hooks are
-  # triggered, use the following commands in this order :
-  # $ make hook-debug s:cwt a:pre_bootstrap v:PROVISION_USING
-  # $ make hook-debug s:cwt a:bootstrap v:PROVISION_USING
-  # NB: aliases are not expanded when the shell is not interactive, unless the
-  # expand_aliases shell option is set using shopt.
-  # See https://unix.stackexchange.com/a/1498
-  shopt -s expand_aliases
-  hook -s 'cwt' -a 'pre_bootstrap' -v 'PROVISION_USING'
+  # Allow extensions to implement custom additional env. variables.
   hook -s 'cwt' -a 'bootstrap' -v 'PROVISION_USING'
 fi

@@ -53,6 +53,9 @@
 # 4. The 'CWT_INC' values are a simple list of files to be sourced in
 #   cwt/bootstrap.sh scope directly. They are meant to contain bash functions
 #   organized by subject. E.g. given subject = git : "$p_path/git/git.inc.sh".
+#   For convenience, any file matching the scripts/cwt/*.inc.sh pattern will
+#   also be added. This gives a place to put some custom project-specific
+#   functions that would not necessarily be pertinent in a subject dir.
 #
 u_cwt_extend() {
   local p_path="$1"
@@ -69,8 +72,8 @@ u_cwt_extend() {
 
   # Always reinit as empty strings on every call to u_cwt_extend().
   # @see cwt/test/cwt/hook.test.sh
-  eval "export ${p_namespace}_SUBJECTS=''"
-  eval "export ${p_namespace}_ACTIONS=''"
+  export "${p_namespace}_SUBJECTS"=''
+  export "${p_namespace}_ACTIONS"=''
 
   # "Reusable" local var name.
   # @see u_cwt_primitive_values()
@@ -89,7 +92,7 @@ u_cwt_extend() {
   for subject in $subjects_list; do
 
     # Build up exported subjects list.
-    eval "${p_namespace}_SUBJECTS+=\"$subject \""
+    export "${p_namespace}_SUBJECTS"+="$subject "
 
     # Build up exported generic includes list (by subject).
     inc="$p_path/$subject/${subject}.inc.sh"
@@ -105,9 +108,22 @@ u_cwt_extend() {
 
     for action in $actions_list; do
       # Build up exported actions list (by subject).
-      eval "${p_namespace}_ACTIONS+=\"${subject}/$action \""
+      export "${p_namespace}_ACTIONS"+="${subject}/$action "
     done
   done
+
+  # Debug.
+  # local subjects_var="${p_namespace}_SUBJECTS"
+  # echo "$subjects_var = '${!subjects_var}'"
+  # local actions_var="${p_namespace}_ACTIONS"
+  # echo "$actions_var = '${!actions_var}'"
+
+  # Convenience additional INC lookup for project-specific functions.
+  if [[ -d scripts/cwt ]]; then
+    for inc in scripts/cwt/*.inc.sh; do
+      CWT_INC+="$inc "
+    done
+  fi
 
   # If extensions are detected, loop through each of them to aggregate namespaced
   # primitives + restrict this to CWT namespace only.
@@ -417,10 +433,12 @@ u_cwt_namespace_has_subject() {
   local p_subject="$2"
 
   local extension_subjects
+  local extension_subjects_var
   local extension_namespace
 
   u_cwt_extension_namespace "$p_extension_path"
-  eval "extension_subjects=\"\$${extension_namespace}_SUBJECTS\""
+  extension_subjects_var="${extension_namespace}_SUBJECTS"
+  extension_subjects="${!extension_subjects_var}"
 
   if [[ -n "$extension_subjects" ]]; then
     local s
@@ -471,6 +489,8 @@ u_cwt_get_actions() {
   local extension
   local uppercase
   local ext_path
+  local subjects_var
+  local actions_var
 
   cwt_action_names=()
   cwt_action_scripts=()
@@ -479,8 +499,10 @@ u_cwt_get_actions() {
     uppercase="$extension"
     u_str_sanitize_var_name "$uppercase" 'uppercase'
     u_str_uppercase "$uppercase"
-    eval "subjects+=\" \$${uppercase}_SUBJECTS\""
-    eval "actions+=\" \$${uppercase}_ACTIONS\""
+    subjects_var="${uppercase}_SUBJECTS"
+    subjects+=" ${!subjects_var}"
+    actions_var="${uppercase}_ACTIONS"
+    actions+=" ${!actions_var}"
     ext_path=''
     u_cwt_extension_path "$extension"
     base_paths+=("$ext_path/$extension")

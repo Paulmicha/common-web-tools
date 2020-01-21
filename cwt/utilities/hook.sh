@@ -38,8 +38,8 @@
 # + the values PROVISION_USING='docker-compose' and INSTANCE_TYPE='dev' :
 # - cwt/my_subject/my_action.hook.sh
 # - cwt/my_subject/my_action.docker-compose.hook.sh
-# - cwt/my_subject/my_action.dev.hook.sh
 # - cwt/my_subject/my_action.docker-compose.dev.hook.sh
+# - cwt/my_subject/my_action.dev.hook.sh
 #
 # @requires the following global variables in calling scope :
 # - CWT_ACTIONS
@@ -85,13 +85,13 @@
 #   # Yields the following lookup paths (ALL includes found are sourced) :
 #   # (given INSTANCE_TYPE='dev' and HOST_TYPE='local')
 #   # - cwt/stack/init.hook.sh
-#   # - cwt/stack/init.dev.hook.sh
 #   # - cwt/stack/init.local.hook.sh
-#   # - cwt/stack/init.dev.local.hook.sh
+#   # - cwt/stack/init.local.dev.hook.sh
+#   # - cwt/stack/init.dev.hook.sh
 #   # - cwt/extensions/<CWT_EXTENSIONS>/stack/init.hook.sh
-#   # - cwt/extensions/<CWT_EXTENSIONS>/stack/init.dev.hook.sh
 #   # - cwt/extensions/<CWT_EXTENSIONS>/stack/init.local.hook.sh
-#   # - cwt/extensions/<CWT_EXTENSIONS>/stack/init.dev.local.hook.sh
+#   # - cwt/extensions/<CWT_EXTENSIONS>/stack/init.local.dev.hook.sh
+#   # - cwt/extensions/<CWT_EXTENSIONS>/stack/init.dev.hook.sh
 #
 #   # 4. Extensions filter :
 #   hook -e 'nodejs'
@@ -114,17 +114,17 @@
 #   # Yields the following lookup paths (not sourcing matches because -t flag) :
 #   # (given HOST_TYPE='local' and INSTANCE_TYPE='dev')
 #   # - cwt/instance/cwt.yml
-#   # - cwt/instance/cwt.dev.yml
 #   # - cwt/instance/cwt.local.yml
-#   # - cwt/instance/cwt.dev.local.yml
+#   # - cwt/instance/cwt.local.dev.yml
+#   # - cwt/instance/cwt.dev.yml
 #   # - cwt/extensions/<CWT_EXTENSIONS>/instance/cwt.yml
-#   # - cwt/extensions/<CWT_EXTENSIONS>/instance/cwt.dev.yml
 #   # - cwt/extensions/<CWT_EXTENSIONS>/instance/cwt.local.yml
-#   # - cwt/extensions/<CWT_EXTENSIONS>/instance/cwt.dev.local.yml
+#   # - cwt/extensions/<CWT_EXTENSIONS>/instance/cwt.local.dev.yml
+#   # - cwt/extensions/<CWT_EXTENSIONS>/instance/cwt.dev.yml
 #   # - cwt.yml
-#   # - cwt.dev.yml
 #   # - cwt.local.yml
-#   # - cwt.dev.local.yml
+#   # - cwt.local.dev.yml
+#   # - cwt.dev.yml
 #
 # We exceptionally name that function without following the usual convention.
 #
@@ -295,7 +295,7 @@ hook() {
 
   # Add support for project root lookup.
   if [ $p_root_lookup -eq 1 ]; then
-    u_hook_build_project_root_dir_lookup "$p_custom_filter"
+    u_hook_build_project_root_dir_lookup "$p_actions_filter" "$p_custom_filter"
   fi
 
   # Debug.
@@ -436,7 +436,7 @@ u_hook_build_lookup_by_subject() {
 
         # Now that we fetched variants actual values, add them as as suggestions
         # unless excluded (see prefixes). These are combinatory, e.g. :
-        # - init.dev.local.hook.sh
+        # - init.local.dev.hook.sh
         # - bootstrap.docker-compose.dev.hook.sh
         # - bootstrap.docker-compose.prod.remote.hook.sh
         u_str_subsequences "$v_values" '.'
@@ -475,10 +475,9 @@ u_hook_build_lookup_by_subject() {
 # @see u_autoload_add_lookup_level()
 #
 u_hook_build_project_root_dir_lookup() {
-  local p_suffix_override="$1"
+  local p_action="$1"
+  local p_suffix_override="$2"
 
-  local a_path
-  local a_parts_arr
   local a
 
   local x_prim
@@ -494,6 +493,9 @@ u_hook_build_project_root_dir_lookup() {
   local v_flag
   local v_fallback
 
+  # TODO [evol] Whitelist possible values ?
+  a="$p_action"
+
   # By default, this function will produce lookup paths using the default
   # double-extension pattern "*.hook.sh". This can be altered when using the
   # custom filter argument (-c).
@@ -502,46 +504,41 @@ u_hook_build_project_root_dir_lookup() {
     suffix="$p_suffix_override"
   fi
 
-  for a_path in $actions; do
-    u_str_split1 'a_parts_arr' "$a_path" '/'
-    a="${a_parts_arr[1]}"
+  # First, add "pure" actions suggestions - unless excluded (see prefixes).
+  if [[ -z "$p_prefixes_filter" ]]; then
+    lookup_paths+=("${a}.${suffix}")
+  fi
 
-    # First, add "pure" actions suggestions - unless excluded (see prefixes).
-    if [[ -z "$p_prefixes_filter" ]]; then
-      lookup_paths+=("${a}.${suffix}")
+  # Then add "prefixed" actions suggestions.
+  for x_val in $prefixes; do
+    lookup_paths+=("${x_val}_${a}.${suffix}")
+  done
+
+  # Finally, add the variants suggestions.
+  for v_prim in $variants; do
+    v_val="${!v_prim}"
+    if [[ "$v_values" != *"$v_val"* ]]; then
+      v_values+="$v_val "
     fi
+  done
 
-    # Then add "prefixed" actions suggestions.
-    for x_val in $prefixes; do
-      lookup_paths+=("${x_val}_${a}.${suffix}")
+  # Now that we fetched variants actual values, add them as as suggestions
+  # unless excluded (see prefixes). These are combinatory, e.g. :
+  # - init.local.dev.hook.sh
+  # - bootstrap.docker-compose.dev.hook.sh
+  # - bootstrap.docker-compose.prod.remote.hook.sh
+  u_str_subsequences "$v_values" '.'
+  if [[ -z "$p_prefixes_filter" ]]; then
+    for v_val in $str_subsequences; do
+      u_autoload_add_lookup_level "${a}." "$suffix" "$v_val" lookup_paths
     done
+  fi
 
-    # Finally, add the variants suggestions.
-    for v_prim in $variants; do
-      v_val="${!v_prim}"
-      if [[ "$v_values" != *"$v_val"* ]]; then
-        v_values+="$v_val "
-      fi
-    done
-
-    # Now that we fetched variants actual values, add them as as suggestions
-    # unless excluded (see prefixes). These are combinatory, e.g. :
-    # - init.dev.local.hook.sh
-    # - bootstrap.docker-compose.dev.hook.sh
-    # - bootstrap.docker-compose.prod.remote.hook.sh
-    u_str_subsequences "$v_values" '.'
-    if [[ -z "$p_prefixes_filter" ]]; then
-      for v_val in $str_subsequences; do
-        u_autoload_add_lookup_level "${a}." "$suffix" "$v_val" lookup_paths
-      done
-    fi
-
-    # Implement prefix + variant lookup paths, e.g. :
-    # pre_bootstrap.docker-compose.hook.sh
-    for x_val in $prefixes; do
-      for v_val in $str_subsequences; do
-        u_autoload_add_lookup_level "${x_val}_${a}." "$suffix" "$v_val" lookup_paths
-      done
+  # Implement prefix + variant lookup paths, e.g. :
+  # pre_bootstrap.docker-compose.hook.sh
+  for x_val in $prefixes; do
+    for v_val in $str_subsequences; do
+      u_autoload_add_lookup_level "${x_val}_${a}." "$suffix" "$v_val" lookup_paths
     done
   done
 }

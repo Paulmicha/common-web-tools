@@ -302,8 +302,13 @@ u_remote_exec_wrapper() {
 # package 'ssh-agent-filter' must be installed on your local machine.
 # @prereq https://git.tiwe.de/ssh-agent-filter.git
 #
-# To list all the possible paths that can be used, use :
-# $ make hook-debug a:remote_instances c:yml v:HOST_TYPE INSTANCE_TYPE
+# To list matches & check which one will be used (the most specific) :
+# $ u_hook_most_specific 'dry-run' \
+#     -a 'remote_instances' \
+#     -c 'yml' \
+#     -v 'HOST_TYPE INSTANCE_TYPE' \
+#     -t -r -d
+#   echo "match = $hook_most_specific_dry_run_match"
 #
 u_remote_instances_setup() {
   local parsed_yaml_remotes=''
@@ -313,7 +318,7 @@ u_remote_instances_setup() {
     -a 'remote_instances' \
     -c 'yml' \
     -v 'HOST_TYPE INSTANCE_TYPE' \
-    -t
+    -t -r
 
   if [[ -f "$hook_most_specific_dry_run_match" ]]; then
     # Purge existing remotes first.
