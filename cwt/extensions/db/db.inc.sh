@@ -81,15 +81,6 @@
 #   u_db_set id_example 1
 #
 u_db_set() {
-  if [[ -z "$CWT_DB_DUMPS_BASE_PATH" ]]; then
-    echo >&2
-    echo "Error in u_db_set() - $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_BASE_PATH' is undefined." >&2
-    echo "Current instance must be (re)initialized with the 'db' extension enabled." >&2
-    echo "-> Aborting (1)." >&2
-    echo >&2
-    exit 1
-  fi
-
   local p_db_id="$1"
   local p_force_reload="$2"
   local db_id
@@ -113,6 +104,9 @@ u_db_set() {
     return
   fi
   export DB_ID="$db_id"
+
+  # Give a chance to other extensions to preset non-readonly env vars.
+  hook -s 'db' -a 'env_preset' -v 'HOST_TYPE INSTANCE_TYPE PROVISION_USING'
 
   case "$CWT_DB_MODE" in
     # Some environments do not require CWT to handle DB credentials at all.
@@ -314,6 +308,55 @@ u_db_set() {
 }
 
 ##
+# Exports all locally-defined DB credentials (multi-DB support).
+#
+# There are 2 ways to declare the different databases that the local project
+# instance will use :
+#   1. Using the read-only "append-type" global CWT_DB_IDS
+#   2. Implementing hook -s 'db' -a 'set_multi_db_ids' -v 'INSTANCE_TYPE'
+#     (adding space-separated values to scoped variable multi_db_ids).
+# @see u_db_set()
+#
+# @example
+#   u_db_set_all
+#   # Result (given 2 ids : 'default' + 'example') :
+#   echo "$DB_ID" # <- Prints 'default'
+#   echo "$DB_USER" # <- Prints the user name for 'default' database.
+#   echo "$EXAMPLE_DB_USER" # <- Prints the user name for 'example' database.
+#   # etc.
+#
+u_db_set_all() {
+  local db_id
+  local db_ids=()
+
+  # Support multi-DB projects defined using the "append"-type global CWT_DB_IDS.
+  if [[ -n "$CWT_DB_IDS" ]]; then
+    u_array_add_once "$CWT_DB_IDS" db_ids
+  fi
+
+  # Let extensions define their own additional DB_IDs.
+  local multi_db_ids=''
+  hook -s 'db' -a 'set_multi_db_ids' -v 'INSTANCE_TYPE'
+  if [[ -n "$multi_db_ids" ]]; then
+    u_array_add_once "$multi_db_ids" db_ids
+  fi
+
+  if [[ -n "$db_ids" ]]; then
+    for db_id in "${db_ids[@]}"; do
+      # Default site will be loaded last, see below.
+      case "$db_id" in 'default')
+        continue
+      esac
+      u_db_set "$db_id"
+    done
+  fi
+
+  # Default DB is loaded last. This allows for the DB "selected" by default
+  # after CWT bootstrap is done to be DB_ID='default'.
+  u_db_set
+}
+
+##
 # Single source of truth : get the list of DB vars.
 #
 # This funtion writes its result to a variable subject to collision in calling
@@ -390,7 +433,6 @@ u_db_exists() {
 #   u_db_create
 #
 u_db_create() {
-  u_db_set $@
   u_hook_most_specific -s 'db' -a 'create' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
 }
 
@@ -548,6 +590,15 @@ u_db_import() {
 #   u_db_backup '/path/to/dump/file.sql'
 #
 u_db_backup() {
+  if [[ -z "$CWT_DB_DUMPS_BASE_PATH" ]]; then
+    echo >&2
+    echo "Error in u_db_backup() - $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_BASE_PATH' is undefined." >&2
+    echo "Current instance must be (re)initialized with the 'db' extension enabled." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    exit 1
+  fi
+
   local p_dump_file_path="$1"
 
   local db_dump_dir
@@ -680,6 +731,15 @@ u_db_restore() {
 #   u_db_restore_last
 #
 u_db_restore_last() {
+  if [[ -z "$CWT_DB_DUMPS_BASE_PATH" ]]; then
+    echo >&2
+    echo "Error in u_db_restore_last() - $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_BASE_PATH' is undefined." >&2
+    echo "Current instance must be (re)initialized with the 'db' extension enabled." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    exit 1
+  fi
+
   u_db_restore "$(u_fs_get_most_recent $CWT_DB_DUMPS_BASE_PATH)" $@
 }
 
@@ -701,6 +761,15 @@ u_db_restore_last() {
 #   u_db_routine_backup
 #
 u_db_routine_backup() {
+  if [[ -z "$CWT_DB_DUMPS_BASE_PATH" ]]; then
+    echo >&2
+    echo "Error in u_db_routine_backup() - $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_BASE_PATH' is undefined." >&2
+    echo "Current instance must be (re)initialized with the 'db' extension enabled." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    exit 1
+  fi
+
   local db_routine_new_backup_file
   local db_backup_file_middle
   local db_backup_file_ext

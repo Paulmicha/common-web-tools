@@ -16,18 +16,6 @@
 # @see cwt/bootstrap.sh
 #
 
-# TODO multi-site setups cannot deal with read-only globals for DB_* vars, but
-# docker-compose.yml files still need those values (from .env).
-# @see u_db_set()
-# @see u_dwt_db_set()
-# An attempt to load them in current shell scope is done in :
-# @see cwt/extensions/docker-compose/cwt/pre_bootstrap.docker-compose.hook.sh
-# BUT we still need to adapt the DB container for multiple DB (creation, and
-# possibly initial DB dump import).
-global DB_HOST "[default]='mariadb'"
-global DB_NAME "[default]='drupal'"
-global DB_USER "[default]='drupal'"
-
 global PHP_TAG "[if-DRUPAL_VERSION]=7 [true]='5.6-dev-4.13.18' [false]='7.3-dev-4.13.18' [index]=1"
 global MARIADB_TAG "[default]='10.4-3.6.7'"
 global NGINX_TAG "[default]='1.17-5.7.2'"
@@ -35,3 +23,8 @@ global NGINX_VHOST_PRESET "[default]='drupal$DRUPAL_VERSION' [index]=1"
 global REDIS_TAG "[default]='4-3.1.4'"
 global ADMINER_TAG "[default]='4-3.7.0'"
 global VARNISH_TAG "[default]='4.1-4.3.6'"
+
+# Redis container name is also necessary for default Drupal settings.
+# @see cwt/extensions/drupalwt/app/drupal_settings.*.tpl.php
+global PHP_SNAME "[default]=php"
+global REDIS_SNAME "[default]=redis"

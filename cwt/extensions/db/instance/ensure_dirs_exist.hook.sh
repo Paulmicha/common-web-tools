@@ -7,6 +7,6 @@
 #
 
 if [ -n "$CWT_DB_DUMPS_BASE_PATH" ] && [ ! -d "$CWT_DB_DUMPS_BASE_PATH" ]; then
-  echo "Creating missing dir ${CWT_DB_DUMPS_BASE_PATH}."
+  echo "Creating missing dir '$CWT_DB_DUMPS_BASE_PATH'."
   mkdir -p "$CWT_DB_DUMPS_BASE_PATH"
 fi

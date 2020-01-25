@@ -10,4 +10,4 @@
 # @see cwt/extensions/docker-compose/instance/start.docker-compose.hook.sh
 #
 
-u_db_set
+u_db_set_all

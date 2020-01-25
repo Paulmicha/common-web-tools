@@ -59,7 +59,7 @@ case "$DWT_MULTISITE" in
     fi
     u_dwt_sites "$dwt_site_to_install"
     multisite_install_profile_var="dwt_sites_${dwt_site_to_install}_install_profile"
-    u_dwt_db_set "$dwt_site_to_install"
+    u_db_set "$dwt_site_to_install"
     ;;
 
   # "Normal" setups.

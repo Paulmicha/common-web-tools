@@ -3,9 +3,9 @@
 ##
 # Implements hook -s 'instance' -p 'pre' -a 'rebuild' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
 #
-# Rewrites locally generated CWT files - among which docker-compose.yml and
-# docker-compose.override.yml based on the values previously set for the
-# following global env. vars :
+# Rewrites locally generated CWT files - e.g. docker-compose.yml, settings
+# files, etc. based on the values previously set for the following global global
+# env. vars :
 # - $INSTANCE_TYPE
 # - $INSTANCE_DOMAIN
 # - $HOST_TYPE

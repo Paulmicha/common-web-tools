@@ -110,9 +110,6 @@ u_instance_init() {
     PROJECT_DOCROOT="$p_cwtii_project_docroot"
   fi
 
-  # Trigger pre-init (optional) extra processes.
-  hook -p 'pre' -a 'init'
-
   # (Re)start global vars aggregation.
   unset GLOBALS
   declare -A GLOBALS
@@ -151,6 +148,7 @@ u_instance_init() {
   u_instance_write_mk
 
   # Trigger instance init (optional) extra processes.
+  hook -p 'pre' -a 'init'
   hook -a 'init' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
 
   # Make sure every writeable folders potentially git-ignored gets created

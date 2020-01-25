@@ -21,6 +21,8 @@ global DWT_MANAGE_SETTINGS_FILES "[default]=true [help]='After instance init and
 
 global DWT_USE_SETTINGS_LOCAL_OVERRIDE "[default]=true [help]='When true, after instance init and/or rebuild, if no sites/default/settings.php file exists, the Drupal core default file will be used with local override support (i.e. the last lines about settings.local.php activated). Also, the generated Drupal settings file will be sites/default/settings.local.php.'"
 
+global DWT_MANAGE_MULTISITE_SETTINGS_FILE "[default]=true [help]='Make (re)generating the multi-site settings file - e.g. sites/sites.php - optional.'"
+
 # Make the automatic crontab setup for Drupal cron on local host during 'app
 # install' opt-in.
 global DWT_USE_CRONTAB "[default]=false [help]='When true, during app install, a generic crontab entry for running Drupal cron will be created on local host (if it has the crontab program installed).'"

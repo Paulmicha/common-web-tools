@@ -22,6 +22,7 @@
 
 echo "Making sure DB exists and credentials are properly set ..."
 
+# TODO [evol] Multi-DB setup support.
 u_db_set
 
 # TODO [wip] Find better workaround than to wait a few seconds for

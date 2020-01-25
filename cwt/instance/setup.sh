@@ -57,16 +57,17 @@ if [[ -n "$CWT_MAKE_INC" ]]; then
   exit 1
 fi
 
+# TODO [wip] check no longer required + remove.
 # Also, calling cwt/instance/init.sh the way it is done below requires the YAML
 # file to be present in $PROJECT_DOCROOT.
-if [[ ! -f '.cwt.yml' ]]; then
-  echo >&2
-  echo "Error in $BASH_SOURCE line $LINENO: the '.cwt.yml' file is required." >&2
-  echo "Please copy/paste 'sample.cwt.yml' to '.cwt.yml' & edit accordingly, then retry." >&2
-  echo "-> Aborting (2)." >&2
-  echo >&2
-  exit 2
-fi
+# if [[ ! -f 'cwt.yml' ]]; then
+#   echo >&2
+#   echo "Error in $BASH_SOURCE line $LINENO: the 'cwt.yml' file is required." >&2
+#   echo "Please copy/paste 'sample.cwt.yml' to 'cwt.yml' & edit accordingly, then retry." >&2
+#   echo "-> Aborting (2)." >&2
+#   echo >&2
+#   exit 2
+# fi
 
 # Defaults (overridable using parameters to this script).
 instance_type='dev'

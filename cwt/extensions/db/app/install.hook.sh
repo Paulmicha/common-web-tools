@@ -21,6 +21,7 @@
 #   cwt/app/install.sh
 #
 
+# TODO [evol] Multi-DB setup support.
 case "$CWT_DB_INITIAL_IMPORT" in true)
   initial_dump_file="$(u_db_get_dump 'initial')"
 

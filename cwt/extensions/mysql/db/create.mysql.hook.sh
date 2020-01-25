@@ -25,7 +25,7 @@
 #   cwt/extensions/db/db/create.sh
 #
 
-echo "Creating $DB_ID $DB_DRIVER database '$DB_NAME' ..."
+echo "Creating $DB_ID $DB_DRIVER database '$DB_NAME' on $DB_HOST ..."
 
 echo "CREATE DATABASE IF NOT EXISTS $DB_NAME;
 GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'$DB_HOST' IDENTIFIED BY '$DB_PASS';" \
@@ -35,4 +35,4 @@ GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'$DB_HOST' IDENTIFIED BY '$DB_P
     --host="$DB_HOST" \
     --port="$DB_PORT"
 
-echo "Creating $DB_ID $DB_DRIVER database '$DB_NAME' : done."
+echo "Creating $DB_ID $DB_DRIVER database '$DB_NAME' on $DB_HOST : done."
