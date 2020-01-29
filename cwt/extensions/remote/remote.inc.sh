@@ -213,25 +213,8 @@ u_remote_authorize_ssh_key() {
 ##
 # Executes commands remotely from local instance.
 #
-# Important note : any command should work, but not aliases (unless called from
-# within a script on the remote).
-#
 # @param 1 String : remote instance's id (short name, no space, _a-zA-Z0-9 only).
-# @param 2 String : command or file path of a script to execute remotely - which
-#   is relative to the PROJECT_DOCROOT of that remote instance.
 # @param ... The rest will be forwarded to the script.
-#
-# @requires the following global variables in calling scope :
-# - REMOTE_INSTANCE_CONNECT_CMD : a command that MUST accept another command as
-#   input - e.g. "ssh -p123 username@example.com".
-# - REMOTE_INSTANCE_PROJECT_DOCROOT : path from where that script must be
-#   executed on remote host. Useful for situations where a similar filesystem
-#   is used, e.g. a partial clone of the same repo lives on the remote host in
-#   order to "bootstrap" CWT-based scripts remotely to operate that instance.
-#
-# TODO provision automatically the following prerequisites during stack init :
-# @prereq manual setup on remote (requires a select up-to-date sync of scripts).
-# @prereq u_remote_instance_add() already launched locally at least once.
 #
 # @example
 #   u_remote_exec_wrapper my_short_id cwt/test/cwt/global.test.sh
@@ -240,8 +223,7 @@ u_remote_authorize_ssh_key() {
 #
 u_remote_exec_wrapper() {
   local p_id="$1"
-  local p_cmd="$2"
-  shift 2
+  shift 1
 
   u_remote_instance_load "$p_id"
 
@@ -253,42 +235,9 @@ u_remote_exec_wrapper() {
     return 1
   fi
 
-  # Sanitize command input + args.
-  # See https://unix.stackexchange.com/a/326672 (using the bash or ksh version).
-  local cmd
-  printf -v cmd '%q ' "$p_cmd"
-
-  if [[ $? -ne 0 ]]; then
-    echo >&2
-    echo "Error in u_remote_exec_wrapper() - $BASH_SOURCE line $LINENO: failed to sanitize given command." >&2
-    echo "-> Aborting (2)." >&2
-    echo >&2
-    return 2
-  fi
-
   # Always execute remotely from REMOTE_INSTANCE_PROJECT_DOCROOT.
-  local cmd_prefix="$REMOTE_INSTANCE_CONNECT_CMD \"cd $REMOTE_INSTANCE_PROJECT_DOCROOT &&"
-  local cmd_suffix="\""
-
-  if [[ -n "$@" ]]; then
-    local p_args
-    printf -v p_args '%q ' "$@"
-
-    if [[ $? -ne 0 ]]; then
-      echo >&2
-      echo "Error in u_remote_exec_wrapper() - $BASH_SOURCE line $LINENO: failed to sanitize given arguments." >&2
-      echo "-> Aborting (3)." >&2
-      echo >&2
-      return 3
-    fi
-
-    # echo "$cmd_prefix $cmd $p_args $cmd_suffix"
-    eval "$cmd_prefix $cmd $p_args $cmd_suffix"
-
-  else
-    # echo "$cmd_prefix $cmd $cmd_suffix"
-    eval "$cmd_prefix $cmd $cmd_suffix"
-  fi
+  # echo "$REMOTE_INSTANCE_CONNECT_CMD \"cd $REMOTE_INSTANCE_PROJECT_DOCROOT && $@\""
+  eval "$REMOTE_INSTANCE_CONNECT_CMD \"cd $REMOTE_INSTANCE_PROJECT_DOCROOT && $@\""
 }
 
 ##
@@ -297,6 +246,8 @@ u_remote_exec_wrapper() {
 # Only the most specific file will be used. This allows to restrict the
 # possibility to execute remote calls from certain instances (i.e. non-local
 # and/or per instance type).
+#
+# TODO [evol] Provide local git-ignored overrides.
 #
 # Prerequisite : in order to use the option 'ssh_use_agent_filter', the
 # package 'ssh-agent-filter' must be installed on your local machine.
@@ -320,12 +271,19 @@ u_remote_instances_setup() {
     -v 'HOST_TYPE INSTANCE_TYPE' \
     -t -r
 
-  if [[ -f "$hook_most_specific_dry_run_match" ]]; then
-    # Purge existing remotes first.
-    u_remote_purge_instances
+  if [[ ! -f "$hook_most_specific_dry_run_match" ]]; then
+    echo >&2
+    echo "Error in u_remote_instances_setup() - $BASH_SOURCE line $LINENO: no remotes YAML definition file was found." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    exit 1
+  fi
 
-    # (Re)init destination file (make empty).
-    cat > 'scripts/cwt/local/remote-instances.sh' <<EOF
+  # Purge existing remotes first.
+  u_remote_purge_instances
+
+  # (Re)init destination file (make empty).
+  cat > 'scripts/cwt/local/remote-instances.sh' <<EOF
 #!/usr/bin/env bash
 
 ##
@@ -342,10 +300,9 @@ u_remote_instances_setup() {
 
 EOF
 
-    # Write remotes definitions.
-    parsed_yaml_remotes="$(u_yaml_parse "$hook_most_specific_dry_run_match" 'cwtri_')"
-    echo "$parsed_yaml_remotes" >> 'scripts/cwt/local/remote-instances.sh'
-  fi
+  # Write remotes definitions.
+  parsed_yaml_remotes="$(u_yaml_parse "$hook_most_specific_dry_run_match" 'cwtri_')"
+  echo "$parsed_yaml_remotes" >> 'scripts/cwt/local/remote-instances.sh'
 
   # Process & adapt parsed result for use with u_remote_instance_load().
   if [[ -f 'scripts/cwt/local/remote-instances.sh' ]]; then
@@ -360,7 +317,7 @@ EOF
     local ssh_use_agent_filter
     local ssh_pubkey
 
-    u_yaml_get_keys "$parsed_yaml_remotes" 'cwtri_'
+    u_yaml_get_root_keys "$hook_most_specific_dry_run_match"
 
     for remote_id in "${yaml_keys[@]}"; do
       var_prefix="cwtri_${remote_id}"
@@ -395,9 +352,9 @@ EOF
         if [[ -z "$ssh_pubkey" ]] && [[ -z "$CWT_SSH_PUBKEY" ]]; then
           echo >&2
           echo "Error in u_remote_instances_setup() - $BASH_SOURCE line $LINENO: missing CWT_SSH_PUBKEY env var." >&2
-          echo "-> Aborting (1)." >&2
+          echo "-> Aborting (2)." >&2
           echo >&2
-          exit 1
+          exit 2
         else
           # Use the public key path set in YAML file or fallback to env. var.
           if [[ -z "$ssh_pubkey" ]]; then

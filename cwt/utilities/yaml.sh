@@ -96,7 +96,56 @@ u_yaml_parse() {
 }
 
 ##
-# Gets "keys" from given parsed YAML string.
+# Gets root "keys" for given YAML file.
+#
+# For now, only works with "non-list" entries.
+# @see u_yaml_parse()
+#
+# Outputs result in a variable subject to collision in calling scope :
+# @var yaml_keys
+#
+# @param 1 String : YAML file path.
+#
+# @example
+#   # Level 0 (root) keys :
+#   u_yaml_get_root_keys 'path/to/file.yml'
+#   echo "Level 0 keys = ${yaml_keys[@]}"
+#   echo "Number of level 0 keys = ${#yaml_keys[@]}"
+#   # Iteration :
+#   for key in "${yaml_keys[@]}"; do
+#     echo "$key"
+#   done
+#
+u_yaml_get_root_keys() {
+  local p_yaml_file="$1"
+  local parsed_line
+  local parsed_var
+  local parsed_var_leaf
+  local parsed_var_split
+
+  yaml_keys=()
+
+  while IFS= read -r parsed_line _; do
+    case "$parsed_line" in
+      # Match any line beginning with something else than space, line break,
+      # tab, etc. and ending with ':'.
+      [![:space:]]*:)
+        parsed_var="${parsed_line//':'/}"
+        if [[ -n "$parsed_var" ]]; then
+          u_array_add_once "$parsed_var" yaml_keys
+        fi
+        ;;
+      *)
+        continue
+        ;;
+    esac
+  done < "$p_yaml_file"
+}
+
+##
+# Gets "keys" from given parsed YAML string filtered by prefix.
+#
+# Warning : for rrot (level 0) keys, use u_yaml_get_root_keys().
 #
 # For now, only works with "non-list" entries.
 # @see u_yaml_parse()
@@ -109,18 +158,15 @@ u_yaml_parse() {
 #   Should match parsed YAML string prefix, if any was used.
 #
 # @example
-#   # Level 0 (root) keys :
+#   # Level 1 keys of 'site' from the u_yaml_parse() example file contents :
 #   parsed_yaml_str="$(u_yaml_parse path/to/file.yml 'conf_')"
-#   u_yaml_get_keys "$parsed_yaml_str" 'conf_'
-#   echo "Level 0 keys = ${yaml_keys[@]}"
-#   echo "Number of level 0 keys = ${#yaml_keys[@]}"
+#   u_yaml_get_keys "$parsed_yaml_str" 'conf_site_'
+#   echo "Level 1 'site' keys = ${yaml_keys[@]}"
+#   echo "Number of level 1 'site' keys = ${#yaml_keys[@]}"
 #   # Iteration :
 #   for key in "${yaml_keys[@]}"; do
 #     echo "$key"
 #   done
-#
-#   # Level 1 keys of 'site' from the u_yaml_parse() example file contents :
-#   u_yaml_get_keys "$parsed_yaml_str" 'conf_site_'
 #
 u_yaml_get_keys() {
   local p_yaml_str="$1"

@@ -633,16 +633,16 @@ u_hook_most_specific() {
     # Debug
     # echo "  -> adjusted depth = $depth"
 
-    if [ $depth -gt $highest_depth ]; then
+    if [[ $depth -ge $highest_depth ]]; then
       most_specific_match="$f"
       highest_depth=$depth
     fi
   done
 
-  if [ -n "$most_specific_match" ] && [ -f "$most_specific_match" ]; then
+  if [[ -n "$most_specific_match" ]] && [[ -f "$most_specific_match" ]]; then
     # If the "dry run" flag is requested, it bypasses the override mechanism.
     # TODO can we workaround this ?
-    if [ $msdr_flag -eq 1 ]; then
+    if [[ $msdr_flag -eq 1 ]]; then
       hook_most_specific_dry_run_match="$most_specific_match"
       return
     fi

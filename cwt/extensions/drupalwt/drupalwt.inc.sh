@@ -323,6 +323,10 @@ EOF
 ##
 # Multi-site : gets sites configuration, optionally filtered by given site.
 #
+# If the following variable is defined in calling scope, it will be used to
+# add lookup paths when loading the sites YAML definition file :
+# @var dwt_remote_id
+#
 # This function writes its results to variables subject to collision in calling
 # scope :
 # @var dwt_sites_ids
@@ -332,16 +336,24 @@ EOF
 # @var dwt_sites_<SITE_ID>_config_sync_dir
 # @var dwt_sites_<SITE_ID>_db_* (id, name, host, port, user, etc.)
 #
-# @exports memoized_dwt_sites_parsed_yaml_str
-#
 # To list matches & check which one will be used (the most specific) :
-# $ u_hook_most_specific 'dry-run' \
-#     -s 'app' \
-#     -a 'sites' \
-#     -c 'yml' \
-#     -v 'HOST_TYPE INSTANCE_TYPE' \
-#     -t -r -d
-#   echo "match = $hook_most_specific_dry_run_match"
+# u_hook_most_specific 'dry-run' \
+#   -s 'app' \
+#   -a 'sites' \
+#   -c 'yml' \
+#   -v 'HOST_TYPE INSTANCE_TYPE' \
+#   -t -r -d
+# echo "match = $hook_most_specific_dry_run_match"
+#
+# Idem, but for a specific host remote ID :
+# dwt_remote_id='preprod'
+# u_hook_most_specific 'dry-run' \
+#   -s 'app' \
+#   -a 'sites' \
+#   -c 'yml' \
+#   -v 'HOST_TYPE INSTANCE_TYPE dwt_remote_id' \
+#   -t -r -d
+# echo "match = $hook_most_specific_dry_run_match"
 #
 # @example
 #   # Get all sites config :
@@ -371,12 +383,23 @@ EOF
 #     echo "$site_id"
 #   done
 #
+#   # Get all sites config for given remote ID :
+#   dwt_remote_id='preprod'
+#   u_dwt_sites
+#
 u_dwt_sites() {
   local p_site="$1"
   local p_want="$2"
   local dwt_vars_prefix='dwt_sites_'
   local sites_parsed_yaml_str=''
   local hook_most_specific_dry_run_match=''
+  local hook_variants
+
+  # Sites YAML definition variants must allow using separate files by remote ID.
+  hook_variants='HOST_TYPE INSTANCE_TYPE'
+  if [[ -n "$dwt_remote_id" ]]; then
+    hook_variants='HOST_TYPE INSTANCE_TYPE dwt_remote_id'
+  fi
 
   # Defaults to dealing with all sites.
   if [[ -z "$p_site" ]]; then
@@ -389,7 +412,7 @@ u_dwt_sites() {
       -s 'app' \
       -a 'sites' \
       -c 'yml' \
-      -v 'HOST_TYPE INSTANCE_TYPE' \
+      -v "$hook_variants" \
       -t -r
 
     # No declaration file found ? Can't carry on, there's nothing to do.
@@ -403,16 +426,18 @@ u_dwt_sites() {
 
     sites_parsed_yaml_str="$(u_yaml_parse "$hook_most_specific_dry_run_match" "$dwt_vars_prefix")"
     memoized_dwt_sites_parsed_yaml_str="$sites_parsed_yaml_str"
+    memoized_dwt_sites_yaml_file="$hook_most_specific_dry_run_match"
 
   # Yaml file was already parsed once in current shell scope -> use memoized
   # value.
   else
     sites_parsed_yaml_str="$memoized_dwt_sites_parsed_yaml_str"
+    hook_most_specific_dry_run_match="$memoized_dwt_sites_yaml_file"
   fi
 
   # Fetch only sites IDs (return early).
   case "$p_want" in 'ids_only')
-    u_yaml_get_keys "$sites_parsed_yaml_str" "$dwt_vars_prefix"
+    u_yaml_get_root_keys "$hook_most_specific_dry_run_match"
     dwt_sites_ids=("${yaml_keys[@]}")
     return
   esac
@@ -422,7 +447,7 @@ u_dwt_sites() {
     # Deal with all sites.
     '*')
       eval "$sites_parsed_yaml_str"
-      u_yaml_get_keys "$sites_parsed_yaml_str" "$dwt_vars_prefix"
+      u_yaml_get_root_keys "$hook_most_specific_dry_run_match"
       dwt_sites_ids=("${yaml_keys[@]}")
       ;;
 
@@ -471,7 +496,7 @@ u_dwt_site_data() {
   local data_keys
 
   dwt_site_data=()
-  dwt_sites_yml_keys
+  u_dwt_sites_yml_keys
   data_keys="$dwt_sites_yml_keys"
 
   # Avoid unnecessarily reloading sites.*.yml config files.
