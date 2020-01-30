@@ -135,6 +135,7 @@ u_dwt_write_drupal_settings() {
   # Get dir name from multi-site setup (if available).
   local site_dir='default'
   local site_dir_var="dwt_sites_${p_site}_dir"
+  u_str_sanitize_var_name "$site_dir_var" 'site_dir_var'
   if [[ -n "${!site_dir_var}" ]]; then
     site_dir="${!site_dir_var}"
   fi
@@ -298,6 +299,7 @@ EOF
       var_name="SITE_${multisite_key}"
       u_str_uppercase "$var_name" 'var_name'
       multisite_var="dwt_sites_${p_site}_${multisite_key}"
+      u_str_sanitize_var_name "$multisite_var" 'multisite_var'
 
       if grep -Fq "${token_prefix}${var_name}${token_suffix}" "$drupal_settings"; then
         sed -e "s,${token_prefix}${var_name}${token_suffix},${!multisite_var},g" -i "$drupal_settings"
@@ -629,9 +631,11 @@ u_dwt_write_multisite_settings() {
   for site_id in "${dwt_sites_ids[@]}"; do
     # Sites' dir :
     var="dwt_sites_${site_id}_dir"
+    u_str_sanitize_var_name "$var" 'var'
     site_dir="${!var}"
     # Sites' domain :
     var="dwt_sites_${site_id}_domain"
+    u_str_sanitize_var_name "$var" 'var'
     site_domain="${!var}"
     if [[ -z "$site_domain" ]]; then
       site_domain="${site_id}.${INSTANCE_DOMAIN}"

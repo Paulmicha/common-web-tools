@@ -10,6 +10,305 @@
 #
 
 ##
+# Searches log messages and get all files changed in all matching commits.
+#
+# This function writes its result to a variable subject to collision in calling
+# scope :
+# @var git_changed_files
+#
+# @param 1 String : The (grep) search pattern.
+# @param 2 [optional] String : A branch name to restrict the search.
+#   Defaults to all branches.
+#
+# @example
+#   # Search log messages in all branches and get all files changed in all
+#   # matching commits :
+#   u_git_find_changed_files 'JRA-224'
+#   for f in "${git_changed_files[@]}"; do
+#     echo "$f"
+#   done
+#
+#   # Same, by only search in a specific branch only :
+#   u_git_find_changed_files 'JRA-224' 'my-branch-name'
+#   for f in "${git_changed_files[@]}"; do
+#     echo "$f"
+#   done
+#
+u_git_find_changed_files() {
+  local p_search="$1"
+  local p_source_branch="$2"
+
+  # By default, search in all branches.
+  if [[ -z "$p_source_branch" ]]; then
+    p_source_branch='--all'
+  fi
+
+  git_commits_hashes=()
+  git_commits_titles=()
+  git_commits_emails=()
+  git_commits_dates=()
+  git_changed_files=()
+
+  u_git_find_commits \
+    -m "$p_search" \
+    -f '<have-changed>' \
+    -b "$p_source_branch"
+}
+
+##
+# Fin commits hashes based on various filters.
+#
+# This function writes its results to variables subject to collision in calling
+# scope :
+#
+# @var git_commits_hashes
+# @var git_commits_titles
+# @var git_commits_emails
+# @var git_commits_dates
+# @var git_changed_files
+#
+# They can be preset in calling scope. This allows to call this function several
+# times and append values to the same arrays.
+# There's a flag available to trigger (re)setting these variables : -v.
+#
+# @param n [optional] String : custom search filter named params.
+#
+# @example
+#   # Search log messages in all branches and get all files changed in all
+#   # matching commits :
+#   u_git_find_commits -m 'JRA-123[^0-9]' -f '<have-changed>' -v # <- Vars are set on 1st call.
+#   u_git_find_commits -m 'JRA-124[^0-9]' -f '<have-changed>'    # <- Vars are NOT reset on 2nd call.
+#   for f in "${git_changed_files[@]}"; do
+#     echo "$f"
+#   done
+#
+#   # Other iteration example :
+#   for ((i = 0 ; i < ${#git_commits_hashes[@]} ; i++)); do
+#     d="${git_commits_dates[$i]}"
+#     t="${git_commits_titles[$i]}"
+#     h="${git_commits_hashes[$i]}"
+#     echo "Commit $i : $d / $t ($h) ..."
+#   done
+#
+#   # TODO [doc] write more examples using the rest of arguments.
+#
+u_git_find_commits() {
+  local search_params=''
+  local branch_filter=''
+  local email_filter=''
+  local date_min_filter=''
+  local date_max_filter=''
+  local file_filter=''
+  local title_inverted_filter=''
+  local invert_order='false'
+
+  local git_log_line
+  local commit_date
+  local commit_email
+  local commit_hash
+  local commit_title
+  local commit_changed_files
+
+  local f
+  local any_file_matches
+  local iteration_can_carry_on
+
+  # By default, search in all branches (without any other filter).
+  if [[ -z "$@" ]]; then
+    search_params+='--all '
+
+  # Custom search filters.
+  else
+    while [[ "$1" =~ ^- ]]; do
+      case "$1" in
+
+        # Search in commits' log messages.
+        -m | --msg )
+          shift; search_params+="--grep='$1' "
+          ;;
+
+        # Filter out commits whose log message title matches given pattern. The
+        # pattern cannot contain "|" inside.
+        # See https://unix.stackexchange.com/a/234415
+        -n | --titlenotmatching )
+          shift; title_inverted_filter="$1"
+          ;;
+
+        # Filter by branch.
+        -b | --branch )
+          shift; branch_filter="$1"
+          ;;
+
+        # Filter by commit author email. The pattern cannot contain "|" inside.
+        # See https://unix.stackexchange.com/a/234415
+        -e | --email )
+          shift; email_filter="$1"
+          ;;
+
+        # Filter by minimum date (discards older commits).
+        -s | --datemin)
+          shift; date_min_filter="$1"
+          ;;
+
+        # Filter by maximum date (discards newer commits).
+        -a | --datemax)
+          shift; date_max_filter="$1"
+          ;;
+
+        # Look for differences whose added or removed line matches the given
+        # regex.
+        -d | --diff)
+          shift; search_params+="-G '$1' "
+          ;;
+
+        # Filter by files.
+        -f | --files)
+          shift; file_filter="$1"
+          ;;
+
+        # Flag : invert hashes order.
+        -i | --invert)
+          invert_order='true'
+          ;;
+
+        # Flag : (re)set the arrays variables. Prevents appending values in
+        # multiple calls to this function in the same scope.
+        -v | --varsreset)
+          git_commits_hashes=()
+          git_commits_titles=()
+          git_commits_emails=()
+          git_commits_dates=()
+          git_changed_files=()
+          ;;
+      esac
+      shift;
+    done
+
+    # If no branch filter was specified, we still need to apply the '--all'
+    # search param.
+    if [[ -z "$branch_filter" ]]; then
+      search_params+='--all '
+    else
+      search_params+="$branch_filter"
+    fi
+  fi
+
+  while IFS= read -r git_log_line _; do
+    u_str_split1 'commit_arr' "$git_log_line" '|'
+
+    commit_date="${commit_arr[0]}"
+    commit_email="${commit_arr[1]}"
+    commit_hash="${commit_arr[2]}"
+    commit_title="${commit_arr[3]}"
+
+    iteration_can_carry_on='false'
+
+    # Apply filter by minimum date (discards older commits).
+    if [[ -n "$date_min_filter" ]]; then
+      if [[ $commit_date -lt $date_min_filter ]]; then
+        continue
+      fi
+    fi
+
+    # Apply filter by maximum date (discards newer commits).
+    if [[ -n "$date_max_filter" ]]; then
+      if [[ $commit_date -gt $date_max_filter ]]; then
+        continue
+      fi
+    fi
+
+    # Apply filter by commit author email (pattern cannot contain "|" inside).
+    if [[ -n "$email_filter" ]]; then
+      case "$commit_email" in
+        $email_filter)
+          iteration_can_carry_on='true'
+          ;;
+        *)
+          continue
+          ;;
+      esac
+    fi
+
+    # Filter out commits whose log message title matches given pattern (pattern
+    # cannot contain "|" inside).
+    if [[ -n "$title_inverted_filter" ]]; then
+      case "$commit_title" in
+        $title_inverted_filter)
+          continue
+          ;;
+        *)
+          iteration_can_carry_on='true'
+          ;;
+      esac
+    fi
+
+    # Apply file filters.
+    if [[ -n "$file_filter" ]]; then
+      commit_changed_files="$(u_git_wrapper diff-tree --no-commit-id --name-only -r "$commit_hash")"
+
+      case "$file_filter" in
+
+        # Filter out commits that have NOT made changes to any source file.
+        # Populate the git_changed_files array in the process.
+        '<have-changed>')
+          if [[ -z "$commit_changed_files" ]]; then
+            continue
+          fi
+          iteration_can_carry_on='true'
+          for f in $commit_changed_files; do
+            u_array_add_once "$f" git_changed_files
+          done
+          ;;
+
+        # Only get commits where files changed match given pattern.
+        # The pattern cannot contain "|" inside.
+        # See https://unix.stackexchange.com/a/234415
+        # Populate the git_changed_files array in the process.
+        *)
+          any_file_matches='false'
+          iteration_can_carry_on='false'
+
+          for f in $commit_changed_files; do
+            case "$f" in $file_filter)
+              any_file_matches='true'
+            esac
+          done
+
+          case "$any_file_matches" in 'true')
+            iteration_can_carry_on='true'
+            for f in $commit_changed_files; do
+              u_array_add_once "$f" git_changed_files
+            done
+          esac
+          ;;
+      esac
+    fi
+
+    case "$iteration_can_carry_on" in 'false')
+      continue
+    esac
+
+    git_commits_hashes+=("$commit_hash")
+    git_commits_titles+=("$commit_title")
+    git_commits_emails+=("$commit_email")
+    git_commits_dates+=("$commit_date")
+
+  done < <(u_git_wrapper "log $search_params --pretty='format:%cd|%ae|%H|%s' --date=format:'%Y%m%d'")
+
+  # Finally, invert all arrays order if requested.
+  case "$invert_order" in 'true')
+    u_array_reverse "${git_commits_hashes[@]}"
+    git_commits_hashes=("${reversed_arr[@]}")
+    u_array_reverse "${git_commits_titles[@]}"
+    git_commits_titles=("${reversed_arr[@]}")
+    u_array_reverse "${git_commits_emails[@]}"
+    git_commits_emails=("${reversed_arr[@]}")
+    u_array_reverse "${git_commits_dates[@]}"
+    git_commits_dates=("${reversed_arr[@]}")
+  esac
+}
+
+##
 # (over)Writes Git hooks to use CWT hooks.
 #
 # Applies to folder "$APP_DOCROOT/.git/hooks" if it exists, otherwise to

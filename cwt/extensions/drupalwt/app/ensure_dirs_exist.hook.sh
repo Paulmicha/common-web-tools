@@ -37,6 +37,7 @@ case "$DWT_MULTISITE" in 'true')
   for site_id in "${dwt_sites_ids[@]}"; do
 
     site_dir_var="dwt_sites_${site_id}_dir"
+    u_str_sanitize_var_name "$site_dir_var" 'site_dir_var'
     site_dir="${!site_dir_var}"
 
     # The 'default' dir should be done already.

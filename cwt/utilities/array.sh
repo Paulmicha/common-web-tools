@@ -111,6 +111,42 @@ u_array_qsort() {
 }
 
 ##
+# Reverses an array.
+#
+# NB : for performance reasons (to avoid using a subshell), this function
+# writes its result to a variable subject to collision in calling scope.
+#
+# @var reversed_arr
+#
+# See https://unix.stackexchange.com/a/412872
+#
+# @example
+#   array=(a c b f 3 5)
+#   u_array_reverse "${array[@]}"
+#   # Check result :
+#   declare -p reversed_arr
+#   # -> output :
+#   #   declare -a reversed_arr='([0]="3" [1]="5" [2]="f" [3]="b" [4]="c" [5]="a")'
+#
+u_array_reverse() {
+  local i
+  local a
+  local tmp_arr
+
+  tmp_arr=("$@")
+  reversed_arr=()
+  last=${#tmp_arr[@]}
+
+  a=""
+  for (( i=last-1 ; i>=0 ; i-- ));do
+    # printf '%s%s' "$a" "${tmp_arr[i]}"
+    reversed_arr+=("${tmp_arr[i]}")
+    a=" "
+  done
+}
+
+
+##
 # Prints array (debug utility).
 #
 # See https://unix.stackexchange.com/a/366655
