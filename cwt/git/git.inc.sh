@@ -10,7 +10,7 @@
 #
 
 ##
-# Searches log messages and get all files changed in all matching commits.
+# Searches log messages and gets all files changed in all matching commits.
 #
 # This function writes its result to a variable subject to collision in calling
 # scope :
@@ -56,7 +56,7 @@ u_git_find_changed_files() {
 }
 
 ##
-# Fin commits hashes based on various filters.
+# Finds commits hashes based on various filters.
 #
 # This function writes its results to variables subject to collision in calling
 # scope :

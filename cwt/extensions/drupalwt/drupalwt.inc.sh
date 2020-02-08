@@ -95,11 +95,15 @@ u_dwt_write_settings() {
 # Uses the following variable in calling scope :
 #   - dwt_sites_ids (if available)
 #
-# To list all the possible paths that can be used, use :
-# $ make hook-debug s:app a:drupal_settings c:tpl.php v:DRUPAL_VERSION HOST_TYPE INSTANCE_TYPE
-#
-# To check the most specific match (if any is found) :
-# $ make hook-debug ms s:app a:drupal_settings c:tpl.php v:DRUPAL_VERSION HOST_TYPE INSTANCE_TYPE
+# To list matches & check which one will be used (the most specific) :
+# $ p_site='my_site_id'
+#   u_hook_most_specific 'dry-run' \
+#     -s 'app' \
+#     -a 'drupal_settings' \
+#     -c 'tpl.php' \
+#     -v 'DRUPAL_VERSION HOST_TYPE INSTANCE_TYPE p_site' \
+#     -t -d
+#   echo "match = $hook_most_specific_dry_run_match"
 #
 u_dwt_write_drupal_settings() {
   local p_site="$1"
@@ -116,11 +120,12 @@ u_dwt_write_drupal_settings() {
     p_site='default'
   fi
 
+  # Drupal settings template variants allow using separate files by site ID.
   u_hook_most_specific 'dry-run' \
     -s 'app' \
     -a 'drupal_settings' \
     -c 'tpl.php' \
-    -v 'DRUPAL_VERSION HOST_TYPE INSTANCE_TYPE' \
+    -v 'DRUPAL_VERSION HOST_TYPE INSTANCE_TYPE p_site' \
     -t
 
   # No declaration file found ? Can't carry on, there's nothing to do.
@@ -505,6 +510,7 @@ u_dwt_site_data() {
   # Considers the "dir" key as mandatory (this is the entry used to check if
   # that site's config was loaded already in current shell scope).
   var="dwt_sites_${p_site}_dir"
+  u_str_sanitize_var_name "$var" 'var'
   eval "var_isset=\"\${$var+set}\"" # <- Variables may be set to empty strings.
   if [[ -z "$var_isset" ]]; then
     u_dwt_sites "$p_site"
@@ -514,6 +520,7 @@ u_dwt_site_data() {
   u_db_vars_list
   for var in $db_vars_list; do
     var="db_$var"
+    u_str_sanitize_var_name "$var" 'var'
     u_str_lowercase "$var" 'var'
     data_keys+=" $var"
   done
@@ -521,6 +528,7 @@ u_dwt_site_data() {
   # Assemble.
   for key in $data_keys; do
     var="dwt_sites_${p_site}_${key}"
+    u_str_sanitize_var_name "$var" 'var'
     eval "var_isset=\"\${$var+set}\"" # <- Variables may be set to empty strings.
     if [[ -n "$var_isset" ]]; then
       dwt_site_data[$key]="${!var}"
@@ -530,13 +538,16 @@ u_dwt_site_data() {
       # look for a 'domains' key and its sub-items that match by the following
       # variants. This allows to conditionally apply different domains while
       # sharing the rest of the settings.
+      # TODO generalize to all keys (singular / plural).
+      # TODO conflict tipping : introduce sub-level to specify weight (e.g. "dev.2").
       case "$key" in 'domain')
         key='domains'
         u_str_subsequences "$HOST_TYPE $INSTANCE_TYPE" '_'
 
         for sub_key in $str_subsequences; do
           var="dwt_sites_${p_site}_${key}_${sub_key}"
-          # echo "dwt_sites_${p_site}_${key}_${sub_key} = '${!var}'"
+          u_str_sanitize_var_name "$var" 'var'
+          # echo "$var = '${!var}'"
           eval "var_isset=\"\${$var+set}\""
           if [[ -n "$var_isset" ]]; then
             # In case of multiple matching variants, take the most specific.
