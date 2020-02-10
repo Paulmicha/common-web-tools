@@ -61,7 +61,7 @@ u_array_add_once() {
 }
 
 ##
-# Quickly sorts an array.
+# Quickly sorts an array by the values it contains.
 #
 # NB : for performance reasons (to avoid using a subshell), this function
 # writes its result to a variable subject to collision in calling scope.
@@ -107,6 +107,38 @@ u_array_qsort() {
     if ((${#larger[@]}>=2)); then
       stack+=( "$((end-${#larger[@]}+1))" "$end" )
     fi
+  done
+}
+
+##
+# Sorts an array by its keys (not is values).
+#
+# This function writes its result to a variable subject to collision in calling
+# scope, and requires that the input array be already defined as 'array'.
+#
+# @var array
+# @var sorted_arr
+#
+# @example
+#   array=()
+#   array[12]='a'
+#   array[7]='b'
+#   array[32]='c'
+#   array[6785]='d'
+#   u_array_ksort
+#   # Check result :
+#   declare -p sorted_arr
+#   # -> output :
+#   #   declare -a sorted_arr=([7]="b" [12]="a" [32]="c" [6785]="d")
+#
+u_array_ksort() {
+  local array_keys="${!array[@]}"
+  local k
+  u_array_qsort "${array_keys[@]}"
+  array_keys="${sorted_arr[@]}"
+  sorted_arr=()
+  for k in $array_keys; do
+    sorted_arr["$k"]="${array[$k]}"
   done
 }
 

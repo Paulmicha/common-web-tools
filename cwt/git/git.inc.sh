@@ -56,7 +56,7 @@ u_git_find_changed_files() {
 }
 
 ##
-# Finds commits hashes based on various filters.
+# Finds commits based on various filters.
 #
 # This function writes its results to variables subject to collision in calling
 # scope :
@@ -65,11 +65,14 @@ u_git_find_changed_files() {
 # @var git_commits_titles
 # @var git_commits_emails
 # @var git_commits_dates
+# @var git_commits_timestamps
 # @var git_changed_files
 #
 # They can be preset in calling scope. This allows to call this function several
 # times and append values to the same arrays.
 # There's a flag available to trigger (re)setting these variables : -v.
+#
+# See https://git-scm.com/docs/git-log
 #
 # @param n [optional] String : custom search filter named params.
 #
@@ -96,14 +99,13 @@ u_git_find_commits() {
   local search_params=''
   local branch_filter=''
   local email_filter=''
-  local date_min_filter=''
-  local date_max_filter=''
   local file_filter=''
   local title_inverted_filter=''
   local invert_order='false'
 
   local git_log_line
   local commit_date
+  local commit_timestamp
   local commit_email
   local commit_hash
   local commit_title
@@ -127,6 +129,12 @@ u_git_find_commits() {
           shift; search_params+="--grep='$1' "
           ;;
 
+        # Search in commits' log messages using numerical filter suffix, i.e. to
+        # avoid matching JR-123 when searching for JRA-12.
+        -g | --msgnum )
+          shift; search_params+="--grep='$1[^0-9]' "
+          ;;
+
         # Filter out commits whose log message title matches given pattern. The
         # pattern cannot contain "|" inside.
         # See https://unix.stackexchange.com/a/234415
@@ -146,38 +154,40 @@ u_git_find_commits() {
           ;;
 
         # Filter by minimum date (discards older commits).
-        -s | --datemin)
-          shift; date_min_filter="$1"
+        # Show commits more recent than a specific date.
+        -s | --since )
+          shift; search_params+="--since='$1' " # Alias : --after=<date>
           ;;
 
         # Filter by maximum date (discards newer commits).
-        -a | --datemax)
-          shift; date_max_filter="$1"
+        # Show commits older than a specific date.
+        -u | --until )
+          shift; search_params+="--until='$1' " # Alias : --before=<date>
           ;;
 
-        # Look for differences whose added or removed line matches the given
-        # regex.
-        -d | --diff)
+        # Look in diffs where added or removed lines match given regex.
+        -d | --diff )
           shift; search_params+="-G '$1' "
           ;;
 
         # Filter by files.
-        -f | --files)
+        -f | --files )
           shift; file_filter="$1"
           ;;
 
         # Flag : invert hashes order.
-        -i | --invert)
+        -i | --invert )
           invert_order='true'
           ;;
 
         # Flag : (re)set the arrays variables. Prevents appending values in
         # multiple calls to this function in the same scope.
-        -v | --varsreset)
+        -v | --varsreset )
           git_commits_hashes=()
           git_commits_titles=()
           git_commits_emails=()
           git_commits_dates=()
+          git_commits_timestamps=()
           git_changed_files=()
           ;;
       esac
@@ -194,28 +204,19 @@ u_git_find_commits() {
   fi
 
   while IFS= read -r git_log_line _; do
+    iteration_can_carry_on='false'
     u_str_split1 'commit_arr' "$git_log_line" '|'
 
     commit_date="${commit_arr[0]}"
     commit_email="${commit_arr[1]}"
     commit_hash="${commit_arr[2]}"
-    commit_title="${commit_arr[3]}"
+    commit_timestamp="${commit_arr[3]}"
 
-    iteration_can_carry_on='false'
+    # Support titles which may contain the character we use as a separator '|'.
+    commit_title="${git_log_line/$commit_date|$commit_email|$commit_hash|$commit_timestamp|/}"
 
-    # Apply filter by minimum date (discards older commits).
-    if [[ -n "$date_min_filter" ]]; then
-      if [[ $commit_date -lt $date_min_filter ]]; then
-        continue
-      fi
-    fi
-
-    # Apply filter by maximum date (discards newer commits).
-    if [[ -n "$date_max_filter" ]]; then
-      if [[ $commit_date -gt $date_max_filter ]]; then
-        continue
-      fi
-    fi
+    # Debug.
+    # echo "log search $commit_date ($commit_timestamp) / $commit_title ($commit_hash)"
 
     # Apply filter by commit author email (pattern cannot contain "|" inside).
     if [[ -n "$email_filter" ]]; then
@@ -224,9 +225,13 @@ u_git_find_commits() {
           iteration_can_carry_on='true'
           ;;
         *)
+          # Debug.
+          # echo "  -> out : filtered by email ('$commit_email' does not match '$email_filter')"
           continue
           ;;
       esac
+    else
+      iteration_can_carry_on='true'
     fi
 
     # Filter out commits whose log message title matches given pattern (pattern
@@ -234,12 +239,16 @@ u_git_find_commits() {
     if [[ -n "$title_inverted_filter" ]]; then
       case "$commit_title" in
         $title_inverted_filter)
+          # Debug.
+          # echo "  -> out : filtered by inverted title ('$commit_title' matches '$title_inverted_filter')"
           continue
           ;;
         *)
           iteration_can_carry_on='true'
           ;;
       esac
+    else
+      iteration_can_carry_on='true'
     fi
 
     # Apply file filters.
@@ -252,6 +261,8 @@ u_git_find_commits() {
         # Populate the git_changed_files array in the process.
         '<have-changed>')
           if [[ -z "$commit_changed_files" ]]; then
+            # Debug.
+            # echo "  -> out : filtered because no modified files were found"
             continue
           fi
           iteration_can_carry_on='true'
@@ -282,6 +293,8 @@ u_git_find_commits() {
           esac
           ;;
       esac
+    else
+      iteration_can_carry_on='true'
     fi
 
     case "$iteration_can_carry_on" in 'false')
@@ -292,8 +305,22 @@ u_git_find_commits() {
     git_commits_titles+=("$commit_title")
     git_commits_emails+=("$commit_email")
     git_commits_dates+=("$commit_date")
+    git_commits_timestamps+=("$commit_timestamp")
 
-  done < <(u_git_wrapper "log $search_params --pretty='format:%cd|%ae|%H|%s' --date=format:'%Y%m%d'")
+  # Quick reference for git log's --pretty option tokens :
+  # - %s : subject
+  # - %f : sanitized subject line, suitable for a filename
+  # - %H : commit hash
+  # - %h : abbreviated commit hash
+  # - %ae : author email
+  # - %al : author local part (before the '@' sign)
+  # - %aN : author name
+  # - %cd : committer date (format respects --date= option)
+  # - %cn : committer name
+  # - %cs : committer date, short format (YYYY-MM-DD)
+  # - %ct : committer date, UNIX timestamp
+  # See https://git-scm.com/docs/git-log
+  done < <(u_git_wrapper "log $search_params --pretty='format:%cd|%ae|%H|%ct|%s' --date=format:'%Y%m%d'")
 
   # Finally, invert all arrays order if requested.
   case "$invert_order" in 'true')
@@ -305,6 +332,139 @@ u_git_find_commits() {
     git_commits_emails=("${reversed_arr[@]}")
     u_array_reverse "${git_commits_dates[@]}"
     git_commits_dates=("${reversed_arr[@]}")
+    u_array_reverse "${git_commits_timestamps[@]}"
+    git_commits_timestamps=("${reversed_arr[@]}")
+  esac
+}
+
+##
+# Searches git log using multiple terms.
+#
+# Same as u_git_find_commits() but allows matching several search terms (OR).
+#
+# @example
+#   # Find commits where title contains either 'JRA-123', 'jRA-124' or 'jRA-125'
+#   # in 'master' branch, using numerical filter suffix, ordered by timestamp in
+#   # ascending order (older to newer).
+#   search_terms='JRA-123 JRA-124 JRA-125'
+#   u_git_mfind_commits "$search_terms" --nfs -b 'master' -i
+#
+#   # Looping example :
+#   for ((i = 0 ; i < ${#git_commits_hashes[@]} ; i++)); do
+#     h="${git_commits_hashes[$i]}"
+#     t="${git_commits_titles[$i]}"
+#     e="${git_commits_emails[$i]}"
+#     d="${git_commits_dates[$i]}"
+#     s="${git_commits_timestamps[$i]}"
+#     echo "$i : $d ($s) / $t ($h)"
+#   done
+#
+u_git_mfind_commits() {
+  local p_search_terms="$1"
+
+  # All remaining arguments are forwarded, except for some options that require
+  # specific pre-processing.
+  shift
+
+  local forwarded_args=''
+  local search_op='-m'
+  local search_term=''
+  local sort='DESC'
+
+  while [[ -n "$1" ]]; do
+    case "$1" in
+      # Results are sorted by timestamp DESC by default (most recent first), so
+      # if the 'invert' flag is requested, it means "sort by ascending order".
+      -i | --invert )
+        sort='ASC'
+        ;;
+      # Flag : use numerical filter suffix, i.e. to avoid matching JR-123 when
+      # searching for JRA-12.
+      --nfs )
+        search_op='-g'
+        ;;
+      *)
+        forwarded_args+="$1 "
+        ;;
+    esac
+    shift
+  done
+
+  git_commits_hashes=()
+  git_commits_titles=()
+  git_commits_emails=()
+  git_commits_dates=()
+  git_commits_timestamps=()
+  git_changed_files=()
+
+  for search_term in $p_search_terms; do
+    u_git_find_commits "$search_op" "$search_term" $forwarded_args
+  done
+
+  # Prepare sorting by timestamp.
+  local i
+  local k
+  local h
+  local t
+  local e
+  local d
+  local s
+  local commits_to_sort
+
+  declare -A commits_to_sort
+
+  for ((i = 0 ; i < ${#git_commits_hashes[@]} ; i++)); do
+    h="${git_commits_hashes[$i]}"
+    t="${git_commits_titles[$i]}"
+    e="${git_commits_emails[$i]}"
+    d="${git_commits_dates[$i]}"
+    s="${git_commits_timestamps[$i]}"
+
+    # Results are keyed by timestamps, but if 2 commits happen in the same
+    # second, a conflict may happen -> append the first 8 characters from hash.
+    k="$s.${h:0:8}"
+
+    commits_to_sort["$k|h"]="$h"
+    commits_to_sort["$k|t"]="$t"
+    commits_to_sort["$k|e"]="$e"
+    commits_to_sort["$k|d"]="$d"
+    commits_to_sort["$k|s"]="$s"
+  done
+
+  u_array_qsort "${!commits_to_sort[@]}"
+
+  git_commits_hashes=()
+  git_commits_titles=()
+  git_commits_emails=()
+  git_commits_dates=()
+  git_commits_timestamps=()
+
+  local k_split_arr
+
+  for k in "${sorted_arr[@]}"; do
+    u_str_split1 'k_split_arr' "$k" '|'
+
+    case "${k_split_arr[1]}" in
+      h) git_commits_hashes+=("${commits_to_sort[$k]}") ;;
+      t) git_commits_titles+=("${commits_to_sort[$k]}") ;;
+      e) git_commits_emails+=("${commits_to_sort[$k]}") ;;
+      d) git_commits_dates+=("${commits_to_sort[$k]}") ;;
+      s) git_commits_timestamps+=("${commits_to_sort[$k]}") ;;
+    esac
+  done
+
+  # Sorting in descending order requires to invert current result at this stage.
+  case "$sort" in 'DESC')
+    u_array_reverse "${git_commits_hashes[@]}"
+    git_commits_hashes=("${reversed_arr[@]}")
+    u_array_reverse "${git_commits_titles[@]}"
+    git_commits_titles=("${reversed_arr[@]}")
+    u_array_reverse "${git_commits_emails[@]}"
+    git_commits_emails=("${reversed_arr[@]}")
+    u_array_reverse "${git_commits_dates[@]}"
+    git_commits_dates=("${reversed_arr[@]}")
+    u_array_reverse "${git_commits_timestamps[@]}"
+    git_commits_timestamps=("${reversed_arr[@]}")
   esac
 }
 
