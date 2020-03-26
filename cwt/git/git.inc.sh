@@ -43,16 +43,11 @@ u_git_find_changed_files() {
     p_source_branch='--all'
   fi
 
-  git_commits_hashes=()
-  git_commits_titles=()
-  git_commits_emails=()
-  git_commits_dates=()
-  git_changed_files=()
-
   u_git_find_commits \
     -m "$p_search" \
     -f '<have-changed>' \
-    -b "$p_source_branch"
+    -b "$p_source_branch" \
+    -v
 }
 
 ##

@@ -48,6 +48,8 @@
 
 . cwt/bootstrap.sh
 
+multisite_install_profile_var=''
+
 case "$DWT_MULTISITE" in
 
   # Multi-site support :
@@ -78,11 +80,12 @@ fi
 install_profile='standard'
 # If this is a multisite setup, the default value may come from chosen site's
 # YAML config. The $2 parameter to this script takes precedence.
-if [[ -n "${!multisite_install_profile_var}" ]]; then
-  install_profile="${!multisite_install_profile_var}"
-fi
 if [[ -n "$2" ]]; then
   install_profile="$2"
+elif [[ -n "$multisite_install_profile_var" ]]; then
+  if [[ -n "${!multisite_install_profile_var}" ]]; then
+    install_profile="${!multisite_install_profile_var}"
+  fi
 fi
 
 # Default value for $3 : admin account name (login).

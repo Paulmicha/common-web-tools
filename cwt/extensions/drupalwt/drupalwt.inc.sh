@@ -380,7 +380,7 @@ EOF
 #   for key in $dwt_sites_yml_keys; do
 #     var="dwt_sites_my_site_id_${key}"
 #     val="${!var}"
-#     echo "${key} = '$val'"
+#     echo "$key = '$val'"
 #   done
 #
 #   # Get sites IDs only :
@@ -661,6 +661,8 @@ u_dwt_write_multisite_settings() {
 }
 
 ##
+# TODO [minor] use readonly global constant instead.
+#
 # Single source of truth : get the list of multi-site config file keys.
 #
 # This funtion writes its result to a variable subject to collision in calling
