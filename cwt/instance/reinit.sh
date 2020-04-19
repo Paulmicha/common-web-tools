@@ -16,6 +16,11 @@
 #   cwt/instance/reinit.sh
 #
 
+# The only values we're using when re-initializing are CWT 'core' globals.
+if [[ -f scripts/cwt/local/global.vars.sh ]]; then
+  . scripts/cwt/local/global.vars.sh
+fi
+
 # Wipe out env vars to avoid pile-ups for 'append' type globals during reinit.
 # See https://unix.stackexchange.com/a/49057
 env -i \

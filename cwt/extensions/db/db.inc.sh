@@ -433,6 +433,7 @@ u_db_exists() {
 #   u_db_create
 #
 u_db_create() {
+  u_db_set "$1" "$2"
   u_hook_most_specific -s 'db' -a 'create' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
 }
 
