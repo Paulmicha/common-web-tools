@@ -28,6 +28,7 @@ u_db_set
 # TODO [wip] Find better workaround than to wait a few seconds for
 # docker-compose stacks. For now, using 5 attempts with 1 second delay before
 # considering the test accurate.
+# TODO make sure this is now obsolete since wait_for implementation.
 case "$PROVISION_USING" in docker-compose)
   if ! u_db_exists "$DB_NAME"; then
     i=0

@@ -458,7 +458,7 @@ u_db_create() {
 #   u_db_destroy
 #
 u_db_destroy() {
-  u_db_set $@
+  u_db_set "$1" "$2"
   u_hook_most_specific -s 'db' -a 'destroy' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
 }
 
@@ -507,7 +507,7 @@ u_db_import() {
     exit 1
   fi
 
-  u_db_set $2 $3
+  u_db_set "$2" "$3"
 
   db_dump_file="$p_dump_file_path"
 
@@ -605,7 +605,7 @@ u_db_backup() {
   local db_dump_file
   local db_dump_file_name
 
-  u_db_set $2 $3
+  u_db_set "$2" "$3"
 
   db_dump_file="$p_dump_file_path"
   db_dump_dir="${db_dump_file%/${db_dump_file##*/}}"
@@ -687,7 +687,7 @@ u_db_backup() {
 #   u_db_clear
 #
 u_db_clear() {
-  u_db_set $@
+  u_db_set "$1" "$2"
   u_hook_most_specific -s 'db' -a 'clear' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
 }
 
@@ -701,6 +701,7 @@ u_db_clear() {
 #
 # @example
 #   u_db_restore '/path/to/dump/file.sql'
+#   u_db_restore '/path/to/dump/file.sql' 'my_custom_db_id'
 #
 u_db_restore() {
   local p_dump_file_path="$1"
@@ -713,8 +714,8 @@ u_db_restore() {
     exit 1
   fi
 
-  u_db_clear $2 $3
-  u_db_import "$p_dump_file_path"
+  u_db_clear "$2" "$3"
+  u_db_import "$p_dump_file_path" "$2" "$3"
 }
 
 ##
@@ -740,7 +741,7 @@ u_db_restore_last() {
     exit 1
   fi
 
-  u_db_restore "$(u_fs_get_most_recent $CWT_DB_DUMPS_BASE_PATH)" $@
+  u_db_restore "$(u_fs_get_most_recent $CWT_DB_DUMPS_BASE_PATH)" "$1" "$2"
 }
 
 ##
@@ -790,7 +791,7 @@ u_db_routine_backup() {
   u_db_set $@
   db_routine_new_backup_file="$CWT_DB_DUMPS_BASE_PATH/local/$DB_ID/$(date +"%Y/%m/%d/%H-%M-%S")_$db_backup_file_middle.$db_backup_file_ext"
 
-  u_db_backup "$db_routine_new_backup_file" $@
+  u_db_backup "$db_routine_new_backup_file" "$1" "$2"
 
   # Some tasks need the generated dump file path.
   routine_dump_file="${db_routine_new_backup_file}.tgz"

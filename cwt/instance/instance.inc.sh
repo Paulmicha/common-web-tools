@@ -231,7 +231,7 @@ u_instance_yaml_config_load() {
 #
 # For details on the syntax used to determine variable names from the YAML file
 # contents :
-# @see u_yaml_parse() in cwt/utilities/string.sh
+# @see u_yaml_parse() in cwt/utilities/yaml.sh
 #
 # @example
 #   yaml_parsed_sp_init=''

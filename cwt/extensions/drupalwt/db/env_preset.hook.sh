@@ -15,7 +15,7 @@ case "$DWT_MULTISITE" in true)
   u_dwt_sites "$DB_ID"
   u_db_vars_list
   for v in $db_vars_list; do
-    dwt_sites_db_var="dwt_sites_${p_site}_db_$v"
+    dwt_sites_db_var="dwt_sites_${DB_ID}_db_$v"
     u_str_sanitize_var_name "$dwt_sites_db_var" 'dwt_sites_db_var'
     u_str_lowercase "$dwt_sites_db_var" dwt_sites_db_var
     eval "dwt_sites_db_var_isset=\"\${$dwt_sites_db_var+set}\""

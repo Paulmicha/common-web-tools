@@ -138,6 +138,10 @@ u_remote_upload() {
 #
 # @see u_remote_exec_wrapper()
 #
+# @param 1 String : the remote ID.
+# @param 2 [optional] String : the SSH public key file path.
+#   Defaults to "$HOME/.ssh/id_rsa.pub" or "$CWT_SSH_PUBKEY" if not empty.
+#
 # @example
 #   u_remote_authorize_ssh_key 'my_short_id'
 #
@@ -146,6 +150,9 @@ u_remote_authorize_ssh_key() {
   local p_key="$2"
 
   local public_key_path="$HOME/.ssh/id_rsa.pub"
+  if [[ -n "$CWT_SSH_PUBKEY" ]]; then
+    public_key_path="$CWT_SSH_PUBKEY"
+  fi
   if [[ -n "$p_key" ]]; then
     public_key_path="$p_key"
   fi
@@ -161,7 +168,7 @@ u_remote_authorize_ssh_key() {
   fi
 
   # Current $USER must already have a public key.
-  if [ ! -f "$public_key_path" ]; then
+  if [[ ! -f "$public_key_path" ]]; then
     echo >&2
     echo "Error in $BASH_SOURCE line $LINENO: the public key '$public_key_path' was not found." >&2
     echo "E.g. generate with command : ssh-keygen -t rsa" >&2
@@ -171,7 +178,7 @@ u_remote_authorize_ssh_key() {
   fi
 
   # Ensures SSH agent is running with the key loaded.
-  if [ -z "$SSH_AUTH_SOCK" ]; then
+  if [[ -z "$SSH_AUTH_SOCK" ]]; then
     echo "SSH agent is not running (or not detected in $BASH_SOURCE line $LINENO)"
     echo "-> Launching ssh-agent and load the key in current terminal session..."
     echo "Note : if a passphrase was used to generate the key, this will prompt for it."
@@ -201,6 +208,7 @@ u_remote_authorize_ssh_key() {
   # TODO make idempotent.
   eval "cat $public_key_path | $REMOTE_INSTANCE_CONNECT_CMD 'cat >> .ssh/authorized_keys'"
 
+  # TODO remove this test, or find a more universally supported way to test this.
   echo "Ok, now the following call should not prompt for password, and should print the IP address of the remote host '$REMOTE_INSTANCE_HOST' :"
   echo
 
@@ -271,16 +279,13 @@ u_remote_instances_setup() {
     -v 'HOST_TYPE INSTANCE_TYPE' \
     -t -r
 
-  if [[ ! -f "$hook_most_specific_dry_run_match" ]]; then
-    echo >&2
-    echo "Error in u_remote_instances_setup() - $BASH_SOURCE line $LINENO: no remotes YAML definition file was found." >&2
-    echo "-> Aborting (1)." >&2
-    echo >&2
-    exit 1
-  fi
-
   # Purge existing remotes first.
   u_remote_purge_instances
+
+  # Having remotes is not required for all instance types.
+  if [[ ! -f "$hook_most_specific_dry_run_match" ]]; then
+    return
+  fi
 
   # (Re)init destination file (make empty).
   cat > 'scripts/cwt/local/remote-instances.sh' <<EOF

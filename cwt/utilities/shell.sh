@@ -37,9 +37,9 @@ i_am_su() {
 # @param 1 String : service name to check.
 # @param 2 String : command to eval.
 # @param 3 [optional] Integer : maximum number of retries.
-#   Defaults to 7.
+#   Defaults to 16.
 # @param 4 [optional] Integer : time to wait in seconds between retries.
-#   Defaults to 3.
+#   Defaults to 4.
 # @param 5 [optional] Integer : delay in seconds before beginning the checks.
 #   Defaults to 1.
 #
@@ -70,10 +70,10 @@ wait_for() {
   set -e
 
   if [[ -z "$p_max_try" ]]; then
-    p_max_try=7
+    p_max_try=16
   fi
   if [[ -z "$p_wait_seconds" ]]; then
-    p_wait_seconds=3
+    p_wait_seconds=4
   fi
   if [[ -z "$p_delay_seconds" ]]; then
     p_delay_seconds=1

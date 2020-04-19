@@ -18,11 +18,20 @@
 #
 # @param 1 String : the remote id.
 # @param 2 [optional] String : path to dump file override or 'new' to create one.
+# @param 3 [optional] String : unique DB identifier. Defaults to 'default'.
+# @param 4 [optional] String : force reload flag (bypasses optimization) if the
+#   DB credentials vars are already exported in current shell scope.
 #
-# @example
+# @examples
+#   # Using the default database :
 #   u_remote_sync_db_to my_remote_id
 #   u_remote_sync_db_to my_remote_id new
 #   u_remote_sync_db_to my_remote_id path/to/local/dump/file.sql.tgz
+#
+#   # Specifying the database (by DB_ID) :
+#   u_remote_sync_db_to my_remote_id '' my_db_id
+#   u_remote_sync_db_to my_remote_id new my_db_id
+#   u_remote_sync_db_to my_remote_id path/to/local/dump/file.sql.tgz my_db_id
 #
 u_remote_sync_db_to() {
   local p_id="$1"
@@ -46,7 +55,7 @@ u_remote_sync_db_to() {
     return 1
   fi
 
-  u_db_set
+  u_db_set "$3" "$4"
 
   # Handle variants given 1st argument.
   if [[ -n "$p_option" ]]; then
@@ -115,11 +124,20 @@ u_remote_sync_db_to() {
 #
 # @param 1 String : the remote id.
 # @param 2 [optional] String : path to dump file override or 'new' to create one.
+# @param 3 [optional] String : unique DB identifier. Defaults to 'default'.
+# @param 4 [optional] String : force reload flag (bypasses optimization) if the
+#   DB credentials vars are already exported in current shell scope.
 #
-# @example
+# @examples
+#   # Using the default database :
 #   u_remote_sync_db_from my_remote_id
 #   u_remote_sync_db_from my_remote_id new
 #   u_remote_sync_db_from my_remote_id path/to/remote/dump/file.sql.tgz
+#
+#   # Specifying the database by DB_ID (e.g. 'my_db_id') :
+#   u_remote_sync_db_from my_remote_id '' my_db_id
+#   u_remote_sync_db_from my_remote_id new my_db_id
+#   u_remote_sync_db_from my_remote_id path/to/remote/dump/file.sql.tgz my_db_id
 #
 u_remote_sync_db_from() {
   local p_id="$1"
@@ -141,7 +159,7 @@ u_remote_sync_db_from() {
     return 1
   fi
 
-  u_db_set
+  u_db_set "$3" "$4"
 
   # Handle variants given 1st argument.
   if [[ -n "$p_option" ]]; then
