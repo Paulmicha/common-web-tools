@@ -52,20 +52,20 @@ if [[ -n "$PROVISION_USING" ]]; then
   fi
 fi
 
-# 3. Using the .cwt.yml method takes precedence.
+# 3. Using the cwt.yml method takes precedence.
 echo
 if [[ -n "$HOST_TYPE" ]] && [[ -n "$INSTANCE_TYPE" ]]; then
-  hook -s 'instance' -a '.cwt' -c 'yml' -v 'HOST_TYPE INSTANCE_TYPE' -d -t
-  echo ".cwt.yml
-.cwt.$HOST_TYPE.yml
-.cwt.$INSTANCE_TYPE.yml
-.cwt.$HOST_TYPE.$INSTANCE_TYPE.yml
+  hook -s 'instance' -a 'cwt' -c 'yml' -v 'HOST_TYPE INSTANCE_TYPE' -d -t
+  echo "cwt.yml
+cwt.$HOST_TYPE.yml
+cwt.$INSTANCE_TYPE.yml
+cwt.$HOST_TYPE.$INSTANCE_TYPE.yml
 .cwt-local.yml
 .cwt-local.$HOST_TYPE.yml
 .cwt-local.$INSTANCE_TYPE.yml
 .cwt-local.$HOST_TYPE.$INSTANCE_TYPE.yml"
 else
-  echo ".cwt.yml
+  echo "cwt.yml
 .cwt-local.yml"
 fi
 
