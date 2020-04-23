@@ -413,33 +413,38 @@ u_dwt_sites() {
     p_site='*'
   fi
 
+  u_hook_most_specific 'dry-run' \
+    -s 'app' \
+    -a 'sites' \
+    -c 'yml' \
+    -v "$hook_variants" \
+    -t -r
+
+  # Immediately empty the variable triggering remote sites lookups in case this
+  # function gets called again without needing it.
+  if [[ -n "$dwt_remote_id" ]]; then
+    dwt_remote_id=''
+  fi
+
+  # No declaration file found ? Can't carry on, there's nothing to do.
+  if [[ ! -f "$hook_most_specific_dry_run_match" ]]; then
+    echo >&2
+    echo "Error in u_dwt_sites() - $BASH_SOURCE line $LINENO: no multi-sites declaration was found." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    return 1
+  fi
+
   # Use pseudo-memoization to reduce multiple calls impact.
-  if [[ -z "$memoized_dwt_sites_parsed_yaml_str" ]]; then
-    u_hook_most_specific 'dry-run' \
-      -s 'app' \
-      -a 'sites' \
-      -c 'yml' \
-      -v "$hook_variants" \
-      -t -r
-
-    # No declaration file found ? Can't carry on, there's nothing to do.
-    if [[ ! -f "$hook_most_specific_dry_run_match" ]]; then
-      echo >&2
-      echo "Error in u_dwt_sites() - $BASH_SOURCE line $LINENO: no multi-sites declaration was found." >&2
-      echo "-> Aborting (1)." >&2
-      echo >&2
-      return 1
-    fi
-
+  if [[ -n "$memoized_dwt_sites_parsed_yaml_str" ]] \
+    && [[ -n "$memoized_dwt_sites_yaml_file" ]] \
+    && [[ "$hook_most_specific_dry_run_match" == "$memoized_dwt_sites_yaml_file" ]]
+  then
+    sites_parsed_yaml_str="$memoized_dwt_sites_parsed_yaml_str"
+  else
     sites_parsed_yaml_str="$(u_yaml_parse "$hook_most_specific_dry_run_match" "$dwt_vars_prefix")"
     memoized_dwt_sites_parsed_yaml_str="$sites_parsed_yaml_str"
     memoized_dwt_sites_yaml_file="$hook_most_specific_dry_run_match"
-
-  # Yaml file was already parsed once in current shell scope -> use memoized
-  # value.
-  else
-    sites_parsed_yaml_str="$memoized_dwt_sites_parsed_yaml_str"
-    hook_most_specific_dry_run_match="$memoized_dwt_sites_yaml_file"
   fi
 
   # Fetch only sites IDs (return early).

@@ -35,10 +35,26 @@ done
 case "$DWT_MULTISITE" in 'true')
   u_dwt_sites
   for site_id in "${dwt_sites_ids[@]}"; do
+    u_str_sanitize_var_name "$site_id" 'site_id'
 
-    site_dir_var="dwt_sites_${site_id}_dir"
-    u_str_sanitize_var_name "$site_dir_var" 'site_dir_var'
-    site_dir="${!site_dir_var}"
+    # Optionally git-ignored config sync dirs need to be dealt with.
+    v="dwt_sites_${site_id}_config_sync_dir"
+    config_sync_dir="${!v}"
+    if [[ -n "$config_sync_dir" ]] && [[ ! -d "$SERVER_DOCROOT/$config_sync_dir" ]]; then
+      echo "Creating missing dir '$SERVER_DOCROOT/$config_sync_dir'"
+      mkdir -p "$SERVER_DOCROOT/$config_sync_dir"
+      if [[ $? -ne 0 ]]; then
+        echo >&2
+        echo "Error in $BASH_SOURCE line $LINENO: unable to create the required dir '$SERVER_DOCROOT/$config_sync_dir'." >&2
+        echo "-> Aborting (2)." >&2
+        echo >&2
+        exit 2
+      fi
+    fi
+
+    # Process required dirs for all local sites.
+    v="dwt_sites_${site_id}_dir"
+    site_dir="${!v}"
 
     # The 'default' dir should be done already.
     # @see cwt/extensions/drupalwt/app/global.vars.sh
@@ -57,9 +73,9 @@ case "$DWT_MULTISITE" in 'true')
           if [[ $? -ne 0 ]]; then
             echo >&2
             echo "Error in $BASH_SOURCE line $LINENO: unable to create the required dir '$required_dir'." >&2
-            echo "-> Aborting (2)." >&2
+            echo "-> Aborting (3)." >&2
             echo >&2
-            exit 2
+            exit 3
           fi
         fi
       esac
