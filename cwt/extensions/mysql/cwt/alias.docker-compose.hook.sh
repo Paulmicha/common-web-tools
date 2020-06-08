@@ -15,3 +15,5 @@
 alias mysql="docker-compose exec $DC_TTY ${MYSQL_SNAME:=mariadb} mysql"
 alias mysqldump="docker-compose exec $DC_TTY ${MYSQL_SNAME:=mariadb} mysqldump"
 alias mysqladmin="docker-compose exec $DC_TTY ${MYSQL_SNAME:=mariadb} mysqladmin"
+alias mysqlcheck="docker-compose exec $DC_TTY ${MYSQL_SNAME:=mariadb} mysqlcheck"
+alias mysql_upgrade="docker-compose exec $DC_TTY ${MYSQL_SNAME:=mariadb} mysql_upgrade"

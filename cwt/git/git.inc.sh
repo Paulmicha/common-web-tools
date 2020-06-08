@@ -10,6 +10,80 @@
 #
 
 ##
+# Basic Git log "processor".
+#
+# Forwards all arguments to u_git_find_commits() in order to allow filtering
+# commits to be processed, except the following first 2 optional arguments :
+#
+# @params 1 & 2 [optional] Strings : "callback" code to eval for each line.
+#   Defaults to : --callback 'echo "$i : $d ${h:0:8} $t"'
+#   meaning : print lines to stdout formatted like :
+#   <line number> : <datestamp> <short commit ID> <commit message>
+#   Variables available in "callback" scope :
+#     - i : line number
+#     - h : commit hash
+#     - t : commit title
+#     - e : commit author email
+#     - d : commit date
+#     - s : commit timestamp
+#
+# @see u_git_find_commits()
+#
+# @example
+#   # Print log lines of all *merge* commits from the past 2 months in
+#   # chronological order :
+#   u_git_log --merges -s '2 months ago' -i
+#
+#   # Print the most recent commits from the past 3 weeks using format :
+#   # <datestamp> <commit ID> <author email>
+#   u_git_log --callback 'echo "$d $h $e"' -s '3 weeks ago'
+#
+#   # Print only merge commits' titles from 'master' branch from the past 3
+#   # months in chronological order, filtering out some strings using a custom
+#   # callback function :
+#   _print_log_line() {
+#     t=${t/"Merge branch "/}
+#     t=${t//"'"/}
+#     echo "$t"
+#   }
+#   u_git_log -c '_print_log_line' --merges -b 'master' -s '3 months ago' -i
+#
+u_git_log() {
+  local p_evaled_code
+  local i
+  local h
+  local t
+  local e
+  local d
+  local s
+
+  # Provide a way to set a custom process for each line. This *must* be the 1st
+  # 2 args for simplicity.
+  case "$1" in -c | --callback )
+    shift
+    p_evaled_code="$1"
+    shift
+  esac
+
+  # By default, this will output all log lines to stdout using the following
+  # format : <line number> : <datestamp> <short commit ID> <commit message>
+  if [[ -z "$p_evaled_code" ]]; then
+    p_evaled_code='echo "$i : $d ${h:0:8} $t"'
+  fi
+
+  u_git_find_commits "$@"
+
+  for ((i = 0 ; i < ${#git_commits_hashes[@]} ; i++)); do
+    h="${git_commits_hashes[$i]}"
+    t="${git_commits_titles[$i]}"
+    e="${git_commits_emails[$i]}"
+    d="${git_commits_dates[$i]}"
+    s="${git_commits_timestamps[$i]}"
+    eval "$p_evaled_code"
+  done
+}
+
+##
 # Searches log messages and gets all files changed in all matching commits.
 #
 # This function writes its result to a variable subject to collision in calling
@@ -121,53 +195,62 @@ u_git_find_commits() {
 
         # Search in commits' log messages.
         -m | --msg )
-          shift; search_params+="--grep='$1' "
+          shift
+          search_params+="--grep='$1' "
           ;;
 
         # Search in commits' log messages using numerical filter suffix, i.e. to
         # avoid matching JR-123 when searching for JRA-12.
         -g | --msgnum )
-          shift; search_params+="--grep='$1[^0-9]' "
+          shift
+          search_params+="--grep='$1[^0-9]' "
           ;;
 
         # Filter out commits whose log message title matches given pattern. The
         # pattern cannot contain "|" inside.
         # See https://unix.stackexchange.com/a/234415
         -n | --titlenotmatching )
-          shift; title_inverted_filter="$1"
+          shift
+          title_inverted_filter="$1"
           ;;
 
         # Filter by branch.
         -b | --branch )
-          shift; branch_filter="$1"
+          shift
+          branch_filter="$1"
           ;;
 
         # Filter by commit author email. The pattern cannot contain "|" inside.
         # See https://unix.stackexchange.com/a/234415
         -e | --email )
-          shift; email_filter="$1"
+          shift
+          email_filter="$1"
           ;;
 
         # Filter by minimum date (discards older commits).
         # Show commits more recent than a specific date.
         -s | --since )
-          shift; search_params+="--since='$1' " # Alias : --after=<date>
+          shift
+          search_params+="--since='$1' " # Alias : --after=<date>
           ;;
 
         # Filter by maximum date (discards newer commits).
         # Show commits older than a specific date.
         -u | --until )
-          shift; search_params+="--until='$1' " # Alias : --before=<date>
+          shift
+          search_params+="--until='$1' " # Alias : --before=<date>
           ;;
 
         # Look in diffs where added or removed lines match given regex.
         -d | --diff )
-          shift; search_params+="-G '$1' "
+          shift
+          search_params+="-G '$1' "
           ;;
 
         # Filter by files.
         -f | --files )
-          shift; file_filter="$1"
+          shift
+          file_filter="$1"
           ;;
 
         # Flag : invert hashes order.
@@ -185,8 +268,15 @@ u_git_find_commits() {
           git_commits_timestamps=()
           git_changed_files=()
           ;;
+
+        # Forward all remaining args starting with '--' to the git-log command.
+        # See https://www.git-scm.com/docs/git-log
+        --*)
+          search_params+="$1 "
+          ;;
       esac
-      shift;
+
+      shift
     done
 
     # If no branch filter was specified, we still need to apply the '--all'
@@ -194,9 +284,16 @@ u_git_find_commits() {
     if [[ -z "$branch_filter" ]]; then
       search_params+='--all '
     else
-      search_params+="$branch_filter"
+      search_params+="$branch_filter "
     fi
   fi
+
+  # Debug.
+  # echo "debug search params :"
+  # echo "  $search_params"
+  # echo "debug $# unprocessed arg(s) :"
+  # echo "  $@"
+  # exit
 
   while IFS= read -r git_log_line _; do
     iteration_can_carry_on='false'
