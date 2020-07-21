@@ -742,6 +742,42 @@ u_git_get_staged_files() {
 }
 
 ##
+# List unmerged files only.
+#
+# @param 1 [optional] String : the git "working dir". Defaults to $APP_DOCROOT.
+# @param 2 [optional] String : the git dir. Defaults to "$1/.git".
+#
+# @example
+#   # List unmerged files in current path.
+#   unmerged_paths="$(u_git_get_unmerged_paths)"
+#   for f in $unmerged_paths; do
+#     echo "unmerged : $f"
+#   done
+#
+#   # List unmerged files in given path.
+#   unmerged_paths="$(u_git_get_unmerged_paths path/to/work/tree)"
+#   for f in $unmerged_paths; do
+#     echo "unmerged : $f"
+#   done
+#
+u_git_get_unmerged_paths() {
+  local p_git_work_tree="$1"
+  local p_git_dir=''
+
+  if [[ -z "$p_git_work_tree" ]]; then
+    p_git_work_tree="$APP_DOCROOT"
+  fi
+
+  if [[ -n "$2" ]]; then
+    p_git_dir="$2"
+  else
+    p_git_dir="$p_git_work_tree/.git"
+  fi
+
+  echo "$(u_git_wrapper diff --name-only --diff-filter=U)"
+}
+
+##
 # Wraps git calls to exec commands from PROJECT_DOCROOT for different repos.
 #
 # @uses the following [optional] vars in calling scope :

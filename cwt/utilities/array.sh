@@ -55,7 +55,7 @@ u_array_add_once() {
   local needle="${1}"
   local haystack_var_name="${2}"
 
-  if ! u_in_array $needle $haystack_var_name; then
+  if ! u_in_array "$needle" "$haystack_var_name"; then
     eval "$haystack_var_name+=($needle)"
   fi
 }
