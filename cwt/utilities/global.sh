@@ -286,6 +286,9 @@ u_global_assign_value() {
 
   u_str_sanitize_var_name "$p_var" 'p_var'
 
+  # Debug.
+  # echo "    u_global_assign_value() $p_var"
+
   # Support tests.
   # @see cwt/test/cwt/global.test.sh
   if [[ $test_cwt_global_aggregate -ne 1 ]]; then
@@ -312,22 +315,42 @@ u_global_assign_value() {
         if [[ "$depending_value" == "$depending_match" ]]; then
           if [[ -n "${GLOBALS[$p_var|value_if_false]}" ]]; then
             default_val="${GLOBALS[$p_var|value_if_false]}"
+
+            # Debug.
+            # echo "    $p_var = '$default_val' // Set default_val to conditional value if false."
           else
+
+            # Debug.
+            # echo "    $p_var : no assignment for condition ${GLOBALS[$p_var|condition]} (depending_value = '$depending_value', depending_match = '$depending_match')"
+
             return
           fi
         elif [[ -n "${GLOBALS[$p_var|value_if_true]}" ]]; then
           default_val="${GLOBALS[$p_var|value_if_true]}"
+
+            # Debug.
+            # echo "    $p_var = '$default_val' // Set default_val to conditional value if true."
         fi
         ;;
       'if')
         if [[ "$depending_value" != "$depending_match" ]]; then
           if [[ -n "${GLOBALS[$p_var|value_if_false]}" ]]; then
             default_val="${GLOBALS[$p_var|value_if_false]}"
+
+            # Debug.
+            # echo "    $p_var = '$default_val' // Set default_val to conditional value if false."
           else
+
+            # Debug.
+            # echo "    $p_var : no assignment for condition ${GLOBALS[$p_var|condition]} (depending_value = '$depending_value', depending_match = '$depending_match')"
+
             return
           fi
         elif [[ -n "${GLOBALS[$p_var|value_if_true]}" ]]; then
           default_val="${GLOBALS[$p_var|value_if_true]}"
+
+            # Debug.
+            # echo "    $p_var = '$default_val' // Set default_val to conditional value if true."
         fi
         ;;
     esac
@@ -549,7 +572,7 @@ global() {
                 GLOBALS["$p_var_name|condition"]='if'
 
                 # Debug.
-                # echo "$p_var_name ifnot : $depending_value != ${declaration_arr[$key]} ?"
+                # echo "$p_var_name if : $depending_value != ${declaration_arr[$key]} ?"
 
                 if [[ "$depending_value" != "${declaration_arr[$key]}" ]]; then
                   # Debug.
@@ -603,6 +626,9 @@ global() {
   # Prevent conditional assignment (and the rest of the processing below if no
   # match was found above) if the global using a condition does not require
   # deferred assignment.
+  # For conditional global values requiring default value(s), they MUST use the
+  # deferred assignment. Ex :
+  # global SERVER_DOCROOT_C "[if-SERVER_DOCROOT]='$APP_DOCROOT/docroot' [true]=/var/www/html/docroot [false]=/var/www/html/web [index]=1"
   if [[ ! $index -gt 0 ]] && [[ -n "${GLOBALS[$p_var_name|condition]}" ]]; then
     unset GLOBALS["$p_var_name|condition"]
     if [[ -n "$p_prevent_assignment" ]]; then

@@ -32,7 +32,7 @@ services:
       MYSQL_PASSWORD: $DB_PASS
     restart: on-failure:5
     volumes:
-      - ./data/db:/var/lib/mysql
+      - mariadb_volume:/var/lib/mysql
 
   # See https://github.com/wodby/php
   # See https://github.com/wodby/drupal-php
@@ -68,3 +68,6 @@ services:
     image: wodby/redis:$REDIS_TAG
     container_name: "${DC_NS}_redis"
     restart: on-failure:5
+
+volumes:
+  mariadb_volume:

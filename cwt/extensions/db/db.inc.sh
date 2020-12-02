@@ -125,27 +125,41 @@ u_db_set() {
     none)
       if [[ -z "$DB_DRIVER" ]]; then
         export DB_DRIVER='mysql'
+      else
+        export DB_DRIVER
       fi
       if [[ -z "$DB_NAME" ]]; then
         export DB_NAME='*'
+      else
+        export DB_NAME
       fi
       if [[ -z "$DB_HOST" ]]; then
         export DB_HOST='localhost'
+      else
+        export DB_HOST
       fi
       if [[ -z "$DB_PORT" ]]; then
         case "$DB_DRIVER" in
           pgsql)  export DB_PORT='5432' ;;
           *)      export DB_PORT='3306' ;;
         esac
+      else
+        export DB_PORT
       fi
       if [[ -z "$DB_ADMIN_USER" ]]; then
         export DB_ADMIN_USER="$DB_USER"
+      else
+        export DB_ADMIN_USER
       fi
       if [[ -z "$DB_ADMIN_PASS" ]]; then
         export DB_ADMIN_PASS="$DB_PASS"
+      else
+        export DB_ADMIN_PASS
       fi
       if [[ -z "$DB_TABLES_SKIP_DATA" ]]; then
         export DB_TABLES_SKIP_DATA=""
+      else
+        export DB_TABLES_SKIP_DATA
       fi
       return
       ;;
@@ -165,9 +179,13 @@ u_db_set() {
     auto)
       if [[ -z "$DB_DRIVER" ]]; then
         export DB_DRIVER='mysql'
+      else
+        export DB_DRIVER
       fi
       if [[ -z "$DB_NAME" ]]; then
         export DB_NAME='*'
+      else
+        export DB_NAME
       fi
       if [[ -z "$DB_USER" ]]; then
         export DB_USER="$DB_ID"
@@ -179,18 +197,26 @@ u_db_set() {
           pgsql) DB_USER="${DB_USER:0:32}" ;;
           mysql) DB_USER="${DB_USER:0:16}" ;;
         esac
+      else
+        export DB_USER
       fi
       if [[ -z "$DB_HOST" ]]; then
         export DB_HOST='localhost'
+      else
+        export DB_HOST
       fi
       if [[ -z "$DB_PORT" ]]; then
         case "$DB_DRIVER" in
           pgsql)  export DB_PORT='5432' ;;
           *)      export DB_PORT='3306' ;;
         esac
+      else
+        export DB_PORT
       fi
       if [[ -z "$DB_TABLES_SKIP_DATA" ]]; then
         export DB_TABLES_SKIP_DATA=""
+      else
+        export DB_TABLES_SKIP_DATA
       fi
 
       # Attempts to load password from registry (secrets store).
@@ -210,6 +236,8 @@ u_db_set() {
         else
           export DB_PASS="$reg_val"
         fi
+      else
+        export DB_PASS
       fi
 
       export DB_ADMIN_USER="${DB_ADMIN_USER:=$DB_USER}"

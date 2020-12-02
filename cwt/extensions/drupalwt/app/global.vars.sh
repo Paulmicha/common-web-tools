@@ -11,7 +11,7 @@
 # @see cwt/bootstrap.sh
 #
 
-global DRUPAL_VERSION "[default]=8"
+global DRUPAL_VERSION "[default]=9"
 global DRUPAL_SETTINGS_FILE "[default]=$SERVER_DOCROOT/sites/default/settings.php"
 global DRUPAL_SETTINGS_LOCAL_FILE "[default]=$SERVER_DOCROOT/sites/default/settings.local.php"
 global DRUPAL_FILES_DIR "[default]=$SERVER_DOCROOT/sites/default/files"

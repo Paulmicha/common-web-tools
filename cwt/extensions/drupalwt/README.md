@@ -57,14 +57,18 @@ If using the `drupalwt_d4d` extension, details about the `docker-compose` "stack
 
 ### 3. Choose a Composer template and do the first install
 
-Here we chose the Composer template from the `thunder` distro, but you can use
-the standard `drupal-composer/drupal-project` (if you do, make sure to leave the
-`SERVER_DOCROOT` value to its default value `app/web`), or any other Composer
-template.
+By default, uses the latest `drupal/recommended-project` Composer template, and `Hello World` as site name.
+
+```sh
+make new-project
+make new-site-install
+```
+
+Here's another example using a custom Composer template from the `thunder` distro.
 
 ```sh
 make new-project 'thunder/thunder-project'
-make new-site-install "My project" 'thunder'
+cwt/extensions/drupalwt/new/site-install.sh "My project" 'thunder'
 ```
 
 This will install the new Drupal site named *My project* with the `thunder`

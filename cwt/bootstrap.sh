@@ -65,8 +65,9 @@ if [[ $CWT_BS_FLAG -ne 1 ]]; then
       # Any additional include may be overridden.
       u_autoload_override "$file" 'continue'
       eval "$inc_override_evaled_code"
-
-      . "$file"
+      if [[ -f "$file" ]]; then
+        . "$file"
+      fi
     done
   fi
 

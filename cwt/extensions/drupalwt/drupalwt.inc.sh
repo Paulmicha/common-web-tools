@@ -156,6 +156,11 @@ u_dwt_write_drupal_settings() {
   esac
   drupal_settings=${drupal_settings/'sites/default'/"sites/$site_dir"}
 
+  # Skip step if Drupal app codebase isn't initialized yet.
+  if [[ ! -f "$drupal_default_settings" ]] && [[ ! -f "$SERVER_DOCROOT/sites/default/default.settings.php" ]]; then
+    return
+  fi
+
   # Console feedback.
   echo "(Re)write Drupal local settings file ($drupal_settings) ..."
   echo "  using template : $hook_most_specific_dry_run_match ..."
