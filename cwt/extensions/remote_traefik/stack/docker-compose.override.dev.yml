@@ -2,8 +2,6 @@ version: '3.7'
 
 services:
   traefik:
-    networks:
-      - proxy
     labels:
       # Traefik configuration for the dashboard
       - "traefik.http.routers.${DC_NS}_traefik_http.rule=Host(`${INSTANCE_DOMAIN}`)"

@@ -34,6 +34,9 @@ case "$DC_MODE" in
     ;;
 esac
 
+# Subdomain or prefix separator for use in Traefik labels.
+global DC_SUBDOMAIN_SEP "[default]='.' [help]='Subdomain or prefix separator for use in Traefik labels. E.g. if instance domain is example.com, one of its services could want to use backend.example.com -> separator = ’.’ in this case. Otherwise, if instance domain is stage.example.com, a service wanting another subdomain would be mailhog-stage.example.com -> here, separator = ’-’.'"
+
 # [optional] Shorter generated make tasks names.
 # @see u_instance_task_name() in cwt/instance/instance.inc.sh
 global CWT_MAKE_TASKS_SHORTER "[append]='docker-compose/dc'"

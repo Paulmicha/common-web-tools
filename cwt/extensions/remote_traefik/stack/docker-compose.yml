@@ -4,8 +4,17 @@ services:
   traefik:
     image: traefik:$TRAEFIK_VERSION
     restart: unless-stopped
+    # This file can be overriden to be manually edited by copying it in :
+    # scripts/cwt/extend/stack
+    # TODO : turn this docker-compose.yml file into a template with a
+    # placeholder to dynamically generate the networks configuration based on
+    # the docker-compose default network creation naming convention.
+    # This process would assume that ALL projects are placed in the same dir,
+    # which could be specified by the global TRAEFIK_PROJECTS_DIR, and that
+    # their folder name does not start with a dot.
     networks:
-      - proxy
+      - project1
+      - project2
     ports:
       - "80:80"
       - "443:443"
@@ -15,5 +24,9 @@ services:
       - ./scripts/cwt/local/acme.json:/acme.json
 
 networks:
-  proxy:
-    external: true
+  project1:
+    external:
+      name: project1-dir_default
+  project2:
+    external:
+      name: project2-dir_default

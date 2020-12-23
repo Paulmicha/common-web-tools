@@ -31,7 +31,8 @@
 
 raw_args=$@
 
-# Sanitize the arguments of this script for hook call below.
+# Sanitize the arguments of this script for hook call below (the variable 'args'
+# will contain the sanitized input, which is what hook implementations will use).
 remote_id="$1"
 u_str_sanitize_var_name "$remote_id" 'remote_id'
 cmd="$2"

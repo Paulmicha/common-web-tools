@@ -1,0 +1,52 @@
+version: "3"
+services:
+
+  # See https://github.com/wodby/nginx
+  nginx:
+    labels:
+      - traefik.http.routers.${DC_NS}_nginx_http.rule=Host(`${INSTANCE_DOMAIN}`)
+      - traefik.http.routers.${DC_NS}_nginx_http.entrypoints=http
+      - traefik.http.routers.${DC_NS}_nginx_http.middlewares=redirect
+      - traefik.http.routers.${DC_NS}_nginx_https.rule=Host(`${INSTANCE_DOMAIN}`)
+      - traefik.http.routers.${DC_NS}_nginx_https.entrypoints=https
+      - traefik.http.routers.${DC_NS}_nginx_https.tls=true
+      - traefik.http.middlewares.redirect.redirectscheme.scheme=https
+
+  php:
+    environment:
+      PHP_SENDMAIL_PATH: /usr/sbin/sendmail -t -i -S mailhog:1025
+
+  # See https://github.com/wodby/adminer
+  adminer:
+    image: wodby/adminer:$ADMINER_TAG
+    container_name: "${DC_NS}_adminer"
+    environment:
+      ADMINER_DEFAULT_DB_DRIVER: $DB_DRIVER
+      ADMINER_DEFAULT_DB_HOST: $DB_HOST
+      ADMINER_DEFAULT_DB_NAME: $DB_NAME
+    expose:
+      - "9000"
+    labels:
+      - "traefik.http.services.${DC_NS}_adminer.loadbalancer.server.port=9000"
+      - traefik.http.routers.${DC_NS}_adminer_http.rule=Host(`adminer${DC_SUBDOMAIN_SEP}${INSTANCE_DOMAIN}`)
+      - traefik.http.routers.${DC_NS}_adminer_http.entrypoints=http
+      - traefik.http.routers.${DC_NS}_adminer_http.middlewares=redirect
+      - traefik.http.routers.${DC_NS}_adminer_https.rule=Host(`adminer${DC_SUBDOMAIN_SEP}${INSTANCE_DOMAIN}`)
+      - traefik.http.routers.${DC_NS}_adminer_https.entrypoints=https
+      - traefik.http.routers.${DC_NS}_adminer_https.tls=true
+      - traefik.http.middlewares.redirect.redirectscheme.scheme=https
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: "${DC_NS}_mailhog"
+    expose:
+      - "8025"
+    labels:
+      - "traefik.http.services.${DC_NS}_mailhog.loadbalancer.server.port=8025"
+      - traefik.http.routers.${DC_NS}_mailhog_http.rule=Host(`mailhog${DC_SUBDOMAIN_SEP}${INSTANCE_DOMAIN}`)
+      - traefik.http.routers.${DC_NS}_mailhog_http.entrypoints=http
+      - traefik.http.routers.${DC_NS}_mailhog_http.middlewares=redirect
+      - traefik.http.routers.${DC_NS}_mailhog_https.rule=Host(`mailhog${DC_SUBDOMAIN_SEP}${INSTANCE_DOMAIN}`)
+      - traefik.http.routers.${DC_NS}_mailhog_https.entrypoints=https
+      - traefik.http.routers.${DC_NS}_mailhog_https.tls=true
+      - traefik.http.middlewares.redirect.redirectscheme.scheme=https

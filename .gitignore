@@ -28,6 +28,8 @@
 !/data/private/README.md
 /data/tmp/*
 !/data/tmp/README.md
+/data/logs/*
+!/data/logs/README.md
 
 # Misc.
 docker-runtime

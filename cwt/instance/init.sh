@@ -13,7 +13,7 @@
 #   # docker-compose namespace, with git origin
 #   'git@my-git-origin.org:my-git-account/cwt.git', app sources cloned in 'dist',
 #   # and using 'dist/web' as app dir - without terminal prompts (-y flag).
-#   u_instance_init \
+#   cwt/instance/init.sh \
 #     -t 'dev' \
 #     -h 'local' \
 #     -p 'ansible' \
