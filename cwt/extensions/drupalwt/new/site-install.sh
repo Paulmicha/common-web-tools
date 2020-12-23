@@ -34,15 +34,11 @@
 #   cwt/extensions/drupalwt/new/site-install.sh
 #
 #   # To specify a site name + install profile :
-#   make new-site-install "My project" 'minimal'
-#   # Or :
 #   cwt/extensions/drupalwt/new/site-install.sh "My project" 'minimal'
 #
 #   # To specify superadmin credentials :
 #   superadmin_password="$(u_str_random)"
 #   echo "Your superadmin login credentials will be : admin / $superadmin_password"
-#   make new-site-install "My project" 'minimal' 'admin' "$superadmin_password"
-#   # Or :
 #   cwt/extensions/drupalwt/new/site-install.sh "My project" 'minimal' 'admin' "$superadmin_password"
 #
 
