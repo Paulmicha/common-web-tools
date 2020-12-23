@@ -31,14 +31,16 @@
 #   u_instance_init
 #
 #   # Initializes an instance of type 'dev', host type 'local', provisionned
-#   # using 'ansible', identified by domain 'dev.cwt.com', with git origin
-#   # 'git@my-git-origin.org:my-git-account/cwt.git', app sources cloned in 'dist',
+#   # using 'ansible', identified by domain 'dev.cwt.com', using 'cwt_dev' as
+#   # docker-compose namespace, with git origin
+#   'git@my-git-origin.org:my-git-account/cwt.git', app sources cloned in 'dist',
 #   # and using 'dist/web' as app dir - without terminal prompts (-y flag).
 #   u_instance_init \
 #     -t 'dev' \
 #     -h 'local' \
 #     -p 'ansible' \
 #     -d 'dev.cwt.com' \
+#     -c 'cwt_dev' \
 #     -g 'git@my-git-origin.org:my-git-account/cwt.git' \
 #     -i 'dist' \
 #     -a 'dist/web' \
@@ -53,6 +55,7 @@ u_instance_init() {
   local p_cwtii_server_docroot=''
   local p_cwtii_instance_type=''
   local p_cwtii_instance_domain=''
+  local p_cwtii_dc_ns=''
 
   # Configurable CWT internals.
   local p_cwtii_host_type=''
@@ -65,15 +68,18 @@ u_instance_init() {
   # in PROJECT_DOCROOT dir).
   yaml_parsed_sp_init=''
   yaml_parsed_globals=''
-  if [[ -f ".cwt.yml" ]] || [[ -f ".cwt-local.yml" ]]; then
-    if [[ -f ".cwt.yml" ]]; then
-      u_instance_yaml_config_parse ".cwt.yml"
+  if [[ -f "cwt.yml" ]] || [[ -f ".cwt-local.yml" ]]; then
+    if [[ -f "cwt.yml" ]]; then
+      u_instance_yaml_config_parse "cwt.yml"
     fi
     if [[ -f ".cwt-local.yml" ]]; then
       u_instance_yaml_config_parse ".cwt-local.yml"
     fi
     if [[ -n "$yaml_parsed_sp_init" ]]; then
       eval "$yaml_parsed_sp_init"
+
+      # TODO support all globals for reinits ? For ex. as in :
+      # @see u_traefik_generate_acme_conf() in cwt/extensions/remote_traefik/remote_traefik.inc.sh
       if [[ -n "$YAML_APP_GIT_ORIGIN" ]]; then
         p_cwtii_app_git_origin="$YAML_APP_GIT_ORIGIN"
       fi
@@ -82,6 +88,12 @@ u_instance_init() {
       fi
       if [[ -n "$YAML_APP_DOCROOT" ]]; then
         p_cwtii_app_docroot="$YAML_APP_DOCROOT"
+      fi
+      if [[ -n "$YAML_INSTANCE_DOMAIN" ]]; then
+        p_cwtii_instance_domain="$YAML_INSTANCE_DOMAIN"
+      fi
+      if [[ -n "$YAML_DC_NS" ]]; then
+        p_cwtii_dc_ns="$YAML_DC_NS"
       fi
     fi
   fi
@@ -94,6 +106,7 @@ u_instance_init() {
       -g) p_cwtii_app_git_origin="$2"; shift 2;;
       -t) p_cwtii_instance_type="$2"; shift 2;;
       -d) p_cwtii_instance_domain="$2"; shift 2;;
+      -c) p_cwtii_dc_ns="$2"; shift 2;;
 
       -h) p_cwtii_host_type="$2"; shift 2;;
       -p) p_cwtii_provision_using="$2"; shift 2;;
@@ -127,6 +140,27 @@ u_instance_init() {
 
   # Any global vars defined in YAML takes precedence. Use the dynamic lookup now
   # that we have values for HOST_TYPE and INSTANCE_TYPE (for variants).
+  # Allow by default the use of local overrides by placing variants in dedicated
+  # folder.
+  # TODO [evol] allow template-like syntax in those for easier combinations ?
+  if [[ -f "scripts/cwt/override/.cwt-local.$HOST_TYPE.yml" ]]; then
+    if [[ -f ".cwt-local.$HOST_TYPE.yml" ]]; then
+      rm -f ".cwt-local.$HOST_TYPE.yml"
+    fi
+    cp "scripts/cwt/override/.cwt-local.$HOST_TYPE.yml" ".cwt-local.$HOST_TYPE.yml"
+  fi
+  if [[ -f "scripts/cwt/override/.cwt-local.$INSTANCE_TYPE.yml" ]]; then
+    if [[ -f ".cwt-local.$INSTANCE_TYPE.yml" ]]; then
+      rm -f ".cwt-local.$INSTANCE_TYPE.yml"
+    fi
+    cp "scripts/cwt/override/.cwt-local.$INSTANCE_TYPE.yml" ".cwt-local.$INSTANCE_TYPE.yml"
+  fi
+  if [[ -f "scripts/cwt/override/.cwt-local.$HOST_TYPE.$INSTANCE_TYPE.yml" ]]; then
+    if [[ -f ".cwt-local.$HOST_TYPE.$INSTANCE_TYPE.yml" ]]; then
+      rm -f ".cwt-local.$HOST_TYPE.$INSTANCE_TYPE.yml"
+    fi
+    cp "scripts/cwt/override/.cwt-local.$HOST_TYPE.$INSTANCE_TYPE.yml" ".cwt-local.$HOST_TYPE.$INSTANCE_TYPE.yml"
+  fi
   yaml_parsed_sp_init=''
   yaml_parsed_globals=''
   u_instance_yaml_config_load
@@ -163,7 +197,7 @@ u_instance_init() {
 }
 
 ##
-# Loads .cwt.yml config files (+ variants) and converts them into declarations.
+# Loads cwt.yml config files (+ variants) and converts them into declarations.
 #
 # @requires the following variables in calling scope :
 # @var yaml_parsed_sp_init
@@ -236,7 +270,7 @@ u_instance_yaml_config_load() {
 # @example
 #   yaml_parsed_sp_init=''
 #   yaml_parsed_globals=''
-#   u_instance_yaml_config_parse ./.cwt.yml
+#   u_instance_yaml_config_parse ./cwt.yml
 #   # -> Usage 1 - special args override for u_instance_init() :
 #   eval "$yaml_parsed_sp_init"
 #   echo "$YAML_SERVER_DOCROOT"

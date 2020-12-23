@@ -1,0 +1,18 @@
+version: '3.7'
+
+services:
+  traefik:
+    networks:
+      - proxy
+    labels:
+      # Traefik configuration for the dashboard
+      - "traefik.http.routers.${DC_NS}_traefik_http.rule=Host(`${INSTANCE_DOMAIN}`)"
+      - "traefik.http.routers.${DC_NS}_traefik_http.entrypoints=http"
+      - "traefik.http.routers.${DC_NS}_traefik_http.middlewares=redirect"
+      - "traefik.http.routers.${DC_NS}_traefik_https.rule=Host(`${INSTANCE_DOMAIN}`)"
+      - "traefik.http.routers.${DC_NS}_traefik_https.entrypoints=https"
+      - "traefik.http.routers.${DC_NS}_traefik_https.tls=true"
+      - "traefik.http.routers.${DC_NS}_traefik_http.service=api@internal"
+      - "traefik.http.routers.${DC_NS}_traefik_https.service=api@internal"
+      - "traefik.http.middlewares.redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.test-auth.basicauth.users=${TRAEFIK_BASIC_AUTH_USERS}"

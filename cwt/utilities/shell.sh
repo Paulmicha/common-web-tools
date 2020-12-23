@@ -8,6 +8,15 @@
 #
 
 ##
+# Gets current user name even if sudoing.
+#
+# See https://stackoverflow.com/questions/1629605/getting-user-inside-shell-script-when-running-with-sudo
+#
+u_print_current_user() {
+  logname 2>/dev/null || echo "$SUDO_USER"
+}
+
+##
 # Checks if current user is root (super user).
 #
 # See https://askubuntu.com/a/836092

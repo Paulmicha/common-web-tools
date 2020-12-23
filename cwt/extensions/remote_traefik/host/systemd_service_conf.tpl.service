@@ -1,0 +1,19 @@
+[Unit]
+Description={{ TRAEFIK_SNAME }}
+Requires=docker.service
+After=docker.service
+
+[Service]
+Restart=always
+User={{ TRAEFIK_SYSTEMD_USER }}
+Group={{ TRAEFIK_SYSTEMD_GROUP }}
+WorkingDirectory={{ PROJECT_DOCROOT }}
+# Shutdown container (if running) when unit is stopped
+ExecStartPre={{ DC_BIN_PATH }}/docker-compose down -v
+# Start container when unit is started
+ExecStart={{ DC_BIN_PATH }}/docker-compose up
+# Stop container when unit is stopped
+ExecStop={{ DC_BIN_PATH }}/docker-compose down -v
+
+[Install]
+WantedBy=multi-user.target

@@ -9,14 +9,16 @@
 #   cwt/instance/init.sh
 #
 #   # Initializes an instance of type 'dev', host type 'local', provisionned
-#   # using 'ansible', identified by domain 'dev.cwt.com', with git origin
-#   # 'git@my-git-origin.org:my-git-account/cwt.git', app sources cloned in 'dist',
-#   # and using 'dist/web' as server docroot - without terminal prompts (-y flag).
-#   cwt/instance/init.sh \
+#   # using 'ansible', identified by domain 'dev.cwt.com', using 'cwt_dev' as
+#   # docker-compose namespace, with git origin
+#   'git@my-git-origin.org:my-git-account/cwt.git', app sources cloned in 'dist',
+#   # and using 'dist/web' as app dir - without terminal prompts (-y flag).
+#   u_instance_init \
 #     -t 'dev' \
 #     -h 'local' \
 #     -p 'ansible' \
 #     -d 'dev.cwt.com' \
+#     -c 'cwt_dev' \
 #     -g 'git@my-git-origin.org:my-git-account/cwt.git' \
 #     -a 'dist' \
 #     -s 'dist/web' \

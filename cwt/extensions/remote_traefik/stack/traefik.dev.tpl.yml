@@ -1,0 +1,20 @@
+api:
+  dashboard: true
+
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+
+providers:
+  docker:
+    network: proxy
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: {{ TRAEFIK_CERT_EMAIL }}
+      storage: acme.json
+      httpChallenge:
+        entryPoint: web

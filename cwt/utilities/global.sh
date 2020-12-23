@@ -295,6 +295,9 @@ u_global_assign_value() {
     eval "unset $p_var"
   fi
 
+  # TODO support all globals for reinits ? For ex. as in :
+  # @see u_traefik_generate_acme_conf() in cwt/extensions/remote_traefik/remote_traefik.inc.sh
+  # @see u_instance_init()
   local arg_var_name="p_cwtii_$p_var"
   u_str_lowercase "$arg_var_name" 'arg_var_name'
   local arg_val="${!arg_var_name}"

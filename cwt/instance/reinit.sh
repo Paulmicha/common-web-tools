@@ -20,12 +20,19 @@
 if [[ -f '.env' ]]; then
   # Can't have read-only variables here, so we need to extract just the
   # variables we need.
+  # TODO support all globals for reinits ? For ex. as in :
+  # @see u_traefik_generate_acme_conf() in cwt/extensions/remote_traefik/remote_traefik.inc.sh
+  # -> here, we could just pass a custom option that would instruct the
+  # u_instance_init() function to dynamically get all existing values ?
   while IFS= read -r line _; do
     case "$line" in
       'INSTANCE_TYPE='*)
         eval "$line"
         ;;
       'INSTANCE_DOMAIN='*)
+        eval "$line"
+        ;;
+      'DC_NS='*)
         eval "$line"
         ;;
       'HOST_TYPE='*)
@@ -53,6 +60,7 @@ env -i \
   . cwt/instance/init.sh \
     -t "$INSTANCE_TYPE" \
     -d "$INSTANCE_DOMAIN" \
+    -c "$DC_NS" \
     -h "$HOST_TYPE" \
     -p "$PROVISION_USING" \
     -y

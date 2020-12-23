@@ -1,0 +1,19 @@
+version: '3.7'
+
+services:
+  traefik:
+    image: traefik:$TRAEFIK_VERSION
+    restart: unless-stopped
+    networks:
+      - proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./scripts/cwt/local/traefik.yml:/traefik.yml
+      - ./scripts/cwt/local/acme.json:/acme.json
+
+networks:
+  proxy:
+    external: true

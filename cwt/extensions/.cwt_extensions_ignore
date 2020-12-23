@@ -7,3 +7,4 @@ mysql
 pgsql
 remote
 remote_db
+remote_traefik
