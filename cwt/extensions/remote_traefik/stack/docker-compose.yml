@@ -3,7 +3,10 @@ version: '3.7'
 services:
   traefik:
     image: traefik:$TRAEFIK_VERSION
+    container_name: traefik
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     # This file can be overriden to be manually edited by copying it in :
     # scripts/cwt/extend/stack
     # TODO : turn this docker-compose.yml file into a template with a
@@ -16,12 +19,20 @@ services:
       - project1
       - project2
     ports:
-      - "80:80"
-      - "443:443"
+      - 80:80
+      - 443:443
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./scripts/cwt/local/traefik.yml:/traefik.yml
       - ./scripts/cwt/local/acme.json:/acme.json
+    labels:
+      # Always redirect HTTP to HTTPS for all domains.
+      # See https://github.com/traefik/blog-posts/blob/master/2019_09_10-101_docker/docker-compose-09.yml
+      - "traefik.http.routers.http-catchall.rule=hostregexp(`{host:.+}`)"
+      - "traefik.http.routers.http-catchall.entrypoints=web"
+      - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
 
 networks:
   project1:

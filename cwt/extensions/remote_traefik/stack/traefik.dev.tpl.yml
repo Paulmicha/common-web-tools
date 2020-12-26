@@ -1,6 +1,10 @@
 api:
   dashboard: true
 
+log:
+  level: DEBUG
+  filePath: "/logs/traefik.log"
+
 entryPoints:
   web:
     address: ":80"
@@ -9,7 +13,8 @@ entryPoints:
 
 providers:
   docker:
-    network: proxy
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
 
 certificatesResolvers:
   letsencrypt:

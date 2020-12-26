@@ -102,10 +102,12 @@ u_traefik_basic_auth_credentials() {
     p_user='admin'
   fi
   if [[ -z "$p_pass" ]]; then
-    p_pass=`< /dev/urandom tr -dc A-Za-z0-9 | head -c14; echo`
+    p_pass=`< /dev/urandom tr -dc A-Za-z0-9 | head -c8; echo`
     u_instance_registry_set 'traefik_basic_auth_creds' "$p_user : $p_pass"
   fi
 
-  local encrypted_pass="$(openssl passwd -apr1 "$p_pass")"
-  echo "$p_user:$(openssl passwd -apr1 "$p_pass")" | sed -e s/\\$/\\$\\$/g
+  # Update : because we're using an env. variable for credentials, we don't
+  # actually need to escape dollar signs here.
+  # echo "$p_user:$(openssl passwd -apr1 "$p_pass")" | sed -e s/\\$/\\$\\$/g
+  echo "$p_user:$(openssl passwd -apr1 "$p_pass")"
 }

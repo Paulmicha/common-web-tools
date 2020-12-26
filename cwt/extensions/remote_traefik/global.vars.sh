@@ -11,7 +11,7 @@
 # @see cwt/bootstrap.sh
 #
 
-global TRAEFIK_VERSION "[default]=2.3"
+global TRAEFIK_VERSION "[default]=v2.4"
 
 # Placeholder email address for Let's Encrypt Acme certificate resolver config.
 # Docs : https://doc.traefik.io/traefik/https/acme
