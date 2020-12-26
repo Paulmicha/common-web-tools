@@ -32,6 +32,7 @@ Here's the list of extensions included (in folder `cwt/extensions`) :
 | `pgsql` |  | Same as `mysql` but for Postgres. |
 | `remote` |  | Utilities to synchronize local instance with remote instance(s). Uses SSH keys loaded in current terminal session. |
 | `remote_db` |  | Uses the `db` and `remote` extensions to provide DB dumps 2-way sync capabilities. |
+| `remote_traefik` |  | Contains default settings for a reverse proxy using Traefik to route traffic to multiple docker-compose instances (supports Https using Let's Encrypt). |
 
 ## PURPOSE
 
