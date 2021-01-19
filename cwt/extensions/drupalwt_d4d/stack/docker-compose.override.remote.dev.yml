@@ -5,6 +5,7 @@ services:
   nginx:
     labels:
       - "traefik.enable=true"
+      - "traefik.http.services.${DC_NS}-nginx-https.loadbalancer.server.port=80"
       - "traefik.http.routers.${DC_NS}-nginx-https.entrypoints=websecure"
       - "traefik.http.routers.${DC_NS}-nginx-https.rule=Host(`${INSTANCE_DOMAIN}`)"
       - "traefik.http.middlewares.${DC_NS}-nginx-auth.basicauth.users=${D4D_BASIC_AUTH_USERS}"
