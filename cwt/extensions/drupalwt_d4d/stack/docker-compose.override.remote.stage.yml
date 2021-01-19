@@ -17,25 +17,6 @@ services:
     environment:
       PHP_SENDMAIL_PATH: /usr/sbin/sendmail -t -i -S mailhog:1025
 
-  # See https://github.com/wodby/adminer
-  adminer:
-    image: wodby/adminer:$ADMINER_TAG
-    container_name: "${DC_NS}_adminer"
-    environment:
-      ADMINER_DEFAULT_DB_DRIVER: $DB_DRIVER
-      ADMINER_DEFAULT_DB_HOST: $DB_HOST
-      ADMINER_DEFAULT_DB_NAME: $DB_NAME
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.${DC_NS}-adminer-https.loadbalancer.server.port=9000"
-      - "traefik.http.routers.${DC_NS}-adminer-https.entrypoints=websecure"
-      - "traefik.http.routers.${DC_NS}-adminer-https.rule=Host(`adminer${DC_SUBDOMAIN_SEP}${INSTANCE_DOMAIN}`)"
-      - "traefik.http.middlewares.${DC_NS}-adminer-auth.basicauth.users=${D4D_BASIC_AUTH_USERS}"
-      - "traefik.http.routers.${DC_NS}-https.middlewares=${DC_NS}-adminer-auth"
-      - "traefik.http.routers.${DC_NS}-adminer-https.tls=true"
-      - "traefik.http.routers.${DC_NS}-adminer-https.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.${DC_NS}-adminer-https.service=${DC_NS}-adminer-https"
-
   mailhog:
     image: mailhog/mailhog
     container_name: "${DC_NS}_mailhog"

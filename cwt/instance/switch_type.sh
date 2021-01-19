@@ -11,14 +11,15 @@
 #   cwt/instance/switch_type.sh 'dev'
 #
 
-# Start by removing all previously initialized values.
-. cwt/instance/uninit.sh
-
 # Force the new instance type value alone.
 INSTANCE_TYPE="$1"
 
-# Then use the same approach as in the "reinit" action.
-# @see cwt/instance/reinit.sh
+# Can't have read-only variables here, so we need to extract just the
+# variables we need.
+# TODO support all globals for reinits ? For ex. as in :
+# @see u_traefik_generate_acme_conf() in cwt/extensions/remote_traefik/remote_traefik.inc.sh
+# -> here, we could just pass a custom option that would instruct the
+# u_instance_init() function to dynamically get all existing values ?
 if [[ -f '.env' ]]; then
   while IFS= read -r line _; do
     case "$line" in
@@ -34,18 +35,38 @@ if [[ -f '.env' ]]; then
       'PROVISION_USING='*)
         eval "$line"
         ;;
+      'CWT_SSH_PUBKEY='*)
+        eval "$line"
+        ;;
+      'CWT_DB_ID='*)
+        eval "$line"
+        ;;
     esac
   done < '.env'
 fi
 
-env -i \
-  CWT_SSH_PUBKEY="$CWT_SSH_PUBKEY" \
-  CWT_DB_ID="$CWT_DB_ID" \
-  HOME="$HOME" LC_CTYPE="${LC_ALL:-${LC_CTYPE:-$LANG}}" PATH="$PATH" USER="$USER" \
-  . cwt/instance/init.sh \
-    -t "$INSTANCE_TYPE" \
-    -d "$INSTANCE_DOMAIN" \
-    -c "$DC_NS" \
-    -h "$HOST_TYPE" \
-    -p "$PROVISION_USING" \
-    -y
+# Remove all previously initialized values.
+. cwt/instance/uninit.sh
+
+# TODO [wip] rework globals to take Yaml files into consideration during
+# deferred values assignement. Simplifies reinit (remove "env -i") :
+
+# Wipe out env vars to avoid pile-ups for 'append' type globals during reinit.
+# See https://unix.stackexchange.com/a/49057
+# Except individual public key path for CWT remote instances operations.
+# @see scripts/cwt/extend/remote/post_init.hook.sh
+# Also except CWT_DB_ID for the db extension.
+# @see u_db_set() in cwt/extensions/db/db.inc.sh
+# Also except common shell env vars some programs use.
+# env -i \
+#   CWT_SSH_PUBKEY="$CWT_SSH_PUBKEY" \
+#   CWT_DB_ID="$CWT_DB_ID" \
+#   HOME="$HOME" LC_CTYPE="${LC_ALL:-${LC_CTYPE:-$LANG}}" PATH="$PATH" USER="$USER" \
+
+. cwt/instance/init.sh \
+  -t "$INSTANCE_TYPE" \
+  -d "$INSTANCE_DOMAIN" \
+  -c "$DC_NS" \
+  -h "$HOST_TYPE" \
+  -p "$PROVISION_USING" \
+  -y

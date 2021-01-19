@@ -3,6 +3,8 @@
 ##
 # Deletes any traces of previous init in current project instance.
 #
+# TODO introduce hook for letting extensions clean up their own generated files.
+#
 # @example
 #   make uninit
 #   # Or :

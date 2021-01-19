@@ -18,7 +18,7 @@ global TRAEFIK_VERSION "[default]=v2.4"
 # @see cwt/extensions/remote_traefik/stack/acme_config.tpl.yml
 global TRAEFIK_CERT_EMAIL "[default]=your-email@example.com [help]='Email address for Let’s Encrypt Acme certificate resolver config, see https://doc.traefik.io/traefik/https/acme'"
 
-global TRAEFIK_BASIC_AUTH_USERS "[default]='$(u_traefik_basic_auth_credentials)'"
+global TRAEFIK_BASIC_AUTH_USERS "[default]='$(u_str_basic_auth_credentials traefik_dashboard_creds)' [help]='Http Basic Auth credentials for traefik dashboard. Defauts to a randomly generated password that can be retrieved locally from a remote instance with the command : make remote-traefik-basic-auth (see cwt/extensions/remote_traefik/remote/traefik_basic_auth.sh)'"
 
 # Support optional systemd setup after instance init for auto-restart i.e. after
 # host shutdown.

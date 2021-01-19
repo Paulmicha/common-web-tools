@@ -10,6 +10,62 @@
 #
 
 ##
+# Encodes a single HTTP BasicAuth login/pass pair.
+#
+# Uses htpasswd encryption, which is also used for docker-compose Traefik labels.
+#
+# @param 1 [optional] String : reg key. Defaults to 'basic_auth_creds'.
+# @param 2 [optional] String : login. Defaults to 'admin'.
+# @param 3 [optional] String : password. Defaults to generated random string.
+#
+# NB : This function writes its result to a variable subject to collision in
+# calling scope.
+#
+# @var basic_auth_credentials
+#
+# @example
+#   # Defaults to key 'basic_auth_creds' + login: admin, pass: (a randomly
+#   # generated string) :
+#   encoded_credentials="$(u_str_basic_auth_credentials)"
+#   echo "$encoded_credentials"
+#   # To read the randomly generated password, use :
+#   u_instance_registry_get 'basic_auth_creds' # <- or whatever key was passed in 3rd arg.
+#
+#   # Specify key :
+#   encoded_credentials="$(u_str_basic_auth_credentials 'custom_reg_namespace')"
+#   echo "$encoded_credentials"
+#
+#   # Specify credentials :
+#   encoded_credentials="$(u_str_basic_auth_credentials 'custom_reg_namespace' 'foo' 'bar')"
+#   echo "$encoded_credentials"
+#
+u_str_basic_auth_credentials() {
+  local p_key="$1"
+  local p_user="$2"
+  local p_pass="$3"
+
+  if [[ -z "$p_key" ]]; then
+    p_key='basic_auth_creds'
+  fi
+  if [[ -z "$p_user" ]]; then
+    p_user='admin'
+  fi
+
+  # When no password is passed as argument, if there was no random password
+  # already generated in current instance for given key, generate one.
+  u_instance_registry_get "$p_key"
+  if [[ -z "$p_pass" ]] && [[ -z "$reg_val" ]]; then
+    p_pass=`< /dev/urandom tr -dc A-Za-z0-9 | head -c8; echo`
+    u_instance_registry_set "$p_key" "$p_user : $p_pass"
+  fi
+
+  # Update : because we're using an env. variable for credentials, we don't
+  # actually need to escape dollar signs here.
+  # echo "$p_user:$(openssl passwd -apr1 "$p_pass")" | sed -e s/\\$/\\$\\$/g
+  echo "$p_user:$(openssl passwd -apr1 "$p_pass")"
+}
+
+##
 # Sanitizes a string to be used as a variable name (for 'eval').
 #
 # This function is a "preset" of the more generic string sanitizing utility.
