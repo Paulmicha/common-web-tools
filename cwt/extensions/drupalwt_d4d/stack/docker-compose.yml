@@ -36,7 +36,6 @@ services:
   # See https://github.com/wodby/php
   # See https://github.com/wodby/drupal-php
   php:
-    # image: wodby/php:$PHP_TAG
     image: wodby/drupal-php:$PHP_TAG
     container_name: "${DC_NS}_php"
     depends_on:
@@ -47,18 +46,36 @@ services:
       DB_NAME: $DB_NAME
       DB_USER: $DB_USER
       DB_PASSWORD: $DB_PASS
-      # TODO [wip] write access to sources for local stacks ?
-      # PHP_FPM_USER: wodby
-      # PHP_FPM_GROUP: wodby
       PHP_UPLOAD_MAX_FILESIZE: 128M
       PHP_POST_MAX_SIZE: 144M
       COLUMNS: 80
-      # Custom CWT instance variants.
-      # Usage example in Php :
-      #   $host_type = getenv('HOST_TYPE');
+      # Custom PHP env vars - example use from Php scripts :
+      # <?php $host_type = getenv('HOST_TYPE');
       HOST_TYPE: $HOST_TYPE
       INSTANCE_TYPE: $INSTANCE_TYPE
       INSTANCE_DOMAIN: $INSTANCE_DOMAIN
+    volumes:
+      - ./$APP_DOCROOT:$APP_DOCROOT_C
+      - $DRUPAL_TMP_DIR:$DRUPAL_TMP_DIR_C
+      - $DRUPAL_PRIVATE_DIR:$DRUPAL_PRIVATE_DIR_C
+
+  crond:
+    image: wodby/drupal-php:$PHP_TAG
+    container_name: "${DC_NS}_crond"
+    environment:
+      CRONTAB: "${DWT_CRON_FREQ} drush -r ${APP_DOCROOT_C} cron"
+      DB_HOST: $DB_HOST
+      DB_DRIVER: $DB_DRIVER
+      DB_NAME: $DB_NAME
+      DB_USER: $DB_USER
+      DB_PASSWORD: $DB_PASS
+      COLUMNS: 80
+      # Custom PHP env vars - example use from Php scripts :
+      # <?php $host_type = getenv('HOST_TYPE');
+      HOST_TYPE: $HOST_TYPE
+      INSTANCE_TYPE: $INSTANCE_TYPE
+      INSTANCE_DOMAIN: $INSTANCE_DOMAIN
+    command: sudo -E LD_PRELOAD=/usr/lib/preloadable_libiconv.so crond -f -d 0
     volumes:
       - ./$APP_DOCROOT:$APP_DOCROOT_C
       - $DRUPAL_TMP_DIR:$DRUPAL_TMP_DIR_C

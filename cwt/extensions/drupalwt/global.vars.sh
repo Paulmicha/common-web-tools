@@ -26,7 +26,8 @@ global DWT_MANAGE_MULTISITE_SETTINGS_FILE "[default]=true [help]='Make (re)gener
 # Make the automatic crontab setup for Drupal cron on local host during 'app
 # install' opt-in.
 global DWT_USE_CRONTAB "[default]=false [help]='When true, during app install, a generic crontab entry for running Drupal cron will be created on local host (if it has the crontab program installed).'"
-global DWT_CRON_FREQ "[default]='*/20 * * * *'"
+# global DWT_CRON_FREQ "[default]='*/20 * * * *'"
+global DWT_CRON_FREQ "[default]='0 * * * *'"
 
 # [optional] Shorter generated make tasks names.
 # @see u_instance_task_name() in cwt/instance/instance.inc.sh

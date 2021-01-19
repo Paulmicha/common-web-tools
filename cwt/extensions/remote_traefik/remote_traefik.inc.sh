@@ -30,7 +30,6 @@ u_traefik_generate_acme_conf() {
   local traefik_conf="$PROJECT_DOCROOT/scripts/cwt/local/traefik.yml"
   local hook_most_specific_dry_run_match=''
 
-  # Drupal settings template variants allow using separate files by site ID.
   u_hook_most_specific 'dry-run' \
     -s 'stack' \
     -a 'traefik' \

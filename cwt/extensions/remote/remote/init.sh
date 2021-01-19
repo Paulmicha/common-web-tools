@@ -14,7 +14,7 @@
 # @example
 #   # Initializes a new remote instance of type 'dev' without interactive
 #   # terminal prompts :
-#   cwt/extensions/remote/remote/init.sh 'dev' -t 'dev' -y
+#   cwt/extensions/remote/remote/init.sh 'dev' -t 'dev'
 #
 
 . cwt/bootstrap.sh
