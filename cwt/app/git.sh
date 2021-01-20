@@ -10,11 +10,11 @@
 # @see u_git_wrapper() in cwt/git/git.inc.sh
 #
 # @example
-#   make app-git 'status'
-#   make app-git 'pull'
-#   make app-git 'gc'
-#   make app-git 'checkout develop'
-#   make app-git 'diff --name-only'
+#   make app-git status
+#   make app-git pull
+#   make app-git gc
+#   make app-git checkout develop
+#   make app-git diff -- --name-only
 #   # Or :
 #   cwt/app/git.sh status
 #   cwt/app/git.sh pull
