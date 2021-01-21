@@ -136,8 +136,6 @@ u_instance_init() {
   # These contain paths required for aggregating env vars and services.
   . cwt/env/global.vars.sh
 
-  u_global_aggregate
-
   # Any global vars defined in YAML takes precedence. Use the dynamic lookup now
   # that we have values for HOST_TYPE and INSTANCE_TYPE (for variants).
   # Allow by default the use of local overrides by placing variants in dedicated
@@ -167,6 +165,9 @@ u_instance_init() {
   if [[ -n "$yaml_parsed_globals" ]]; then
     eval "$yaml_parsed_globals"
   fi
+
+  # Normal process runs after YAML globals.
+  u_global_aggregate
 
   # If we want to test instance init (when "dry run" flag is set), nothing is
   # written and hooks are replaced by a prefixed variant.

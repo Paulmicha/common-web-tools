@@ -15,10 +15,7 @@
 #
 
 global APP_DOCROOT_C "[default]=/var/www/html"
-
-# TODO debug deferred assignments.
-# global SERVER_DOCROOT_C "[if-SERVER_DOCROOT]='$APP_DOCROOT/docroot' [true]=/var/www/html/docroot [false]=/var/www/html/web [index]=1"
-global SERVER_DOCROOT_C "[default]=/var/www/html/web"
+global SERVER_DOCROOT_C "[if-SERVER_DOCROOT]='$APP_DOCROOT/docroot' [true]=/var/www/html/docroot [false]=/var/www/html/web [index]=1"
 
 global DRUPAL_FILES_DIR_C "[default]=sites/default/files"
 global DRUPAL_TMP_DIR_C "[default]='/mnt/files/tmp'"

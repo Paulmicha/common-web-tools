@@ -201,6 +201,9 @@ u_global_aggregate() {
   local inc
   local global_lookup_paths=''
 
+  # Flag to alter the default global() process in order to get YAML precedence.
+  globals_skip_yaml=1
+
   u_global_lookup_paths
 
   for inc in $global_lookup_paths; do
@@ -506,6 +509,14 @@ global() {
 
   u_str_sanitize_var_name "$p_var_name" 'p_var_name'
 
+  # Skip any var that was already set in YAML files.
+  # @see u_global_aggregate()
+  if [[ -n "$yaml_parsed_globals" ]] && [[ $globals_skip_yaml -eq 1 ]]; then
+    case "$yaml_parsed_globals" in *"global ${p_var_name} "*)
+      return
+    esac
+  fi
+
   # TODO [evol] sanitize $p_values ?
   if [[ -n "$p_values" ]]; then
 
@@ -567,6 +578,9 @@ global() {
 
                   # return 0
                   p_prevent_assignment='1'
+
+                  # debug
+                  # echo "$p_var_name prevented because condition ifnot does not match"
                 fi
               ;;
               if-*)
@@ -582,6 +596,9 @@ global() {
 
                   # return 0
                   p_prevent_assignment='1'
+
+                  # debug
+                  # echo "$p_var_name prevented because condition if does not match"
                 fi
               ;;
             esac
@@ -659,6 +676,10 @@ global() {
   # variable determines the index for all subsequent calls.
   if [[ $index -gt 0 ]]; then
     p_prevent_assignment='1'
+
+    # debug
+    # echo "$p_var_name prevented because deferred index = $index"
+
     if ! u_in_array $p_var_name GLOBALS_DEFERRED; then
       GLOBALS_DEFERRED+=($p_var_name)
     fi
@@ -667,6 +688,10 @@ global() {
   # TODO when the 1st declaration does not trigger deferred assignation and
   # subsequent calls do, workaround : "unexport" ?
   elif u_in_array $p_var_name GLOBALS_DEFERRED; then
+
+    # debug
+    # echo "$p_var_name prevented because previously put in GLOBALS_DEFERRED : '$GLOBALS_DEFERRED'"
+
     p_prevent_assignment='1'
   fi
 
