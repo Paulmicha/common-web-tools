@@ -56,7 +56,11 @@ u_str_basic_auth_credentials() {
   u_instance_registry_get "$p_key"
   if [[ -z "$p_pass" ]] && [[ -z "$reg_val" ]]; then
     p_pass=`< /dev/urandom tr -dc A-Za-z0-9 | head -c8; echo`
-    u_instance_registry_set "$p_key" "$p_user : $p_pass"
+    u_instance_registry_set "$p_key" "$p_user:$p_pass"
+  else
+    u_str_split1 'split_arr' "$reg_val" ':'
+    p_user="${split_arr[0]}"
+    p_pass="${split_arr[1]}"
   fi
 
   # Update : because we're using an env. variable for credentials, we don't

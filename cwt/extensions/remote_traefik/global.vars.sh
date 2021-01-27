@@ -20,6 +20,8 @@ global TRAEFIK_CERT_EMAIL "[default]=your-email@example.com [help]='Email addres
 
 global TRAEFIK_BASIC_AUTH_USERS "[default]='$(u_str_basic_auth_credentials traefik_dashboard_creds)' [help]='Http Basic Auth credentials for traefik dashboard. Defauts to a randomly generated password that can be retrieved locally from a remote instance with the command : make remote-traefik-basic-auth (see cwt/extensions/remote_traefik/remote/traefik_basic_auth.sh)'"
 
+global TRAEFIK_LOG_LEVEL "[default]='WARN'"
+
 # Support optional systemd setup after instance init for auto-restart i.e. after
 # host shutdown.
 global TRAEFIK_SYSTEMD_SETUP "[default]='false' [help]='Set to true if you need to setup auto-restart i.e. after host shutdown using a systemd service. See cwt/extensions/remote_traefik/host/systemd_service_setup.sh'"

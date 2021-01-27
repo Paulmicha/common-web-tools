@@ -5,7 +5,7 @@ services:
     labels:
       # Traefik configuration for the dashboard
       - "traefik.enable=true"
-      # - "traefik.http.services.${DC_NS}-http.loadbalancer.server.port=8080"
+      - "traefik.http.services.${DC_NS}-http.loadbalancer.server.port=8080"
       - "traefik.http.routers.${DC_NS}-https.entrypoints=websecure"
       - "traefik.http.routers.${DC_NS}-https.rule=Host(`${INSTANCE_DOMAIN}`)"
       - "traefik.http.middlewares.${DC_NS}-auth.basicauth.users=${TRAEFIK_BASIC_AUTH_USERS}"

@@ -2,7 +2,7 @@ api:
   dashboard: true
 
 log:
-  level: DEBUG
+  level: {{ TRAEFIK_LOG_LEVEL }}
   filePath: "/logs/traefik.log"
 
 entryPoints:
