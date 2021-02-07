@@ -20,6 +20,8 @@ global DRUPAL_PRIVATE_DIR "[default]=$PROJECT_DOCROOT/data/private"
 global DRUPAL_CONFIG_SYNC_DIR "[ifnot-DRUPAL_VERSION]=7 [default]=$APP_DOCROOT/config/sync"
 global DRUPAL_HASH_SALT "$(u_str_random 74)"
 
+global DWT_COMPOSER_INSTALL "[if-DRUPAL_VERSION]=7 [true]='no' [false]='yes' [help]='Determines if composer is used to manage dependencies, i.e. if the command “composer install” must be run during app install by default.'"
+
 global REDIS_CLIENT_HOST "[default]=localhost [help]='Commonly used Redis cache backend settings are included by default.'"
 global REDIS_CLIENT_PORT '6379'
 

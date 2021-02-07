@@ -14,4 +14,4 @@
 #
 
 . cwt/bootstrap.sh
-u_db_routine_backup 'no-purge' "$@"
+u_db_routine_backup "$@"

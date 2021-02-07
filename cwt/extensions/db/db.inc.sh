@@ -800,6 +800,12 @@ u_db_routine_backup() {
     exit 1
   fi
 
+  # When DB_NAME is not initialized in current shell scope, assume 'default'
+  # unleess overridden by the 1st param.
+  if [[ -z "$DB_NAME" ]]; then
+    u_db_set "$1"
+  fi
+
   local db_routine_new_backup_file
   local db_backup_file_middle
   local db_backup_file_ext

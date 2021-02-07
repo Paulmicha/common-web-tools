@@ -1,7 +1,19 @@
 version: "3"
 services:
 
-  # See https://github.com/wodby/nginx
+  # TODO [evol] Switch to port 80 + default domain by default if enabled ?
+  # varnish:
+  #   labels:
+  #     - "traefik.http.services.${DC_NS}-varnish-https.loadbalancer.server.port=6081"
+  #     - "traefik.http.routers.${DC_NS}-varnish-https.rule=Host(`varnish${DC_SUBDOMAIN_SEP}${INSTANCE_DOMAIN}`)"
+  #     - "traefik.http.middlewares.${DC_NS}-varnish-auth.basicauth.users=${D4D_BASIC_AUTH_USERS}"
+  #     - "traefik.http.routers.${DC_NS}-https.middlewares=${DC_NS}-varnish-auth"
+  #     - "traefik.http.routers.${DC_NS}-varnish-https.tls=true"
+  #     - "traefik.http.routers.${DC_NS}-varnish-https.tls.certresolver=letsencrypt"
+  #     - "traefik.http.routers.${DC_NS}-varnish-https.service=${DC_NS}-varnish-https"
+
+  # TODO [evol] Allocate port 80 + default domain to Varnish by default if
+  # enabled ?
   nginx:
     labels:
       - "traefik.enable=true"
@@ -31,3 +43,23 @@ services:
       - "traefik.http.routers.${DC_NS}-mailhog-https.tls=true"
       - "traefik.http.routers.${DC_NS}-mailhog-https.tls.certresolver=letsencrypt"
       - "traefik.http.routers.${DC_NS}-mailhog-https.service=${DC_NS}-mailhog-https"
+
+  # solr:
+  #   labels:
+  #     - "traefik.http.services.${DC_NS}-solr-https.loadbalancer.server.port=8983"
+  #     - "traefik.http.routers.${DC_NS}-solr-https.rule=Host(`solr${DC_SUBDOMAIN_SEP}${INSTANCE_DOMAIN}`)"
+  #     - "traefik.http.middlewares.${DC_NS}-solr-auth.basicauth.users=${D4D_BASIC_AUTH_USERS}"
+  #     - "traefik.http.routers.${DC_NS}-https.middlewares=${DC_NS}-solr-auth"
+  #     - "traefik.http.routers.${DC_NS}-solr-https.tls=true"
+  #     - "traefik.http.routers.${DC_NS}-solr-https.tls.certresolver=letsencrypt"
+  #     - "traefik.http.routers.${DC_NS}-solr-https.service=${DC_NS}-solr-https"
+
+  # tika:
+  #   labels:
+  #     - "traefik.http.services.${DC_NS}-tika-https.loadbalancer.server.port=9998"
+  #     - "traefik.http.routers.${DC_NS}-tika-https.rule=Host(`tika${DC_SUBDOMAIN_SEP}${INSTANCE_DOMAIN}`)"
+  #     - "traefik.http.middlewares.${DC_NS}-tika-auth.basicauth.users=${D4D_BASIC_AUTH_USERS}"
+  #     - "traefik.http.routers.${DC_NS}-https.middlewares=${DC_NS}-tika-auth"
+  #     - "traefik.http.routers.${DC_NS}-tika-https.tls=true"
+  #     - "traefik.http.routers.${DC_NS}-tika-https.tls.certresolver=letsencrypt"
+  #     - "traefik.http.routers.${DC_NS}-tika-https.service=${DC_NS}-tika-https"

@@ -16,15 +16,17 @@
 # @see cwt/bootstrap.sh
 #
 
-global PHP_TAG "[if-DRUPAL_VERSION]=7 [true]='5.6-dev-4.13.18' [false]='7.4-dev-4.21.6' [index]=1"
-global MARIADB_TAG "[default]='10.5-3.9.7'"
-global NGINX_TAG "[default]='1.19-5.10.11'"
-global NGINX_VHOST_PRESET "[default]='drupal$DRUPAL_VERSION' [index]=1"
-global REDIS_TAG "[default]='6-3.4.8'"
-global ADMINER_TAG "[default]='4-3.13.4'"
-global VARNISH_TAG "[default]='6.0-4.4.11'"
-
-# Redis container name is also necessary for default Drupal settings.
-# @see cwt/extensions/drupalwt/app/drupal_settings.*.tpl.php
 global PHP_SNAME "[default]=php"
 global REDIS_SNAME "[default]=redis"
+global SOLR_SNAME "[default]=solr"
+
+global PHP_TAG "[if-DRUPAL_VERSION]=7 [true]='5.6-dev-4.13.18' [false]='7.4-dev-4.22.0' [index]=1"
+global MARIADB_TAG "[default]='10.5-3.10.1'"
+global NGINX_TAG "[default]='1.19-5.11.1'"
+global NGINX_VHOST_PRESET "[default]='drupal$DRUPAL_VERSION' [index]=1"
+global REDIS_TAG "[default]='6-3.5.0'"
+global ADMINER_TAG "[default]='4-3.14.0'"
+global SOLR_TAG "[default]='8-4.8.0'"
+global TIKA_TAG "[default]='1.25-full'"
+global SOLR_CONFIG_SET "[default]='search_api_solr_4.1.9'"
+global VARNISH_TAG "[default]='6.0-4.5.1'"

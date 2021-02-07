@@ -1,6 +1,22 @@
 version: "3"
 services:
 
+  # TODO [evol] Allocate port 80 to Varnish by default if enabled ?
+  # In this case, VARNISH_BACKEND_PORT would need to be switched to 6081.
+  # See https://github.com/wodby/varnish
+  # varnish:
+  #   image: wodby/varnish:$VARNISH_TAG
+  #   container_name: "${DC_NS}_varnish"
+  #   depends_on:
+  #     - nginx
+  #   environment:
+  #     VARNISH_SECRET: secret
+  #     VARNISH_BACKEND_HOST: nginx
+  #     VARNISH_BACKEND_PORT: 80
+  #     VARNISH_CONFIG_PRESET: drupal
+  #     VARNISH_ALLOW_UNRESTRICTED_PURGE: 1
+
+  # TODO [evol] Allocate port 6081 to Nginx by default if Varnish is enabled ?
   # See https://github.com/wodby/nginx
   nginx:
     image: wodby/nginx:$NGINX_TAG
@@ -86,6 +102,20 @@ services:
     image: wodby/redis:$REDIS_TAG
     container_name: "${DC_NS}_redis"
     restart: on-failure:5
+
+  # See https://github.com/wodby/solr
+  # solr:
+  #   image: wodby/solr:$SOLR_TAG
+  #   container_name: "${DC_NS}_solr"
+  #   environment:
+  #     SOLR_DEFAULT_CONFIG_SET: $SOLR_CONFIG_SET
+  #     SOLR_HEAP: 1024m
+
+  # See https://github.com/apache/tika-docker
+  # tika:
+  #   image: apache/tika:$TIKA_TAG
+  #   container_name: "${DC_NS}_tika"
+  #   restart: on-failure:5
 
 volumes:
   mariadb_volume:

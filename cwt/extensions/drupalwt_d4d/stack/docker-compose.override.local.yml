@@ -1,6 +1,12 @@
 version: "3"
 services:
 
+  # TODO [evol] Allocate port 80 to Varnish by default if enabled ?
+  # varnish:
+  #   ports:
+  #     - "6081:6081"
+
+  # TODO [evol] Allocate port 6081 to Nginx by default if Varnish is enabled ?
   nginx:
     ports:
       - "80:80"

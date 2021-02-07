@@ -14,4 +14,5 @@ case "$DWT_MULTISITE" in false)
   DB_HOST='mariadb'
   DB_NAME='drupal'
   DB_USER='drupal'
+  DB_TABLES_SKIP_DATA='cache,cache_*,history,search_*,sessions,watchdog'
 esac
