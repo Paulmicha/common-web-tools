@@ -60,7 +60,7 @@ fi
 # We'll need to run multiple instructions in a single connection.
 cmds=()
 
-cmds+=("if [[ -d $REMOTE_INSTANCE_PROJECT_DOCROOT/.git ]]; then echo 'Instance appears to be already initialized.'; exit ; fi")
+cmds+=("if [[ -f $REMOTE_INSTANCE_PROJECT_DOCROOT/.git/HEAD ]] ; then echo 'Instance appears to be already initialized.' ; exit ; fi")
 
 if [[ -n "${hosts[@]}" ]] && [[ -n "${hosts_with_user[@]}" ]]; then
   for (( i = 0; i < ${#hosts[@]}; i++ )); do

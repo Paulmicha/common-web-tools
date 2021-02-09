@@ -4,6 +4,7 @@ services:
   # TODO [evol] Switch to port 80 + default domain by default if enabled ?
   # varnish:
   #   labels:
+  #     - "traefik.enable=true"
   #     - "traefik.http.services.${DC_NS}-varnish-https.loadbalancer.server.port=6081"
   #     - "traefik.http.routers.${DC_NS}-varnish-https.rule=Host(`varnish${DC_SUBDOMAIN_SEP}${INSTANCE_DOMAIN}`)"
   #     - "traefik.http.middlewares.${DC_NS}-varnish-auth.basicauth.users=${D4D_BASIC_AUTH_USERS}"

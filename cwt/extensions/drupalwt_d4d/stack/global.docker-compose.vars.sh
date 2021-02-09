@@ -22,6 +22,7 @@ global SOLR_SNAME "[default]=solr"
 
 global PHP_TAG "[if-DRUPAL_VERSION]=7 [true]='5.6-dev-4.13.18' [false]='7.4-dev-4.22.0' [index]=1"
 global MARIADB_TAG "[default]='10.5-3.10.1'"
+global POSTGRES_TAG "[default]='13-1.19.0'"
 global NGINX_TAG "[default]='1.19-5.11.1'"
 global NGINX_VHOST_PRESET "[default]='drupal$DRUPAL_VERSION' [index]=1"
 global REDIS_TAG "[default]='6-3.5.0'"

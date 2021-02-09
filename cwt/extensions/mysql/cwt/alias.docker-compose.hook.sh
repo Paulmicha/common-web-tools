@@ -12,6 +12,7 @@
 # @see cwt/extensions/docker-compose/cwt/pre_bootstrap.docker-compose.hook.sh
 #
 
+# TODO [evol] support multi-db projects.
 alias mysql="docker-compose exec $DC_TTY ${MYSQL_SNAME:=mariadb} mysql"
 alias mysqldump="docker-compose exec $DC_TTY ${MYSQL_SNAME:=mariadb} mysqldump"
 alias mysqladmin="docker-compose exec $DC_TTY ${MYSQL_SNAME:=mariadb} mysqladmin"

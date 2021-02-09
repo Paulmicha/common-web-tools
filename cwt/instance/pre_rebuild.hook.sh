@@ -15,6 +15,7 @@
 # @see cwt/instance/rebuild.sh
 #
 
+# TODO confirm and remove "env -i" if not needed.
 env -i \
   CWT_SSH_PUBKEY="$CWT_SSH_PUBKEY" \
   CWT_DB_ID="$CWT_DB_ID" \

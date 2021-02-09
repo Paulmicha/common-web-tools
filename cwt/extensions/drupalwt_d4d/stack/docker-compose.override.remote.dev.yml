@@ -4,6 +4,7 @@ services:
   # TODO [evol] Switch to port 80 + default domain by default if enabled ?
   # varnish:
   #   labels:
+  #     - "traefik.enable=true"
   #     - "traefik.http.services.${DC_NS}-varnish-https.loadbalancer.server.port=6081"
   #     - "traefik.http.routers.${DC_NS}-varnish-https.rule=Host(`varnish${DC_SUBDOMAIN_SEP}${INSTANCE_DOMAIN}`)"
   #     - "traefik.http.middlewares.${DC_NS}-varnish-auth.basicauth.users=${D4D_BASIC_AUTH_USERS}"
@@ -65,6 +66,7 @@ services:
 
   # solr:
   #   labels:
+  #     - "traefik.enable=true"
   #     - "traefik.http.services.${DC_NS}-solr-https.loadbalancer.server.port=8983"
   #     - "traefik.http.routers.${DC_NS}-solr-https.rule=Host(`solr${DC_SUBDOMAIN_SEP}${INSTANCE_DOMAIN}`)"
   #     - "traefik.http.middlewares.${DC_NS}-solr-auth.basicauth.users=${D4D_BASIC_AUTH_USERS}"
@@ -75,6 +77,7 @@ services:
 
   # tika:
   #   labels:
+  #     - "traefik.enable=true"
   #     - "traefik.http.services.${DC_NS}-tika-https.loadbalancer.server.port=9998"
   #     - "traefik.http.routers.${DC_NS}-tika-https.rule=Host(`tika${DC_SUBDOMAIN_SEP}${INSTANCE_DOMAIN}`)"
   #     - "traefik.http.middlewares.${DC_NS}-tika-auth.basicauth.users=${D4D_BASIC_AUTH_USERS}"

@@ -713,6 +713,8 @@ u_instance_domain() {
 ##
 # [abstract] Sets instance-level registry value.
 #
+# TODO implement encryption.
+#
 # Writes to an abstract instance-level storage by given key. "Abstract" means that
 # CWT core itself doesn't provide any actual implementation for this
 # functionality. It is necessary to use an extension which does. E.g. :
@@ -746,6 +748,8 @@ u_instance_registry_set() {
 
 ##
 # [abstract] Gets instance-level registry value.
+#
+# TODO implement decryption.
 #
 # Reads from an abstract instance-level storage by given key. "Abstract" means that
 # CWT core itself doesn't provide any actual implementation for this

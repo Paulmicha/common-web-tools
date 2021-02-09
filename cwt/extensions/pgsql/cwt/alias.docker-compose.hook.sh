@@ -13,6 +13,7 @@
 # @see cwt/extensions/docker-compose/cwt/pre_bootstrap.docker-compose.hook.sh
 #
 
+# TODO [evol] support multi-db projects.
 alias psql="docker-compose exec $DC_TTY ${POSTGRES_SNAME:=postgres} psql"
 alias pg_restore="docker-compose exec $DC_TTY ${POSTGRES_SNAME:=postgres} pg_restore"
 alias dropdb="docker-compose exec $DC_TTY ${POSTGRES_SNAME:=postgres} dropdb"

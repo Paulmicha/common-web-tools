@@ -20,13 +20,15 @@
 #   cwt/app/install.sh
 #
 
-case "$CWT_DB_INITIAL_IMPORT" in true)
-  echo "Making sure DB exists and credentials are properly set ..."
+db_ids=()
+u_db_get_ids
 
-  # TODO [evol] Multi-DB setup support.
-  u_db_set
+for db_id in "${db_ids[@]}"; do
+  echo "Making sure DB exists and credentials are properly set for '$db_id' ..."
 
-  if u_db_exists "$DB_NAME"; then
+  u_db_set "$db_id"
+
+  if u_db_exists "$DB_NAME" "$db_id"; then
     echo "  '$DB_NAME' exists. Carry on."
   else
     echo "  '$DB_NAME' does not exist : creating ..."
@@ -41,7 +43,7 @@ case "$CWT_DB_INITIAL_IMPORT" in true)
         DB_ADMIN_PASS
     fi
 
-    u_db_create
+    u_db_create "$db_id"
 
     if [[ $? -ne 0 ]]; then
       echo >&2
@@ -51,4 +53,6 @@ case "$CWT_DB_INITIAL_IMPORT" in true)
       exit 1
     fi
   fi
-esac
+
+  echo "Making sure DB exists and credentials are properly set for '$db_id' : done."
+done

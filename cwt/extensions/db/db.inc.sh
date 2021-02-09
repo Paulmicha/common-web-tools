@@ -95,18 +95,26 @@ u_db_set() {
   else
     db_id="$p_db_id"
   fi
-
   u_str_sanitize_var_name "$db_id" 'db_id'
 
-  # If DB credentials vars are already exported in current shell scope for given
-  # db_id, no need to reload (unless explicitly asked).
-  if [[ -n "$DB_ID" ]] && [[ "$DB_ID" == "$db_id" ]] && [[ -z "$p_force_reload" ]]; then
-    return
+  if [[ -n "$DB_ID" ]]; then
+    # If DB credentials vars are already exported in current shell scope for given
+    # db_id, no need to reload (unless explicitly asked).
+    if [[ "$DB_ID" == "$db_id" ]] && [[ -z "$p_force_reload" ]]; then
+      return
+    fi
+    # When DB_ID was previously set in current shell scope AND it is different
+    # (or the force reload is requested), then we first need to USET all the
+    # unprefixed DB_* variables so that the default values are properly set
+    # below.
+    u_db_unset
   fi
+
   export DB_ID="$db_id"
 
-  # Give a chance to other extensions to preset non-readonly env vars.
-  hook -s 'db' -a 'env_preset' -v 'HOST_TYPE INSTANCE_TYPE PROVISION_USING'
+  # Give a chance to other extensions to preset non-readonly env vars, including
+  # per DB_ID.
+  hook -s 'db' -a 'env_preset' -v 'INSTANCE_TYPE PROVISION_USING DB_ID'
 
   case "$CWT_DB_MODE" in
     # Some environments do not require CWT to handle DB credentials at all.
@@ -219,19 +227,19 @@ u_db_set() {
         export DB_TABLES_SKIP_DATA
       fi
 
-      # Attempts to load password from registry (secrets store).
-      # Warning : if cwt/extensions/file_registry is used as registry storage
-      # backend, no encryption will be used. This may be fine for local dev - e.g.
-      # in temporary virtual machines inaccessible to the outside world, but
-      # it is obviously a security risk.
-      reg_val=''
-      u_instance_registry_get "${db_id}.DB_PASS"
-
-      # Generate random local instance DB password and store it for subsequent
-      # calls.
       if [[ -z "$DB_PASS" ]]; then
+        # Attempts to load password from registry (secrets store).
+        # Warning : if cwt/extensions/file_registry is used as registry storage
+        # backend, no encryption will be used. This may be fine for local dev - e.g.
+        # in temporary virtual machines inaccessible to the outside world, but
+        # it is obviously a security risk.
+        reg_val=''
+        u_instance_registry_get "${db_id}.DB_PASS"
+
+        # Generate random local instance DB password and store it for subsequent
+        # calls.
         if [[ -z "$reg_val" ]]; then
-          export DB_PASS=`< /dev/urandom tr -dc A-Za-z0-9 | head -c14; echo`
+          export DB_PASS="$(< /dev/urandom tr -dc A-Za-z0-9 | head -c14; echo)"
           u_instance_registry_set "${db_id}.DB_PASS" "$DB_PASS"
         else
           export DB_PASS="$reg_val"
@@ -336,6 +344,55 @@ u_db_set() {
 }
 
 ##
+# Unsets all DB_* variables so that the correct values can then be (re)set.
+#
+# Required because the default values would not be correctly set if we switched
+# between databases in the same shell scope - i.e. as in u_db_set_all()
+#
+# @see u_db_set()
+#
+u_db_unset() {
+  local v
+  u_db_vars_list
+  for v in $db_vars_list; do
+    eval "unset DB_$v"
+  done
+}
+
+##
+# Gets an array of all database IDs defined in current project instance.
+#
+# NB : for performance reasons (to avoid using a subshell), this function
+# writes its result to a variable subject to collision in calling scope.
+#
+# @var db_ids
+#
+# @example
+#   db_ids=()
+#   u_db_get_ids
+#   echo ${db_ids[@]}"
+#
+u_db_get_ids() {
+  local db_id
+  local multi_db_ids=''
+
+  # Support multi-DB projects defined using the "append"-type global CWT_DB_IDS.
+  if [[ -n "$CWT_DB_IDS" ]]; then
+    for db_id in $CWT_DB_IDS; do
+      u_array_add_once "$db_id" db_ids
+    done
+  fi
+
+  # Let extensions define their own additional DB_IDs.
+  hook -s 'db' -a 'set_multi_db_ids' -v 'INSTANCE_TYPE'
+  if [[ -n "$multi_db_ids" ]]; then
+    for db_id in $multi_db_ids; do
+      u_array_add_once "$db_id" db_ids
+    done
+  fi
+}
+
+##
 # Exports all locally-defined DB credentials (multi-DB support).
 #
 # There are 2 ways to declare the different databases that the local project
@@ -357,19 +414,9 @@ u_db_set_all() {
   local db_id
   local db_ids=()
 
-  # Support multi-DB projects defined using the "append"-type global CWT_DB_IDS.
-  if [[ -n "$CWT_DB_IDS" ]]; then
-    u_array_add_once "$CWT_DB_IDS" db_ids
-  fi
+  u_db_get_ids
 
-  # Let extensions define their own additional DB_IDs.
-  local multi_db_ids=''
-  hook -s 'db' -a 'set_multi_db_ids' -v 'INSTANCE_TYPE'
-  if [[ -n "$multi_db_ids" ]]; then
-    u_array_add_once "$multi_db_ids" db_ids
-  fi
-
-  if [[ -n "$db_ids" ]]; then
+  if [[ -n "${db_ids[@]}" ]]; then
     for db_id in "${db_ids[@]}"; do
       # Default site will be loaded last, see below.
       case "$db_id" in 'default')
@@ -430,7 +477,7 @@ u_db_exists() {
   local db_exists=''
 
   u_db_set "$2" "$3"
-  u_hook_most_specific -s 'db' -a 'exists' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
+  u_hook_most_specific -s 'db' -a 'exists' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
 
   case "$db_exists" in true)
     return 1
@@ -462,7 +509,7 @@ u_db_exists() {
 #
 u_db_create() {
   u_db_set "$1" "$2"
-  u_hook_most_specific -s 'db' -a 'create' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
+  u_hook_most_specific -s 'db' -a 'create' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
 }
 
 ##
@@ -488,7 +535,7 @@ u_db_create() {
 #
 u_db_destroy() {
   u_db_set "$1" "$2"
-  u_hook_most_specific -s 'db' -a 'destroy' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
+  u_hook_most_specific -s 'db' -a 'destroy' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
 }
 
 ##
@@ -573,7 +620,7 @@ u_db_import() {
   fi
 
   # Implementations MUST use var $db_dump_file as input path (source file).
-  u_hook_most_specific -s 'db' -a 'import' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
+  u_hook_most_specific -s 'db' -a 'import' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
 
   # Remove uncompressed version of the dump when we're done.
   if [[ $file_was_uncompressed -eq 0 ]]; then
@@ -663,7 +710,7 @@ u_db_backup() {
   fi
 
   # Implementations MUST use var $db_dump_file as output path (resulting file).
-  u_hook_most_specific -s 'db' -a 'backup' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
+  u_hook_most_specific -s 'db' -a 'backup' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
 
   if [ ! -f "$db_dump_file" ]; then
     echo >&2
@@ -717,7 +764,7 @@ u_db_backup() {
 #
 u_db_clear() {
   u_db_set "$1" "$2"
-  u_hook_most_specific -s 'db' -a 'clear' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
+  u_hook_most_specific -s 'db' -a 'clear' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
 }
 
 ##
@@ -770,7 +817,16 @@ u_db_restore_last() {
     exit 1
   fi
 
-  u_db_restore "$(u_fs_get_most_recent $CWT_DB_DUMPS_BASE_PATH)" "$1" "$2"
+  local p_db_id="$1"
+
+  if [[ -z "$p_db_id" ]]; then
+    p_db_id='default'
+  fi
+
+  # TODO how to get most recent file from multiple dirs, because we may want to
+  # restore a recently downloaded dump from a remote instance, and we don't
+  # want to mix different databases together here ?
+  u_db_restore "$(u_fs_get_most_recent $CWT_DB_DUMPS_BASE_PATH/local/$p_db_id)" "$p_db_id" "$2"
 }
 
 ##
@@ -800,11 +856,7 @@ u_db_routine_backup() {
     exit 1
   fi
 
-  # When DB_NAME is not initialized in current shell scope, assume 'default'
-  # unleess overridden by the 1st param.
-  if [[ -z "$DB_NAME" ]]; then
-    u_db_set "$1"
-  fi
+  u_db_set $@
 
   local db_routine_new_backup_file
   local db_backup_file_middle
@@ -823,7 +875,6 @@ u_db_routine_backup() {
     db_backup_file_ext='sql'
   esac
 
-  u_db_set $@
   db_routine_new_backup_file="$CWT_DB_DUMPS_BASE_PATH/local/$DB_ID/$(date +"%Y/%m/%d/%H-%M-%S")_$db_backup_file_middle.$db_backup_file_ext"
 
   u_db_backup "$db_routine_new_backup_file" "$1" "$2"
@@ -856,24 +907,29 @@ u_db_routine_backup() {
 #
 u_db_get_dump() {
   local p_option="$1"
+  local p_db_id="$2"
   local dump_to_return
+
+  if [[ -z "$p_db_id" ]]; then
+    p_db_id='default'
+  fi
 
   if [[ -n "$p_option" ]]; then
     case "$p_option" in
       new)
-        u_db_routine_backup $2 $3
+        u_db_routine_backup "$p_db_id" "$3"
         dump_to_return="$routine_dump_file"
         ;;
       initial)
         local initial_dump_match
-        u_fs_file_list "$CWT_DB_DUMPS_BASE_PATH" 'initial.*'
+        u_fs_file_list "$CWT_DB_DUMPS_BASE_PATH/local/$p_db_id" 'initial.*'
         for initial_dump_match in $file_list; do
-          dump_to_return="$CWT_DB_DUMPS_BASE_PATH/$initial_dump_match"
+          dump_to_return="$CWT_DB_DUMPS_BASE_PATH/local/$p_db_id/$initial_dump_match"
         done
         ;;
     esac
   else
-    dump_to_return="$(u_fs_get_most_recent $CWT_DB_DUMPS_BASE_PATH)"
+    dump_to_return="$(u_fs_get_most_recent $CWT_DB_DUMPS_BASE_PATH/local/$p_db_id)"
   fi
 
   if [[ -f "$dump_to_return" ]]; then

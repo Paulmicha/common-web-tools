@@ -7,6 +7,7 @@ services:
   # varnish:
   #   image: wodby/varnish:$VARNISH_TAG
   #   container_name: "${DC_NS}_varnish"
+  #   restart: on-failure:5
   #   depends_on:
   #     - nginx
   #   environment:
@@ -21,6 +22,7 @@ services:
   nginx:
     image: wodby/nginx:$NGINX_TAG
     container_name: "${DC_NS}_nginx"
+    restart: on-failure:5
     depends_on:
       - php
     environment:
@@ -31,7 +33,6 @@ services:
       NGINX_STATIC_404_TRY_INDEX: 1
       NGINX_SERVER_ROOT: $SERVER_DOCROOT_C
       NGINX_CLIENT_MAX_BODY_SIZE: 144M
-    restart: on-failure:5
     volumes:
       - ./$APP_DOCROOT:$APP_DOCROOT_C
 
@@ -39,21 +40,35 @@ services:
   mariadb:
     image: wodby/mariadb:$MARIADB_TAG
     container_name: "${DC_NS}_mariadb"
+    restart: on-failure:5
     stop_grace_period: 30s
     environment:
       MYSQL_ROOT_PASSWORD: $DB_ADMIN_PASS
       MYSQL_DATABASE: $DB_NAME
       MYSQL_USER: $DB_USER
       MYSQL_PASSWORD: $DB_PASS
-    restart: on-failure:5
     volumes:
       - mariadb_volume:/var/lib/mysql
+
+  # See https://github.com/wodby/postgres/
+  # postgres:
+  #   image: wodby/postgres:$POSTGRES_TAG
+  #   container_name: "${DC_NS}_postgres"
+  #   restart: on-failure:5
+  #   stop_grace_period: 30s
+  #   environment:
+  #     POSTGRES_DB: $DB_NAME
+  #     POSTGRES_USER: $DB_USER
+  #     POSTGRES_PASSWORD: $DB_PASSWORD
+  #   volumes:
+  #     - postgres_volume:/var/lib/postgresql/data
 
   # See https://github.com/wodby/php
   # See https://github.com/wodby/drupal-php
   php:
     image: wodby/drupal-php:$PHP_TAG
     container_name: "${DC_NS}_php"
+    restart: on-failure:5
     depends_on:
       - "mariadb"
     environment:
@@ -78,6 +93,7 @@ services:
   crond:
     image: wodby/drupal-php:$PHP_TAG
     container_name: "${DC_NS}_crond"
+    restart: on-failure:5
     environment:
       CRONTAB: "${DWT_CRON_FREQ} drush -r ${APP_DOCROOT_C} cron"
       DB_HOST: $DB_HOST
@@ -107,6 +123,7 @@ services:
   # solr:
   #   image: wodby/solr:$SOLR_TAG
   #   container_name: "${DC_NS}_solr"
+  #   restart: on-failure:5
   #   environment:
   #     SOLR_DEFAULT_CONFIG_SET: $SOLR_CONFIG_SET
   #     SOLR_HEAP: 1024m
@@ -119,3 +136,4 @@ services:
 
 volumes:
   mariadb_volume:
+  # postgres_volume:

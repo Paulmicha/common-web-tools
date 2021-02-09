@@ -21,23 +21,27 @@
 #   cwt/app/install.sh
 #
 
-# TODO [evol] Multi-DB setup support.
 case "$CWT_DB_INITIAL_IMPORT" in true)
-  initial_dump_file="$(u_db_get_dump 'initial')"
+  db_ids=()
+  u_db_get_ids
 
-  if [[ -f "$initial_dump_file" ]]; then
-    echo "Importing initial DB dump file '$initial_dump_file' ..."
+  for db_id in "${db_ids[@]}"; do
+    initial_dump_file="$(u_db_get_dump 'initial' "$db_id")"
 
-    u_db_restore "$initial_dump_file"
+    if [[ -f "$initial_dump_file" ]]; then
+      echo "Importing initial '$db_id' DB dump file '$initial_dump_file' ..."
 
-    if [[ $? -ne 0 ]]; then
-      echo >&2
-      echo "Error in $BASH_SOURCE line $LINENO: failed to import initial DB dump file '$initial_dump_file'." >&2
-      echo "-> Aborting (1)." >&2
-      echo >&2
-      exit 1
+      u_db_restore "$initial_dump_file" "$db_id"
+
+      if [[ $? -ne 0 ]]; then
+        echo >&2
+        echo "Error in $BASH_SOURCE line $LINENO: failed to import initial DB dump file '$initial_dump_file'." >&2
+        echo "-> Aborting (1)." >&2
+        echo >&2
+        exit 1
+      fi
+
+      echo "Importing initial '$db_id' DB dump file '$initial_dump_file' : done."
     fi
-
-    echo "Importing initial DB dump file '$initial_dump_file' : done."
-  fi
+  done
 esac

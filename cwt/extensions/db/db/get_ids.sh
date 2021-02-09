@@ -12,6 +12,12 @@
 #
 
 . cwt/bootstrap.sh
-u_db_set $@
 
-echo "CWT_DB_IDS = '$CWT_DB_IDS'"
+db_ids=()
+u_db_get_ids
+
+echo "Here are all the database IDs defined in this project instance :"
+
+for db_id in "${db_ids[@]}"; do
+  echo " - $db_id"
+done
