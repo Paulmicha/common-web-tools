@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ##
-# Gets local instance DB credentials.
+# Gets local instance DB credentials (in fact, all DB information).
 #
 # @see u_db_set()
 #
@@ -35,17 +35,38 @@
 #   # Or :
 #   cwt/extensions/db/db/get_credentials.sh my_custom_db_id
 #
+#   # All locally defined databases at once.
+#   make db-get-credentials '%'
+#   # Or :
+#   cwt/extensions/db/db/get_credentials.sh '%'
+#
 
 . cwt/bootstrap.sh
-u_db_set $@
 
-echo "Details for local database '$DB_ID' :"
-echo "  DB_DRIVER = '$DB_DRIVER'"
-echo "  DB_HOST = '$DB_HOST'"
-echo "  DB_PORT = '$DB_PORT'"
-echo "  DB_NAME = '$DB_NAME'"
-echo "  DB_USER = '$DB_USER'"
-echo "  DB_PASS = '$DB_PASS'"
-echo "  DB_ADMIN_USER = '$DB_ADMIN_USER'"
-echo "  DB_ADMIN_PASS = '$DB_ADMIN_PASS'"
-echo "  DB_TABLES_SKIP_DATA = '$DB_TABLES_SKIP_DATA'"
+db_ids=()
+
+if [[ "$1" == '%' ]]; then
+  u_db_get_ids
+elif [[ -n "$1" ]]; then
+  db_ids+=("$1")
+else
+  db_ids+=('default')
+fi
+
+u_db_vars_list
+echo
+
+for db_id in "${db_ids[@]}"; do
+  u_db_set $db_id
+
+  for v in $db_vars_list; do
+    var_name="DB_$v"
+    echo "$var_name = '${!var_name}'"
+  done
+
+  if [[ -n "$dc_db_service_name" ]]; then
+    echo "docker-compose service name = '$dc_db_service_name'"
+  fi
+
+  echo
+done

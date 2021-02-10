@@ -104,7 +104,7 @@ u_db_set() {
       return
     fi
     # When DB_ID was previously set in current shell scope AND it is different
-    # (or the force reload is requested), then we first need to USET all the
+    # (or the force reload is requested), then we first need to UNSET all the
     # unprefixed DB_* variables so that the default values are properly set
     # below.
     u_db_unset
@@ -115,6 +115,10 @@ u_db_set() {
   # Give a chance to other extensions to preset non-readonly env vars, including
   # per DB_ID.
   hook -s 'db' -a 'env_preset' -v 'INSTANCE_TYPE PROVISION_USING DB_ID'
+
+  # Allow bash aliases to be adapted to the currently active DB_ID.
+  # @see cwt/extensions/mysql/cwt/alias.docker-compose.hook.sh
+  hook -s 'cwt' -a 'alias' -v 'PROVISION_USING'
 
   case "$CWT_DB_MODE" in
     # Some environments do not require CWT to handle DB credentials at all.
@@ -353,10 +357,19 @@ u_db_set() {
 #
 u_db_unset() {
   local v
+
   u_db_vars_list
+
   for v in $db_vars_list; do
     eval "unset DB_$v"
   done
+
+  # Also need to reset the variable allowing to target a specific docker-compose
+  # service depending on the currently active DB_ID.
+  # @see cwt/extensions/mysql/cwt/alias.docker-compose.hook.sh
+  if [[ -n "$dc_db_service_name" ]]; then
+    unset dc_db_service_name
+  fi
 }
 
 ##

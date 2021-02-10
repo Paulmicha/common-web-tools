@@ -13,8 +13,20 @@
 # @see cwt/extensions/docker-compose/cwt/pre_bootstrap.docker-compose.hook.sh
 #
 
-# TODO [evol] support multi-db projects.
-alias psql="docker-compose exec $DC_TTY ${POSTGRES_SNAME:=postgres} psql"
-alias pg_restore="docker-compose exec $DC_TTY ${POSTGRES_SNAME:=postgres} pg_restore"
-alias dropdb="docker-compose exec $DC_TTY ${POSTGRES_SNAME:=postgres} dropdb"
-alias createdb="docker-compose exec $DC_TTY ${POSTGRES_SNAME:=postgres} createdb"
+# In order to support multi-db projects, those aliases must target the proper
+# service depending on the currently selected DB_ID.
+# This hook will be called once during bootstrap, then once more during db_set()
+# where a local variable may target the correct service.
+# -> Use the read-only global value if the service name was not overridden in
+# u_db_set().
+# @see cwt/extensions/db/db.inc.sh
+# @see cwt/extensions/mysql/cwt/global.docker-compose.vars.sh
+if [[ -z "$dc_db_service_name" ]]; then
+  dc_db_service_name="${POSTGRES_SNAME:=postgres}"
+fi
+
+alias pg_isready="docker-compose exec $DC_TTY $dc_db_service_name pg_isready"
+alias psql="docker-compose exec $DC_TTY $dc_db_service_name psql"
+alias pg_restore="docker-compose exec $DC_TTY $dc_db_service_name pg_restore"
+alias dropdb="docker-compose exec $DC_TTY $dc_db_service_name dropdb"
+alias createdb="docker-compose exec $DC_TTY $dc_db_service_name createdb"
