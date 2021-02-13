@@ -32,11 +32,17 @@ if [[ -z "$REMOTE_INSTANCE_CONNECT_CMD" ]]; then
   exit 1
 fi
 
+# If the remote instance was already initialized :
+# - make sure it is up to date (git pull)
+# - uninit so it can be reinit below using given arguments
+# Otherwise, carry on with the initial git cloning - making sure beforehand that
+# the git host(s) are included in ~/.ssh/known_hosts on the remote.
+# This prevents errors due to first time connecting to this/those git host(s).
+
 # Use current git remote 'origin' in case the remote dir is empty.
 # Expected format : user@host.com:path/to/project.git
 git_origin="$(git config --get remote.origin.url)"
 
-# Prevent error due to first time connecting to git host(s).
 hosts=()
 regex="\@([^\:]+)\:"
 hosts_with_user=()
@@ -57,28 +63,54 @@ if [[ -n "$APP_GIT_ORIGIN" ]]; then
   fi
 fi
 
-# We'll need to run multiple instructions in a single connection.
-cmds=()
-
-cmds+=("if [[ -f $REMOTE_INSTANCE_PROJECT_DOCROOT/.git/HEAD ]] ; then echo 'Instance appears to be already initialized.' ; exit ; fi")
+# This part of the command needs to be dynamically generated.
+dyn_cmd_known_hosts=''
 
 if [[ -n "${hosts[@]}" ]] && [[ -n "${hosts_with_user[@]}" ]]; then
   for (( i = 0; i < ${#hosts[@]}; i++ )); do
-    cmds+=("( ssh -T ${hosts_with_user[i]} &> /dev/null ; if [[ \\\$? -ne 0 ]]; then ssh-keyscan -H ${hosts[i]} >> ~/.ssh/known_hosts ; echo 'Added ${hosts[i]} to known hosts.' ; else echo 'Ok - ${hosts[i]} appears to authorize connection.' ; fi )")
+    dyn_cmd_known_hosts+="
+
+  ssh -T ${hosts_with_user[i]} &> /dev/null
+  if [[ \$? -ne 0 ]]; then
+    ssh-keyscan -H ${hosts[i]} >> ~/.ssh/known_hosts
+    echo 'Added ${hosts[i]} to known hosts.'
+  else
+    echo 'Ok - ${hosts[i]} appears to authorize connection.'
+  fi
+
+"
   done
 fi
 
-cmds+=("( [[ ! -d $REMOTE_INSTANCE_PROJECT_DOCROOT ]] && mkdir -p $REMOTE_INSTANCE_PROJECT_DOCROOT )")
-cmds+=("cd $REMOTE_INSTANCE_PROJECT_DOCROOT")
-cmds+=("( [[ -z \\\"\\\$(ls -A)\\\" ]] && git clone '$git_origin' . )")
-cmds+=("cwt/instance/init.sh -y -h 'remote'")
+# Assemble and execute the command remotely.
+# cat <<REMOTECMD
+eval "$REMOTE_INSTANCE_CONNECT_CMD" bash <<REMOTECMD
 
-joined_str=''
-u_str_join " ; " "${cmds[@]}"
+if [[ -f $REMOTE_INSTANCE_PROJECT_DOCROOT/.git/HEAD ]] && [[ -f $REMOTE_INSTANCE_PROJECT_DOCROOT/.env ]]; then
 
-remote_command="$joined_str $@"
+  echo 'Instance appears to be already initialized.'
+  echo '-> Make sure it is up to date, and reinit using given arguments.'
 
-# Debug.
-# echo "$remote_command"
+  cd $REMOTE_INSTANCE_PROJECT_DOCROOT
+  git pull
+  cwt/instance/uninit.sh
 
-eval "$REMOTE_INSTANCE_CONNECT_CMD \"$remote_command\""
+else
+$dyn_cmd_known_hosts
+
+  if [[ ! -d $REMOTE_INSTANCE_PROJECT_DOCROOT ]]; then
+    echo 'Create the remote PROJECT_DOCROOT dir.'
+    mkdir -p $REMOTE_INSTANCE_PROJECT_DOCROOT
+  fi
+
+  if [[ ! -f $REMOTE_INSTANCE_PROJECT_DOCROOT/.git/HEAD ]]; then
+    echo 'Clone current git origin in remote PROJECT_DOCROOT dir.'
+    git clone '$git_origin' $REMOTE_INSTANCE_PROJECT_DOCROOT
+  fi
+
+  cd $REMOTE_INSTANCE_PROJECT_DOCROOT
+fi
+
+cwt/instance/init.sh -y -h 'remote' $@
+
+REMOTECMD

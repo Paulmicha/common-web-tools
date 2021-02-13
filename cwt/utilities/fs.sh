@@ -313,6 +313,10 @@ u_fs_dir_list() {
     p_path='.'
   fi
 
+  if [[ ! -d "$p_path" ]]; then
+    return
+  fi
+
   if [[ -z "$p_maxdepth" ]]; then
     p_maxdepth=1
   fi
@@ -405,6 +409,10 @@ u_fs_file_list() {
 
   if [[ -z "$p_path" ]]; then
     p_path='.'
+  fi
+
+  if [[ ! -d "$p_path" ]]; then
+    return
   fi
 
   if [[ -z "$p_maxdepth" ]]; then

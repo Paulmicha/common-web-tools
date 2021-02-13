@@ -383,7 +383,7 @@ u_db_unset() {
 # @example
 #   db_ids=()
 #   u_db_get_ids
-#   echo ${db_ids[@]}"
+#   echo "${db_ids[@]}"
 #
 u_db_get_ids() {
   local db_id
@@ -493,10 +493,10 @@ u_db_exists() {
   u_hook_most_specific -s 'db' -a 'exists' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
 
   case "$db_exists" in true)
-    return 1
+    return 0
   esac
 
-  return 0
+  return 1
 }
 
 ##

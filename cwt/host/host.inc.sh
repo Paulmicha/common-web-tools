@@ -89,13 +89,19 @@ u_host_crontab_remove() {
 ##
 # Returns current host IP address.
 #
+# See https://github.com/hbons/Dazzle/blob/master/dazzle.sh
+#
 u_host_ip() {
-  local ip
-  local all_ips="$(hostname -I)"
-  for ip in $all_ips; do
-    echo "$ip"
-    return
-  done
+  # Fetch the external IP address :
+  # 1. fetch all inet addresses (IPv4)
+  # 2. select only global scope addresses
+  # 3. extract the address
+  # 4. limit the list to the first address to get only one IP in case the server has more than one
+  ip -f inet addr \
+    | grep "inet .* scope global" \
+    | grep -Po "inet ([\d+\.]+)" \
+    | cut -c 6- \
+    | head -n1
 }
 
 ##

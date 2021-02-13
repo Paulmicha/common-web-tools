@@ -27,7 +27,7 @@ if psql -lqtA \
   -d "$DB_NAME" \
     | grep -q "^$p_db_name|"
 then
-  db_exists='false'
-else
   db_exists='true'
+else
+  db_exists='false'
 fi

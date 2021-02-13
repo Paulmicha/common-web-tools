@@ -18,5 +18,15 @@
 #
 
 case "$D4D_USE_SOLR" in 'yes')
-  init_solr
+  # @see cwt/extensions/drupalwt_d4d/cwt/alias.docker-compose.hook.sh
+  # See https://github.com/wodby/solr/blob/master/bin/init_solr
+  init_solr &> /dev/null
+
+  if [[ $? -ne 0 ]]; then
+    echo >&2
+    echo "Error in $BASH_SOURCE line $LINENO: failed to create the 'default' Solr core." >&2
+    echo >&2
+  else
+    echo "The 'default' Solr core has been created."
+  fi
 esac

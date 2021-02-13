@@ -60,6 +60,7 @@ services:
   #     POSTGRES_DB: $DB_NAME
   #     POSTGRES_USER: $DB_USER
   #     POSTGRES_PASSWORD: $DB_PASSWORD
+  #     PGPASSWORD: $DB_PASSWORD
   #   volumes:
   #     - postgres_volume:/var/lib/postgresql/data
 
