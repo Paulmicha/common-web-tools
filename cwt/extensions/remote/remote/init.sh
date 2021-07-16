@@ -86,7 +86,7 @@ fi
 # cat <<REMOTECMD
 eval "$REMOTE_INSTANCE_CONNECT_CMD" bash <<REMOTECMD
 
-if [[ -f $REMOTE_INSTANCE_PROJECT_DOCROOT/.git/HEAD ]] && [[ -f $REMOTE_INSTANCE_PROJECT_DOCROOT/.env ]]; then
+if [[ -f $REMOTE_INSTANCE_PROJECT_DOCROOT/.git/HEAD ]]; then
 
   echo 'Instance appears to be already initialized.'
   echo '-> Make sure it is up to date, and reinit using given arguments.'
@@ -107,10 +107,12 @@ $dyn_cmd_known_hosts
     echo 'Clone current git origin in remote PROJECT_DOCROOT dir.'
     git clone '$git_origin' $REMOTE_INSTANCE_PROJECT_DOCROOT
   fi
-
-  cd $REMOTE_INSTANCE_PROJECT_DOCROOT
 fi
 
-cwt/instance/init.sh -y -h 'remote' $@
-
 REMOTECMD
+
+# Workaround : launch the "init" action separately. Fixes unknown issue where
+# running this inside the "inline" command above appeared to be skipped on first
+# call.
+. cwt/extensions/remote/remote/exec.sh "$remote_id" \
+  "cwt/instance/init.sh -y -h 'remote' $@"

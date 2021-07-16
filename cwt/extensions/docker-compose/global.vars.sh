@@ -40,3 +40,5 @@ global DC_SUBDOMAIN_SEP "[default]='.' [help]='Subdomain or prefix separator for
 # [optional] Shorter generated make tasks names.
 # @see u_instance_task_name() in cwt/instance/instance.inc.sh
 global CWT_MAKE_TASKS_SHORTER "[append]='docker-compose/dc'"
+global CWT_MAKE_TASKS_SHORTER "[append]='service-exec/se'"
+global CWT_MAKE_TASKS_SHORTER "[append]='service-run/sr'"

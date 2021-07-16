@@ -4,7 +4,7 @@
 # [abstract] Installs application instance on current host.
 #
 # The "app install" action is meant to setup the application if it requires
-# e.g. some settings file to be generated, a database to be initialiazed, some
+# e.g. some settings file to be generated, a database to be initialized, some
 # DB dump to be imported, etc.
 #
 # This script provides an entry point for triggering a specific hook. "Abstract"

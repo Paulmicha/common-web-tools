@@ -189,9 +189,9 @@ u_remote_authorize_ssh_key() {
     if [[ $? -ne 0 ]]; then
       echo >&2
       echo "Error in $BASH_SOURCE line $LINENO: the command 'ssh-add' exited with a non-zero status." >&2
-      echo "-> Aborting (4)." >&2
+      echo "-> Aborting (3)." >&2
       echo >&2
-      exit 4
+      return 3
     else
       echo "Launching ssh-agent and load the key in current terminal session : done."
     fi

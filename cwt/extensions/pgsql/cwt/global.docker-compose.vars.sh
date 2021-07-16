@@ -14,5 +14,4 @@
 # @see cwt/bootstrap.sh
 #
 
-# TODO [evol] support multi-db projects.
 global POSTGRES_SNAME "[default]=postgres"
