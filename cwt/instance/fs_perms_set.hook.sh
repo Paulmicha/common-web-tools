@@ -35,14 +35,15 @@ dir_list=''
 u_fs_dir_list
 for d in $dir_list; do
   chmod "$FS_NW_DIRS" "$d"
-  check_chmod=$?
-  if [ $check_chmod -ne 0 ]; then
-    echo >&2
-    echo "Error in $BASH_SOURCE line $LINENO: chmod exited with non-zero status ($check_chmod)." >&2
-    echo "-> Aborting (3)." >&2
-    echo >&2
-    exit 3
-  fi
+  # Some bind mounts for app dir may need different ownership -> do not enforce.
+  # check_chmod=$?
+  # if [ $check_chmod -ne 0 ]; then
+  #   echo >&2
+  #   echo "Error in $BASH_SOURCE line $LINENO: chmod exited with non-zero status ($check_chmod)." >&2
+  #   echo "-> Aborting (3)." >&2
+  #   echo >&2
+  #   exit 3
+  # fi
 done
 
 # Sets 'normal' file permissions (644 by default) to CWT files. Applies to files

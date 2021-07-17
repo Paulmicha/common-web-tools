@@ -54,13 +54,28 @@ u_remote_download() {
     p_remote_path="$REMOTE_INSTANCE_PROJECT_DOCROOT/$p_remote_path"
   fi
 
+  # Make sure local dir exists.
+  local local_dir="$p_local_path"
+  if [[ ! "${local_dir:(-1)}" = '/' ]]; then
+    local_dir="${local_dir%/*}"
+  fi
+  if [[ ! -d "$local_dir" ]]; then
+    mkdir -p "$local_dir"
+    if [[ $? -ne 0 ]]; then
+      echo >&2
+      echo "Error in $BASH_SOURCE line $LINENO: unable to create local dir where remote file will be stored." >&2
+      echo >&2
+      exit 1
+    fi
+  fi
+
   scp "${REMOTE_INSTANCE_SSH_USER}@${REMOTE_INSTANCE_HOST}:$p_remote_path" "$p_local_path" "$@"
 
   if [[ $? -ne 0 ]]; then
     echo >&2
     echo "Error in $BASH_SOURCE line $LINENO: the command 'scp' exited with a non-zero status." >&2
     echo >&2
-    exit 1
+    exit 2
   else
     echo "Download successfully completed."
   fi

@@ -118,6 +118,9 @@ u_remote_sync_db_to() {
 ##
 # Fetches DB dump from given remote and restores it locally.
 #
+# TODO avoid duplicated code
+# @see u_remote_download_db_from
+#
 # Optionally creates a new dump before fetching it, or uses most recent
 # remote instance DB dump (default). Always wipes out and restores the dump on
 # local DB.
@@ -177,8 +180,10 @@ u_remote_sync_db_from() {
   # The local dump file path must be placed inside a subfolder named
   # after the remote instance id in order to avoid any risks of collision.
   rsf_leaf="${rsf_remote_dump_file##*/}"
-  rsf_dump_local_base_path="$CWT_DB_DUMPS_BASE_PATH/$p_id/$DB_ID"
-  rsf_dump_remote_base_path="$CWT_DB_DUMPS_BASE_PATH/local/$DB_ID"
+  relative_path=''
+  u_fs_relative_path "$CWT_DB_DUMPS_BASE_PATH"
+  rsf_dump_local_base_path="$relative_path/$p_id/$DB_ID"
+  rsf_dump_remote_base_path="$relative_path/local/$DB_ID"
   rsf_local_dump_file="${rsf_remote_dump_file//$rsf_dump_remote_base_path/$rsf_dump_local_base_path}"
 
   echo "Fetching dump file '$rsf_remote_dump_file' from remote '$p_id' ..."
@@ -197,5 +202,92 @@ u_remote_sync_db_from() {
   echo "Restoring it locally ..."
   u_db_restore "$rsf_local_dump_file"
   echo "Restoring it locally : done."
+  echo
+}
+
+##
+# Just fetches DB dump from given remote (without restoring it locally).
+#
+# TODO avoid duplicated code
+# @see u_remote_sync_db_from
+#
+# Optionally creates a new dump before fetching it, or uses most recent
+# remote instance DB dump (default). Always wipes out and restores the dump on
+# local DB.
+#
+# @param 1 String : the remote id.
+# @param 2 [optional] String : path to dump file override or 'new' to create one.
+# @param 3 [optional] String : unique DB identifier. Defaults to 'default'.
+# @param 4 [optional] String : force reload flag (bypasses optimization) if the
+#   DB credentials vars are already exported in current shell scope.
+#
+# @examples
+#   # Using the default database :
+#   u_remote_download_db_from my_remote_id
+#   u_remote_download_db_from my_remote_id new
+#   u_remote_download_db_from my_remote_id path/to/remote/dump/file.sql.tgz
+#
+#   # Specifying the database by DB_ID (e.g. 'my_db_id') :
+#   u_remote_download_db_from my_remote_id '' my_db_id
+#   u_remote_download_db_from my_remote_id new my_db_id
+#   u_remote_download_db_from my_remote_id path/to/remote/dump/file.sql.tgz my_db_id
+#
+u_remote_download_db_from() {
+  local p_id="$1"
+  local p_option="$2"
+
+  local rsf_remote_dump_file
+  local rsf_dump_local_base_path
+  local rsf_dump_remote_base_path
+  local rsf_leaf
+  local rsf_local_dump_file
+
+  u_remote_instance_load "$p_id"
+
+  if [[ -z "$REMOTE_INSTANCE_CONNECT_CMD" ]]; then
+    echo >&2
+    echo "Error in u_remote_sync_db_from() - $BASH_SOURCE line $LINENO: no conf found for remote id '$p_id'." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    return 1
+  fi
+
+  u_db_set "$3" "$4"
+
+  # Handle variants given 1st argument.
+  if [[ -n "$p_option" ]]; then
+    # No check if file exists on the remote instance (perf).
+    rsf_remote_dump_file="$p_option"
+    case "$p_option" in new)
+      rsf_remote_dump_file="$(cwt/extensions/remote/remote/exec.sh "$p_id" "cwt/extensions/db/db/get_dump.sh new")"
+      rsf_remote_dump_file="${rsf_remote_dump_file#$REMOTE_INSTANCE_PROJECT_DOCROOT/}"
+    esac
+  else
+    rsf_remote_dump_file="$(cwt/extensions/remote/remote/exec.sh "$p_id" "cwt/extensions/db/db/get_dump.sh")"
+    rsf_remote_dump_file="${rsf_remote_dump_file#$REMOTE_INSTANCE_PROJECT_DOCROOT/}"
+  fi
+
+  # The local dump file path must be placed inside a subfolder named
+  # after the remote instance id in order to avoid any risks of collision.
+  rsf_leaf="${rsf_remote_dump_file##*/}"
+  relative_path=''
+  u_fs_relative_path "$CWT_DB_DUMPS_BASE_PATH"
+  rsf_dump_local_base_path="$relative_path/$p_id/$DB_ID"
+  rsf_dump_remote_base_path="$relative_path/local/$DB_ID"
+  rsf_local_dump_file="${rsf_remote_dump_file//$rsf_dump_remote_base_path/$rsf_dump_local_base_path}"
+
+  echo "Fetching dump file '$rsf_remote_dump_file' from remote '$p_id' ..."
+  u_remote_download "$p_id" "$rsf_remote_dump_file" "$rsf_local_dump_file"
+
+  if [[ ! -f "$rsf_local_dump_file" ]]; then
+    echo >&2
+    echo "Error in u_remote_sync_db_from() - $BASH_SOURCE line $LINENO: failed to fetch remote dump file." >&2
+    echo "-> Aborting (2)." >&2
+    echo >&2
+    return 2
+  else
+    echo "Fetching dump file '$rsf_remote_dump_file' from remote '$p_id' : done."
+  fi
+
   echo
 }
