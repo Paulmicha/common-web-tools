@@ -11,13 +11,13 @@
 # @param 2 [optional] String : path to dump file override or 'new' to create one.
 #
 # @example
-#   make db-sync-to my_remote_id
-#   make db-sync-to my_remote_id new
-#   make db-sync-to my_remote_id path/to/local/dump/file.sql.tgz
+#   make db-sync-to dev
+#   make db-sync-to dev new
+#   make db-sync-to dev path/to/local/dump/file.sql.tgz
 #   # Or :
-#   cwt/extensions/remote/db/sync_to.sh my_remote_id
-#   cwt/extensions/remote/db/sync_to.sh my_remote_id new
-#   cwt/extensions/remote/db/sync_to.sh my_remote_id path/to/local/dump/file.sql.tgz
+#   cwt/extensions/remote_db/db/sync_to.sh dev
+#   cwt/extensions/remote_db/db/sync_to.sh dev new
+#   cwt/extensions/remote_db/db/sync_to.sh dev path/to/local/dump/file.sql.tgz
 #
 
 . cwt/bootstrap.sh
