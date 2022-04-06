@@ -763,10 +763,10 @@ u_db_backup() {
 # @see cwt/extensions/pgsql
 #
 # To list all the possible paths that can be used, use :
-# $ make hook-debug s:db a:clear v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:db a:clear v:DB_DRIVER DB_ID INSTANCE_TYPE
 #
 # To check the most specific match (if any is found) :
-# $ make hook-debug ms s:db a:clear v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug ms s:db a:clear v:DB_DRIVER DB_ID INSTANCE_TYPE
 #
 # @param 1 [optional] String : unique DB identifier. Defaults to 'default'.
 # @param 2 [optional] String : force reload flag (bypasses optimization) if the
@@ -935,9 +935,11 @@ u_db_get_dump() {
         ;;
       initial)
         local initial_dump_match
-        u_fs_file_list "$CWT_DB_DUMPS_BASE_PATH/local/$p_db_id" 'initial.*'
+        # u_fs_file_list "$CWT_DB_DUMPS_BASE_PATH/local/$p_db_id" 'initial.*'
+        u_fs_file_list "$CWT_DB_DUMPS_BASE_PATH" 'initial.*'
         for initial_dump_match in $file_list; do
-          dump_to_return="$CWT_DB_DUMPS_BASE_PATH/local/$p_db_id/$initial_dump_match"
+          # dump_to_return="$CWT_DB_DUMPS_BASE_PATH/local/$p_db_id/$initial_dump_match"
+          dump_to_return="$CWT_DB_DUMPS_BASE_PATH/$initial_dump_match"
         done
         ;;
     esac

@@ -1,0 +1,47 @@
+version: "3"
+services:
+
+  apache:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.${DC_NS}-apache-https.loadbalancer.server.port=80"
+      - "traefik.http.routers.${DC_NS}-apache-https.entrypoints=websecure"
+      - "traefik.http.routers.${DC_NS}-apache-https.rule=Host(`${INSTANCE_DOMAIN}`)"
+      - "traefik.http.middlewares.${DC_NS}-apache-auth.basicauth.users=${MOODLE_BASIC_AUTH_USERS}"
+      - "traefik.http.routers.${DC_NS}-apache-https.middlewares=${DC_NS}-apache-auth"
+      - "traefik.http.routers.${DC_NS}-apache-https.tls=true"
+      - "traefik.http.routers.${DC_NS}-apache-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.${DC_NS}-apache-https.service=${DC_NS}-apache-https"
+
+  # See https://github.com/wodby/adminer
+  adminer:
+    image: wodby/adminer:$ADMINER_TAG
+    container_name: "${DC_NS}_adminer"
+    environment:
+      ADMINER_DEFAULT_DB_DRIVER: $DB_DRIVER
+      ADMINER_DEFAULT_DB_HOST: $DB_HOST
+      ADMINER_DEFAULT_DB_NAME: $DB_NAME
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.${DC_NS}-adminer-https.loadbalancer.server.port=9000"
+      - "traefik.http.routers.${DC_NS}-adminer-https.entrypoints=websecure"
+      - "traefik.http.routers.${DC_NS}-adminer-https.rule=Host(`adminer${DC_SUBDOMAIN_SEP}${INSTANCE_DOMAIN}`)"
+      - "traefik.http.middlewares.${DC_NS}-adminer-auth.basicauth.users=${MOODLE_BASIC_AUTH_USERS}"
+      - "traefik.http.routers.${DC_NS}-adminer-https.middlewares=${DC_NS}-adminer-auth"
+      - "traefik.http.routers.${DC_NS}-adminer-https.tls=true"
+      - "traefik.http.routers.${DC_NS}-adminer-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.${DC_NS}-adminer-https.service=${DC_NS}-adminer-https"
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: "${DC_NS}_mailhog"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.${DC_NS}-mailhog-https.loadbalancer.server.port=8025"
+      - "traefik.http.routers.${DC_NS}-mailhog-https.entrypoints=websecure"
+      - "traefik.http.routers.${DC_NS}-mailhog-https.rule=Host(`mailhog${DC_SUBDOMAIN_SEP}${INSTANCE_DOMAIN}`)"
+      - "traefik.http.middlewares.${DC_NS}-mailhog-auth.basicauth.users=${MOODLE_BASIC_AUTH_USERS}"
+      - "traefik.http.routers.${DC_NS}-mailhog-https.middlewares=${DC_NS}-mailhog-auth"
+      - "traefik.http.routers.${DC_NS}-mailhog-https.tls=true"
+      - "traefik.http.routers.${DC_NS}-mailhog-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.${DC_NS}-mailhog-https.service=${DC_NS}-mailhog-https"

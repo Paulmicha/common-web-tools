@@ -1,0 +1,83 @@
+version: "3"
+services:
+
+  # See https://github.com/wodby/apache
+  apache:
+    image: wodby/apache:$APACHE_TAG
+    container_name: "${DC_NS}_apache"
+    restart: on-failure:5
+    depends_on:
+      - php
+    environment:
+      APACHE_LOG_LEVEL: $APACHE_LOG_LEVEL
+      APACHE_BACKEND_HOST: php
+      APACHE_VHOST_PRESET: $APACHE_VHOST_PRESET
+      APACHE_DOCUMENT_ROOT: $SERVER_DOCROOT_C
+    volumes:
+      - ./$APP_DOCROOT:$APP_DOCROOT_C
+      - ./$MOODLE_DATA_DIR:$MOODLE_DATA_DIR_C
+      - ./$MOODLE_PHPUNITDATA_DIR:$MOODLE_PHPUNITDATA_DIR_C
+      - ./$MOODLE_BEHATDATA_DIR:$MOODLE_BEHATDATA_DIR_C
+      - ./$MOODLE_BEHATFAILDUMPS_DIR:$MOODLE_BEHATFAILDUMPS_DIR_C
+
+  # See https://github.com/wodby/php
+  php:
+    image: wodby/php:$PHP_TAG
+    container_name: "${DC_NS}_php"
+    restart: on-failure:5
+    depends_on:
+      - "mariadb"
+    environment:
+      PHP_FPM_USER: $PHP_FPM_USER
+      PHP_FPM_GROUP: $PHP_FPM_GROUP
+      PHP_UPLOAD_MAX_FILESIZE: 128M
+      PHP_POST_MAX_SIZE: 144M
+      COLUMNS: 80
+      INSTANCE_TYPE: $INSTANCE_TYPE
+      HOST_TYPE: $HOST_TYPE
+      # See https://github.com/wodby/php/issues/35
+      PHP_FPM_ENV_VARS: '["INSTANCE_TYPE", "HOST_TYPE"]'
+    volumes:
+      - ./$APP_DOCROOT:$APP_DOCROOT_C
+      - ./$MOODLE_DATA_DIR:$MOODLE_DATA_DIR_C
+      - ./$MOODLE_PHPUNITDATA_DIR:$MOODLE_PHPUNITDATA_DIR_C
+      - ./$MOODLE_BEHATDATA_DIR:$MOODLE_BEHATDATA_DIR_C
+      - ./$MOODLE_BEHATFAILDUMPS_DIR:$MOODLE_BEHATFAILDUMPS_DIR_C
+
+  crond:
+    image: wodby/php:$PHP_TAG
+    container_name: "${DC_NS}_crond"
+    restart: on-failure:5
+    environment:
+      CRONTAB: "${MOODLE_CRON_FREQ} php ${APP_DOCROOT_C} admin/cron.php"
+      PHP_FPM_USER: $PHP_FPM_USER
+      PHP_FPM_GROUP: $PHP_FPM_GROUP
+      COLUMNS: 80
+      INSTANCE_TYPE: $INSTANCE_TYPE
+      HOST_TYPE: $HOST_TYPE
+      # See https://github.com/wodby/php/issues/35
+      PHP_FPM_ENV_VARS: '["INSTANCE_TYPE", "HOST_TYPE"]'
+    command: sudo -E LD_PRELOAD=/usr/lib/preloadable_libiconv.so crond -f -d 0
+    volumes:
+      - ./$APP_DOCROOT:$APP_DOCROOT_C
+      - ./$MOODLE_DATA_DIR:$MOODLE_DATA_DIR_C
+      - ./$MOODLE_PHPUNITDATA_DIR:$MOODLE_PHPUNITDATA_DIR_C
+      - ./$MOODLE_BEHATDATA_DIR:$MOODLE_BEHATDATA_DIR_C
+      - ./$MOODLE_BEHATFAILDUMPS_DIR:$MOODLE_BEHATFAILDUMPS_DIR_C
+
+  # See https://github.com/wodby/mariadb
+  mariadb:
+    image: wodby/mariadb:$MARIADB_TAG
+    container_name: "${DC_NS}_mariadb"
+    restart: on-failure:5
+    stop_grace_period: 30s
+    environment:
+      MYSQL_ROOT_PASSWORD: $DB_ADMIN_PASS
+      MYSQL_DATABASE: $DB_NAME
+      MYSQL_USER: $DB_USER
+      MYSQL_PASSWORD: $DB_PASS
+    volumes:
+      - mariadb_volume:/var/lib/mysql
+
+volumes:
+  mariadb_volume:

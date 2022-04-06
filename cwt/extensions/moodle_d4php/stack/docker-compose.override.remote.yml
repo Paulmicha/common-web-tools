@@ -1,0 +1,12 @@
+version: "3"
+services:
+
+  apache:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.${DC_NS}-apache-https.loadbalancer.server.port=80"
+      - "traefik.http.routers.${DC_NS}-apache-https.entrypoints=websecure"
+      - "traefik.http.routers.${DC_NS}-apache-https.rule=Host(`${INSTANCE_DOMAIN}`)"
+      - "traefik.http.routers.${DC_NS}-apache-https.tls=true"
+      - "traefik.http.routers.${DC_NS}-apache-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.${DC_NS}-apache-https.service=${DC_NS}-apache-https"

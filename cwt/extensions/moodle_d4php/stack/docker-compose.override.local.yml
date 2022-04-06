@@ -1,0 +1,6 @@
+version: "3"
+services:
+
+  apache:
+    ports:
+      - "80:80"

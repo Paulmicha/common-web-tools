@@ -97,7 +97,7 @@ u_remote_download() {
 #   u_remote_upload 'my_short_id' /local/path/to/file.ext /remote/dir/new-file-name.ext
 #
 #   # Upload a single file using relative paths.
-#   u_remote_download 'my_short_id' local-file.ext remote-file.ext
+#   u_remote_upload 'my_short_id' local-file.ext remote-file.ext
 #
 #   # Upload an entire dir (recursively).
 #   u_remote_upload 'my_short_id' /local/dir /remote/dir -r
