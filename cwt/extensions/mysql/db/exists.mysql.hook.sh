@@ -19,12 +19,10 @@
 # Debug.
 # echo "Test if database '${p_db_name}' exists (user=$DB_USER, password="$DB_PASS", host="$DB_HOST", port="$DB_PORT")..."
 
-# See https://stackoverflow.com/a/12427903
-if [[ "$(mysql -se"USE $p_db_name;" \
-  --user="$DB_USER" \
-  --password="$DB_PASS" \
-  --host="$DB_HOST" \
-  --port="$DB_PORT" 2>&1)" == "" ]]; then
+# See https://stackoverflow.com/a/59708674
+if mysql --user="$DB_USER" --password="$DB_PASS" --host="$DB_HOST" \
+  --port="$DB_PORT" -e "use $p_db_name"
+then
   db_exists='true'
 else
   db_exists='false'

@@ -128,8 +128,8 @@ u_yaml_get_root_keys() {
   while IFS= read -r parsed_line _; do
     case "$parsed_line" in
       # Match any line beginning with something else than space, line break,
-      # tab, etc. and ending with ':'.
-      [![:space:]]*:)
+      # tab, etc. or '#' (commented out) and ending with ':'.
+      [![:space:]'#']*:)
         parsed_var="${parsed_line//':'/}"
         if [[ -n "$parsed_var" ]]; then
           u_array_add_once "$parsed_var" yaml_keys

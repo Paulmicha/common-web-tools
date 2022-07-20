@@ -30,6 +30,11 @@
 #   # Download an entire dir (recursively).
 #   u_remote_download 'my_short_id' /remote/dir /local/dir -r
 #
+#   # Allow non-blocking "file not found" errors by setting this var in calling
+#   # scope :
+#   remote_download_skip_errors='true'
+#   u_remote_download 'my_short_id' /remote/file.ext /local/dir/
+#
 u_remote_download() {
   local p_id="$1"
   local p_remote_path="$2"
@@ -69,13 +74,18 @@ u_remote_download() {
     fi
   fi
 
+  # Debug.
+  # echo "scp ${REMOTE_INSTANCE_SSH_USER}@${REMOTE_INSTANCE_HOST}:$p_remote_path $p_local_path $@"
+
   scp "${REMOTE_INSTANCE_SSH_USER}@${REMOTE_INSTANCE_HOST}:$p_remote_path" "$p_local_path" "$@"
 
   if [[ $? -ne 0 ]]; then
-    echo >&2
-    echo "Error in $BASH_SOURCE line $LINENO: the command 'scp' exited with a non-zero status." >&2
-    echo >&2
-    exit 2
+    if [[ -z "$remote_download_skip_errors" ]]; then
+      echo >&2
+      echo "Error in $BASH_SOURCE line $LINENO: the command 'scp' exited with a non-zero status." >&2
+      echo >&2
+      exit 2
+    fi
   else
     echo "Download successfully completed."
   fi

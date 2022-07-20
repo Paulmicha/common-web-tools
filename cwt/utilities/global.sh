@@ -19,23 +19,24 @@
 # @var cwt_globals_values
 #
 # @example
-#   u_global_list
-#
 #   # Print all var names :
+#   u_global_list
 #   for var_name in "${cwt_globals_var_names[@]}"; do
 #     echo "$var_name"
 #   done
 #
 #   # Print all values :
+#   u_global_list
 #   for value in "${cwt_globals_values[@]}"; do
 #     echo "$value"
 #   done
 #
 #   # Print both :
+#   u_global_list
 #   for i in "${!cwt_globals_var_names[@]}"; do
 #     var_name="${cwt_globals_var_names[$i]}"
 #     value="${cwt_globals_values[$i]}"
-#     echo "the global $var_name = '$value'"
+#     echo "$var_name = '$value'"
 #   done
 #
 u_global_list() {
@@ -50,6 +51,8 @@ u_global_list() {
     GLOBALS_COUNT=0
     GLOBALS_UNIQUE_NAMES=()
     GLOBALS_UNIQUE_KEYS=()
+    GLOBALS_DEFERRED=()
+    GLOBALS['.defer-max']=0
     GLOBALS_DRY_RUN=1
     . cwt/env/global.vars.sh
     u_global_aggregate
@@ -189,17 +192,42 @@ u_global_lookup_paths() {
 }
 
 ##
-# Aggregates global env vars for this instance.
+# Aggregates all global env vars and assigns their value(s).
+#
+# This function can be called in different contexts :
+#   1. generating globals for the first time
+#   2. updating previously generated globals
+#   3. get the list of all globals (dynamically)
+#
+# When it's 3. we need to also read the custom Yaml declarations. It's already
+# loaded in calling scope for the other 2 cases.
+#
+# It manipulates or reads the following vars from calling scope :
+#
+# @var yaml_parsed_sp_init
+# @var yaml_parsed_globals
+# @var globals_skip_yaml
 #
 # @see u_instance_init()
+# @see u_global_list()
 # @see u_global_lookup_paths()
-#
-# @example
-#   u_global_aggregate
+# @see global()
+# @see u_instance_yaml_config_load()
 #
 u_global_aggregate() {
   local inc
   local global_lookup_paths=''
+
+  # The context 3. (get the list of all globals) requires adding the custom Yaml
+  # declarations.
+  if [[ -z "$yaml_parsed_globals" ]]; then
+    yaml_parsed_sp_init=''
+    yaml_parsed_globals=''
+    u_instance_yaml_config_load
+    if [[ -n "$yaml_parsed_globals" ]]; then
+      eval "$yaml_parsed_globals"
+    fi
+  fi
 
   # Flag to alter the default global() process in order to get YAML precedence.
   globals_skip_yaml=1
@@ -214,7 +242,7 @@ u_global_aggregate() {
     . "$inc"
   done
 
-  # Support deferred value assignation.
+  # Support deferred value assignment.
   # @see global()
   if [[ ${GLOBALS['.defer-max']} -gt 0 ]]; then
     i=0

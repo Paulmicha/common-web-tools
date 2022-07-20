@@ -24,11 +24,6 @@
 #   u_dwt_write_settings
 #
 u_dwt_write_settings() {
-  # All this can be turned off using the following "killswitch" global var :
-  case "$DWT_MANAGE_SETTINGS" in false)
-    return
-  esac
-
   # Multi-DB (manually set using the CWT_DB_IDS global) support.
   # It is necessary to load every prefixed DB var before (re)writing Drupal
   # settings in case those use multiple databases (thus need those vars loaded
@@ -58,9 +53,11 @@ u_dwt_write_settings() {
       done
 
       # (Re)write Drupal settings files (e.g. sites/*/settings.php) for every site.
-      for site_id in "${dwt_sites_ids[@]}"; do
-        u_dwt_write_drupal_settings "$site_id"
-      done
+      case "$DWT_MANAGE_SETTINGS_FILES" in true)
+        for site_id in "${dwt_sites_ids[@]}"; do
+          u_dwt_write_drupal_settings "$site_id"
+        done
+      esac
 
       # (Re)write the multi-site declaration settings file (i.e. sites/sites.php).
       # TODO [evol] Support custom output file (i.e. sites/sites_local.php)
@@ -72,7 +69,9 @@ u_dwt_write_settings() {
 
     # "Normal" setups : just write the Drupal settings file.
     *)
-      u_dwt_write_drupal_settings
+      case "$DWT_MANAGE_SETTINGS_FILES" in true)
+        u_dwt_write_drupal_settings
+      esac
       ;;
   esac
 }
@@ -149,7 +148,12 @@ u_dwt_write_drupal_settings() {
   local drupal_default_settings="$DRUPAL_SETTINGS_FILE"
   drupal_default_settings=${drupal_default_settings/'sites/default'/"sites/$site_dir"}
 
-  # Support using local settings overrides.
+  # Support using local settings overrides. It's the difference between writing
+  # everything in the settings.php file, or keeping it versionned and having it
+  # include a settings.local.php file (kept out of the project repo). That way
+  # we can have a shared, common set of settings and only generate dynamically
+  # the ones really specific to all the different instances, which can also
+  # override anything from the settings.php file.
   local drupal_settings="$DRUPAL_SETTINGS_FILE"
   case "$DWT_USE_SETTINGS_LOCAL_OVERRIDE" in 1|y*|true)
     drupal_settings="$DRUPAL_SETTINGS_LOCAL_FILE"
@@ -165,10 +169,11 @@ u_dwt_write_drupal_settings() {
   echo "(Re)write Drupal local settings file ($drupal_settings) ..."
   echo "  using template : $hook_most_specific_dry_run_match ..."
 
-  # If the "normal" settings file does not exist and we're using local settings
-  # overrides, we're going to need the default settings file (thant includes the
-  # override) -> create it from Drupal core default.settings.php.
   case "$DWT_USE_SETTINGS_LOCAL_OVERRIDE" in 1|y*|true)
+
+    # If the "normal" settings file does not exist and we're using local settings
+    # overrides, we're going to need the default settings file (thant includes the
+    # override) -> create it from Drupal core default.settings.php.
     if [[ ! -f "$drupal_default_settings" ]]; then
 
       echo "  the required base file $drupal_default_settings doesn't exist"
@@ -201,6 +206,24 @@ EOF
         echo "-> Aborting (5)." >&2
         echo >&2
         exit 5
+      fi
+
+    # In case the file already exists, make sure it includes our override.
+    # This is done by detecting the presence of the line doing the include
+    # in order to avoid appending it more than once (idempotence).
+    else
+      local haystack
+      u_fs_get_file_contents "$drupal_default_settings" 'haystack'
+      if [[ -z "$haystack" ]] || [[ "$haystack" != *"/settings.local.php"* ]]; then
+        # Avoid errors due to file permissions.
+        chmod u+w "$drupal_default_settings"
+        cat >> "$drupal_default_settings" <<'EOF'
+
+// Load local development override configuration, if available.
+if (file_exists($app_root . '/' . $site_path . '/settings.local.php')) {
+  include $app_root . '/' . $site_path . '/settings.local.php';
+}
+EOF
       fi
     fi
   esac
@@ -319,6 +342,7 @@ EOF
   esac
 
   # Keep write-protection.
+  u_instance_get_permissions
   chmod "$FS_P_FILES" "$drupal_settings"
   if [[ $? -ne 0 ]]; then
     echo >&2
