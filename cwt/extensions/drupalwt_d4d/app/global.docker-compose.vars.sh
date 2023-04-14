@@ -15,11 +15,12 @@
 #
 
 global APP_DOCROOT_C "[default]=/var/www/html"
-global SERVER_DOCROOT_C "[if-SERVER_DOCROOT]='$APP_DOCROOT/docroot' [true]=/var/www/html/docroot [false]=/var/www/html/web [index]=1"
+global SERVER_DOCROOT_C "[if-SERVER_DOCROOT]='$APP_DOCROOT/docroot' [true]=/var/www/html/docroot [false]=/var/www/html/web"
 
-global DRUPAL_FILES_DIR_C "[default]=sites/default/files"
+global DRUPAL_FILES_DIR_C "[default]=$SERVER_DOCROOT_C/sites/default/files"
 global DRUPAL_TMP_DIR_C "[default]='/mnt/files/tmp'"
+# global DRUPAL_TRANSLATION_DIR_C "[default]=$SERVER_DOCROOT_C/sites/default/files/translations"
 global DRUPAL_PRIVATE_DIR_C "[default]='/mnt/files/private'"
-global DRUPAL_CONFIG_SYNC_DIR_C "[ifnot-DRUPAL_VERSION]=7 [default]=$APP_DOCROOT_C/config/sync [index]=1"
+global DRUPAL_CONFIG_SYNC_DIR_C "[default]=$APP_DOCROOT_C/config/sync"
 
 global REDIS_CLIENT_HOST "[value]=${REDIS_SNAME:=redis} [index]=1"

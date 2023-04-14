@@ -255,6 +255,19 @@ EOF
     if grep -Fq "${token_prefix}${var_name}${token_suffix}" "$drupal_settings"; then
       var_val="${!var_name}"
 
+      # Drupal settings require some specific paths to be relative to the Drupal
+      # install dir ($SERVER_DOCROOT), like :
+      #   "$PROJECT_DOCROOT/$APP_DOCROOT/config/sync" => '../config/sync'
+      case "$var_name" in DRUPAL_FILES_DIR|DRUPAL_CONFIG_SYNC_DIR)
+        # If the value does not start with '/', we assume it is relative to
+        # PROJECT_DOCROOT. It must be absolute for the conversion to work.
+        if [[ "${var_val:0:1}" != '/' ]]; then
+          var_val="$PROJECT_DOCROOT/$var_val"
+        fi
+        u_fs_relative_path "$var_val" "$SERVER_DOCROOT"
+        var_val="$relative_path"
+      esac
+
       # Docker-compose specific : container paths are different, and CWT needs
       # both -> use variable name convention : if a variable named like the
       # current one with a '_C' suffix, it will automatically be used instead.
@@ -264,11 +277,21 @@ EOF
         var_name_c="${var_name}_C"
         if [[ -n "${!var_name_c}" ]]; then
           var_val="${!var_name_c}"
+          case "$var_name_c" in DRUPAL_FILES_DIR_C|DRUPAL_CONFIG_SYNC_DIR_C)
+            # If the value does not start with '/', in the case of
+            # project instances using docker-compose, we assume it is relative
+            # to APP_DOCROOT_C. It must be absolute for the conversion to work.
+            if [[ "${var_val:0:1}" != '/' ]] && [[ "${APP_DOCROOT_C:0:1}" == '/' ]]; then
+              var_val="$APP_DOCROOT_C/$var_val"
+            fi
+            u_fs_relative_path "$var_val" "$SERVER_DOCROOT_C"
+            var_val="$relative_path"
+          esac
         fi
       esac
 
       sed -e "s,${token_prefix}${var_name}${token_suffix},${var_val},g" -i "$drupal_settings"
-      # echo "  [$p_site] replaced '${token_prefix}${var_name}${token_suffix}' by '${var_val}'"
+      # echo "  [$p_site] replaced global '${token_prefix}${var_name}${token_suffix}' by '${var_val}'"
     fi
   done
 
@@ -329,14 +352,79 @@ EOF
     u_dwt_sites_yml_keys
 
     for multisite_key in $dwt_sites_yml_keys; do
+      # Except for 'config_sync_dir', which is handled below due to relative
+      # path conversion.
+      case "$multisite_key" in config_sync_dir)
+        continue
+      esac
+
       var_name="SITE_${multisite_key}"
       u_str_uppercase "$var_name" 'var_name'
       multisite_var="dwt_sites_${p_site}_${multisite_key}"
       u_str_sanitize_var_name "$multisite_var" 'multisite_var'
+      var_val="${!multisite_var}"
 
       if grep -Fq "${token_prefix}${var_name}${token_suffix}" "$drupal_settings"; then
-        sed -e "s,${token_prefix}${var_name}${token_suffix},${!multisite_var},g" -i "$drupal_settings"
-        # echo "  [$p_site] replaced '${token_prefix}${var_name}${token_suffix}' by '${!multisite_var}'"
+        sed -e "s,${token_prefix}${var_name}${token_suffix},$var_val,g" -i "$drupal_settings"
+        # echo "  [$p_site] replaced multisite key '${token_prefix}${var_name}${token_suffix}' by '$var_val'"
+      fi
+    done
+
+    # Writeable paths are dealt with like this : the globals that would apply
+    # to the default site (like in mono-site setups) are renamed in the settings
+    # file template by replacing the "DRUPAL_" prefix with "SITE_".
+    # So instead of having for instance :
+    #   $settings['file_public_path'] = '{{ DRUPAL_FILES_DIR }}';
+    # in case of multi-sites setups, we would use :
+    #   $settings['file_public_path'] = '{{ SITE_FILES_DIR }}';
+    # @see u_dwt_get_sites_writeable_paths()
+    local multisite_writeable_paths_varnames=()
+    multisite_writeable_paths_varnames+=("SITE_FILES_DIR")
+    multisite_writeable_paths_varnames+=("SITE_TMP_DIR")
+    # multisite_writeable_paths_varnames+=("SITE_TRANSLATION_DIR")
+    multisite_writeable_paths_varnames+=("SITE_CONFIG_SYNC_DIR")
+    multisite_writeable_paths_varnames+=("SITE_PRIVATE_DIR")
+
+    dwt_sites_writeable_paths=()
+    case "$PROVISION_USING" in
+      docker-compose)
+        u_dwt_get_sites_writeable_paths "$p_site" 'dc'
+        ;;
+      *)
+        u_dwt_get_sites_writeable_paths "$p_site"
+        ;;
+    esac
+
+    for (( i = 0 ; i < ${#multisite_writeable_paths_varnames[@]} ; i++ )); do
+      var_name="${multisite_writeable_paths_varnames[$i]}"
+      var_val="${dwt_sites_writeable_paths[$i]}"
+
+      case "$var_name" in SITE_FILES_DIR|SITE_CONFIG_SYNC_DIR)
+        case "$PROVISION_USING" in
+          docker-compose)
+            # If the value does not start with '/', in the case of
+            # project instances using docker-compose, we assume it is relative
+            # to APP_DOCROOT_C. It must be absolute for the conversion to work.
+            if [[ "${var_val:0:1}" != '/' ]] && [[ "${APP_DOCROOT_C:0:1}" == '/' ]]; then
+              var_val="$APP_DOCROOT_C/$var_val"
+            fi
+            u_fs_relative_path "$var_val" "$SERVER_DOCROOT_C"
+            ;;
+          *)
+            # If the value does not start with '/', we assume it is relative to
+            # PROJECT_DOCROOT. It must be absolute for the conversion to work.
+            if [[ "${var_val:0:1}" != '/' ]]; then
+              var_val="$PROJECT_DOCROOT/$var_val"
+            fi
+            u_fs_relative_path "$var_val" "$SERVER_DOCROOT"
+            ;;
+        esac
+        var_val="$relative_path"
+      esac
+
+      if grep -Fq "${token_prefix}${var_name}${token_suffix}" "$drupal_settings"; then
+        sed -e "s,${token_prefix}${var_name}${token_suffix},$var_val,g" -i "$drupal_settings"
+        # echo "  [$p_site] replaced writeable path '${token_prefix}${var_name}${token_suffix}' by '$var_val'"
       fi
     done
   esac
@@ -692,6 +780,129 @@ u_dwt_write_multisite_settings() {
 
   echo "(Re)write the multi-site settings file (i.e. $target_file) : done."
   echo
+}
+
+##
+# In a multi-site setup, given a singe site ID, returns writeable file paths.
+#
+# @param 1 String : the site ID.
+# @param 2 [optional] String : wether or not to return the docker-compose
+#   "aliases" of those vars. Any non-empty string can be passed. Defaults to
+#   to an empty string, meaning : "I do not want the docker-compose version".
+#   @see cwt/extensions/drupalwt_d4d/app/global.docker-compose.vars.sh
+#
+# This function writes its result to the following variable which MUST be preset
+# in calling scope :
+# @var dwt_sites_writeable_paths
+#
+# Allows to get per-site values for the following globals :
+# - DRUPAL_FILES_DIR
+# - DRUPAL_TMP_DIR
+# - DRUPAL_TRANSLATION_DIR # Update : this does not appear to be supported in settings file declaration -> commented out for now
+# - DRUPAL_CONFIG_SYNC_DIR
+# - DRUPAL_PRIVATE_DIR
+# @see cwt/extensions/drupalwt/app/global.vars.sh
+#
+# @example
+#   # For local sites :
+#   u_dwt_sites
+#   for site_id in "${dwt_sites_ids[@]}"; do
+#     u_str_sanitize_var_name "$site_id" 'site_id'
+#     dwt_sites_writeable_paths=()
+#     u_dwt_get_sites_writeable_paths "$site_id"
+#     echo "Writeable_path for site '$site_id' :"
+#     for writeable_path in "${dwt_sites_writeable_paths[@]}"; do
+#       echo "  $writeable_path"
+#     done
+#   done
+#
+#   # For local sites, using the docker-compose version of the paths :
+#   u_dwt_sites
+#   for site_id in "${dwt_sites_ids[@]}"; do
+#     u_str_sanitize_var_name "$site_id" 'site_id'
+#     dwt_sites_writeable_paths=()
+#     u_dwt_get_sites_writeable_paths "$site_id" 'dc'
+#     echo "Writeable_path for site '$site_id' :"
+#     for writeable_path in "${dwt_sites_writeable_paths[@]}"; do
+#       echo "  $writeable_path"
+#     done
+#   done
+#
+#   # For remote sites - here, on the 'prod' remote instance :
+#   dwt_remote_id='prod'
+#   u_dwt_sites
+#   for site_id in "${dwt_sites_ids[@]}"; do
+#     u_str_sanitize_var_name "$site_id" 'site_id'
+#     dwt_sites_writeable_paths=()
+#     u_dwt_get_sites_writeable_paths "$site_id"
+#     echo "Writeable_path for site '$site_id' :"
+#     for writeable_path in "${dwt_sites_writeable_paths[@]}"; do
+#       echo "  $writeable_path"
+#     done
+#   done
+#
+u_dwt_get_sites_writeable_paths() {
+  local p_site="$1"
+  local p_dc_variants="$2"
+
+  # local path_names='files_dir tmp_dir translation_dir config_sync_dir private_dir'
+  local path_names='files_dir tmp_dir config_sync_dir private_dir'
+  local path_val=''
+  local site_dir=''
+  local v=''
+
+  for path_name in $path_names; do
+
+    # In a multi-site setup, all of these paths may be set in the YAML sites
+    # declarations, e.g. : sites.local.yml or sites.prod.yml in project docroot.
+    v="dwt_sites_${p_site}_${path_name}"
+    path_val="${!v}"
+
+    if [[ -n "$path_val" ]]; then
+      if [[ -n "$p_dc_variants" ]]; then
+        # In the YAML sites declaration, for paths like the config sync dir,
+        # it contains the APP_DOCROOT (otherwise the ensure_dirs_exist.hook.sh
+        # would not be possible).
+        # @see cwt/extensions/drupalwt/app/ensure_dirs_exist.hook.sh
+        # -> For docker-compose instances, we must convert it to a path relative
+        # to APP_DOCROOT_C.
+        # TODO limit this treatment to relative paths starting with APP_DOCROOT ?
+        case "$path_name" in config_sync_dir)
+          local to_remove="$APP_DOCROOT/"
+          # echo "    to_remove = $to_remove (from path_val = $path_val)"
+          path_val="${path_val/"$to_remove"/}"
+          # echo "    -> result : path_val = $path_val"
+        esac
+      fi
+      dwt_sites_writeable_paths+=("$path_val")
+    else
+      # In the absence of specific paths defined in sites' YAML files, fallback
+      # to replace all 'sites/default' bits from the defaults.
+      v="dwt_sites_${p_site}_dir"
+      site_dir="${!v}"
+
+      if [[ -z "$site_dir" ]]; then
+        echo >&2
+        echo "Error in $BASH_SOURCE line $LINENO: missing a site dir for '$p_site'." >&2
+        echo "-> Aborting (1)." >&2
+        echo >&2
+        exit 1
+      fi
+
+      v="DRUPAL_${path_name}"
+      if [[ -n "$p_dc_variants" ]]; then
+        v="DRUPAL_${path_name}_C"
+      fi
+      u_str_uppercase "$v" 'v'
+      path_val="${!v}"
+
+      if [[ -n "$path_val" ]]; then
+        # Drupal multi-site paths in the 'sites' dir all get the same treatment.
+        # TODO exclude paths not matching 'sites/default/'.
+        dwt_sites_writeable_paths+=(${path_val/'sites/default/'/"sites/$site_dir/"})
+      fi
+    fi
+  done
 }
 
 ##

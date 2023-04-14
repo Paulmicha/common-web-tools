@@ -3,7 +3,7 @@
 ##
 # Implements hook -a 'fs_perms_set' -s 'app instance' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'.
 #
-# Applies writeable permissions for multisite setups 'files' dirs.
+# Applies writeable permissions for multisite setups.
 #
 # This file is dynamically included when the "hook" is triggered.
 # @see u_instance_set_permissions() in cwt/instance/instance.inc.sh
@@ -16,22 +16,18 @@
 case "$DWT_MULTISITE" in 'true')
   u_dwt_sites
   for site_id in "${dwt_sites_ids[@]}"; do
+    u_str_sanitize_var_name "$site_id" 'site_id'
 
-    site_dir_var="dwt_sites_${site_id}_dir"
-    u_str_sanitize_var_name "$site_dir_var" 'site_dir_var'
-    site_dir="${!site_dir_var}"
-
-    # The 'default' dir should be done already (see WRITEABLE_DIRS and
+    # The 'default' site should be done already (see WRITEABLE_DIRS and
     # PROTECTED_FILES globals).
     # @see cwt/extensions/drupalwt/app/global.vars.sh
-    case "$site_dir" in 'default')
+    case "$site_id" in 'default')
       continue
     esac
 
-    files_dir="$DRUPAL_FILES_DIR"
-    files_dir=${files_dir/'sites/default'/"sites/$site_dir"}
-    if [[ -d "$files_dir" ]]; then
-      writeable_dir="$files_dir"
+    dwt_sites_writeable_paths=()
+    u_dwt_get_sites_writeable_paths "$site_id"
+    for writeable_dir in "${dwt_sites_writeable_paths[@]}"; do
       # HACK : docker-compose projects may have subdirs where this returns many
       # errors we don't care about, so we prevent errors from polluting output.
       # (See docker-compose ownership issues).
@@ -41,7 +37,7 @@ case "$DWT_MULTISITE" in 'true')
         echo "Setting writeable dir permissions $FS_W_DIRS to '$writeable_dir'" ; \
         find "$writeable_dir" -type d -exec chmod "$FS_W_DIRS" {} + \
       ) 2> /dev/null
-    fi
+    done
 
     drupal_settings="$DRUPAL_SETTINGS_FILE"
     drupal_settings=${drupal_settings/'sites/default'/"sites/$site_dir"}

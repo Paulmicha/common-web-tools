@@ -112,6 +112,9 @@ u_remote_download() {
 #   # Upload an entire dir (recursively).
 #   u_remote_upload 'my_short_id' /local/dir /remote/dir -r
 #
+#   # Do not overrite existing files on the remote.
+#   u_remote_upload 'my_short_id' /path/to/file.ext /remote/dir/ --ignore-existing
+#
 u_remote_upload() {
   local p_id="$1"
   local p_local_path="$2"
@@ -136,7 +139,17 @@ u_remote_upload() {
     p_remote_path="$REMOTE_INSTANCE_PROJECT_DOCROOT/$p_remote_path"
   fi
 
-  scp "$p_local_path" "${REMOTE_INSTANCE_SSH_USER}@${REMOTE_INSTANCE_HOST}:${p_remote_path}" "$@"
+  if [[ "$1" == '--ignore-existing' ]]; then
+    local uru_host_part=''
+    if [[ -n "$REMOTE_INSTANCE_SSH_USER" ]]; then
+      uru_host_part="${REMOTE_INSTANCE_SSH_USER}@${REMOTE_INSTANCE_HOST}"
+    else
+      uru_host_part="$REMOTE_INSTANCE_HOST"
+    fi
+    rsync -vau "$p_local_path" "$uru_host_part:${p_remote_path}"
+  else
+    scp "$p_local_path" "${REMOTE_INSTANCE_SSH_USER}@${REMOTE_INSTANCE_HOST}:${p_remote_path}" $@
+  fi
 
   if [[ $? -ne 0 ]]; then
     echo >&2
