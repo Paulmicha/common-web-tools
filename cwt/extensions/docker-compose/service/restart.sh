@@ -23,7 +23,7 @@ fi
 
 echo "Restarting the '$p_service' service ..."
 
-docker-compose restart "$p_service"
+docker compose restart "$p_service"
 
 echo "Restarting the '$p_service' service : done."
 echo

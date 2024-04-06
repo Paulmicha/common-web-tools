@@ -26,7 +26,7 @@ echo "Starting the '$p_service' service ..."
 # TODO [wip] Differenciate single service pre-start hook ?
 hook -s 'instance' -p 'pre' -a 'start' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
 
-docker-compose start "$p_service"
+docker compose start "$p_service"
 
 # TODO [wip] Differenciate single service post-start hook ?
 hook -s 'instance' -p 'post' -a 'start' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'

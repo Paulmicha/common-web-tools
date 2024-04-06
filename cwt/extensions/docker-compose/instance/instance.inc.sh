@@ -17,8 +17,8 @@
 u_dc_instance_start() {
   echo "Starting $INSTANCE_DOMAIN containers ..."
 
-  docker-compose pull
-  docker-compose up -d --remove-orphans
+  docker compose pull
+  docker compose up -d --remove-orphans
 
   # Create an opportunity for containers like databases to wait until their
   # service(s) are ready / accept connections. Examples :
@@ -42,7 +42,7 @@ u_dc_instance_start() {
 u_dc_instance_stop() {
   echo "Stopping $INSTANCE_DOMAIN containers ..."
 
-  docker-compose stop
+  docker compose stop
 
   echo "Stopping $INSTANCE_DOMAIN containers : done."
   echo
@@ -56,7 +56,7 @@ u_dc_instance_stop() {
 u_dc_instance_build() {
   echo "Building $INSTANCE_DOMAIN containers ..."
 
-  docker-compose build --no-cache
+  docker compose build --no-cache
 
   echo "Building $INSTANCE_DOMAIN containers : done."
   echo
@@ -70,7 +70,7 @@ u_dc_instance_build() {
 u_dc_instance_destroy() {
   echo "Destroying $INSTANCE_DOMAIN (stops and removes containers, networks, volumes, and images) ..."
 
-  docker-compose down --remove-orphans --volumes
+  docker compose down --remove-orphans --volumes
 
   echo "Destroying $INSTANCE_DOMAIN (stops and removes containers, networks, volumes, and images) : done."
   echo

@@ -25,7 +25,7 @@ fi
 
 echo "Creating the '$p_service' service container ..."
 
-docker-compose create "$p_service"
+docker compose create "$p_service"
 
 echo "Creating the '$p_service' service container : done."
 echo

@@ -23,7 +23,7 @@ fi
 
 echo "Removing the '$p_service' service ..."
 
-docker-compose rm -fsv "$p_service"
+docker compose rm -fsv "$p_service"
 
 echo "Removing the '$p_service' service : done."
 echo

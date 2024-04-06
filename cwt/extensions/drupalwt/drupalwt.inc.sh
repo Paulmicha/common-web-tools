@@ -240,7 +240,11 @@ EOF
       exit 3
     fi
   fi
+
+  # Avoid errors due to file permissions.
+  chmod u+w "$SERVER_DOCROOT/sites/$site_dir"
   cp "$hook_most_specific_dry_run_match" "$drupal_settings"
+
   if [[ $? -ne 0 ]]; then
     echo >&2
     echo "Error in u_dwt_write_drupal_settings() - $BASH_SOURCE line $LINENO: failed to copy template $hook_most_specific_dry_run_match to '$drupal_settings'." >&2

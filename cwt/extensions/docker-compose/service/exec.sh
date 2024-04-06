@@ -23,4 +23,4 @@ fi
 
 shift 1
 
-docker-compose exec "$p_service" $@
+docker compose exec "$p_service" $@

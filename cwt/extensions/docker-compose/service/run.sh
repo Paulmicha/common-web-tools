@@ -23,4 +23,4 @@ fi
 
 shift 1
 
-docker-compose run "$p_service" $@
+docker compose run "$p_service" $@

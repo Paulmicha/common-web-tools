@@ -23,7 +23,7 @@ fi
 
 echo "Stopping the '$p_service' service ..."
 
-docker-compose stop "$p_service"
+docker compose stop "$p_service"
 
 echo "Stopping the '$p_service' service : done."
 echo

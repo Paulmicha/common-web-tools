@@ -20,14 +20,14 @@ case "$DC_MODE" in
     u_hook_most_specific 'dry-run' -s 'stack' -a 'docker-compose' -c "yml" -v 'DC_YML_VARIANTS' -t
 
     if [[ -f "$hook_most_specific_dry_run_match" ]]; then
-      alias docker-compose="docker-compose -f $hook_most_specific_dry_run_match"
+      alias docker-compose="docker compose -f $hook_most_specific_dry_run_match"
     fi
     ;;
 
   # Use the path provided in the DC_YML global.
   'manual')
     if [[ -f "$DC_YML" ]]; then
-      alias docker-compose="docker-compose -f $DC_YML"
+      alias docker-compose="docker compose -f $DC_YML"
     fi
     ;;
 esac
