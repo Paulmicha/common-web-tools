@@ -25,4 +25,4 @@ if [[ -z "$dc_db_service_name" ]]; then
   dc_db_service_name="${ARANGODB_SNAME:=arangodb}"
 fi
 
-alias arangosh="docker-compose exec $DC_TTY $dc_db_service_name arangosh"
+alias arangosh="docker compose exec $DC_TTY $dc_db_service_name arangosh"

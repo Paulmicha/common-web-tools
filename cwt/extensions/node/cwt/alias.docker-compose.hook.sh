@@ -10,7 +10,7 @@
 # @see cwt/extensions/docker-compose/cwt/pre_bootstrap.docker-compose.hook.sh
 #
 
-alias node="docker-compose run $DC_TTY ${NODE_SNAME:=node} node"
-alias npm="docker-compose run $DC_TTY ${NODE_SNAME:=node} npm"
-alias yarn="docker-compose run $DC_TTY ${NODE_SNAME:=node} yarn"
-alias npx="docker-compose run $DC_TTY ${NODE_SNAME:=node} npx"
+alias node="docker compose run $DC_TTY ${NODE_SNAME:=node} node"
+alias npm="docker compose run $DC_TTY ${NODE_SNAME:=node} npm"
+alias yarn="docker compose run $DC_TTY ${NODE_SNAME:=node} yarn"
+alias npx="docker compose run $DC_TTY ${NODE_SNAME:=node} npx"

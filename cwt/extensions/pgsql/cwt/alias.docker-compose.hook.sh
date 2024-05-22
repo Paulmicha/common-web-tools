@@ -25,8 +25,8 @@ if [[ -z "$dc_db_service_name" ]]; then
   dc_db_service_name="${POSTGRES_SNAME:=postgres}"
 fi
 
-alias pg_isready="docker-compose exec $DC_TTY $dc_db_service_name pg_isready"
-alias psql="docker-compose exec $DC_TTY $dc_db_service_name psql"
-alias pg_restore="docker-compose exec $DC_TTY $dc_db_service_name pg_restore"
-alias dropdb="docker-compose exec $DC_TTY $dc_db_service_name dropdb"
-alias createdb="docker-compose exec $DC_TTY $dc_db_service_name createdb"
+alias pg_isready="docker compose exec $DC_TTY $dc_db_service_name pg_isready"
+alias psql="docker compose exec $DC_TTY $dc_db_service_name psql"
+alias pg_restore="docker compose exec $DC_TTY $dc_db_service_name pg_restore"
+alias dropdb="docker compose exec $DC_TTY $dc_db_service_name dropdb"
+alias createdb="docker compose exec $DC_TTY $dc_db_service_name createdb"

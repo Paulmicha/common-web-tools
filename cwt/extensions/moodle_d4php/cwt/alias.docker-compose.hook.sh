@@ -14,4 +14,4 @@
 
 php_sname="${PHP_SNAME:=php}"
 
-alias php="docker-compose exec $DC_TTY $php_sname php"
+alias php="docker compose exec $DC_TTY $php_sname php"

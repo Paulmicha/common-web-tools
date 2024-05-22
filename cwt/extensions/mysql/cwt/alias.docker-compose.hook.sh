@@ -24,8 +24,8 @@ if [[ -z "$dc_db_service_name" ]]; then
   dc_db_service_name="${MYSQL_SNAME:=mariadb}"
 fi
 
-alias mysql="docker-compose exec $DC_TTY $dc_db_service_name mysql"
-alias mysqldump="docker-compose exec $DC_TTY $dc_db_service_name mysqldump"
-alias mysqladmin="docker-compose exec $DC_TTY $dc_db_service_name mysqladmin"
-alias mysqlcheck="docker-compose exec $DC_TTY $dc_db_service_name mysqlcheck"
-alias mysql_upgrade="docker-compose exec $DC_TTY $dc_db_service_name mysql_upgrade"
+alias mysql="docker compose exec $DC_TTY $dc_db_service_name mysql"
+alias mysqldump="docker compose exec $DC_TTY $dc_db_service_name mysqldump"
+alias mysqladmin="docker compose exec $DC_TTY $dc_db_service_name mysqladmin"
+alias mysqlcheck="docker compose exec $DC_TTY $dc_db_service_name mysqlcheck"
+alias mysql_upgrade="docker compose exec $DC_TTY $dc_db_service_name mysql_upgrade"
