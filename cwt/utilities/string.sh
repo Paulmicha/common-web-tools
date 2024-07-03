@@ -284,6 +284,12 @@ u_str_uppercase() {
 #   u_str_join '|' "${a[@]}"
 #   echo "$joined_str" # <- outputs 'one|two|three three|four|five'
 #
+#   # Update Debian 12 : need to escape characters like '&' in separator :
+#   joined_str=''
+#   input_str='one two three four five'
+#   u_str_join ' \&\& ' $input_str
+#   echo "$joined_str" # <- outputs 'one && two && three && four && five'
+#
 u_str_join() {
   local p_sep=$1
   local IFS=

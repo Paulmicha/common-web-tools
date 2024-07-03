@@ -129,6 +129,27 @@
 # We exceptionally name that function without following the usual convention.
 #
 hook() {
+  # Update 2024-06 cache results.
+  local p_cache_key="$@"
+  local regex="-v ([^\-]+)"
+
+  if [[ $p_cache_key =~ $regex ]]; then
+    for var in ${BASH_REMATCH[1]}; do
+      p_cache_key="${p_cache_key/$var/${!var}}"
+    done
+  fi
+
+  p_cache_key="${p_cache_key// -/-}"
+  u_str_sanitize_var_name "$p_cache_key" 'p_cache_key'
+  local hook_cache_file="scripts/cwt/local/cache/hook.${p_cache_key}.sh"
+
+  if [[ -f "$hook_cache_file" ]]; then
+    . "$hook_cache_file"
+    return
+  fi
+
+  local hook_cache_contents=''
+
   local p_actions_filter
   local p_subjects_filter
   local p_prefixes_filter
@@ -341,12 +362,41 @@ hook() {
         continue
       fi
 
-      u_autoload_override "$inc" 'continue'
-      eval "$inc_override_evaled_code"
+      # Update 2024-06 cache results.
+      local override=${p_script_path/cwt/"scripts/overrides"}
+      if [[ -f "$override" ]]; then
+        hook_cache_contents+=". $override
+"
+        . "$override"
+        continue
+      fi
 
+      hook_cache_contents+=". $inc
+"
       . "$inc"
     fi
   done
+
+  # Update 2024-06 cache results.
+  if [[ $p_dry_run -eq 1 ]]; then
+    hook_cache_contents+="hook_dry_run_matches=\"$hook_dry_run_matches\""
+  fi
+
+  cat > "$hook_cache_file" <<CACHE
+#!/usr/bin/env bash
+
+##
+# Generated cache file for hook $p_cache_key
+#
+# @see cwt/utilities/hook.sh
+#
+
+$hook_cache_contents
+
+CACHE
+
+  # Debug.
+  # echo "New cache written for hook $p_cache_key"
 }
 
 ##

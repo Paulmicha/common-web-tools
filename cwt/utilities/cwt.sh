@@ -130,6 +130,22 @@ u_cwt_extend() {
   if [[ "$p_namespace" == 'CWT' ]]; then
     export CWT_EXTENSIONS
     u_cwt_extensions
+
+    # Update 2024-06 cache results.
+    # @see cwt/bootstrap.sh
+    cwt_primitives_cache_str+="
+CWT_INC='$CWT_INC'
+CWT_SUBJECTS='$CWT_SUBJECTS'
+CWT_ACTIONS='$CWT_ACTIONS'
+CWT_EXTENSIONS='$CWT_EXTENSIONS'
+"
+  else
+    local prefixed_subjects_var="${p_namespace}_SUBJECTS"
+    local prefixed_actions_var="${p_namespace}_ACTIONS"
+    cwt_primitives_cache_str+="
+$prefixed_subjects_var='${!prefixed_subjects_var}'
+$prefixed_actions_var='${!prefixed_actions_var}'
+"
   fi
 }
 

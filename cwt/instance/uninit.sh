@@ -31,3 +31,8 @@ for f in $cwt_instance_uninit_purge_list; do
     fi
   fi
 done
+
+# Update 2024-06 cache results.
+if [[ -d scripts/cwt/local/cache ]]; then
+  rm -rf scripts/cwt/local/cache
+fi

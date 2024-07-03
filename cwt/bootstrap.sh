@@ -43,8 +43,27 @@ if [[ $CWT_BS_FLAG -ne 1 ]]; then
 
   # Initializes "primitives" for hooks and lookups (CWT extension mecanisms).
   # These are : subjects, actions, prefixes, variants and extensions.
-  CWT_INC=''
-  u_cwt_extend
+  # Update 2024-06 cache results.
+  if [[ -f scripts/cwt/local/cache/cwt.sh ]]; then
+    . scripts/cwt/local/cache/cwt.sh
+  else
+    export cwt_primitives_cache_str=''
+    CWT_INC=''
+    u_cwt_extend
+    mkdir -p scripts/cwt/local/cache
+    cat > scripts/cwt/local/cache/cwt.sh <<CACHE
+#!/usr/bin/env bash
+
+##
+# Generated cache file for CWT primitives.
+#
+# @see cwt/bootstrap.sh
+#
+
+$cwt_primitives_cache_str
+
+CACHE
+  fi
 
   # Because aliases are expanded when a function definition is read, *not* when
   # the function is executed, we need to have the possibility to define aliases
