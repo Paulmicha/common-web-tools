@@ -118,18 +118,20 @@ u_cwt_extend() {
   # local actions_var="${p_namespace}_ACTIONS"
   # echo "$actions_var = '${!actions_var}'"
 
-  # Convenience additional INC lookup for project-specific functions.
-  if [[ -d scripts/cwt ]]; then
-    for inc in scripts/cwt/*.inc.sh; do
-      CWT_INC+="$inc "
-    done
-  fi
-
   # If extensions are detected, loop through each of them to aggregate namespaced
   # primitives + restrict this to CWT namespace only.
   if [[ "$p_namespace" == 'CWT' ]]; then
     export CWT_EXTENSIONS
     u_cwt_extensions
+
+    # Convenience additional INC lookup for project-specific functions.
+    if [[ -d scripts/cwt ]]; then
+      for inc in scripts/cwt/*.inc.sh; do
+        if [[ -f "$inc" ]]; then
+          CWT_INC+="$inc "
+        fi
+      done
+    fi
 
     # Update 2024-06 cache results.
     # @see cwt/bootstrap.sh
