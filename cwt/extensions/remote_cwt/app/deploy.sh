@@ -12,12 +12,12 @@
 #   # Deploy target defaults to the 'prod' remote instance.
 #   make app-deploy
 #   # Or :
-#   cwt/extensions/remote/app/deploy.sh
+#   cwt/extensions/remote_cwt/app/deploy.sh
 #
 #   # Deploy to the 'dev' remote instance.
 #   make app-deploy 'dev'
 #   # Or :
-#   cwt/extensions/remote/app/deploy.sh 'dev'
+#   cwt/extensions/remote_cwt/app/deploy.sh 'dev'
 #
 
 p_remote_id="$1"
@@ -26,5 +26,5 @@ if [[ -z "$p_remote_id" ]]; then
   p_remote_id='prod'
 fi
 
-cwt/extensions/remote/remote/exec.sh "$p_remote_id" \
+cwt/extensions/remote_cwt/remote/exec.sh "$p_remote_id" \
   'cwt/app/update.sh'

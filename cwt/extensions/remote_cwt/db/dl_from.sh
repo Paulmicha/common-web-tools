@@ -15,9 +15,9 @@
 #   make db-dl-from my_remote_id new
 #   make db-dl-from my_remote_id path/to/remote/dump/file.sql.tgz
 #   # Or :
-#   cwt/extensions/remote_db/db/dl_from.sh my_remote_id
-#   cwt/extensions/remote_db/db/dl_from.sh my_remote_id new
-#   cwt/extensions/remote_db/db/dl_from.sh my_remote_id path/to/remote/dump/file.sql.tgz
+#   cwt/extensions/remote_cwt/db/dl_from.sh my_remote_id
+#   cwt/extensions/remote_cwt/db/dl_from.sh my_remote_id new
+#   cwt/extensions/remote_cwt/db/dl_from.sh my_remote_id path/to/remote/dump/file.sql.tgz
 #
 
 . cwt/bootstrap.sh

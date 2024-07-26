@@ -14,7 +14,7 @@
 #
 # Important notes:
 #   - when providing relative paths, the reference is PROJECT_DOCROOT (locally)
-#     and REMOTE_INSTANCE_PROJECT_DOCROOT (remotely)
+#     and REMOTE_INSTANCE_DOCROOT (remotely)
 #   - any additional arguments are passed on to the 'scp' command
 #
 # See https://gist.github.com/dehamzah/ac216f38319d34444487f6375359ad29
@@ -43,7 +43,7 @@ u_remote_download() {
 
   u_remote_instance_load "$p_id"
 
-  if [[ -z "$REMOTE_INSTANCE_CONNECT_CMD" ]]; then
+  if [[ -z "$REMOTE_INSTANCE_SSH_CONNECT_CMD" ]]; then
     echo >&2
     echo "Error in $BASH_SOURCE line $LINENO: no conf found for remote id '$p_id'." >&2
     echo "-> Aborting (1)." >&2
@@ -56,7 +56,7 @@ u_remote_download() {
     p_local_path="$PROJECT_DOCROOT/$p_local_path"
   fi
   if [[ "${p_remote_path:0:1}" != '/' ]]; then
-    p_remote_path="$REMOTE_INSTANCE_PROJECT_DOCROOT/$p_remote_path"
+    p_remote_path="$REMOTE_INSTANCE_DOCROOT/$p_remote_path"
   fi
 
   # Make sure local dir exists.
@@ -96,7 +96,7 @@ u_remote_download() {
 #
 # Important notes:
 #   - when providing relative paths, the reference is PROJECT_DOCROOT (locally)
-#     and REMOTE_INSTANCE_PROJECT_DOCROOT (remotely)
+#     and REMOTE_INSTANCE_DOCROOT (remotely)
 #   - any additional arguments are passed on to the 'scp' command
 #
 # See https://gist.github.com/dehamzah/ac216f38319d34444487f6375359ad29
@@ -123,7 +123,7 @@ u_remote_upload() {
 
   u_remote_instance_load "$p_id"
 
-  if [[ -z "$REMOTE_INSTANCE_CONNECT_CMD" ]]; then
+  if [[ -z "$REMOTE_INSTANCE_SSH_CONNECT_CMD" ]]; then
     echo >&2
     echo "Error in u_remote_upload() - $BASH_SOURCE line $LINENO: no conf found for remote id '$p_id'." >&2
     echo "-> Aborting (1)." >&2
@@ -136,7 +136,7 @@ u_remote_upload() {
     p_local_path="$PROJECT_DOCROOT/$p_local_path"
   fi
   if [[ "${p_remote_path:0:1}" != '/' ]]; then
-    p_remote_path="$REMOTE_INSTANCE_PROJECT_DOCROOT/$p_remote_path"
+    p_remote_path="$REMOTE_INSTANCE_DOCROOT/$p_remote_path"
   fi
 
   if [[ "$1" == '--ignore-existing' ]]; then
@@ -162,110 +162,15 @@ u_remote_upload() {
 }
 
 ##
-# Add Local SSH keys to remote host(s) authorized keys.
-#
-# Prerequisites:
-# - Local SSH keys created and loaded in local shell session (ssh-agent).
-#
-# Calling this function will :
-# - Add remote host to local "known_hosts" by connecting once via ssh.
-# - Send public key to remote server user's "authorized_keys" file.
-#
-# Note : these steps will prompt for confirmation and/or passwords. After it's
-# done, ssh should work without these prompts.
-#
-# @see u_remote_exec_wrapper()
-#
-# @param 1 String : the remote ID.
-# @param 2 [optional] String : the SSH public key file path.
-#   Defaults to "$HOME/.ssh/id_rsa.pub" or "$CWT_SSH_PUBKEY" if not empty.
-#
-# @example
-#   u_remote_authorize_ssh_key 'my_short_id'
-#
-u_remote_authorize_ssh_key() {
-  local p_id="$1"
-  local p_key="$2"
-
-  local public_key_path="$HOME/.ssh/id_rsa.pub"
-  if [[ -n "$CWT_SSH_PUBKEY" ]]; then
-    public_key_path="$CWT_SSH_PUBKEY"
-  fi
-  if [[ -n "$p_key" ]]; then
-    public_key_path="$p_key"
-  fi
-
-  u_remote_instance_load "$p_id"
-
-  if [[ -z "$REMOTE_INSTANCE_CONNECT_CMD" ]]; then
-    echo >&2
-    echo "Error in $BASH_SOURCE line $LINENO: no conf found for remote id '$p_id'." >&2
-    echo "-> Aborting (1)." >&2
-    echo >&2
-    return 1
-  fi
-
-  # Current $USER must already have a public key.
-  if [[ ! -f "$public_key_path" ]]; then
-    echo >&2
-    echo "Error in $BASH_SOURCE line $LINENO: the public key '$public_key_path' was not found." >&2
-    echo "E.g. generate with command : ssh-keygen -t rsa" >&2
-    echo "-> Aborting (2)." >&2
-    echo >&2
-    return 2
-  fi
-
-  # Ensures SSH agent is running with the key loaded.
-  if [[ -z "$SSH_AUTH_SOCK" ]]; then
-    echo "SSH agent is not running (or not detected in $BASH_SOURCE line $LINENO)"
-    echo "-> Launching ssh-agent and load the key in current terminal session..."
-    echo "Note : if a passphrase was used to generate the key, this will prompt for it."
-
-    eval `ssh-agent -s`
-    ssh-add "$public_key_path"
-
-    if [[ $? -ne 0 ]]; then
-      echo >&2
-      echo "Error in $BASH_SOURCE line $LINENO: the command 'ssh-add' exited with a non-zero status." >&2
-      echo "-> Aborting (3)." >&2
-      echo >&2
-      return 3
-    else
-      echo "Launching ssh-agent and load the key in current terminal session : done."
-    fi
-  fi
-
-  echo
-  echo "Sending our local key to the remote server 'authorized_keys' file..."
-  echo "Note : this may prompt for confirmation for adding the remote host to the local 'known_hosts' file if it's the first time a connexion is made."
-  echo
-
-  # SSH users on the remote may not already have an .ssh dir in their $HOME dir.
-  u_remote_exec_wrapper "$p_id" '[ ! -d ~/.ssh ] && mkdir -p ~/.ssh'
-
-  # TODO make idempotent.
-  eval "cat $public_key_path | $REMOTE_INSTANCE_CONNECT_CMD 'cat >> .ssh/authorized_keys'"
-
-  # TODO remove this test, or find a more universally supported way to test this.
-  echo "Ok, now the following call should not prompt for password, and should print the IP address of the remote host '$REMOTE_INSTANCE_HOST' :"
-  echo
-
-  eval "$REMOTE_INSTANCE_CONNECT_CMD -t ip route get 1"
-
-  echo "Over."
-  echo
-}
-
-##
 # Executes commands remotely from local instance.
 #
 # @param 1 String : remote instance's id (short name, no space, _a-zA-Z0-9 only).
 # @param ... The rest will be forwarded to the script.
 #
 # @example
-#   u_remote_exec_wrapper my_short_id cwt/test/cwt/global.test.sh
-#   u_remote_exec_wrapper my_short_id make globals-lp
 #   u_remote_exec_wrapper my_short_id git status
+#   u_remote_exec_wrapper my_short_id make globals-lp
+#   u_remote_exec_wrapper my_short_id cwt/test/cwt/global.test.sh
 #
 u_remote_exec_wrapper() {
   local p_id="$1"
@@ -273,17 +178,184 @@ u_remote_exec_wrapper() {
 
   u_remote_instance_load "$p_id"
 
-  if [[ -z "$REMOTE_INSTANCE_CONNECT_CMD" ]]; then
+  if [[ -z "$REMOTE_INSTANCE_SSH_CONNECT_CMD" ]]; then
     echo >&2
-    echo "Error in u_remote_exec_wrapper() - $BASH_SOURCE line $LINENO: no conf found for remote id '$p_id'." >&2
+    echo "Error in u_remote_exec_wrapper() - $BASH_SOURCE line $LINENO: no SSH connection defined for remote id '$p_id'." >&2
     echo "-> Aborting (1)." >&2
     echo >&2
     return 1
   fi
 
-  # Always execute remotely from REMOTE_INSTANCE_PROJECT_DOCROOT.
-  # echo "$REMOTE_INSTANCE_CONNECT_CMD \"cd $REMOTE_INSTANCE_PROJECT_DOCROOT && $@\""
-  eval "$REMOTE_INSTANCE_CONNECT_CMD \"cd $REMOTE_INSTANCE_PROJECT_DOCROOT && $@\""
+  # Always execute remotely from REMOTE_INSTANCE_DOCROOT, and inject the remote
+  # exec commands prefix code (if any is defined in given remote instance).
+  local remote_cmd="$REMOTE_INSTANCE_SSH_EXEC_PREFIX cd $REMOTE_INSTANCE_DOCROOT && $@"
+
+  if [[ -z "$REMOTE_INSTANCE_SSH_EXEC_PREFIX" ]]; then
+    remote_cmd="cd $REMOTE_INSTANCE_DOCROOT && $@"
+  fi
+
+  # Debug
+  # echo "$REMOTE_INSTANCE_SSH_CONNECT_CMD \"$remote_cmd\""
+
+  $REMOTE_INSTANCE_SSH_CONNECT_CMD "$remote_cmd"
+}
+
+##
+# Replaces tokens from any remote instance definition value.
+#
+# TODO additional argument to specify into which variable to write the result ?
+#
+# Any value from the same definition can be used directly as a token. E.g. in
+# the following YAML definition :
+# ```yml
+#
+# prod:
+#   host: 1.2.3.4
+#   docroot: /var/www/foobar
+#   domain: foobar.com
+#   dumps:
+#     default:
+#       base_dir: /path/to/dumps
+#       file: '{{ %Y-%m-%d.%H-%M-%S }}_site_{{ DOMAIN }}'
+#
+# ```
+# - The {{ DOMAIN }} will be replaced by 'foobar.com'.
+# - Any global var (env) can also be used here.
+# - The {{ %Y-%m-%d.%H-%M-%S }} part will be replaced by '2024-07-25.11-16-11'.
+#
+# This writes its result to a variable subject to collision in calling scope.
+# @var tokens_replaced
+#
+# @param 1 String : remote instance's id (e.g. 'prod').
+# @param 2 String : input string containing tokens to replace.
+# @param 3 [optional] Int : recursive calls counter. Because there are tokens
+#   that may point to values that also contain tokens, this function calls
+#   itself at the end to traverse all the tokens. But we need to be able to
+#   break out of the recursion if a token cannot get replaced due to missing
+#   value.
+#
+# @example
+#   tokens_replaced=''
+#   u_remote_definition_tokens_replace 'prod' '{{ %Y-%m-%d.%H-%M-%S }}_site_{{ DOMAIN }}'
+#   echo "$tokens_replaced" # yields for example : '2024-07-25.11-16-11_site_foobar.com'
+#
+u_remote_definition_tokens_replace() {
+  local p_remote_id="$1"
+  local p_input_str="$2"
+  local p_circuit_breaker=0
+
+  if [[ -z "$p_remote_id" ]]; then
+    echo >&2
+    echo "Error in u_remote_definition_tokens_replace() - $BASH_SOURCE line $LINENO: param 1 (p_remote_id) is required." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    return 1
+  fi
+
+  if [[ -z "$p_input_str" ]]; then
+    echo >&2
+    echo "Error in u_remote_definition_tokens_replace() - $BASH_SOURCE line $LINENO: param 2 (p_input_str) is required." >&2
+    echo "-> Aborting (2)." >&2
+    echo >&2
+    return 2
+  fi
+
+  if [[ $3 -gt $p_circuit_breaker ]]; then
+    p_circuit_breaker=$3
+  fi
+
+  # Only load remote instance definitions if necessary.
+  if [[ -z "$REMOTE_INSTANCE_ID" ]] || [[ "$REMOTE_INSTANCE_ID" != "$p_remote_id"  ]]; then
+    u_remote_instance_load "$p_remote_id"
+  fi
+
+  # Start with the raw input, which we will gradually transform below.
+  tokens_replaced="$p_input_str"
+
+  # First, any value from the same definition can be used directly as a token.
+  local var=''
+  local val=''
+  local KEY=''
+  local keys=()
+  local token=''
+
+  u_remote_definition_get_keys
+
+  for key in "${keys[@]}"; do
+    var="remote_instance_$key"
+    u_str_uppercase "$key" 'KEY'
+    u_str_uppercase "$var" 'var'
+    val="${!var}"
+    token="{{ $KEY }}"
+
+    # Debug.
+    # case "$key" in 'domain')
+    #   echo "var = '$var'"
+    #   echo "  token = '$token'"
+    #   echo "  val = '$val'"
+    #   echo "  before :"
+    #   echo "    $tokens_replaced"
+    # esac
+
+    tokens_replaced="${tokens_replaced//$token/$val}"
+
+    # Debug.
+    # case "$key" in 'domain')
+    #   echo "  after :"
+    #   echo "    $tokens_replaced"
+    # esac
+  done
+
+  # Same for any global var.
+  u_global_list
+
+  for var in "${cwt_globals_var_names[@]}"; do
+    val="${!var}"
+    token="{{ $var }}"
+
+    # Debug.
+    # echo "var = '$var'"
+    # echo "  token = '$token'"
+    # echo "  val = '$val'"
+
+    tokens_replaced="${tokens_replaced//$token/$val}"
+  done
+
+  # The {{ %Y-%m-%d.%H-%M-%S }} part(s) must be replaced by current datestamp.
+  local match=''
+  local regex_loop_str="$tokens_replaced"
+  local regex="\{\{[[:space:]]*([^[:space:]]+)[[:space:]]*\}\}"
+
+  while [[ "$regex_loop_str" =~ $regex ]]; do
+    token="${BASH_REMATCH[0]}"
+    match="${BASH_REMATCH[1]}"
+
+    # For the while loop to get all tokens, it needs to be gradually pruned.
+    regex_loop_str="${regex_loop_str#*$token}"
+
+    # Anything with a '%' character is considered a date formatter.
+    case "$match" in *'%'*)
+      val="$(date +"$match")"
+
+      # Debug.
+      # echo "token = '$token'"
+      # echo "  val = '$val'"
+
+      tokens_replaced="${tokens_replaced//$token/$val}"
+    esac
+  done
+
+  # There are tokens that may point to values that also contain tokens.
+  case "$tokens_replaced" in *'{{ '*)
+    # Up to 9 recursions is probably more than enough.
+    if [[ $p_circuit_breaker -lt 10 ]]; then
+      p_circuit_breaker+=1
+      u_remote_definition_tokens_replace "$p_remote_id" "$tokens_replaced" $p_circuit_breaker
+    else
+      echo "Notice : breaking out of u_remote_definition_tokens_replace() recursion."
+      echo "  $tokens_replaced"
+    fi
+  esac
 }
 
 ##
@@ -292,8 +364,6 @@ u_remote_exec_wrapper() {
 # Only the most specific file will be used. This allows to restrict the
 # possibility to execute remote calls from certain instances (i.e. non-local
 # and/or per instance type).
-#
-# TODO [evol] Provide local git-ignored overrides.
 #
 # Prerequisite : in order to use the option 'ssh_use_agent_filter', the
 # package 'ssh-agent-filter' must be installed on your local machine.
@@ -308,7 +378,6 @@ u_remote_exec_wrapper() {
 #   echo "match = $hook_most_specific_dry_run_match"
 #
 u_remote_instances_setup() {
-  local parsed_yaml_remotes=''
   hook_most_specific_dry_run_match=''
 
   u_hook_most_specific 'dry-run' \
@@ -344,7 +413,7 @@ u_remote_instances_setup() {
 EOF
 
   # Write remotes definitions.
-  parsed_yaml_remotes="$(u_yaml_parse "$hook_most_specific_dry_run_match" 'cwtri_')"
+  local parsed_yaml_remotes="$(u_yaml_parse "$hook_most_specific_dry_run_match" 'cwtri_')"
   echo "$parsed_yaml_remotes" >> 'scripts/cwt/local/remote-instances.sh'
 
   # Process & adapt parsed result for use with u_remote_instance_load().
@@ -353,198 +422,257 @@ EOF
 
     local remote_id
     local var_prefix
-    local v
-    local host
-    local docroot
-    local ssh_user
-    local ssh_use_agent_filter
-    local ssh_pubkey
+    local var
+    local val
+    local key
+    local keys=()
+
+    u_remote_definition_get_keys
 
     u_yaml_get_root_keys "$hook_most_specific_dry_run_match"
 
     for remote_id in "${yaml_keys[@]}"; do
       var_prefix="cwtri_${remote_id}"
-      # u_str_uppercase "$var_prefix" var_prefix
 
-      v="${var_prefix}_host"
-      host="${!v}"
+      # The dictionary stores all the variables to be (re)written in the
+      # generated definition file(s) in the end. It's per remote instance, hence
+      # we make sure it is empty before attempting to build on it in this loop.
+      unset setup_dict
+      declare -A setup_dict
 
-      if [[ -z "$host" ]]; then
+      setup_dict[id]="$remote_id"
+
+      for key in "${keys[@]}"; do
+        var="${var_prefix}_${key}"
+        val="${!var}"
+
+        # Debug
+        # echo "$remote_id.$key = '$val' ($var)"
+
+        # TODO [check] see if there are unintended consequences to skip any
+        # empty value here.
+        if [[ -z "$val" ]]; then
+          continue
+        fi
+
+        # TODO [evol] see if there's a better workaround for quotes. Right now,
+        # we have to trim any ' or " prefix + suffix manually here.
+        # @see cwt/vendor/bash-yaml/script/yaml.sh
+        val="${val%\'}"
+        val="${val#\'}"
+        val="${val%\"}"
+        val="${val#\"}"
+
+        setup_dict["$key"]="$val"
+      done
+
+      # Can't carry on without the host.
+      if [[ -z "${setup_dict[host]}" ]]; then
+        echo "Notice : there is no 'host' for remote '$remote_id' -> skip setup."
         continue
       fi
 
-      # echo "$remote_id.host = '$host' ($v)"
-      v="${var_prefix}_docroot"
-      docroot="${!v}"
-      # echo "$remote_id.docroot = '$docroot' ($v)"
-      v="${var_prefix}_ssh_user"
-      ssh_user="${!v}"
-      # echo "$remote_id.ssh_user = '$ssh_user' ($v)"
-      v="${var_prefix}_ssh_use_agent_filter"
-      ssh_use_agent_filter="${!v}"
-      # echo "$remote_id.ssh_use_agent_filter = '$ssh_use_agent_filter' ($v)"
-      v="${var_prefix}_ssh_pubkey"
-      ssh_pubkey="${!v}"
-      # echo "$remote_id.ssh_pubkey = '$ssh_pubkey' ($v)"
-
-      # This option requires installing the package ssh-agent-filter on your
-      # local machine.
-      # See https://git.tiwe.de/ssh-agent-filter.git
-      if [[ -n "$ssh_use_agent_filter" ]]; then
-        # We can't setup SSH connection command without a path to a public key.
-        if [[ -z "$ssh_pubkey" ]] && [[ -z "$CWT_SSH_PUBKEY" ]]; then
-          echo >&2
-          echo "Error in u_remote_instances_setup() - $BASH_SOURCE line $LINENO: missing CWT_SSH_PUBKEY env var." >&2
-          echo "-> Aborting (2)." >&2
-          echo >&2
-          exit 2
-        else
-          # Use the public key path set in YAML file or fallback to env. var.
-          if [[ -z "$ssh_pubkey" ]]; then
-            ssh_pubkey="$CWT_SSH_PUBKEY"
-          fi
-          # Do not require a ssh_user.
-          local user_host="$ssh_user@$host"
-          if [[ -z "$ssh_user" ]]; then
-            user_host="$host"
-          fi
-          u_remote_instance_add \
-            "$remote_id" \
-            "$host" \
-            "$docroot" \
-            "$ssh_user" \
-            "afssh -f $(u_remote_get_pubkey_hex_md5_fingerprint $ssh_pubkey) -- -T $user_host"
-        fi
-      else
-        u_remote_instance_add \
-          "$remote_id" \
-          "$host" \
-          "$docroot" \
-          "$ssh_user"
+      # Deal with fallback values (if available).
+      if [[ -z "${setup_dict[ssh_exec_prefix]}" ]] \
+        && [[ -n "$CWT_REMOTE_SSH_EXEC_PREFIX" ]]
+      then
+        setup_dict[ssh_exec_prefix]="$CWT_REMOTE_SSH_EXEC_PREFIX"
       fi
+
+      # Custom tokens, e.g. {{ CURRENT_USER }} must be replaced by the current
+      # local user name, even if sudoing.
+      # See https://stackoverflow.com/questions/1629605/getting-user-inside-shell-script-when-running-with-sudo
+      case "${setup_dict[ssh_user]}" in '{{ CURRENT_USER }}')
+        setup_dict[ssh_user]="$(logname 2>/dev/null || echo $SUDO_USER)"
+      esac
+
+      # Provide a default SSH connect command.
+      if [[ -z "${setup_dict[ssh_connect_cmd]}" ]]; then
+        local user_host="${setup_dict[ssh_user]}@${setup_dict[host]}"
+
+        if [[ -z "${setup_dict[ssh_user]}" ]]; then
+          user_host="${setup_dict[host]}"
+        fi
+
+        # NB : the '-A' flag allows to forward currently loaded SSH keys from
+        # the local terminal session. The '-T' flag requests a non-interactive
+        # tty (= opens a non-interactive terminal session on remote).
+        setup_dict[ssh_connect_cmd]="ssh -T -A $user_host"
+
+        if [[ -n "${setup_dict[ssh_port]}" ]]; then
+          setup_dict[ssh_connect_cmd]="ssh -T -A -p${setup_dict[ssh_port]} $user_host"
+        fi
+      fi
+
+      # Pre-render the remote connection prefix for commands like rsync or scp.
+      if [[ -z "${setup_dict[prefix]}" ]]; then
+        setup_dict[prefix]="${setup_dict[host]}"
+
+        if [[ -n "${setup_dict[ssh_user]}" ]]; then
+          setup_dict[prefix]="${setup_dict[ssh_user]}@${setup_dict[host]}"
+        fi
+      fi
+
+      # Finally, create the resulting definition file.
+      if [[ ! -d 'scripts/cwt/local/remote-instances' ]]; then
+        mkdir -p 'scripts/cwt/local/remote-instances'
+
+        if [[ $? -ne 0 ]]; then
+          echo >&2
+          echo "Error in $BASH_SOURCE line $LINENO: failed to create missing required dir scripts/cwt/local/remote-instances." >&2
+          echo "-> Aborting (1)." >&2
+          echo >&2
+          return 1
+        fi
+      fi
+
+      local conf="scripts/cwt/local/remote-instances/${remote_id}.sh"
+
+      cat > "$conf" <<EOF
+#!/usr/bin/env bash
+
+##
+# '$remote_id' remote instance definition file.
+#
+# This file is automatically generated.
+# @see u_remote_instances_setup() in cwt/extensions/remote/remote.inc.sh
+#
+
+EOF
+      # Write (append) to the generated definition file, escaping single quotes
+      # because it's a plain bash script that will be sourced.
+      for key in "${!setup_dict[@]}"; do
+        var="remote_instance_$key"
+        u_str_uppercase "$var" 'var'
+
+        val="${setup_dict[$key]}"
+        val="${val//\'/\'\"\'\"\'}" # @link https://stackoverflow.com/a/1250279/2592338
+
+        printf "%s\n" "export $var='$val'" >> "$conf"
+      done
     done
   fi
 }
 
 ##
-# Adds a remote instance.
+# Produces an array of keys for remote instance definitions.
 #
-# @param 1 String : remote instance's id (short name, no space, _a-zA-Z0-9 only).
-# @param 2 String : remote instance's host domain.
-# @param 3 String : remote instance's PROJECT_DOCROOT value.
-# @param 4 [optional] String : remote SSH user.
-#   Defaults to: current user, even if sudoing.
-# @param 5 [optional] String : raw command used to connect (including args).
-#   Defaults to: 'ssh -T -A username@example.com' (request a non-interactive TTY
-#   and enable ssh-agent forwarding).
+# This function appends entries to an array which must be initialized in calling
+# scope already :
+#
+# @var keys
 #
 # @example
-#   # Basic example with only mandatory params (defaults to current user) :
-#   u_remote_instance_add \
-#     'my_short_id' \
-#     'remote.instance.example.com' \
-#     '/path/to/remote/instance/docroot'
+#   keys=()
+#   u_remote_definition_get_keys
 #
-#   # Example specifying user to use on remote :
-#   u_remote_instance_add \
-#     'my_short_id' \
-#     'remote.instance.example.com' \
-#     '/path/to/remote/instance/docroot' \
-#     'my_ssh_user'
+#   for key in "${keys[@]}"; do
+#     echo "key = $key"
+#   done
 #
-#   # Example with user + SSH connection cmd override (using
-#   # ssh-agent-filter) :
-#   u_remote_instance_add \
-#     'my_short_id' \
-#     'remote.instance.example.com' \
-#     '/path/to/remote/instance/docroot' \
-#     'remote_user' \
-#     'afssh -c /home/local_user/.ssh/id_project_name -- -T remote_user@remote.instance.example.com'
-#     # Tip : ssh-agent-filter alternative using fingerprint instead of filepath
-#     # (workaround some unexpected varying behaviors under some Linux distros) :
-#     # "afssh -f $(u_remote_get_pubkey_hex_md5_fingerprint $CWT_SSH_PUBKEY) -- -T remote_user@remote.instance.example.com"
-#
-u_remote_instance_add() {
-  local p_id="$1"
-  local p_host="$2"
-  local p_project_docroot="$3"
-  local p_ssh_user="$4"
-  local p_connect_cmd="$5"
+u_remote_definition_get_keys() {
+  keys+=('id')
+  keys+=('host')
+  keys+=('domain')
+  keys+=('docroot')
+  keys+=('prefix')
+  keys+=('ssh_user')
+  keys+=('ssh_port')
+  keys+=('ssh_exec_prefix')
+  keys+=('ssh_connect_cmd')
 
-  # Update : no longer require user to support custom ssh config.
-  # If dynamic fallback is wanted, use '<current-user>'.
-  # if [[ -z "$p_ssh_user" ]]; then
-  case "$p_ssh_user" in '<current-user>')
-    # Get current user even if sudoing.
-    # See https://stackoverflow.com/questions/1629605/getting-user-inside-shell-script-when-running-with-sudo
-    p_ssh_user="$(logname 2>/dev/null || echo $SUDO_USER)"
-  esac
-  # fi
+  # Remote files are a dynamic list of names (suffixes) used to assign variables
+  # to folders to sync to and from (anb between) remote instances. It's meant
+  # for files that are not part of the versionned app sources, e.g. git-ignored
+  # dirs like sites/default/files in Drupal, etc.
+  if [[ -n "$CWT_REMOTE_FILES_SUFFIXES" ]]; then
+    local suffix=''
 
-  if [[ ! -d 'scripts/cwt/local/remote-instances' ]]; then
-    mkdir -p 'scripts/cwt/local/remote-instances'
-    if [[ $? -ne 0 ]]; then
-      echo >&2
-      echo "Error in u_remote_instance_add() - $BASH_SOURCE line $LINENO: failed to create missing required dir scripts/cwt/local/remote-instances." >&2
-      echo "-> Aborting (1)." >&2
-      echo >&2
-      return 1
-    fi
-  fi
-
-  local conf="scripts/cwt/local/remote-instances/${p_id}.sh"
-
-  # Confirm overwriting existing config if the file already exists.
-  if [[ -f "$conf" ]]; then
-    echo
-    while true; do
-      echo "It seems the file '$conf' already exists."
-      read -p "Overwrite ? (y/n) : " yn
-      case $yn in
-        [Yy]* ) echo "Ok, proceeding to override existing settings."; break;;
-        [Nn]* ) echo "Aborting (1)."; return 1;;
-        * ) echo "Please answer yes (enter 'y') or no (enter 'n').";;
-      esac
+    for suffix in $CWT_REMOTE_FILES_SUFFIXES; do
+      u_str_sanitize_var_name "$suffix" 'suffix'
+      keys+=("data_files_${suffix}_remote")
+      keys+=("data_files_${suffix}_local")
     done
   fi
 
-  local connection_cmd="$p_connect_cmd"
-  if [[ -z "$p_connect_cmd" ]]; then
+  # The DB-related config entries need dynamic var names.
+  # Needs the 'db' CWT extension, which might be disabled, so we check if
+  # function is defined.
+  if type u_db_get_ids >/dev/null 2>&1 ; then
+    local db_id
+    local db_ids=()
 
-    # Do not require a ssh_user.
-    local user_host="$p_ssh_user@$p_host"
-    if [[ -z "$p_ssh_user" ]]; then
-      user_host="$p_host"
-    fi
+    u_db_get_ids
 
-    # NB : the '-A' flag allows to forward currently loaded SSH keys from
-    # the local terminal session. The '-T' flag requests a non-interactive
-    # tty (= opens a non-interactive terminal session on remote).
-    connection_cmd="ssh -T -A $user_host"
+    for db_id in "${db_ids[@]}"; do
+      keys+=("data_dumps_${db_id}_base_dir")
+      keys+=("data_dumps_${db_id}_file")
+      keys+=("data_dumps_${db_id}_latest_symlink")
+      keys+=("data_dumps_${db_id}_type")
+      keys+=("data_dumps_${db_id}_cmd")
+    done
 
-    if [[ -n "$p_ssh_port" ]]; then
-      connection_cmd="ssh -T -A -p$p_ssh_port $user_host"
-    fi
+    # In order to generate remote commands like mysql dump, in some cases, there
+    # are credentials available remotely as env vars (which can be loaded
+    # through ssh_exec_prefix if necessary). Hence the use of a mapping
+    # definition, so the command can be properly formed (to be able to use the
+    # correct remote env vars).
+    local var=''
+    local vars_to_map='db_driver db_host db_port db_name db_user db_pass db_admin_user db_admin_pass'
+
+    for var in $vars_to_map; do
+      keys+=("data_dumps_${db_id}_env_map_${var}")
+    done
   fi
 
-  # (Re)init destination file (make empty).
-  cat > "$conf" <<'EOF'
-#!/usr/bin/env bash
+  # Allows other extensions to extend the list of keys.
+  hook -s 'remote_definition_keys' -a 'alter' -v 'REMOTE_INSTANCE_ID'
+}
 
 ##
-# Remote instance config file.
+# For any given remote instance, get a single key value.
 #
-# This file is automatically generated.
-# @see u_remote_instance_add()
+# @param 1 String : remote instance ID.
+# @param 2 String : key of the value to read from its definition.
+# @param 3 String : name of the variable in calling scope which holds the
+#   result.
 #
+# @example
+#   remote_dir=''
+#   u_remote_definition_get_key 'prod' 'data_files_private_remote' 'remote_dir'
+#   echo "remote_dir = $remote_dir"
+#
+u_remote_definition_get_key() {
+  local p_remote_id="$1"
+  local p_key="$2"
+  local p_rdgk_var="$3"
 
-EOF
+  # Only load the remote instance definition if not already loaded.
+  if [[ -z "$REMOTE_INSTANCE_ID" || "$REMOTE_INSTANCE_ID" != "$p_remote_id" ]]; then
+    u_remote_instance_load "$p_remote_id"
+  fi
 
-  printf "%s\n" "export REMOTE_INSTANCE_ID='$p_id'" >> "$conf"
-  printf "%s\n" "export REMOTE_INSTANCE_HOST='$p_host'" >> "$conf"
-  printf "%s\n" "export REMOTE_INSTANCE_SSH_USER='$p_ssh_user'" >> "$conf"
-  printf "%s\n" "export REMOTE_INSTANCE_CONNECT_CMD='$connection_cmd'" >> "$conf"
-  printf "%s\n" "export REMOTE_INSTANCE_PROJECT_DOCROOT='$p_project_docroot'" >> "$conf"
+  local var=''
+  local val=''
+  local KEY=''
+
+  u_str_uppercase "$p_key" 'KEY'
+
+  var="REMOTE_INSTANCE_$KEY"
+  val="${!var}"
+
+  # Skip tokens if empty.
+  if [[ -z "$val" ]]; then
+    printf -v "$p_rdgk_var" '%s' ""
+    return
+  fi
+
+  # Replace tokens.
+  local tokens_replaced=''
+  u_remote_definition_tokens_replace "$p_remote_id" "$val"
+
+  # Write result to var in calling scope.
+  printf -v "$p_rdgk_var" '%s' "$tokens_replaced"
 }
 
 ##
@@ -553,12 +681,6 @@ EOF
 # @param 1 [optional] String : remote instance's id (short name, no space,
 #   _a-zA-Z0-9 only). Defaults to the first *.sh file found in folder :
 #   scripts/cwt/local/remote-instances.
-#
-# @exports REMOTE_INSTANCE_ID
-# @exports REMOTE_INSTANCE_HOST
-# @exports REMOTE_INSTANCE_SSH_USER
-# @exports REMOTE_INSTANCE_CONNECT_CMD
-# @exports REMOTE_INSTANCE_PROJECT_DOCROOT
 #
 # @example
 #   # Only need to call the function for exporting globals in current shell :
@@ -597,27 +719,4 @@ u_remote_purge_instances() {
       return 1
     fi
   done
-}
-
-##
-# Gets given SSH public key's hex-encoded md5 fingerprint.
-#
-# See https://superuser.com/questions/1088165/get-ssh-key-fingerprint-in-old-hex-format-on-new-version-of-openssh
-# + https://github.com/tiwe-de/ssh-agent-filter
-#
-# @example
-#   connect_cmd="afssh -f $(u_remote_get_pubkey_hex_md5_fingerprint $HOME/.ssh/id_rsa.pub) -- -T my_user@my_host"
-#
-u_remote_get_pubkey_hex_md5_fingerprint() {
-  local p_public_key_file="$1"
-
-  if [[ ! -f "$p_public_key_file" ]]; then
-    echo >&2
-    echo "Error in u_remote_get_pubkey_hex_md5_fingerprint() - $BASH_SOURCE line $LINENO: public key not found or not accessible." >&2
-    echo "-> Aborting (1)." >&2
-    echo >&2
-    return 1
-  fi
-
-  awk '{print $2}' "$p_public_key_file" | base64 -d | md5sum | sed 's/../&:/g; s/: .*$//'
 }

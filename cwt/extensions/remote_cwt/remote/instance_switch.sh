@@ -12,17 +12,17 @@
 #   # Switches the 'prod' remote instance to type 'prod'.
 #   make remote-instance-switch
 #   # Or :
-#   cwt/extensions/remote/remote/instance_switch.sh
+#   cwt/extensions/remote_cwt/remote/instance_switch.sh
 #
 #   # Switches the 'stage' remote instance to type 'prod'.
 #   make remote-instance-switch 'stage'
 #   # Or :
-#   cwt/extensions/remote/remote/instance_switch.sh 'stage'
+#   cwt/extensions/remote_cwt/remote/instance_switch.sh 'stage'
 #
 #   # Switches the 'dev' remote instance to type 'stage'.
 #   make remote-instance-switch 'dev' 'stage'
 #   # Or :
-#   cwt/extensions/remote/remote/instance_switch.sh 'dev' 'stage'
+#   cwt/extensions/remote_cwt/remote/instance_switch.sh 'dev' 'stage'
 #
 
 . cwt/bootstrap.sh
@@ -37,5 +37,5 @@ if [[ -z "$p_new_type" ]]; then
   p_new_type='prod'
 fi
 
-. cwt/extensions/remote/remote/exec.sh "$p_remote_id" \
+. cwt/extensions/remote_cwt/remote/exec.sh "$p_remote_id" \
   "cwt/instance/switch_type.sh $p_new_type && cwt/instance/restart.sh"

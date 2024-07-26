@@ -16,10 +16,10 @@
 #   # prompts, overriding the host type to 'local' (to avoid being assigned
 #   # the 'prod remote' INSTANCE_DOMAIN when we're using the local YAML settings
 #   # overrides - i.e. scripts/cwt/override/.cwt-local.remote.prod.yml):
-#   cwt/extensions/remote/remote/setup.sh 'lan' -t 'prod' -h 'local'
+#   cwt/extensions/remote_cwt/remote/setup.sh 'lan' -t 'prod' -h 'local'
 #
 
-cwt/extensions/remote/remote/init.sh $@
+cwt/extensions/remote_cwt/remote/init.sh $@
 
 if [[ $? -ne 0 ]]; then
   echo >&2
@@ -29,5 +29,5 @@ if [[ $? -ne 0 ]]; then
   exit 1
 fi
 
-cwt/extensions/remote/remote/exec.sh "$1" \
+cwt/extensions/remote_cwt/remote/exec.sh "$1" \
   'cwt/instance/start.sh && cwt/app/install.sh'

@@ -11,10 +11,10 @@
 # @example
 #   make remote-destroy 'my_short_id'
 #   # Or :
-#   cwt/extensions/remote/remote/destroy.sh 'my_short_id'
+#   cwt/extensions/remote_cwt/remote/destroy.sh 'my_short_id'
 #
 
 . cwt/bootstrap.sh
 
-cwt/extensions/remote/remote/exec.sh "$1" \
+cwt/extensions/remote_cwt/remote/exec.sh "$1" \
   'cwt/instance/destroy.sh && find . -delete'

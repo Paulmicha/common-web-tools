@@ -9,5 +9,6 @@ mysql
 node
 pgsql
 remote
+remote_cwt
 remote_db
 remote_traefik

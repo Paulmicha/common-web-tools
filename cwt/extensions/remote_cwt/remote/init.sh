@@ -14,7 +14,7 @@
 # @example
 #   # Initializes a new remote instance of type 'dev' without interactive
 #   # terminal prompts :
-#   cwt/extensions/remote/remote/init.sh 'dev' -t 'dev'
+#   cwt/extensions/remote_cwt/remote/init.sh 'dev' -t 'dev'
 #
 
 . cwt/bootstrap.sh
@@ -24,7 +24,7 @@ shift
 
 u_remote_instance_load "$remote_id"
 
-if [[ -z "$REMOTE_INSTANCE_CONNECT_CMD" ]]; then
+if [[ -z "$REMOTE_INSTANCE_SSH_CONNECT_CMD" ]]; then
   echo >&2
   echo "Error in u_remote_exec_wrapper() - $BASH_SOURCE line $LINENO: no conf found for remote id '$remote_id'." >&2
   echo "-> Aborting (1)." >&2
@@ -84,28 +84,28 @@ fi
 
 # Assemble and execute the command remotely.
 # cat <<REMOTECMD
-eval "$REMOTE_INSTANCE_CONNECT_CMD" bash <<REMOTECMD
+eval "$REMOTE_INSTANCE_SSH_CONNECT_CMD" bash <<REMOTECMD
 
-if [[ -f $REMOTE_INSTANCE_PROJECT_DOCROOT/.git/HEAD ]]; then
+if [[ -f $REMOTE_INSTANCE_DOCROOT/.git/HEAD ]]; then
 
   echo 'Instance appears to be already initialized.'
   echo '-> Make sure it is up to date, and reinit using given arguments.'
 
-  cd $REMOTE_INSTANCE_PROJECT_DOCROOT
+  cd $REMOTE_INSTANCE_DOCROOT
   git pull
   cwt/instance/uninit.sh
 
 else
 $dyn_cmd_known_hosts
 
-  if [[ ! -d $REMOTE_INSTANCE_PROJECT_DOCROOT ]]; then
+  if [[ ! -d $REMOTE_INSTANCE_DOCROOT ]]; then
     echo 'Create the remote PROJECT_DOCROOT dir.'
-    mkdir -p $REMOTE_INSTANCE_PROJECT_DOCROOT
+    mkdir -p $REMOTE_INSTANCE_DOCROOT
   fi
 
-  if [[ ! -f $REMOTE_INSTANCE_PROJECT_DOCROOT/.git/HEAD ]]; then
+  if [[ ! -f $REMOTE_INSTANCE_DOCROOT/.git/HEAD ]]; then
     echo 'Clone current git origin in remote PROJECT_DOCROOT dir.'
-    git clone '$git_origin' $REMOTE_INSTANCE_PROJECT_DOCROOT
+    git clone '$git_origin' $REMOTE_INSTANCE_DOCROOT
   fi
 fi
 
@@ -114,5 +114,5 @@ REMOTECMD
 # Workaround : launch the "init" action separately. Fixes unknown issue where
 # running this inside the "inline" command above appeared to be skipped on first
 # call.
-. cwt/extensions/remote/remote/exec.sh "$remote_id" \
+. cwt/extensions/remote_cwt/remote/exec.sh "$remote_id" \
   "cwt/instance/init.sh -y -h 'remote' $@"

@@ -15,9 +15,9 @@
 #   make db-sync-from prod new
 #   make db-sync-from prod path/to/remote/dump/file.sql.tgz
 #   # Or :
-#   cwt/extensions/remote_db/db/sync_from.sh prod
-#   cwt/extensions/remote_db/db/sync_from.sh prod new
-#   cwt/extensions/remote_db/db/sync_from.sh prod path/to/remote/dump/file.sql.tgz
+#   cwt/extensions/remote_cwt/db/sync_from.sh prod
+#   cwt/extensions/remote_cwt/db/sync_from.sh prod new
+#   cwt/extensions/remote_cwt/db/sync_from.sh prod path/to/remote/dump/file.sql.tgz
 #
 
 . cwt/bootstrap.sh

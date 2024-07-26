@@ -15,9 +15,9 @@
 #   make db-sync-to dev new
 #   make db-sync-to dev path/to/local/dump/file.sql.tgz
 #   # Or :
-#   cwt/extensions/remote_db/db/sync_to.sh dev
-#   cwt/extensions/remote_db/db/sync_to.sh dev new
-#   cwt/extensions/remote_db/db/sync_to.sh dev path/to/local/dump/file.sql.tgz
+#   cwt/extensions/remote_cwt/db/sync_to.sh dev
+#   cwt/extensions/remote_cwt/db/sync_to.sh dev new
+#   cwt/extensions/remote_cwt/db/sync_to.sh dev path/to/local/dump/file.sql.tgz
 #
 
 . cwt/bootstrap.sh
