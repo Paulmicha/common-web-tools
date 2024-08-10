@@ -83,7 +83,9 @@ CACHE
     for file in $CWT_INC; do
       # Any additional include may be overridden.
       u_autoload_override "$file" 'continue'
-      eval "$inc_override_evaled_code"
+      if [[ -n "$inc_override_evaled_code" ]]; then
+        eval "$inc_override_evaled_code"
+      fi
       if [[ -f "$file" ]]; then
         . "$file"
       fi

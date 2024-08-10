@@ -4,7 +4,7 @@
 # Implements u_hook_most_specific -s 'db' -a 'clear' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
 #
 # This file is dynamically included when the "hook" is triggered.
-# @see u_db_import() in cwt/extensions/db/db.inc.sh
+# @see u_db_exec() in cwt/extensions/db/db.inc.sh
 #
 # The following variables are available here :
 #   - DB_ID - defaults to 'default'.

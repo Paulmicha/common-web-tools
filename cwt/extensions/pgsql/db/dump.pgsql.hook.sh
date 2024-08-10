@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 ##
-# Implements u_hook_most_specific -s 'db' -a 'backup' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
+# Implements u_hook_most_specific -s 'db' -a 'dump' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
 #
 # This file is dynamically included when the "hook" is triggered.
-# @see u_db_backup() in cwt/extensions/db/db.inc.sh
+# @see u_db_dump() in cwt/extensions/db/db.inc.sh
 #
 # The following variables are available here :
 #   - DB_ID - defaults to 'default'.
@@ -22,7 +22,7 @@
 # @example
 #   make db-backup
 #   # Or :
-#   cwt/extensions/db/db/backup.sh
+#   cwt/extensions/db/db/dump.sh
 #
 
 # Prereq check :

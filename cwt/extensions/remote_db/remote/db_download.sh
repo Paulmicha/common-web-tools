@@ -7,13 +7,12 @@
 # @see scripts/cwt/local/remote-instances/${p_remote_id}.sh
 # @see u_remote_instances_setup() in cwt/extensions/remote/remote.inc.sh
 #
-# @param 1 [optional] String : remote host ID. This is the root key defined in
-#   YAML remote instances definition file : @see remote_instances.local.yml
+# @param 1 [optional] String : remote host ID.
 #   Defaults to 'prod'.
 # @param 2 [optional] String : remote DB id.
-#   Defaults to '*', meaning : download all DB IDs defined in the remote.
-# @param 3 [optional] String : datestamp of the DB dump(s) to download.
-#   Defaults to the latest dump (requires the symlink).
+#   Defaults to '', meaning : download all DB IDs defined in the remote.
+# @param 3 [optional] String : remote DB dump file path (relative to the
+#   REMOTE_INSTANCE_DOCROOT, but absolute paths work too).
 #
 # @example
 #   # Fetch most recent remote DB dump from all DB IDs on remote 'prod' :
@@ -21,23 +20,17 @@
 #   # Or :
 #   cwt/extensions/remote_db/remote/db_download.sh 'prod'
 #
-#   # Fetch specifically the remote DB dump corresponding to a datestamp :
-#   make remote-db-download 'prod' '*' '2024-07-26.00-38-08'
+#   # Fetch a specific remote DB dump file :
+#   make remote-db-download 'prod' 'api' data/db-dumps/local/api/2024-08-07.15-34-23_api_foobar.localhost.sql.gz
 #   # Or :
-#   cwt/extensions/remote_db/remote/db_download.sh 'prod' '*' '2024-07-26.00-38-08'
-#
-#   # Fetch specifically the remote DB dump corresponding to a datestamp from a
-#   # single DB ID on remote instance 'prod' :
-#   make remote-db-download 'prod' 'api' '2024-07-26.00-38-08'
-#   # Or :
-#   cwt/extensions/remote_db/remote/db_download.sh 'prod' 'api' '2024-07-26.00-38-08'
+#   cwt/extensions/remote_db/remote/db_download.sh 'prod' 'api' data/db-dumps/local/api/2024-08-07.15-34-23_api_foobar.localhost.sql.gz
 #
 
 . cwt/bootstrap.sh
 
 remote_id="$1"
 db_id="$2"
-datestamp="$3"
+remote_file="$3"
 
 if [[ -z "$remote_id" ]]; then
   remote_id='prod'
@@ -47,7 +40,7 @@ echo "Downloading DB dumps from remote instance '$remote_id' ..."
 
 declare -A dumps_dict
 
-u_remote_db_prepare_downloads "$remote_id" "$db_id" "$datestamp"
+u_remote_db_prepare_downloads "$remote_id" "$db_id" "$remote_file"
 
 db_id=''
 db_ids=()
@@ -68,11 +61,14 @@ for db_id in "${db_ids[@]}"; do
   # echo "remote_dump_file_path = ${dumps_dict["${db_id}.remote_dump_file_path"]}"
   # echo "local_dump_file_path = ${dumps_dict["${db_id}.local_dump_file_path"]}"
 
-  # TODO What do we want to do with existing local files ?
-  # The use of symlinks always results in the same file name here...
-  # if [[ -f "${dumps_dict[${db_id}.local_dump_file_path]}" ]]; then
-  #   echo "File already exists."
-  # fi
+  # The use of symlinks always results in the same file name here
+  # -> only skip re-downloading if NOT using the symlink.
+  if [[ "$CWT_REMOTE_DB_SYMLINK_DL" != 'yes' && -f "${dumps_dict[${db_id}.local_dump_file_path]}" ]]; then
+    echo "  File already exists :"
+    echo "    ${dumps_dict[${db_id}.local_dump_file_path]}"
+    echo "    -> skip re-downloading."
+    continue
+  fi
 
   # Make sure the local dir exists.
   mkdir -p "${dumps_dict["${db_id}.local_dump_dir"]}"

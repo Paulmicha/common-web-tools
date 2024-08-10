@@ -40,8 +40,7 @@
 #   make self-test
 #
 
-.PHONY: default init init-debug hook hook-debug globals-lp self-test
-default: init
+.PHONY: init init-debug setup hook hook-debug globals-lp self-test debug
 
 init:
 	@ cwt/instance/init.make.sh $(filter-out $@,$(MAKECMDGOALS))
@@ -49,6 +48,7 @@ init:
 init-debug:
 	@ cwt/instance/init.make.sh -d -r $(filter-out $@,$(MAKECMDGOALS))
 
+# Make this shortcut available before instance init.
 setup:
 	@ cwt/instance/setup.sh $(filter-out $@,$(MAKECMDGOALS))
 
@@ -59,10 +59,7 @@ hook-debug:
 	@ cwt/instance/hook.make.sh -d -t $(filter-out $@,$(MAKECMDGOALS))
 
 globals-lp:
-	@ cwt/env/global_lookup_paths.make.sh
-
-list-actions:
-	@ cwt/instance/list_actions.make.sh
+	@ cwt/env/global_lookup_paths.make.sh $(filter-out $@,$(MAKECMDGOALS))
 
 self-test:
-	@ cwt/test/self_test.sh
+	@ cwt/test/self_test.sh $(filter-out $@,$(MAKECMDGOALS))

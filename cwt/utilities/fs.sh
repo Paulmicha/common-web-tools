@@ -196,45 +196,60 @@ u_fs_merge_dirs() {
 ##
 # Recursively gets the last N most recent file(s) in given path.
 #
-# @param 1 [optional] String base path (defaults to '.').
-# @param 2 [optional] Number number of most recent files to get (defaults to 1).
+# @param 1 [optional] String : the dir where to look.
+#   Defaults to '.' (PROJECT_DOCROOT).
+# @param 2 [optional] String : file name filter pattern.
+#   Defaults to '', meaning : don't filter.
+# @param 3 [optional] Number : max depth (to look in subfolders too).
+#   Defaults to 1.
+# @param 4 [optional] Number : how many most recent files to get.
+#   Defaults to 1.
 #
 # @see https://stackoverflow.com/questions/4561895/how-to-recursively-find-the-latest-modified-file-in-a-directory
 #
 # @example
-#   most_recent="$(u_fs_get_most_recent)"
-#   echo "$most_recent"
+#   # Gets the last modified file in current dir (PROJECT_DOCROOT) :
+#   most_recent_file="$(u_fs_get_most_recent)"
+#   echo "most_recent_file = $most_recent_file"
 #
 #   # Gets the last modified file in path 'cwt' :
 #   most_recent="$(u_fs_get_most_recent 'cwt')"
-#   echo "$most_recent"
+#   echo "most_recent = $most_recent"
 #
-#   # Gets the last 3 files modified in path 'cwt' :
-#   most_recent="$(u_fs_get_most_recent 'cwt' 3)"
-#   echo "$most_recent"
+#   # Gets the last modified '*.yml' file in path 'scripts' :
+#   most_recent="$(u_fs_get_most_recent 'scripts' '*.yml')"
+#   echo "most_recent = $most_recent"
+#
+#   # Gets the last 3 files modified in path 'cwt' up to 5 dir deep :
+#   while read -r file; do
+#     echo "$file"
+#   done <<< "$(u_fs_get_most_recent 'cwt' '' 5 3)"
 #
 u_fs_get_most_recent() {
   local p_path="$1"
-  local p_max=$2
+  local p_filter_pattern="$2"
+  local p_max_depth="$3"
+  local p_n_files="$4"
 
   if [[ -z "$p_path" ]]; then
     p_path='.'
   fi
-  if [[ -z "$p_max" ]]; then
-    p_max=1
+
+  if [[ -z "$p_max_depth" ]]; then
+    p_max_depth=1
   fi
 
-  # TODO Mac OSX ?
-  # find "$p_path" -type f -print0 \
-  #   | xargs -0 stat -f "%m %N" \
-  #   | sort -rn \
-  #   | head -1 \
-  #   | cut -f2- -d" "
+  if [[ -z "$p_n_files" ]]; then
+    p_n_files=1
+  fi
 
-  find "$p_path" -type f -printf '%T@ %p\n' \
-    | sort -rn \
-    | head -$p_max \
-    | cut -f2- -d" "
+  if [[ -n "$p_filter_pattern" ]]; then
+    find "$p_path" -maxdepth "$p_max_depth" -type f -name "$p_filter_pattern" -exec ls -1t '{}' + \
+      | head -n$p_n_files
+  else
+    find "$p_path" -maxdepth "$p_max_depth" -type f -exec ls -1t '{}' + \
+      | head -n$p_n_files
+  fi
 }
 
 ##
@@ -373,9 +388,10 @@ u_fs_dir_list() {
 # Gets a list of files in given folder.
 #
 # NB : for performance reasons (to avoid using a subshell), this function
-# writes its result to a variable subject to collision in calling scope.
+# writes its result to variables subject to collision in calling scope.
 #
 # @var file_list
+# @var file_list_arr
 #
 # @param 1 [optional] String base path (defaults to '.').
 # @param 2 [optional] String file name filter pattern (defaults to '*' / not filtering).
@@ -400,12 +416,21 @@ u_fs_dir_list() {
 #     echo "$file"
 #   done <<< "$file_list"
 #
+#   # TODO [evol] deprecate the string variable to avoid issues with file names
+#   # containing space(s) and the last empty line :
+#   file_list_arr=()
+#   u_fs_file_list "$dir"
+#   for file in "${file_list_arr[@]}"; do
+#     echo "file = $file"
+#   done
+#
 u_fs_file_list() {
   local p_path="$1"
   local p_filter_pattern="$2"
   local p_maxdepth=$3
 
   file_list=''
+  file_list_arr=()
 
   if [[ -z "$p_path" ]]; then
     p_path='.'
@@ -430,7 +455,7 @@ u_fs_file_list() {
       file_list="$(find "$p_path" -maxdepth "$p_maxdepth" -type f -name "$p_filter_pattern" -printf '%P\n')"
     fi
 
-  # Otherwise, just use the less expensive bash loop.
+  # Otherwise, just use the less expensive bash globbing.
   else
     if [[ "$p_path" != '.' ]]; then
       pushd "$p_path" >/dev/null
@@ -441,16 +466,18 @@ u_fs_file_list() {
 
     if [[ -z "$p_filter_pattern" ]]; then
       for i in * ; do
-        if [ -f "$i" ]; then
+        if [[ -f "$i" ]]; then
+          file_list_arr+=("$i")
           file_list+="${i}
 "
         fi
       done
     else
       for i in * ; do
-        if [ -f "$i" ]; then
+        if [[ -f "$i" ]]; then
           case "$i" in
             $p_filter_pattern)
+              file_list_arr+=("$i")
               file_list+="${i}
 "
             ;;

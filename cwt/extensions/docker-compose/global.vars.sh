@@ -13,6 +13,8 @@
 
 global DC_BIN_PATH "[default]=/usr/local/bin"
 
+global DC_STACK_VERSION "[default]=1 [help]='A number (integer) that is used for example when we upgrade one or more services (or the whole stack). See cwt/extensions/docker-compose/stack/switch.sh'"
+
 # Important note : when using relative paths in docker-compose.yml files, the
 # folder of the file itself is the reference.
 # If it should instead be relative to PROJECT_DOCROOT, then the 'generate' mode
@@ -26,7 +28,7 @@ global DC_NS "[default]='$(u_dc_default_namespace)' [help]='Docker-compose names
 # allow applying defaults when DC_MODE is set in another global.vars.sh file.
 case "$DC_MODE" in
   auto|generate)
-    global DC_YML_VARIANTS "[default]='$HOST_TYPE $INSTANCE_TYPE' [help]='Hook variants to determine which docker-compose.yml (and optionally docker-compose.override.yml) will be matched for use in current project instance. Defaults to ’HOST_TYPE INSTANCE_TYPE’.'"
+    global DC_YML_VARIANTS "[default]='$HOST_TYPE $INSTANCE_TYPE v$DC_STACK_VERSION' [help]='Hook variants to determine which docker-compose.yml (and optionally docker-compose.override.yml) will be matched for use in current project instance. Defaults to ’HOST_TYPE INSTANCE_TYPE’.'"
     ;;
   manual)
     global DC_YML "[default]='docker-compose.yml' [help]='Specifies where docker-compose will find the YAML declaration file to use for current project instance.'"
@@ -38,7 +40,7 @@ esac
 global DC_SUBDOMAIN_SEP "[default]='.' [help]='Subdomain or prefix separator for use in Traefik labels. E.g. if instance domain is example.com, one of its services could want to use backend.example.com -> separator = ’.’ in this case. Otherwise, if instance domain is stage.example.com, a service wanting another subdomain would be mailhog-stage.example.com -> here, separator = ’-’.'"
 
 # [optional] Shorter generated make tasks names.
-# @see u_instance_task_name() in cwt/instance/instance.inc.sh
+# @see u_make_task_name() in cwt/instance/instance.inc.sh
 global CWT_MAKE_TASKS_SHORTER "[append]='docker-compose/dc'"
 global CWT_MAKE_TASKS_SHORTER "[append]='service-exec/se'"
 global CWT_MAKE_TASKS_SHORTER "[append]='service-run/sr'"

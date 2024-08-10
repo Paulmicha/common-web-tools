@@ -280,7 +280,7 @@ u_cwt_extension_path() {
 # @example
 #   primitive_values=''
 #   u_cwt_primitive_values 'subjects'
-#   echo "$primitive_values" # Yields 'app git host instance remote test'
+#   echo "$primitive_values" # Yields 'app  cache  git  host  instance  make  test'
 #
 #   # Default path 'cwt' can be modified by providing the 2nd argument :
 #   primitive_values=''
@@ -373,6 +373,7 @@ u_cwt_primitive_values() {
       if [[ "$p_primitive" == 'actions' ]]; then
         v="${v%%.sh}"
         u_str_split1 'v_dots_arr' "$v" '.'
+
         if [[ ${#v_dots_arr[@]} -gt 1 ]]; then
           continue
         fi
@@ -558,9 +559,9 @@ u_cwt_get_actions() {
 #   echo "$lookup_paths"
 #
 u_cwt_extensions_get_makefiles() {
-  local mk_includes_lp
-  local cwt_gm_ext
-  local ext_path
+  local mk_includes_lp=''
+  local cwt_gm_ext=''
+  local ext_path=''
 
   for cwt_gm_ext in $CWT_EXTENSIONS; do
     ext_path=''

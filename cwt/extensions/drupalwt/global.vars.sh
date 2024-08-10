@@ -30,5 +30,5 @@ global DWT_USE_CRONTAB "[default]=false [help]='When true, during app install, a
 global DWT_CRON_FREQ "[default]='0 * * * *'"
 
 # [optional] Shorter generated make tasks names.
-# @see u_instance_task_name() in cwt/instance/instance.inc.sh
+# @see u_make_task_name() in cwt/instance/instance.inc.sh
 global CWT_MAKE_TASKS_SHORTER "[append]='drupalwt/dwt'"

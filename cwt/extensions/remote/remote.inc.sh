@@ -19,6 +19,9 @@
 #
 # See https://gist.github.com/dehamzah/ac216f38319d34444487f6375359ad29
 #
+# If the env var DEBUG_MODE is non-empty, this function will only print the
+# command to be executed.
+#
 # @example
 #   # Download a single file.
 #   u_remote_download 'my_short_id' /remote/file.ext /local/dir/
@@ -75,9 +78,13 @@ u_remote_download() {
   fi
 
   # Debug.
-  # echo "scp ${REMOTE_INSTANCE_SSH_USER}@${REMOTE_INSTANCE_HOST}:$p_remote_path $p_local_path $@"
+  if [[ -n "$DEBUG_MODE" ]]; then
+    echo "u_remote_download() debug mode - command :"
+    echo "  scp $REMOTE_INSTANCE_PREFIX:$p_remote_path $p_local_path $@"
+    return
+  fi
 
-  scp "${REMOTE_INSTANCE_SSH_USER}@${REMOTE_INSTANCE_HOST}:$p_remote_path" "$p_local_path" "$@"
+  scp "$REMOTE_INSTANCE_PREFIX:$p_remote_path" "$p_local_path" "$@"
 
   if [[ $? -ne 0 ]]; then
     if [[ -z "$remote_download_skip_errors" ]]; then
@@ -100,6 +107,9 @@ u_remote_download() {
 #   - any additional arguments are passed on to the 'scp' command
 #
 # See https://gist.github.com/dehamzah/ac216f38319d34444487f6375359ad29
+#
+# If the env var DEBUG_MODE is non-empty, this function will only print the
+# command to be executed.
 #
 # @example
 #   # Upload a single file.
@@ -140,15 +150,23 @@ u_remote_upload() {
   fi
 
   if [[ "$1" == '--ignore-existing' ]]; then
-    local uru_host_part=''
-    if [[ -n "$REMOTE_INSTANCE_SSH_USER" ]]; then
-      uru_host_part="${REMOTE_INSTANCE_SSH_USER}@${REMOTE_INSTANCE_HOST}"
-    else
-      uru_host_part="$REMOTE_INSTANCE_HOST"
+    # Debug.
+    if [[ -n "$DEBUG_MODE" ]]; then
+      echo "u_remote_upload() debug mode - command :"
+      echo "  rsync -vau $p_local_path $REMOTE_INSTANCE_PREFIX:${p_remote_path}"
+      return
     fi
-    rsync -vau "$p_local_path" "$uru_host_part:${p_remote_path}"
+
+    rsync -vau "$p_local_path" "$REMOTE_INSTANCE_PREFIX:${p_remote_path}"
   else
-    scp "$p_local_path" "${REMOTE_INSTANCE_SSH_USER}@${REMOTE_INSTANCE_HOST}:${p_remote_path}" $@
+    # Debug.
+    if [[ -n "$DEBUG_MODE" ]]; then
+      echo "u_remote_upload() debug mode - command :"
+      echo "  scp $p_local_path $REMOTE_INSTANCE_PREFIX:${p_remote_path} $@"
+      return
+    fi
+
+    scp "$p_local_path" "$REMOTE_INSTANCE_PREFIX:${p_remote_path}" $@
   fi
 
   if [[ $? -ne 0 ]]; then
@@ -163,6 +181,9 @@ u_remote_upload() {
 
 ##
 # Executes commands remotely from local instance.
+#
+# If the env var DEBUG_MODE is non-empty, this function will only print the
+# command to be executed.
 #
 # @param 1 String : remote instance's id (short name, no space, _a-zA-Z0-9 only).
 # @param ... The rest will be forwarded to the script.
@@ -194,8 +215,12 @@ u_remote_exec_wrapper() {
     remote_cmd="cd $REMOTE_INSTANCE_DOCROOT && $@"
   fi
 
-  # Debug
-  # echo "$REMOTE_INSTANCE_SSH_CONNECT_CMD \"$remote_cmd\""
+  # Debug.
+  if [[ -n "$DEBUG_MODE" ]]; then
+    echo "u_remote_exec_wrapper() debug mode - command :"
+    echo "  $REMOTE_INSTANCE_SSH_CONNECT_CMD \"$remote_cmd\""
+    return
+  fi
 
   $REMOTE_INSTANCE_SSH_CONNECT_CMD "$remote_cmd"
 }
@@ -216,14 +241,22 @@ u_remote_exec_wrapper() {
 #   dumps:
 #     default:
 #       base_dir: /path/to/dumps
-#       file: '{{ %Y-%m-%d.%H-%M-%S }}_site_{{ DOMAIN }}'
+#       file: '{{ %Y-%m-%d.%H-%M-%S }}_site_{{ domain }}'
+#   files:
+#     public:
+#       remote: {{ docroot }}/path/to/public-files
+#       local: '{{ APP_DOCROOT }}/path/to/public-files
 #
 # ```
-# - The {{ DOMAIN }} will be replaced by 'foobar.com'.
-# - Any global var (env) can also be used here.
-# - The {{ %Y-%m-%d.%H-%M-%S }} part will be replaced by '2024-07-25.11-16-11'.
+# - {{ domain }} will be replaced by 'foobar.com'.
+# - {{ docroot }} will be replaced by '/var/www/foobar'.
+# - Any global (env) var, e.g. {{ APP_DOCROOT }}, will be replaced by their
+#   value.
+# - The {{ %Y-%m-%d.%H-%M-%S }} part will be replaced by current datestamp like
+#   '2024-07-25.11-16-11'.
 #
-# This writes its result to a variable subject to collision in calling scope.
+# This writes its result to a variable subject to collision in calling scope :
+#
 # @var tokens_replaced
 #
 # @param 1 String : remote instance's id (e.g. 'prod').
@@ -352,8 +385,12 @@ u_remote_definition_tokens_replace() {
       p_circuit_breaker+=1
       u_remote_definition_tokens_replace "$p_remote_id" "$tokens_replaced" $p_circuit_breaker
     else
-      echo "Notice : breaking out of u_remote_definition_tokens_replace() recursion."
-      echo "  $tokens_replaced"
+      echo >&2
+      echo "Error : breaking out of u_remote_definition_tokens_replace() recursion." >&2
+      echo "This likely means that at least one token value is empty in :" >&2
+      echo "  $tokens_replaced" >&2
+      echo >&2
+      exit 3
     fi
   esac
 }
@@ -361,13 +398,18 @@ u_remote_definition_tokens_replace() {
 ##
 # Setup all remote instances at once using YAML file hook: remote_instances.yml
 #
-# Only the most specific file will be used. This allows to restrict the
+# Converts the YAML code into generated bash files that will be sourced when
+# calling u_remote_instance_load(). They export variables with a specific
+# naming convention. They are not the same as "globals" i.e. not read-only, and
+# not exported in .env file(s).
+#
+# To read the generated remote instance definition(s) :
+# @see u_remote_instance_load()
+# @see u_remote_definition_get_key()
+#
+# Only the most specific .yml file will be used. This allows to restrict the
 # possibility to execute remote calls from certain instances (i.e. non-local
 # and/or per instance type).
-#
-# Prerequisite : in order to use the option 'ssh_use_agent_filter', the
-# package 'ssh-agent-filter' must be installed on your local machine.
-# @prereq https://git.tiwe.de/ssh-agent-filter.git
 #
 # To list matches & check which one will be used (the most specific) :
 # $ u_hook_most_specific 'dry-run' \
@@ -376,6 +418,112 @@ u_remote_definition_tokens_replace() {
 #     -v 'HOST_TYPE INSTANCE_TYPE' \
 #     -t -r -d
 #   echo "match = $hook_most_specific_dry_run_match"
+#
+# @example
+#   # Here's an example YAML remote instances definition file :
+#   #   remote_instances.local.yml
+#   # (i.e. only loaded on 'local' INSTANCE_TYPE) :
+#   ```yaml
+#
+#   includes:
+#     common:
+#       ssh:
+#         user: paul
+#         exec_prefix: '[ -f ~/.bashrc ] && . ~/.bashrc ;'
+#     drupal:
+#       docroot: /var/www/drupal/root
+#       files:
+#         public:
+#           remote: {{ DOCROOT }}/web/sites/default/files
+#           local: '{{ SERVER_DOCROOT }}/sites/default/files'
+#         private:
+#           remote: {{ DOCROOT }}/private
+#           local: '{{ APP_DOCROOT }}/private'
+#       dumps:
+#         default:
+#           base_dir: /var/www/drupal/dumps
+#           file: '{{ %Y-%m-%d.%H-%M-%S }}_drupal_{{ DOMAIN }}.sql'
+#           latest_symlink: 'drupal_latest_{{ DOMAIN }}.sql'
+#           cmd: drush sql-dump --structure-tables-key='common' --result-file='{{ DUMPS_DEFAULT_BASE_DIR }}/local/{{ DUMPS_DEFAULT_FILE }}' --gzip
+#     node:
+#       docroot: /var/www/node
+#       dumps:
+#         node:
+#           base_dir: /var/www/node/dump
+#           file: '{{ %Y-%m-%d.%H-%M-%S }}_node_{{ DOMAIN }}.sql'
+#           latest_symlink: 'node_latest_{{ DOMAIN }}.sql'
+#           type: mysql
+#           env_map:
+#             db_user: FOOBAR_USER
+#             db_name: FOOBAR_NAME
+#             db_host: FOOBAR_HOST
+#             db_port: FOOBAR_PORT
+#             db_pass: FOOBAR_PASS
+#
+#   dev:
+#     includes: common drupal
+#     host: 1.2.3.4
+#     domain: dev.foobar.com
+#
+#   dev_node:
+#     includes: common node
+#     host: 10.20.30.40
+#     domain: dev-node.foobar.com
+#
+#   staging:
+#     includes: common drupal
+#     host: 2.3.4.5
+#     domain: staging.foobar.com
+#
+#   staging_node:
+#     includes: common node
+#     host: 20.30.40.50
+#     domain: staging-node.foobar.com
+#
+#   prod:
+#     includes: common drupal
+#     host: 3.4.5.6
+#     domain: prod.foobar.com
+#
+#   prod_node:
+#     includes: common node
+#     host: 30.40.50.60
+#     domain: prod-node.foobar.com
+#
+#   ```
+#   # Important note :
+#   # In order to match remote and local databases, the DB dumps definitions
+#   # are keyed by CWT DB_IDs, as in :
+#   # @see u_db_set() in cwt/extensions/db/db.inc.sh
+#
+#   # With that declaration, running :
+#   u_remote_instances_setup
+#
+#   # Will (re)generate the following files :
+#   # - scripts/cwt/local/remote-instances/dev.sh
+#   # - scripts/cwt/local/remote-instances/dev_node.sh
+#   # - scripts/cwt/local/remote-instances/staging.sh
+#   # - scripts/cwt/local/remote-instances/staging_node.sh
+#   # - scripts/cwt/local/remote-instances/prod.sh
+#   # - scripts/cwt/local/remote-instances/prod_node.sh
+#
+#   # Example content - e.g. of file scripts/cwt/local/remote-instances/dev.sh :
+#   export REMOTE_INSTANCE_DOCROOT='/var/www/drupal/root'
+#   export REMOTE_INSTANCE_DOMAIN='dev.foobar.com'
+#   export REMOTE_INSTANCE_DUMPS_DEFAULT_BASE_DIR='/var/www/drupal/dump'
+#   export REMOTE_INSTANCE_DUMPS_DEFAULT_CMD='drush sql-dump --structure-tables-key='"'"'common'"'"' --result-file='"'"'{{ DUMPS_DEFAULT_BASE_DIR }}/local/{{ DUMPS_DEFAULT_FILE }}'"'"' --gzip'
+#   export REMOTE_INSTANCE_DUMPS_DEFAULT_FILE='{{ %Y-%m-%d.%H-%M-%S }}_drupal_{{ DOMAIN }}.sql'
+#   export REMOTE_INSTANCE_DUMPS_DEFAULT_LATEST_SYMLINK='drupal_latest_{{ DOMAIN }}.sql'
+#   export REMOTE_INSTANCE_FILES_PRIVATE_LOCAL='{{ APP_DOCROOT }}/private'
+#   export REMOTE_INSTANCE_FILES_PRIVATE_REMOTE='{{ DOCROOT }}/private'
+#   export REMOTE_INSTANCE_FILES_PUBLIC_LOCAL='{{ SERVER_DOCROOT }}/sites/default/files'
+#   export REMOTE_INSTANCE_FILES_PUBLIC_REMOTE='/var/www/drupal/files'
+#   export REMOTE_INSTANCE_PREFIX='paul@1.2.3.4'
+#   export REMOTE_INSTANCE_HOST='1.2.3.4'
+#   export REMOTE_INSTANCE_ID='recette'
+#   export REMOTE_INSTANCE_SSH_CONNECT_CMD='ssh -T -A paul@1.2.3.4'
+#   export REMOTE_INSTANCE_SSH_EXEC_PREFIX='[ -f ~/.bashrc ] && . ~/.bashrc ;'
+#   export REMOTE_INSTANCE_SSH_USER='paul'
 #
 u_remote_instances_setup() {
   hook_most_specific_dry_run_match=''
@@ -426,12 +574,18 @@ EOF
     local val
     local key
     local keys=()
+    local include
 
     u_remote_definition_get_keys
 
     u_yaml_get_root_keys "$hook_most_specific_dry_run_match"
 
     for remote_id in "${yaml_keys[@]}"; do
+      # "includes" is a reserved keyword.
+      case "$remote_id" in 'includes')
+        continue
+      esac
+
       var_prefix="cwtri_${remote_id}"
 
       # The dictionary stores all the variables to be (re)written in the
@@ -466,50 +620,69 @@ EOF
         setup_dict["$key"]="$val"
       done
 
+      # Check includes ("extending" shared definitions).
+      var="${var_prefix}_includes"
+      val="${!var}"
+
+      if [[ -n  "$val" ]]; then
+        # Debug.
+        # echo "${var_prefix} includes :"
+
+        for include in $val; do
+          # Debug.
+          # echo "  $include :"
+
+          for key in "${keys[@]}"; do
+            var="cwtri_includes_${include}_${key}"
+            val="${!var}"
+
+            if [[ -z "$val" ]]; then
+              continue
+            fi
+
+            # Skip any existing non-empty value in current remote definition, so
+            # that it only "inherits" values not already specified.
+            if [[ -n "${setup_dict[$key]}" ]]; then
+              continue
+            fi
+
+            # Debug.
+            # echo "    ${key} = $val"
+
+            val="${val%\'}"
+            val="${val#\'}"
+            val="${val%\"}"
+            val="${val#\"}"
+
+            setup_dict["$key"]="$val"
+          done
+        done
+      fi
+
       # Can't carry on without the host.
       if [[ -z "${setup_dict[host]}" ]]; then
         echo "Notice : there is no 'host' for remote '$remote_id' -> skip setup."
         continue
       fi
 
-      # Deal with fallback values (if available).
-      if [[ -z "${setup_dict[ssh_exec_prefix]}" ]] \
-        && [[ -n "$CWT_REMOTE_SSH_EXEC_PREFIX" ]]
-      then
-        setup_dict[ssh_exec_prefix]="$CWT_REMOTE_SSH_EXEC_PREFIX"
-      fi
-
-      # Custom tokens, e.g. {{ CURRENT_USER }} must be replaced by the current
-      # local user name, even if sudoing.
-      # See https://stackoverflow.com/questions/1629605/getting-user-inside-shell-script-when-running-with-sudo
-      case "${setup_dict[ssh_user]}" in '{{ CURRENT_USER }}')
-        setup_dict[ssh_user]="$(logname 2>/dev/null || echo $SUDO_USER)"
-      esac
-
-      # Provide a default SSH connect command.
-      if [[ -z "${setup_dict[ssh_connect_cmd]}" ]]; then
-        local user_host="${setup_dict[ssh_user]}@${setup_dict[host]}"
-
-        if [[ -z "${setup_dict[ssh_user]}" ]]; then
-          user_host="${setup_dict[host]}"
-        fi
-
-        # NB : the '-A' flag allows to forward currently loaded SSH keys from
-        # the local terminal session. The '-T' flag requests a non-interactive
-        # tty (= opens a non-interactive terminal session on remote).
-        setup_dict[ssh_connect_cmd]="ssh -T -A $user_host"
-
-        if [[ -n "${setup_dict[ssh_port]}" ]]; then
-          setup_dict[ssh_connect_cmd]="ssh -T -A -p${setup_dict[ssh_port]} $user_host"
-        fi
-      fi
-
-      # Pre-render the remote connection prefix for commands like rsync or scp.
+      # Preset the remote host prefix for commands like ssh, rsync or scp.
       if [[ -z "${setup_dict[prefix]}" ]]; then
         setup_dict[prefix]="${setup_dict[host]}"
 
         if [[ -n "${setup_dict[ssh_user]}" ]]; then
           setup_dict[prefix]="${setup_dict[ssh_user]}@${setup_dict[host]}"
+        fi
+      fi
+
+      # Provide a default SSH connect command.
+      if [[ -z "${setup_dict[ssh_connect_cmd]}" ]]; then
+        # NB : the '-A' flag allows to forward currently loaded SSH keys from
+        # the local terminal session. The '-T' flag requests a non-interactive
+        # tty (= opens a non-interactive terminal session on remote).
+        setup_dict[ssh_connect_cmd]="ssh -T -A ${setup_dict[prefix]}"
+
+        if [[ -n "${setup_dict[ssh_port]}" ]]; then
+          setup_dict[ssh_connect_cmd]="ssh -T -A -p${setup_dict[ssh_port]} ${setup_dict[prefix]}"
         fi
       fi
 
@@ -541,12 +714,18 @@ EOF
 EOF
       # Write (append) to the generated definition file, escaping single quotes
       # because it's a plain bash script that will be sourced.
-      for key in "${!setup_dict[@]}"; do
+      # Sort keys to output a more readable generated file.
+      local sorted_keys="$(for key in ${!setup_dict[@]}; do echo "$key"; done | sort)"
+
+      for key in $sorted_keys; do
         var="remote_instance_$key"
         u_str_uppercase "$var" 'var'
 
         val="${setup_dict[$key]}"
-        val="${val//\'/\'\"\'\"\'}" # @link https://stackoverflow.com/a/1250279/2592338
+
+        # Escape single quotes in a way that does not break the shell.
+        # @link https://stackoverflow.com/a/1250279/2592338
+        val="${val//\'/\'\"\'\"\'}"
 
         printf "%s\n" "export $var='$val'" >> "$conf"
       done
@@ -580,6 +759,7 @@ u_remote_definition_get_keys() {
   keys+=('ssh_port')
   keys+=('ssh_exec_prefix')
   keys+=('ssh_connect_cmd')
+  keys+=('dumps_datestamp')
 
   # Remote files are a dynamic list of names (suffixes) used to assign variables
   # to folders to sync to and from (anb between) remote instances. It's meant
@@ -590,8 +770,8 @@ u_remote_definition_get_keys() {
 
     for suffix in $CWT_REMOTE_FILES_SUFFIXES; do
       u_str_sanitize_var_name "$suffix" 'suffix'
-      keys+=("data_files_${suffix}_remote")
-      keys+=("data_files_${suffix}_local")
+      keys+=("files_${suffix}_remote")
+      keys+=("files_${suffix}_local")
     done
   fi
 
@@ -605,11 +785,16 @@ u_remote_definition_get_keys() {
     u_db_get_ids
 
     for db_id in "${db_ids[@]}"; do
-      keys+=("data_dumps_${db_id}_base_dir")
-      keys+=("data_dumps_${db_id}_file")
-      keys+=("data_dumps_${db_id}_latest_symlink")
-      keys+=("data_dumps_${db_id}_type")
-      keys+=("data_dumps_${db_id}_cmd")
+      keys+=("dumps_${db_id}_base_dir")
+      keys+=("dumps_${db_id}_file")
+      keys+=("dumps_${db_id}_latest_symlink")
+      keys+=("dumps_${db_id}_type")
+      keys+=("dumps_${db_id}_cmd")
+
+      # TODO [evol] does it make sense to keep a trace of the latest datestamp ?
+      # As an alternative to symlinks - because the download of the latest dump
+      # will currently always result in the same file name locally...
+      # keys+=("dumps_${db_id}_datestamp")
     done
 
     # In order to generate remote commands like mysql dump, in some cases, there
@@ -621,11 +806,11 @@ u_remote_definition_get_keys() {
     local vars_to_map='db_driver db_host db_port db_name db_user db_pass db_admin_user db_admin_pass'
 
     for var in $vars_to_map; do
-      keys+=("data_dumps_${db_id}_env_map_${var}")
+      keys+=("dumps_${db_id}_env_map_${var}")
     done
   fi
 
-  # Allows other extensions to extend the list of keys.
+  # Allows other extensions to alter the list of keys.
   hook -s 'remote_definition_keys' -a 'alter' -v 'REMOTE_INSTANCE_ID'
 }
 
@@ -634,18 +819,25 @@ u_remote_definition_get_keys() {
 #
 # @param 1 String : remote instance ID.
 # @param 2 String : key of the value to read from its definition.
-# @param 3 String : name of the variable in calling scope which holds the
-#   result.
+# @param 3 [optional] String : name of the variable in calling scope which holds
+#   the result. Defaults to "$2".
+# @param 4 [optional] String : flag to skip tokens replacement.
+#   Defaults to an empty string, meaning : don't skip.
 #
 # @example
 #   remote_dir=''
-#   u_remote_definition_get_key 'prod' 'data_files_private_remote' 'remote_dir'
+#   u_remote_definition_get_key 'prod' 'files_private_remote' 'remote_dir'
 #   echo "remote_dir = $remote_dir"
 #
 u_remote_definition_get_key() {
   local p_remote_id="$1"
   local p_key="$2"
   local p_rdgk_var="$3"
+  local p_skip_token_replacement="$4"
+
+  if [[ -z "$p_rdgk_var" ]]; then
+    p_rdgk_var="$p_key"
+  fi
 
   # Only load the remote instance definition if not already loaded.
   if [[ -z "$REMOTE_INSTANCE_ID" || "$REMOTE_INSTANCE_ID" != "$p_remote_id" ]]; then
@@ -668,11 +860,15 @@ u_remote_definition_get_key() {
   fi
 
   # Replace tokens.
-  local tokens_replaced=''
-  u_remote_definition_tokens_replace "$p_remote_id" "$val"
+  if [[ -z "$p_skip_token_replacement" ]]; then
+    local tokens_replaced=''
+    u_remote_definition_tokens_replace "$p_remote_id" "$val"
 
-  # Write result to var in calling scope.
-  printf -v "$p_rdgk_var" '%s' "$tokens_replaced"
+    # Write result to var in calling scope.
+    printf -v "$p_rdgk_var" '%s' "$tokens_replaced"
+  else
+    printf -v "$p_rdgk_var" '%s' "$val"
+  fi
 }
 
 ##
@@ -708,9 +904,15 @@ u_remote_instance_load() {
 #   u_remote_purge_instances
 #
 u_remote_purge_instances() {
+  local file=''
+
+  echo "Clearing generated remote instances definitions ..."
+
   u_fs_file_list 'scripts/cwt/local/remote-instances'
+
   for file in $file_list; do
     rm "scripts/cwt/local/remote-instances/$file"
+
     if [[ $? -ne 0 ]]; then
       echo >&2
       echo "Error in u_remote_purge_instances() - $BASH_SOURCE line $LINENO: failed to remove locally generated instance '$file' (in scripts/cwt/local/remote-instances)." >&2
@@ -718,5 +920,33 @@ u_remote_purge_instances() {
       echo >&2
       return 1
     fi
+  done
+
+  echo "Clearing generated remote instances definitions : done."
+  echo
+}
+
+##
+# Get all local generated remote instance IDs.
+#
+# Requires that the following var in calling scope be initialized to an empty
+# array :
+#
+# @var instance_ids
+#
+# @example
+#   instance_ids=()
+#   u_remote_get_instances
+#   for instance_id in "${instance_ids[@]}"; do
+#     echo "instance_id = $instance_id"
+#   done
+#
+u_remote_get_instances() {
+  local file=''
+
+  u_fs_file_list 'scripts/cwt/local/remote-instances'
+
+  for file in $file_list; do
+    instance_ids+=("${file%.sh}")
   done
 }

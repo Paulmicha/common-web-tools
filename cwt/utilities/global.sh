@@ -76,6 +76,11 @@ u_global_list() {
 # @see u_instance_init()
 #
 u_global_write() {
+  local gn_arr=()
+  local global_val=''
+  local has_double_quote=0
+  local has_single_quote=0
+
   if [ -z "$GLOBALS_COUNT" ]; then
     echo >&2
     echo "Error in u_global_write() - $BASH_SOURCE line $LINENO: nothing to write." >&2
@@ -105,15 +110,62 @@ EOF
 
   # Write every aggregated globals.
   for global_name in ${GLOBALS['.sorting']}; do
-    u_str_split1 'evn_arr' "$global_name" '|'
-    global_name="${evn_arr[1]}"
-    eval "[[ -z \"\$$global_name\" ]] && echo \"readonly $global_name\"=\'\' >> scripts/cwt/local/global.vars.sh"
-    eval "[[ -n \"\$$global_name\" ]] && echo \"readonly $global_name=\\\"\$$global_name\\\"\" >> scripts/cwt/local/global.vars.sh"
+    u_str_split1 'gn_arr' "$global_name" '|'
+
+    global_name="${gn_arr[1]}"
+    global_val="${!global_name}"
+
+    has_double_quote=0
+    has_single_quote=0
+
+    case "$global_val" in *'"'*)
+      has_double_quote=1
+    esac
+
+    case "$global_val" in *"'"*)
+      has_single_quote=1
+    esac
+
+    # TODO is there a way out of this ? Considered edge case, #YAGNI.
+    if [[ $has_double_quote == 1 && $has_single_quote == 1 ]]; then
+      echo
+      echo "Notice : the global $global_name has the following value :"
+      echo "  ${!global_name}"
+      echo "  -> it appears to have both single quotes and double quotes, which can cause unexpected issues."
+      echo
+    fi
+
+    if [[ -z "$global_val" ]]; then
+      echo "readonly $global_name=''" >> scripts/cwt/local/global.vars.sh
+    else
+      if [[ $has_single_quote != 1 ]]; then
+        echo "readonly $global_name='$global_val'" >> scripts/cwt/local/global.vars.sh
+      else
+        # TODO do we want to escape any '$' sign when using double quotes ?
+        echo "readonly $global_name=\"$global_val\"" >> scripts/cwt/local/global.vars.sh
+      fi
+    fi
+
+    # Debug.
+    # echo "global_name = $global_name -> value : '${!global_name}'"
 
     # Also write globals to git-ignored '.env' file for Makefile and other tools
     # like docker-compose.
-    eval "[[ -z \"\$$global_name\" ]] && echo \"$global_name\"= >> .env"
-    eval "[[ -n \"\$$global_name\" ]] && echo \"$global_name=\$$global_name\" >> .env"
+    # In this case, any value that could break inclusion of the .env file in a
+    # bash script must be quoted.
+    case "$global_val" in *' '*|*'$'*|*'#'*|*'['*|*']'*|*'*|*'*|*'&'*|*'*'*|*'"'*|*"'"*)
+      if [[ $has_single_quote != 1 ]]; then
+        global_val="'$global_val'"
+      else
+        global_val="\"$global_val\""
+      fi
+    esac
+
+    if [[ -z "$global_val" ]]; then
+      echo "$global_name=" >> .env
+    else
+      echo "$global_name=$global_val" >> .env
+    fi
   done
 
   echo "Writing global (env) vars to scripts/cwt/local/global.vars.sh : done."

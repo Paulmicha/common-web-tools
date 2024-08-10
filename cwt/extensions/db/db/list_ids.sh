@@ -6,9 +6,9 @@
 # Prints all databse ID(s) declared in this project instance.
 #
 # @example
-#   make db-get-ids
+#   make db-list-ids
 #   # Or :
-#   cwt/extensions/db/db/get_ids.sh
+#   cwt/extensions/db/db/list_ids.sh
 #
 
 . cwt/bootstrap.sh

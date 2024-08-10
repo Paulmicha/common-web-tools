@@ -4,12 +4,12 @@
 # Convenience make task to list available actions in current project instance.
 #
 # @see Makefile
-# @see cwt/default.mk
+# @see cwt/make/default.mk
 #
 # @example
 #   make list-actions
 #   # Or :
-#   cwt/instance/list_actions.make.sh
+#   cwt/instance/list_actions.sh
 #
 
 . cwt/bootstrap.sh

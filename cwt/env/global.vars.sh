@@ -50,8 +50,8 @@ global HOST_OS "$(u_host_os)"
 
 # [optional] Provide additional custom makefile includes, and short subjects
 # or actions replacements used for generating Makefile task names.
-# @see u_instance_write_mk()
-# @see u_instance_task_name()
+# @see u_make_generate()
+# @see u_make_task_name()
 # @see Makefile
 global CWT_MAKE_INC "[append]='$(u_cwt_extensions_get_makefiles)'"
 global CWT_MAKE_TASKS_SHORTER "[append]='registry/reg lookup-path/lp'"

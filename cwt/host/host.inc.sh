@@ -158,7 +158,7 @@ u_host_os() {
 #
 # Writes to an abstract host-level storage by given key. "Abstract" means that
 # CWT core itself doesn't provide any actual implementation for this
-# functionality. It is necessary to use an extension which does. E.g. :
+# functionality. It is necessary to use an extension that does. E.g. :
 # @see cwt/extensions/file_registry
 #
 # @example
@@ -192,7 +192,7 @@ u_host_registry_set() {
 #
 # Reads from an abstract host-level storage by given key. "Abstract" means that
 # CWT core itself doesn't provide any actual implementation for this
-# functionality. It is necessary to use an extension which does. E.g. :
+# functionality. It is necessary to use an extension that does. E.g. :
 # @see cwt/extensions/file_registry
 #
 # NB : for performance reasons (to avoid using a subshell), this function

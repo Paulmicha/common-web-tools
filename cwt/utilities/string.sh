@@ -10,6 +10,135 @@
 #
 
 ##
+# Converts tokens from given global (or any variable containing any token).
+#
+# This is used for things like file names patterns, as in the "db" extension :
+# {{ %Y-%m-%d.%H-%M-%S }}_local-{{ DB_ID }}.{{ USER }}.{{ DUMP_FILE_EXTENSION }}
+#
+# Tokens can be any variable name available in calling scope, date formatters,
+# or anything that can be evaled.
+#
+# By convention, this function writes its result to a variable named by default
+# after the global name transformed to lowercase.
+#
+# @param 1 String : input var name.
+# @param 2 [optional] String : output var name.
+#   Defaults to param 1 in lowercase.
+# @param 3 [optional] Int : recursive calls counter. Because there are tokens
+#   that may point to values that also contain tokens, this function calls
+#   itself at the end to traverse all the tokens. But we need to be able to
+#   break out of the recursion if a token cannot get replaced due to missing
+#   value.
+#
+# @example
+#   # Use the default naming convention :
+#   DUMP_FILE_EXTENSION='sql'
+#   u_str_convert_tokens CWT_DB_DUMPS_LOCAL_PATTERN
+#   echo "cwt_db_dumps_local_pattern = '$cwt_db_dumps_local_pattern'"
+#
+#   # Provide a specific var name for reading the result :
+#   u_str_convert_tokens CWT_DB_DUMPS_LOCAL_PATTERN 'my_var_name'
+#   echo "my_var_name = '$my_var_name'"
+#
+u_str_convert_tokens() {
+  local p_input_var_name="$1"
+  local p_output_var_name="$2"
+  local p_circuit_breaker=0
+
+  if [[ -z "$p_input_var_name" ]]; then
+    echo >&2
+    echo "Error in u_str_convert_tokens() - $BASH_SOURCE line $LINENO: param 1 (p_input_var_name) is required." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    return 1
+  fi
+
+  if [[ -z "$p_output_var_name" ]]; then
+    u_str_lowercase "$p_input_var_name" 'p_output_var_name'
+  fi
+
+  if [[ $3 -gt $p_circuit_breaker ]]; then
+    p_circuit_breaker=$3
+  fi
+
+  local tokens_replaced="${!p_input_var_name}"
+  local regex="\{\{[[:space:]]*([^[:space:]]+)[[:space:]]*\}\}"
+  local regex_loop_str="$tokens_replaced"
+  local token=''
+  local match=''
+  local val=''
+  local token_var_name_check=''
+
+  while [[ "$regex_loop_str" =~ $regex ]]; do
+    token="${BASH_REMATCH[0]}"
+    match="${BASH_REMATCH[1]}"
+
+    # For the while loop to get all tokens, it needs to be gradually pruned.
+    regex_loop_str="${regex_loop_str#*$token}"
+
+    val=''
+    token_var_name_check=''
+
+    # Anything with a '%' character is considered a date formatter.
+    case "$match" in *'%'*)
+      val="$(date +"$match")"
+
+      # Debug.
+      # echo "token = '$token'"
+      # echo "  val = '$val'"
+
+      tokens_replaced="${tokens_replaced//$token/$val}"
+      continue
+    esac
+
+    u_str_sanitize_var_name "$match" 'token_var_name_check'
+
+    if [[ "$token_var_name_check" == "$match" && -v $match ]]; then
+      val="${!match}"
+    fi
+
+    # Debug.
+    # echo "val.1 = '$val'"
+
+    # If the attempt to convert to a variable name produces an empty string, we
+    # move on to the eval (in a subshell).
+    if [[ -z "$val" ]]; then
+      # Debug.
+      # echo "val=\"\$($match)\""
+
+      eval "val=\"\$($match)\""
+    fi
+
+    # Debug.
+    # echo "val.2 = '$val'"
+
+    # TODO is it ok to require that all tokens not be empty ?
+    if [[ -n "$val" ]]; then
+      tokens_replaced="${tokens_replaced//$token/$val}"
+    fi
+  done
+
+  # There are tokens that may point to values that also contain tokens.
+  case "$tokens_replaced" in *'{{ '*)
+    # Up to 9 recursions is probably more than enough.
+    if [[ $p_circuit_breaker -lt 10 ]]; then
+      p_circuit_breaker+=1
+      u_str_convert_tokens "$p_input_var_name" "$p_output_var_name" $p_circuit_breaker
+    else
+      echo >&2
+      echo "Error : breaking out of u_str_convert_tokens() recursion." >&2
+      echo "This likely means that at least one token value is empty in :" >&2
+      echo "  $tokens_replaced" >&2
+      echo >&2
+      exit 2
+    fi
+  esac
+
+  # Write result to var in calling scope.
+  printf -v "$p_output_var_name" '%s' "$tokens_replaced"
+}
+
+##
 # Encodes a single HTTP BasicAuth login/pass pair.
 #
 # Uses htpasswd encryption, which is also used for docker-compose Traefik labels.

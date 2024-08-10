@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 ##
-# Implements u_hook_most_specific -s 'db' -a 'import' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
+# Implements u_hook_most_specific -s 'db' -a 'exec' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
 #
 # This file is dynamically included when the "hook" is triggered.
-# @see u_db_import() in cwt/extensions/db/db.inc.sh
+# @see u_db_exec() in cwt/extensions/db/db.inc.sh
 #
 # The following variables are available here :
 #   - DB_ID - defaults to 'default'.
@@ -20,9 +20,9 @@
 # @see u_db_set() in cwt/extensions/db/db.inc.sh
 #
 # @example
-#   make db-import
+#   make db-exec
 #   # Or :
-#   cwt/extensions/db/db/import.sh
+#   cwt/extensions/db/db/exec.sh
 #
 
 # Prereq check :
@@ -57,7 +57,7 @@ psql \
 
 if [[ $? -ne 0 ]]; then
   echo >&2
-  echo "Error in $BASH_SOURCE line $LINENO: unable to import dump file '$db_dump_file' into $DB_DRIVER DB '$DB_NAME'." >&2
+  echo "Error in $BASH_SOURCE line $LINENO: unable to exec the queries in file '$db_dump_file' into $DB_DRIVER DB '$DB_NAME'." >&2
   echo "-> Aborting (2)." >&2
   echo >&2
   exit 2

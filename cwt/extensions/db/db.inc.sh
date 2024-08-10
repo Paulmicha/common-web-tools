@@ -116,10 +116,6 @@ u_db_set() {
   # per DB_ID.
   hook -s 'db' -a 'env_preset' -v 'INSTANCE_TYPE PROVISION_USING DB_ID'
 
-  # Allow bash aliases to be adapted to the currently active DB_ID.
-  # @see cwt/extensions/mysql/cwt/alias.docker-compose.hook.sh
-  hook -s 'cwt' -a 'alias' -v 'PROVISION_USING'
-
   case "$CWT_DB_MODE" in
     # Some environments do not require CWT to handle DB credentials at all.
     # In these cases, the following global env vars should be provided in
@@ -345,6 +341,10 @@ u_db_set() {
     u_str_uppercase "$prefixed_db_var" 'prefixed_db_var'
     export "$prefixed_db_var=${!db_var}"
   done
+
+  # Allow bash aliases to be adapted to the currently active DB_ID.
+  # @see cwt/extensions/mysql/cwt/alias.docker-compose.hook.sh
+  hook -s 'cwt' -a 'alias' -v 'PROVISION_USING'
 }
 
 ##
@@ -431,7 +431,7 @@ u_db_set_all() {
 
   if [[ -n "${db_ids[@]}" ]]; then
     for db_id in "${db_ids[@]}"; do
-      # Default site will be loaded last, see below.
+      # Default DB will be loaded last, see below.
       case "$db_id" in 'default')
         continue
       esac
@@ -449,6 +449,7 @@ u_db_set_all() {
 #
 # This funtion writes its result to a variable subject to collision in calling
 # scope :
+#
 # @var db_vars_list
 #
 # @example
@@ -463,7 +464,8 @@ u_db_vars_list() {
 # [abstract] Detects if a database already exists.
 #
 # "Abstract" means that this extension doesn't provide any actual implementation
-# for this functionality. It is necessary to use an extension which does. E.g. :
+# for this functionality. It is necessary to use an extension that does. E.g. :
+#
 # @see cwt/extensions/mysql
 # @see cwt/extensions/pgsql
 #
@@ -474,9 +476,11 @@ u_db_vars_list() {
 # $ make hook-debug ms s:db a:exists v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
 #
 # @param 1 String : the database name to check.
-# @param 2 [optional] String : unique DB identifier. Defaults to 'default'.
+# @param 2 [optional] String : the database ID ($DB_ID), see u_db_set().
+#   Defaults to 'default'.
 # @param 3 [optional] String : force reload flag (bypasses optimization) if the
 #   DB credentials vars are already exported in current shell scope.
+#   TODO deprecate this argument and export a specific variable instead.
 #
 # @example
 #   if u_db_exists 'my_db_name'; then
@@ -487,9 +491,12 @@ u_db_vars_list() {
 #
 u_db_exists() {
   local p_db_name="$1"
+  local p_db_id="$2"
+  local p_force_reload_flag="$3"
+
   local db_exists=''
 
-  u_db_set "$2" "$3"
+  u_db_set "$p_db_id" "$p_force_reload_flag"
   u_hook_most_specific -s 'db' -a 'exists' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
 
   case "$db_exists" in true)
@@ -503,7 +510,8 @@ u_db_exists() {
 # [abstract] Creates (+ sets up) new database.
 #
 # "Abstract" means that this extension doesn't provide any actual implementation
-# for this functionality. It is necessary to use an extension which does. E.g. :
+# for this functionality. It is necessary to use an extension that does. E.g. :
+#
 # @see cwt/extensions/mysql
 # @see cwt/extensions/pgsql
 #
@@ -513,23 +521,29 @@ u_db_exists() {
 # To check the most specific match (if any is found) :
 # $ make hook-debug ms s:db a:create v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
 #
-# @param 1 [optional] String : unique DB identifier. Defaults to 'default'.
+# @param 1 [optional] String : the database ID ($DB_ID), see u_db_set().
+#   Defaults to 'default'.
 # @param 2 [optional] String : force reload flag (bypasses optimization) if the
 #   DB credentials vars are already exported in current shell scope.
+#   TODO deprecate this argument and export a specific variable instead.
 #
 # @example
 #   u_db_create
 #
 u_db_create() {
-  u_db_set "$1" "$2"
+  local p_db_id="$1"
+  local p_force_reload_flag="$2"
+
+  u_db_set "$p_db_id" "$p_force_reload_flag"
   u_hook_most_specific -s 'db' -a 'create' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
 }
 
 ##
-# [abstract] Destroys given database.
+# [abstract] Destroys (deletes) a database.
 #
 # "Abstract" means that this extension doesn't provide any actual implementation
-# for this functionality. It is necessary to use an extension which does. E.g. :
+# for this functionality. It is necessary to use an extension that does. E.g. :
+#
 # @see cwt/extensions/mysql
 # @see cwt/extensions/pgsql
 #
@@ -539,64 +553,72 @@ u_db_create() {
 # To check the most specific match (if any is found) :
 # $ make hook-debug ms s:db a:destroy v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
 #
-# @param 1 [optional] String : unique DB identifier. Defaults to 'default'.
+# @param 1 [optional] String : the database ID ($DB_ID), see u_db_set().
+#   Defaults to 'default'.
 # @param 2 [optional] String : force reload flag (bypasses optimization) if the
 #   DB credentials vars are already exported in current shell scope.
+#   TODO deprecate this argument and export a specific variable instead.
 #
 # @example
 #   u_db_destroy
+#   u_db_destroy 'custom_db_id'
 #
 u_db_destroy() {
-  u_db_set "$1" "$2"
+  local p_db_id="$1"
+  local p_force_reload_flag="$2"
+
+  u_db_set "$p_db_id" "$p_force_reload_flag"
   u_hook_most_specific -s 'db' -a 'destroy' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
 }
 
 ##
-# [abstract] Imports given dump file into database.
+# [abstract] Executes given file (containing any query) in given DB ID.
 #
 # "Abstract" means that this extension doesn't provide any actual implementation
-# for this functionality. It is necessary to use an extension which does. E.g. :
+# for this functionality. It is necessary to use an extension that does. E.g. :
+#
 # @see cwt/extensions/mysql
 # @see cwt/extensions/pgsql
 #
-# To list all the possible paths that can be used, use :
-# $ make hook-debug s:db a:import v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
-#
-# To check the most specific match (if any is found) :
-# $ make hook-debug ms s:db a:import v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
-#
-# Important notes : implementations of the hook -s 'db' -a 'import' MUST use the
-# following variable in calling scope as input path (source file) :
+# Important notes : implementations of the hook -s 'db' -a 'dump' MUST use the
+# following variable in calling scope as output path (resulting file) :
 #
 # @var db_dump_file
 #
-# This function does not implement the import of the "raw" DB dump file, but
-# it always checks if it must be previously uncompressed (detects the ".tgz"
-# extension).
+# To list all the possible paths that can be used, use :
+# $ make hook-debug s:db a:exec v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
+#
+# To check the most specific match (if any is found) :
+# $ make hook-debug ms s:db a:exec v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
 #
 # @param 1 String : the dump file path.
-# @param 2 [optional] String : unique DB identifier. Defaults to 'default'.
+# @param 2 [optional] String : the database ID ($DB_ID), see u_db_set().
+#   Defaults to 'default'.
 # @param 3 [optional] String : force reload flag (bypasses optimization) if the
 #   DB credentials vars are already exported in current shell scope.
+#   TODO deprecate this argument and export a specific variable instead.
 #
 # @example
-#   u_db_import '/path/to/dump/file.sql.tgz'
+#   u_db_exec 'path/to/dump/file.sql.tgz'
 #
-u_db_import() {
+u_db_exec() {
   local p_dump_file_path="$1"
+  local p_db_id="$2"
+  local p_force_reload_flag="$3"
+
   local db_dump_dir
   local db_dump_file
   local leaf
 
   if [[ ! -f "$p_dump_file_path" ]]; then
     echo >&2
-    echo "Error in u_db_import() - $BASH_SOURCE line $LINENO: the DB dump file '$p_dump_file_path' is missing or inaccessible." >&2
+    echo "Error in u_db_exec() - $BASH_SOURCE line $LINENO: the DB dump file '$p_dump_file_path' is missing or inaccessible." >&2
     echo "-> Aborting (1)." >&2
     echo >&2
     exit 1
   fi
 
-  u_db_set "$2" "$3"
+  u_db_set "$p_db_id" "$p_force_reload_flag"
 
   db_dump_file="$p_dump_file_path"
 
@@ -625,7 +647,7 @@ u_db_import() {
 
     if [[ ! -f "$db_dump_file" ]]; then
       echo >&2
-      echo "Error in u_db_import() - $BASH_SOURCE line $LINENO: missing uncompressed dump file '$db_dump_file'." >&2
+      echo "Error in u_db_exec() - $BASH_SOURCE line $LINENO: missing uncompressed dump file '$db_dump_file'." >&2
       echo "-> Aborting (2)." >&2
       echo >&2
       exit 2
@@ -633,14 +655,15 @@ u_db_import() {
   fi
 
   # Implementations MUST use var $db_dump_file as input path (source file).
-  u_hook_most_specific -s 'db' -a 'import' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
+  u_hook_most_specific -s 'db' -a 'exec' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
 
   # Remove uncompressed version of the dump when we're done.
   if [[ $file_was_uncompressed -eq 0 ]]; then
     rm "$db_dump_file"
+
     if [[ $? -ne 0 ]]; then
       echo >&2
-      echo "Error in u_db_import() - $BASH_SOURCE line $LINENO: failed to remove uncompressed dump file '$db_dump_file'." >&2
+      echo "Error in u_db_exec() - $BASH_SOURCE line $LINENO: failed to remove uncompressed dump file '$db_dump_file'." >&2
       echo "-> Aborting (3)." >&2
       echo >&2
       exit 3
@@ -649,52 +672,57 @@ u_db_import() {
 }
 
 ##
-# [abstract] Backs up (= exports = saves) database to a compressed (tgz) dump file.
+# [abstract] Dumps database to a compressed (gz) dump file.
+#
+# This function does not implement the creation of the "raw" DB dump file, but
+# it always compresses it after (appending ".gz" to given file path).
 #
 # "Abstract" means that this extension doesn't provide any actual implementation
-# for this functionality. It is necessary to use an extension which does. E.g. :
+# for this functionality. It is necessary to use an extension that does. E.g. :
+#
 # @see cwt/extensions/mysql
 # @see cwt/extensions/pgsql
 #
-# To list all the possible paths that can be used, use :
-# $ make hook-debug s:db a:backup v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
-#
-# To check the most specific match (if any is found) :
-# $ make hook-debug ms s:db a:backup v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
-#
-# Important notes : implementations of the hook -s 'db' -a 'backup' MUST use the
+# Important notes : implementations of the hook -s 'db' -a 'dump' MUST use the
 # following variable in calling scope as output path (resulting file) :
 #
 # @var db_dump_file
 #
-# This function does not implement the creation of the "raw" DB dump file, but
-# it always compresses it immediately (appends ".tgz" to given file path).
+# To list all the possible paths that can be used, use :
+# $ make hook-debug s:db a:dump v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
+#
+# To check the most specific match (if any is found) :
+# $ make hook-debug ms s:db a:dump v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
 #
 # @param 1 String : the dump file path.
-# @param 2 [optional] String : unique DB identifier. Defaults to 'default'.
+# @param 2 [optional] String : the database ID ($DB_ID), see u_db_set().
+#   Defaults to 'default'.
 # @param 3 [optional] String : force reload flag (bypasses optimization) if the
 #   DB credentials vars are already exported in current shell scope.
+#   TODO deprecate this argument and export a specific variable instead.
 #
 # @example
-#   u_db_backup '/path/to/dump/file.sql'
+#   u_db_dump 'path/to/dump/file.sql'
 #
-u_db_backup() {
+u_db_dump() {
+  local p_dump_file_path="$1"
+  local p_db_id="$2"
+  local p_force_reload_flag="$3"
+
   if [[ -z "$CWT_DB_DUMPS_BASE_PATH" ]]; then
     echo >&2
-    echo "Error in u_db_backup() - $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_BASE_PATH' is undefined." >&2
+    echo "Error in u_db_dump() - $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_BASE_PATH' is undefined." >&2
     echo "Current instance must be (re)initialized with the 'db' extension enabled." >&2
     echo "-> Aborting (1)." >&2
     echo >&2
     exit 1
   fi
 
-  local p_dump_file_path="$1"
-
   local db_dump_dir
   local db_dump_file
   local db_dump_file_name
 
-  u_db_set "$2" "$3"
+  u_db_set "$p_db_id" "$p_force_reload_flag"
 
   db_dump_file="$p_dump_file_path"
   db_dump_dir="${db_dump_file%/${db_dump_file##*/}}"
@@ -704,7 +732,7 @@ u_db_backup() {
   # beforehand (e.g. existing file deleted or moved).
   if [[ -f "$db_dump_file" ]]; then
     echo >&2
-    echo "Error in u_db_backup() - $BASH_SOURCE line $LINENO: destination file '$db_dump_file' already exists." >&2
+    echo "Error in u_db_dump() - $BASH_SOURCE line $LINENO: destination file '$db_dump_file' already exists." >&2
     echo "-> Aborting (2)." >&2
     echo >&2
     exit 2
@@ -715,7 +743,7 @@ u_db_backup() {
 
     if [[ $? -ne 0 ]]; then
       echo >&2
-      echo "Error in u_db_backup() - $BASH_SOURCE line $LINENO: failed to create new backup dir '$db_dump_dir'." >&2
+      echo "Error in u_db_dump() - $BASH_SOURCE line $LINENO: failed to create new backup dir '$db_dump_dir'." >&2
       echo "-> Aborting (1)." >&2
       echo >&2
       exit 1
@@ -723,11 +751,11 @@ u_db_backup() {
   fi
 
   # Implementations MUST use var $db_dump_file as output path (resulting file).
-  u_hook_most_specific -s 'db' -a 'backup' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
+  u_hook_most_specific -s 'db' -a 'dump' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
 
   if [ ! -f "$db_dump_file" ]; then
     echo >&2
-    echo "Error in u_db_backup() - $BASH_SOURCE line $LINENO: file '$db_dump_file' does not exist." >&2
+    echo "Error in u_db_dump() - $BASH_SOURCE line $LINENO: file '$db_dump_file' does not exist." >&2
     echo "-> Aborting (2)." >&2
     echo >&2
     exit 2
@@ -735,19 +763,22 @@ u_db_backup() {
 
   # Compress & remove uncompressed dump file.
   db_dump_file_name="${db_dump_file##*/}"
-  tar czf "$db_dump_file.tgz" -C "$db_dump_dir" "$db_dump_file_name"
+
+  tar czf "$db_dump_file.gz" -C "$db_dump_dir" "$db_dump_file_name"
+
   if [[ $? -ne 0 ]]; then
     echo >&2
-    echo "Error in u_db_backup() - $BASH_SOURCE line $LINENO: failed to compress dump file '$db_dump_file'." >&2
+    echo "Error in u_db_dump() - $BASH_SOURCE line $LINENO: failed to compress dump file '$db_dump_file'." >&2
     echo "-> Aborting (3)." >&2
     echo >&2
     exit 3
   fi
 
   rm "$db_dump_file"
+
   if [[ $? -ne 0 ]]; then
     echo >&2
-    echo "Error in u_db_backup() - $BASH_SOURCE line $LINENO: failed to remove uncompressed dump file '$db_dump_file'." >&2
+    echo "Error in u_db_dump() - $BASH_SOURCE line $LINENO: failed to remove uncompressed dump file '$db_dump_file'." >&2
     echo "-> Aborting (4)." >&2
     echo >&2
     exit 4
@@ -758,7 +789,8 @@ u_db_backup() {
 # [abstract] Clears (empties) database.
 #
 # "Abstract" means that this extension doesn't provide any actual implementation
-# for this functionality. It is necessary to use an extension which does. E.g. :
+# for this functionality. It is necessary to use an extension that does. E.g. :
+#
 # @see cwt/extensions/mysql
 # @see cwt/extensions/pgsql
 #
@@ -768,15 +800,20 @@ u_db_backup() {
 # To check the most specific match (if any is found) :
 # $ make hook-debug ms s:db a:clear v:DB_DRIVER DB_ID INSTANCE_TYPE
 #
-# @param 1 [optional] String : unique DB identifier. Defaults to 'default'.
+# @param 1 [optional] String : the database ID ($DB_ID), see u_db_set().
+#   Defaults to 'default'.
 # @param 2 [optional] String : force reload flag (bypasses optimization) if the
 #   DB credentials vars are already exported in current shell scope.
+#   TODO deprecate this argument and export a specific variable instead.
 #
 # @example
 #   u_db_clear
 #
 u_db_clear() {
-  u_db_set "$1" "$2"
+  local p_db_id="$1"
+  local p_force_reload_flag="$2"
+
+  u_db_set "$p_db_id" "$p_force_reload_flag"
   u_hook_most_specific -s 'db' -a 'clear' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
 }
 
@@ -784,16 +821,20 @@ u_db_clear() {
 # Empties database + imports given dump file.
 #
 # @param 1 String : the dump file path.
-# @param 2 [optional] String : unique DB identifier. Defaults to 'default'.
+# @param 2 [optional] String : the database ID ($DB_ID), see u_db_set().
+#   Defaults to 'default'.
 # @param 3 [optional] String : force reload flag (bypasses optimization) if the
 #   DB credentials vars are already exported in current shell scope.
+#   TODO deprecate this argument and export a specific variable instead.
 #
 # @example
-#   u_db_restore '/path/to/dump/file.sql'
-#   u_db_restore '/path/to/dump/file.sql' 'my_custom_db_id'
+#   u_db_restore 'path/to/dump/file.sql'
+#   u_db_restore 'path/to/dump/file.sql' 'my_custom_db_id'
 #
 u_db_restore() {
   local p_dump_file_path="$1"
+  local p_db_id="$2"
+  local p_force_reload_flag="$3"
 
   if [[ ! -f "$p_dump_file_path" ]]; then
     echo >&2
@@ -803,8 +844,8 @@ u_db_restore() {
     exit 1
   fi
 
-  u_db_clear "$2" "$3"
-  u_db_import "$p_dump_file_path" "$2" "$3"
+  u_db_clear "$p_db_id" "$p_force_reload_flag"
+  u_db_exec "$p_dump_file_path" "$p_db_id" "$p_force_reload_flag"
 }
 
 ##
@@ -813,14 +854,22 @@ u_db_restore() {
 # @see u_fs_get_most_recent()
 # @requires globals CWT_DB_DUMPS_BASE_PATH in calling scope.
 #
-# @param 1 [optional] String : unique DB identifier. Defaults to 'default'.
-# @param 2 [optional] String : force reload flag (bypasses optimization) if the
+# @param 1 [optional] String : the database ID ($DB_ID), see u_db_set().
+#   Defaults to 'default'.
+# @param 2 [optional] String : subfolder in DB dumps dir.
+#   Defaults to 'local'.
+# @param 3 [optional] String : force reload flag (bypasses optimization) if the
 #   DB credentials vars are already exported in current shell scope.
+#   TODO deprecate this argument and export a specific variable instead.
 #
 # @example
 #   u_db_restore_last
 #
 u_db_restore_last() {
+  local p_db_id="$1"
+  local p_subdir="$2"
+  local p_force_reload_flag="$3"
+
   if [[ -z "$CWT_DB_DUMPS_BASE_PATH" ]]; then
     echo >&2
     echo "Error in u_db_restore_last() - $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_BASE_PATH' is undefined." >&2
@@ -830,36 +879,59 @@ u_db_restore_last() {
     exit 1
   fi
 
-  local p_db_id="$1"
+  if [[ ! -d "$CWT_DB_DUMPS_BASE_PATH" ]]; then
+    echo >&2
+    echo "Error in u_db_restore_last() - $BASH_SOURCE line $LINENO: the dir $CWT_DB_DUMPS_BASE_PATH does not exist." >&2
+    echo "-> Aborting (2)." >&2
+    echo >&2
+    exit 2
+  fi
 
   if [[ -z "$p_db_id" ]]; then
     p_db_id='default'
   fi
 
-  # TODO how to get most recent file from multiple dirs, because we may want to
-  # restore a recently downloaded dump from a remote instance, and we don't
-  # want to mix different databases together here ?
-  u_db_restore "$(u_fs_get_most_recent $CWT_DB_DUMPS_BASE_PATH/local/$p_db_id)" "$p_db_id" "$2"
+  if [[ -z "$p_subdir" ]]; then
+    p_subdir='local'
+  fi
+
+  u_db_restore \
+    "$(u_fs_get_most_recent $CWT_DB_DUMPS_BASE_PATH/$p_subdir/$p_db_id)" \
+    "$p_db_id" \
+    "$p_force_reload_flag"
 }
 
 ##
-# Creates a routine DB dump backup.
+# Routine local DB dump (backup).
 #
-# @requires globals CWT_DB_DUMPS_BASE_PATH in calling scope.
+# The dump file path will be determined by the following globals :
+#   - CWT_DB_DUMPS_BASE_PATH
+#   - CWT_DB_DUMPS_LOCAL_PATTERN
 #
-# @param 1 [optional] String : unique DB identifier. Defaults to 'default'.
-# @param 2 [optional] String : force reload flag (bypasses optimization) if the
-#   DB credentials vars are already exported in current shell scope.
+# @see cwt/extensions/db/global.vars.sh
 #
-# NB : for performance reasons (to avoid using a subshell), this function
-# writes its result to a variable subject to collision in calling scope.
+# This function writes its result to a variable subject to collision in calling
+# scope :
 #
 # @var routine_dump_file
 #
+# @param 1 [optional] String : the database ID ($DB_ID), see u_db_set().
+#   Defaults to 'default'.
+# @param 2 [optional] String : force reload flag (bypasses optimization) if the
+#   DB credentials vars are already exported in current shell scope.
+#   TODO deprecate this argument and export a specific variable instead.
+#
 # @example
 #   u_db_routine_backup
+#   echo "routine_dump_file = $routine_dump_file"
+#
+#   # Resulting dump file path example :
+#   # data/db-dumps/local/default/2024-08-08.17-25-29_local-default.paul.sql
 #
 u_db_routine_backup() {
+  local p_db_id="$1"
+  local p_force_reload_flag="$2"
+
   if [[ -z "$CWT_DB_DUMPS_BASE_PATH" ]]; then
     echo >&2
     echo "Error in u_db_routine_backup() - $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_BASE_PATH' is undefined." >&2
@@ -869,7 +941,16 @@ u_db_routine_backup() {
     exit 1
   fi
 
-  u_db_set $@
+  if [[ -z "$CWT_DB_DUMPS_LOCAL_PATTERN" ]]; then
+    echo >&2
+    echo "Error in u_db_routine_backup() - $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_LOCAL_PATTERN' is undefined." >&2
+    echo "Current instance must be (re)initialized with the 'db' extension enabled." >&2
+    echo "-> Aborting (2)." >&2
+    echo >&2
+    exit 2
+  fi
+
+  u_db_set "$p_db_id" "$p_force_reload_flag"
 
   local db_routine_new_backup_file
   local db_backup_file_middle
@@ -888,12 +969,23 @@ u_db_routine_backup() {
     db_backup_file_ext='sql'
   esac
 
-  db_routine_new_backup_file="$CWT_DB_DUMPS_BASE_PATH/local/$DB_ID/$(date +"%Y/%m/%d/%H-%M-%S")_$db_backup_file_middle.$db_backup_file_ext"
+  # Init var used in the pattern.
+  # @see cwt/extensions/db/global.vars.sh
+  # @see u_str_convert_tokens() in
+  local DUMP_FILE_EXTENSION="$db_backup_file_ext"
 
-  u_db_backup "$db_routine_new_backup_file" "$1" "$2"
+  u_str_convert_tokens CWT_DB_DUMPS_LOCAL_PATTERN 'db_routine_new_backup_file'
+
+  # Debug.
+  # echo "db_routine_new_backup_file = '$db_routine_new_backup_file'"
+
+  u_db_dump \
+    "$CWT_DB_DUMPS_BASE_PATH/local/$DB_ID/$db_routine_new_backup_file" \
+    "$p_db_id" \
+    "$p_force_reload_flag"
 
   # Some tasks need the generated dump file path.
-  routine_dump_file="${db_routine_new_backup_file}.tgz"
+  routine_dump_file="${db_routine_new_backup_file}.gz"
 }
 
 ##
@@ -901,12 +993,18 @@ u_db_routine_backup() {
 #
 # Optionally creates a new routine dump first.
 #
-# @param 1 [optional] String : pass 'new' to create new dump instead of
-#   returning most recent among existing local DB dump files.
-#   Pass 'initial' to get a dump file whose name matches 'initial.*'.
-# @param 2 [optional] String : unique DB identifier. Defaults to 'default'.
-# @param 3 [optional] String : force reload flag (bypasses optimization) if the
+# @param 1 [optional] String : Pass 'new' to create immediately a new routine
+#   dump and return its file path. Pass 'last' to return the most recent dump
+#   file. Any other value is a "find" file name filter that will return a single
+#   matching dump (the most recent in case there are several matches).
+#   Defaults to 'last'.
+# @param 2 [optional] String : the database ID ($DB_ID), see u_db_set().
+#   Defaults to 'default'.
+# @param 3 [optional] String : subfolder in DB dumps dir.
+#   Defaults to 'local'.
+# @param 4 [optional] String : force reload flag (bypasses optimization) if the
 #   DB credentials vars are already exported in current shell scope.
+#   TODO deprecate this argument and export a specific variable instead.
 #
 # @example
 #   most_recent_dump_file="$(u_db_get_dump)"
@@ -921,33 +1019,162 @@ u_db_routine_backup() {
 u_db_get_dump() {
   local p_option="$1"
   local p_db_id="$2"
-  local dump_to_return
+  local p_subdir="$3"
+  local p_force_reload_flag="$4"
+
+  if [[ -z "$p_option" ]]; then
+    p_option='last'
+  fi
 
   if [[ -z "$p_db_id" ]]; then
     p_db_id='default'
   fi
 
-  if [[ -n "$p_option" ]]; then
-    case "$p_option" in
-      new)
-        u_db_routine_backup "$p_db_id" "$3"
-        dump_to_return="$routine_dump_file"
-        ;;
-      initial)
-        local initial_dump_match
-        # u_fs_file_list "$CWT_DB_DUMPS_BASE_PATH/local/$p_db_id" 'initial.*'
-        u_fs_file_list "$CWT_DB_DUMPS_BASE_PATH" 'initial.*'
-        for initial_dump_match in $file_list; do
-          # dump_to_return="$CWT_DB_DUMPS_BASE_PATH/local/$p_db_id/$initial_dump_match"
-          dump_to_return="$CWT_DB_DUMPS_BASE_PATH/$initial_dump_match"
-        done
-        ;;
-    esac
-  else
-    dump_to_return="$(u_fs_get_most_recent $CWT_DB_DUMPS_BASE_PATH/local/$p_db_id)"
+  if [[ -z "$p_subdir" ]]; then
+    p_subdir='local'
   fi
+
+  local dump_to_return
+
+  case "$p_option" in
+    'last')
+      dump_to_return="$(u_fs_get_most_recent "$CWT_DB_DUMPS_BASE_PATH/$p_subdir/$p_db_id")"
+      ;;
+
+    # The 'new' option means create immediately a new routine dump and return
+    # its file path.
+    'new')
+      u_db_routine_backup "$p_db_id" "$p_force_reload_flag"
+      dump_to_return="$routine_dump_file"
+      ;;
+
+    # Any other value is a "find" file name filter.
+    *)
+      dump_to_return="$(u_fs_get_most_recent "$CWT_DB_DUMPS_BASE_PATH/$p_subdir/$p_db_id" "$p_option")"
+      ;;
+  esac
 
   if [[ -f "$dump_to_return" ]]; then
     echo "$dump_to_return"
   fi
+}
+
+##
+# Setup a new database (create + import initial dump).
+#
+# @param 1 [optional] String : the database ID ($DB_ID), see u_db_set().
+#   Defaults to 'default'.
+# @param 2 [optional] String : force reload flag (bypasses optimization) if the
+#   DB credentials vars are already exported in current shell scope.
+#   TODO deprecate this argument and export a specific variable instead.
+#
+# @example
+#   u_db_setup
+#   u_db_setup 'custom_db_id'
+#
+u_db_setup() {
+  local p_db_id="$1"
+  local p_force_reload_flag="$2"
+
+  u_db_set "$p_db_id" "$p_force_reload_flag"
+
+  # Only create the database if it does not already exist.
+  if u_db_exists "$DB_NAME"; then
+    echo "The $DB_ID database ('$DB_NAME') exists already."
+  else
+    echo "Creating $DB_ID database '$DB_NAME' ..."
+
+    u_db_create "$DB_ID" "$p_force_reload_flag"
+
+    echo "Creating $DB_ID database '$DB_NAME' : done."
+    echo
+  fi
+
+  # Only move on to the initial DB import if configured to do so.
+  case "$CWT_DB_INITIAL_IMPORT" in true)
+    u_db_restore_any "$DB_ID"
+  esac
+}
+
+##
+# Restores any dump found that matches given DB ID.
+#
+# The dump file can be in any subfolder, as long as it corresponds to the
+# corrrect DB ID.
+#
+# @param 1 [optional] String : the database ID ($DB_ID), see u_db_set().
+#   Defaults to 'default'.
+# @param 2 [optional] String : force reload flag (bypasses optimization) if the
+#   DB credentials vars are already exported in current shell scope.
+#   TODO deprecate this argument and export a specific variable instead.
+#
+# @example
+#   u_db_restore_any
+#   u_db_restore_any 'custom_db_id'
+#
+u_db_restore_any() {
+  local p_db_id="$1"
+  local p_force_reload_flag="$2"
+
+  u_db_set "$p_db_id" "$p_force_reload_flag"
+
+  # Only move on to the initial DB import if configured to do so.
+  # if [[ "$CWT_DB_INITIAL_IMPORT" != 'true' ]]; then
+  #   return
+  # fi
+
+  # The initial dump file can be in any subfolder, as long as it corresponds to
+  # the corrrect DB ID. We'll try the following folders, and use the first dump
+  # file found.
+  local initial_dump_file=''
+  local lookup_subdir
+  local lookup_subdirs=()
+
+  # If the "remote" CWT extension is enabled, look for dumps previously
+  # downloaded. We can check if extension is enabled by verifying that the
+  # function u_remote_get_instances() is defined.
+  # @see cwt/extensions/remote/remote.inc.sh
+  if type u_remote_get_instances >/dev/null 2>&1 ; then
+    local instance_id
+    local instance_ids=()
+
+    u_remote_get_instances
+
+    for instance_id in "${instance_ids[@]}"; do
+      lookup_subdirs+=("$instance_id")
+    done
+  fi
+
+  # Also look into local dumps.
+  lookup_subdirs+=('local')
+
+  for lookup_subdir in "${lookup_subdirs[@]}"; do
+    initial_dump_file="$(u_fs_get_most_recent "$CWT_DB_DUMPS_BASE_PATH/$lookup_subdir/$DB_ID" '*.gz')"
+
+    if [[ -f "$initial_dump_file" ]]; then
+      break
+    fi
+  done
+
+  if [[ ! -f "$initial_dump_file" ]]; then
+    echo >&2
+    echo "Error in u_db_setup() - $BASH_SOURCE line $LINENO: no dump file was found." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    exit 1
+  fi
+
+  echo "Importing $DB_ID DB dump file '$initial_dump_file' ..."
+
+  u_db_restore "$initial_dump_file" "$DB_ID"
+
+  if [[ $? -ne 0 ]]; then
+    echo >&2
+    echo "Error in $BASH_SOURCE line $LINENO: failed to import initial DB dump file '$initial_dump_file'." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    exit 1
+  fi
+
+  echo "Importing $DB_ID DB dump file '$initial_dump_file' : done."
 }

@@ -7,7 +7,7 @@
 #   YAML remote instances definition file : @see remote_instances.local.yml
 #   Defaults to 'prod'.
 # @param 2 [optional] String : remote DB id.
-#   Defaults to all DB IDs defined in the remote.
+#   Defaults to '', meaning : all DB IDs defined in the remote.
 #
 # @example
 #   # On 'prod' remote by default : all DB IDs defined in 'prod' are dumped.
@@ -61,6 +61,7 @@ for db_id in "${db_ids[@]}"; do
   # echo "${db_id}.dir = ${dumps_dict["${db_id}.dir"]}"
   # echo "${db_id}.type = ${dumps_dict["${db_id}.type"]}"
   # echo
+  # continue
 
   # We need at least the 'cmd' and 'dir' parts to remotely create the dump.
   if [[ -z "${dumps_dict["${db_id}.cmd"]}" ]] \
@@ -103,7 +104,9 @@ done
 # Debug.
 # echo "$joined_str"
 
-u_remote_exec_wrapper "$remote_id" $joined_str
+if [[ -n "$joined_str" ]]; then
+  u_remote_exec_wrapper "$remote_id" $joined_str
+fi
 
 echo "Creating DB dumps on remote instance '$remote_id' : done."
 echo

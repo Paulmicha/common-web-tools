@@ -18,7 +18,7 @@
 #
 # @see u_global_aggregate()
 # @see u_global_write()
-# @see u_instance_write_mk()
+# @see u_make_generate()
 #
 # Gotcha : when calling this function in an already initialized instance, given
 # its design, every 'append' type globals values would pile-up, creating
@@ -147,23 +147,33 @@ u_instance_init() {
     fi
     cp "scripts/cwt/override/.cwt-local.$HOST_TYPE.yml" ".cwt-local.$HOST_TYPE.yml"
   fi
+
   if [[ -f "scripts/cwt/override/.cwt-local.$INSTANCE_TYPE.yml" ]]; then
     if [[ -f ".cwt-local.$INSTANCE_TYPE.yml" ]]; then
       rm -f ".cwt-local.$INSTANCE_TYPE.yml"
     fi
     cp "scripts/cwt/override/.cwt-local.$INSTANCE_TYPE.yml" ".cwt-local.$INSTANCE_TYPE.yml"
   fi
+
   if [[ -f "scripts/cwt/override/.cwt-local.$HOST_TYPE.$INSTANCE_TYPE.yml" ]]; then
     if [[ -f ".cwt-local.$HOST_TYPE.$INSTANCE_TYPE.yml" ]]; then
       rm -f ".cwt-local.$HOST_TYPE.$INSTANCE_TYPE.yml"
     fi
     cp "scripts/cwt/override/.cwt-local.$HOST_TYPE.$INSTANCE_TYPE.yml" ".cwt-local.$HOST_TYPE.$INSTANCE_TYPE.yml"
   fi
+
   yaml_parsed_sp_init=''
   yaml_parsed_globals=''
+
   u_instance_yaml_config_load
+
   if [[ -n "$yaml_parsed_globals" ]]; then
     eval "$yaml_parsed_globals"
+
+    if [[ $? -ne 0 ]]; then
+      echo "  Aborting(1)" >&2
+      exit 1
+    fi
   fi
 
   # Normal process runs after YAML globals.
@@ -180,7 +190,7 @@ u_instance_init() {
 
   u_global_write
 
-  u_instance_write_mk
+  u_make_generate
 
   # Trigger instance init (optional) extra processes.
   hook -p 'pre' -a 'init'
@@ -299,7 +309,7 @@ u_instance_yaml_config_parse() {
   # TODO [evol] support lists (convert to [append] in globals declarations) ?
   while IFS= read -r parsed_line _; do
     parsed_val="$(echo "$parsed_line" | awk -F '[()]' '{print $2}')"
-    parsed_var_leaf="=${parsed_line##*=}"
+    parsed_var_leaf="=${parsed_line#*=}"
     parsed_var="${parsed_line%$parsed_var_leaf}"
     u_str_uppercase "$parsed_var" 'parsed_var'
 
@@ -309,6 +319,23 @@ u_instance_yaml_config_parse() {
     esac
 
     parsed_var="${parsed_var#'YAML_'}"
+
+    # Debug.
+    # echo "parsed_line = '$parsed_line'"
+    # echo "parsed_var_leaf = '$parsed_var_leaf'"
+    # echo "parsed_var = '$parsed_var'"
+    # echo "parsed_val = '$parsed_val'"
+
+    # Trim any ' or " prefix + suffix manually here.
+    # parsed_val="${parsed_val%\'}"
+    # parsed_val="${parsed_val#\'}"
+    # parsed_val="${parsed_val%\"}"
+    # parsed_val="${parsed_val#\"}"
+
+    # Escape single quotes in a way that does not break the shell.
+    # @link https://stackoverflow.com/a/1250279/2592338
+    # parsed_val="${parsed_val//\'/\'\"\'\"\'}"
+
     yaml_parsed_globals+="global $parsed_var $parsed_val ; "
 
   done < <(u_yaml_parse "$yaml_config_filepath" 'yaml_')
@@ -518,196 +545,43 @@ u_instance_get_ownership() {
 }
 
 ##
-# Converts given string to a task name - e.g. for use as Make task.
+# Gets default value for this project instance's domain.
 #
-# During conversion, some terms are abbreviated - e.g. :
-#   - registry -> reg
-#   - lookup-path -> lp
-#   - docker-compose -> dc
-#   - drupalwt -> dwt
+# TODO just use the cleaned up local dir name ?
 #
-# @param 1 String : input to convert.
-# @param 2 [optional] String : the variable name in calling scope which will be
-#   assigned the result. Defaults to 'task'.
+# By default, attempt to read local machine IP address. If it's a LAN
+# address like 192.168.0.43, the resulting domain will be :
 #
-# @var [default] task
+# parent-dirname.host-lan-0-43.localhost
 #
-u_instance_task_name() {
-  local p_str="$1"
-  local p_itn_var_name="$2"
+# @example
+#   instance_domain="$(u_instance_domain)"
+#   echo "instance_domain = $instance_domain"
+#
+u_instance_domain() {
+  local p_local_host_name="$1"
 
-  if [[ -z "$p_itn_var_name" ]]; then
-    p_itn_var_name='task'
+  if [[ -z "$p_local_host_name" ]]; then
+    p_local_host_name="$(u_host_ip)"
   fi
 
-  u_str_sanitize "$p_str" '-' 'p_str' '[^a-zA-Z0-9]'
+  case "$p_local_host_name" in "192.168."*)
+    p_local_host_name="${p_local_host_name//192.168./lan-}"
+  esac
 
-  if [[ -n "$CWT_MAKE_TASKS_SHORTER" ]]; then
-    local search_replace_pattern=''
-    for search_replace_pattern in $CWT_MAKE_TASKS_SHORTER; do
-      u_str_sanitize "$search_replace_pattern" '' 'search_replace_pattern' '[^a-zA-Z0-9\/\-_]'
-      eval "p_str=\"\${p_str//$search_replace_pattern}\""
-    done
-  fi
+  # The dir name is slugified + we remove any '-dev-stack' suffix + lowercase.
+  local dirname="${PWD##*/}"
+  u_str_sanitize "$dirname" '-' 'dirname'
+  dirname="${dirname//-dev-stack/}"
+  u_str_lowercase "$dirname" 'dirname'
 
-  printf -v "$p_itn_var_name" '%s' "$p_str"
-}
-
-##
-# Aggregates subject-action entry points and adds them as Make tasks.
-#
-# Generates a Makefile include with tasks corresponding to every subject-action
-# in current instance.
-#
-u_instance_write_mk() {
-  local extension
-  local extension_var
-  local extension_actions
-  local extension_namespace
-  local extension_iteration
-
-  # From our "entry point" scripts' path, we need to provide a unique task
-  # name -> we use subject-action pairs while preventing potential collisions
-  # in case different extensions implement the same subject-action pair.
-  # Important note : the arrays 'mk_tasks' and 'mk_entry_points' must have the
-  # exact same order and size.
-  local mk_tasks=()
-  local mk_entry_points=()
-  local index
-
-  local task
-  local sa_pair
-  local ext_path
-
-  # No need to check for collisions in CWT core (we know there aren't any).
-  for sa_pair in $CWT_ACTIONS; do
-    task=''
-    u_instance_task_name "$sa_pair"
-
-    # The 'instance' subject is a special case : we remove it to explicitly make
-    # it the default subject. All actions belonging to the 'instance' subject
-    # are transformed to the action part alone.
-    # Exception : instance-init -> init = already hardcoded, so prevent adding
-    # it twice. Same for setup.
-    # @see cwt/instance/init.make.sh
-    # @see Makefile (the one in PROJECT_DOCROOT path).
-    case "$task" in instance-*)
-      case "$task" in instance-init|instance-setup)
-        continue
-      esac
-      task="${task#*instance-}"
-    esac
-
-    mk_tasks+=("$task")
-    mk_entry_points+=("cwt/$sa_pair.sh")
-  done
-
-  # We need the custom 'extend' scripts folder to have priority for avoiding
-  # "prefixed" aliases in case of collision with generic CWT extensions (so that
-  # they get prefixed, not the project-specific implementation).
-  # -> Move it first in iteration below.
-  extension_iteration='extend'
-  for extension in $CWT_EXTENSIONS; do
-    case "$extension" in 'extend')
-      continue
-    esac
-    extension_iteration+=" $extension"
-  done
-
-  for extension in $extension_iteration; do
-    u_cwt_extension_namespace "$extension"
-    extension_var="${extension_namespace}_ACTIONS"
-    extension_actions="${!extension_var}"
-    if [[ -n "$extension_actions" ]]; then
-
-      # Extensions' subject-action pairs must yield unique tasks -> check for
-      # collisions.
-      for sa_pair in $extension_actions; do
-        task=''
-        u_instance_task_name "$sa_pair"
-
-        case "$task" in instance-*)
-          task="${task#*instance-}"
-        esac
-
-        if u_in_array "$task" 'mk_tasks'; then
-          task="${extension}-$task"
-          u_instance_task_name "$task"
-        fi
-
-        mk_tasks+=("$task")
-        ext_path=''
-        u_cwt_extension_path "$extension"
-        # TODO [minor] Figure out why this can produce duplicate entries.
-        # mk_entry_points+=("$ext_path/$extension/$sa_pair.sh")
-        u_array_add_once "$ext_path/$extension/$sa_pair.sh" mk_entry_points
-      done
-
-    fi
-  done
-
-  if [[ -z "$mk_entry_points" ]]; then
+  if [[ -n "$p_local_host_name" ]]; then
+    p_local_host_name="${p_local_host_name//./-}"
+    echo "${dirname}.host-${p_local_host_name}.localhost"
     return
   fi
 
-  echo "Writing generic Makefile include scripts/cwt/local/default.mk ..."
-
-  cat > scripts/cwt/local/default.mk <<'EOF'
-
-##
-# Current instance Makefile include.
-#
-# Contains generic tasks for subject-action entry points (default scripts).
-#
-# This file is automatically generated during "instance init", and it will be
-# entirely overwritten every time it is executed.
-#
-# @see u_instance_init() in cwt/instance/instance.inc.sh
-# @see u_instance_write_mk() in cwt/instance/instance.inc.sh
-#
-
-EOF
-
-  for index in "${!mk_entry_points[@]}"; do
-    task="${mk_tasks[index]}"
-
-    echo ".PHONY: $task
-$task:
-	@ ${mk_entry_points[index]} \$(filter-out \$@,\$(MAKECMDGOALS))
-" >> scripts/cwt/local/default.mk
-
-  done
-
-  echo "Writing generic Makefile include scripts/cwt/local/default.mk : done."
-  echo
-}
-
-##
-# Gets default value for this project instance's domain.
-#
-# Some projects may have DNS-dependant features to test locally, so we
-# provide a default one based on project docroot dirname. In these cases, the
-# necessary domains must be added to the device's hosts file (usually located
-# in /etc/hosts or C:\Windows\System32\drivers\etc\hosts). Alternatives also
-# exist to achieve this.
-#
-# The generated domain uses 'io' TLD in order to avoid trigger searches from
-# some browsers address bars (like Chrome's).
-#
-u_instance_domain() {
-  local lh="$(u_host_ip)"
-
-  if [ -z "$lh" ]; then
-    lh='local'
-  fi
-
-  if [[ $lh == "192.168."* ]]; then
-    lh="${lh//192.168./lan-}"
-  else
-    lh="host-${lh}"
-  fi
-
-  echo "${PWD##*/}.${lh//./-}.io"
+  echo "${dirname}.localhost"
 }
 
 ##
