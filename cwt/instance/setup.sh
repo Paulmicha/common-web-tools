@@ -87,6 +87,7 @@ if [[ -n "$3" ]]; then
 else
   # Generates a default domain name based on current dir name and local host IP.
   . cwt/host/host.inc.sh
+  . cwt/utilities/string.sh
   . cwt/instance/instance.inc.sh
   instance_domain=$(u_instance_domain)
 fi
@@ -94,6 +95,38 @@ fi
 if [[ -n "$4" ]]; then
   provision_using="$4"
 fi
+
+# If previously initialized local instance, we need to make sure we don't run
+# the setup script before uninit.
+purge_list=()
+purge_list+=('.env')
+purge_list+=('scripts/cwt/local/global.vars.sh')
+purge_list+=('scripts/cwt/local/default.mk')
+purge_list+=('scripts/cwt/local/make_args_check.sh')
+
+for entry in "${purge_list[@]}"; do
+  if [[ -f "$entry" ]]; then
+    echo >&2
+    echo "Error in $BASH_SOURCE line $LINENO: First, uninit." >&2
+    echo >&2
+    echo "If we setup an instance previously initialized, it needs to be cleaned up first :" >&2
+    echo '$ make stop' >&2
+    echo '$ make uninit' >&2
+    echo "Or :" >&2
+    echo '$ cwt/instance/stop.sh' >&2
+    echo '$ cwt/instance/uninit.sh' >&2
+    echo >&2
+    echo "For a full reinstall, first run :" >&2
+    echo '$ make destroy' >&2
+    echo '$ make uninit' >&2
+    echo "Or :" >&2
+    echo '$ cwt/instance/destroy.sh' >&2
+    echo '$ cwt/instance/uninit.sh' >&2
+    echo "-> Aborting (2)." >&2
+    echo >&2
+    exit 2
+  fi
+done
 
 echo
 echo "Setup $host_type instance '$instance_domain' (type : $instance_type) using $provision_using ..."

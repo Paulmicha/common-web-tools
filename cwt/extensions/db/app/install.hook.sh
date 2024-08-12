@@ -3,8 +3,7 @@
 ##
 # Implements hook -s 'app' -a 'install' -v 'PROVISION_USING INSTANCE_TYPE'
 #
-# Restores any dump matching every defined DB ID. The dump file(s) can be in any
-# subfolder, as long as they correspond to the corrrect DB ID.
+# Setup new databases (create if it doesn't exist) + import initial dump.
 #
 # @see cwt/app/install.sh
 # @see cwt/instance/setup.sh
@@ -25,6 +24,6 @@ case "$CWT_DB_INITIAL_IMPORT" in true)
   u_db_get_ids
 
   for db_id in "${db_ids[@]}"; do
-    u_db_restore_any "$db_id"
+    u_db_setup "$db_id"
   done
 esac

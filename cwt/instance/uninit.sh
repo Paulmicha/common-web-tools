@@ -27,6 +27,7 @@ purge_list=()
 purge_list+=('.env')
 purge_list+=('scripts/cwt/local/global.vars.sh')
 purge_list+=('scripts/cwt/local/default.mk')
+purge_list+=('scripts/cwt/local/make_args_check.sh')
 
 # Let extensions clean up their own generated files and/or alter the purge_list.
 hook -s 'instance' -a 'uninit' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'

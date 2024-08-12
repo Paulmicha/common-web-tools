@@ -325,7 +325,7 @@ SHELL_SCRIPT_HEAD
 
     feedback_code+="        $task)
 "
-    feedback_code+="          echo \"$script \$rest_of_args\"
+    feedback_code+="          echo \"$script \$rest_of_args\" >&2
 "
     feedback_code+="          ;;
 "
