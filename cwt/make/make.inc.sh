@@ -20,29 +20,13 @@
 #   u_make_check_args arg1 arg2
 #
 u_make_check_args() {
-  local mk_tasks=()
-  local mk_entry_points=()
+  local make_entries=()
+  local real_scripts=()
 
-  # Manually add our own hardcoded entries.
-  # @see cwt/make/default.mk
-  mk_tasks+=('init')
-  mk_entry_points+=('cwt/instance/init.make.sh')
-  mk_tasks+=('init-debug')
-  mk_entry_points+=('cwt/instance/init.make.sh -d -r')
-  mk_tasks+=('setup')
-  mk_entry_points+=('cwt/instance/setup.sh')
-  mk_tasks+=('hook')
-  mk_entry_points+=('cwt/instance/hook.make.sh')
-  mk_tasks+=('hook-debug')
-  mk_entry_points+=('cwt/instance/hook.make.sh -d -t')
-  mk_tasks+=('globals-lp')
-  mk_entry_points+=('cwt/env/global_lookup_paths.make.sh')
-  mk_tasks+=('self-test')
-  mk_entry_points+=('cwt/test/self_test.sh')
-
+  u_make_list_hardcoded
   u_make_list_entry_points
 
-  if [[ -z "${mk_tasks[@]}" ]]; then
+  if [[ -z "${make_entries[@]}" ]]; then
     echo >&2
     echo "Error in u_make_check_args() - $BASH_SOURCE line $LINENO: make entry points not found." >&2
     echo "It seems local instance hasn't been initialized yet." >&2
@@ -52,11 +36,11 @@ u_make_check_args() {
     exit 1
   fi
 
-  local entry=''
+  local make_entry_point=''
 
   while [[ $# -gt 0 ]]; do
-    for entry in "${mk_tasks[@]}"; do
-      case "$1" in "$entry")
+    for make_entry_point in "${make_entries[@]}"; do
+      case "$1" in "$make_entry_point")
         echo >&2
         echo "The value '$1' is reserved as a Make entry point." >&2
         echo "-> Aborting (2)." >&2
@@ -111,20 +95,20 @@ u_make_task_name() {
 # This function writes its result to variables subject to collision in calling
 # scope :
 #
-# @var mk_tasks
-# @var mk_entry_points
+# @var make_entries
+# @var real_scripts
 #
 # @example
-#   mk_tasks=()
-#   mk_entry_points=()
+#   make_entries=()
+#   real_scripts=()
 #
 #   u_make_list_entry_points
 #
-#   for index in "${!mk_entry_points[@]}"; do
-#     task="${mk_tasks[index]}"
-#     script="${mk_entry_points[index]}"
+#   for i in "${!real_scripts[@]}"; do
+#     task="${make_entries[i]}"
+#     script="${real_scripts[i]}"
 #
-#     echo "Make entry point $index :"
+#     echo "Make entry point $i :"
 #     echo "  task = $task"
 #     echo "  script = $script"
 #   done
@@ -139,10 +123,8 @@ u_make_list_entry_points() {
   # From our "entry point" scripts' path, we need to provide a unique task
   # name -> we use subject-action pairs while preventing potential collisions
   # in case different extensions implement the same subject-action pair.
-  # Important note : the arrays 'mk_tasks' and 'mk_entry_points' must have the
+  # Important note : the arrays 'make_entries' and 'real_scripts' must have the
   # exact same order and size.
-  local index
-
   local task
   local sa_pair
   local ext_path
@@ -166,8 +148,8 @@ u_make_list_entry_points() {
       task="${task#*instance-}"
     esac
 
-    mk_tasks+=("$task")
-    mk_entry_points+=("cwt/$sa_pair.sh")
+    make_entries+=("$task")
+    real_scripts+=("cwt/$sa_pair.sh")
   done
 
   # We need the custom 'extend' scripts folder to have priority for avoiding
@@ -198,24 +180,24 @@ u_make_list_entry_points() {
           task="${task#*instance-}"
         esac
 
-        if u_in_array "$task" 'mk_tasks'; then
+        if u_in_array "$task" 'make_entries'; then
           task="${extension}-$task"
           u_make_task_name "$task"
         fi
 
-        mk_tasks+=("$task")
+        make_entries+=("$task")
         ext_path=''
         u_cwt_extension_path "$extension"
         # TODO [minor] Figure out why this can produce duplicate entries.
-        # mk_entry_points+=("$ext_path/$extension/$sa_pair.sh")
-        u_array_add_once "$ext_path/$extension/$sa_pair.sh" mk_entry_points
+        # real_scripts+=("$ext_path/$extension/$sa_pair.sh")
+        u_array_add_once "$ext_path/$extension/$sa_pair.sh" real_scripts
       done
     fi
   done
 }
 
 ##
-# Writes make entrypoints to scripts/cwt/local/default.mk
+# Writes make entrypoints to scripts/cwt/local/generated.mk
 #
 # Generates a Makefile include with tasks corresponding to every subject-action
 # in current instance.
@@ -224,22 +206,25 @@ u_make_list_entry_points() {
 # @see u_make_check_args()
 #
 u_make_generate() {
-  local index
-  local task
-  local script
-  local mk_tasks=()
-  local mk_entry_points=()
+  local i
+  local make_entry_point
+  local real_script
 
+  local make_entries=()
+  local real_scripts=()
+
+  # All except the hardcoded ones.
   u_make_list_entry_points
 
-  if [[ -z "$mk_entry_points" ]]; then
+  if [[ -z "$real_scripts" ]]; then
     echo "Notice in u_make_generate() - $BASH_SOURCE line $LINENO: no Make entry points have been found."
     return
   fi
 
-  echo "Writing generic Makefile include scripts/cwt/local/default.mk ..."
+  echo "Writing Makefile include scripts/cwt/local/generated.mk ..."
 
-  cat > scripts/cwt/local/default.mk <<'EOF'
+  cat > scripts/cwt/local/generated.mk <<'EOF'
+SHELL := /usr/bin/env bash
 
 ##
 # Current instance Makefile include.
@@ -255,31 +240,37 @@ u_make_generate() {
 
 EOF
 
-  for index in "${!mk_entry_points[@]}"; do
-    task="${mk_tasks[index]}"
+  for i in "${!make_entries[@]}"; do
+    make_entry_point="${make_entries[i]}"
+    real_script="${real_scripts[i]}"
 
-    echo ".PHONY: $task
-$task:
-	@ scripts/cwt/local/make_args_check.sh \$(MAKECMDGOALS) && ${mk_entry_points[index]} \$(filter-out \$@,\$(MAKECMDGOALS))
-" >> scripts/cwt/local/default.mk
+    echo ".PHONY: $make_entry_point
+$make_entry_point:
+	@ cwt/make/call_wrap.make.sh $real_script \$(MAKECMDGOALS)
+" >> scripts/cwt/local/generated.mk
 
   done
 
-  echo "Writing generic Makefile include scripts/cwt/local/default.mk : done."
+  echo "Writing Makefile include scripts/cwt/local/generated.mk : done."
   echo
 
   # We'll also need to generate a "normal" shell script (not bash) to check
   # that among all arguments sent to a Make entry point, none are "reserved"
   # values - i.e. that would trigger unwanted other targets.
-  echo "Writing arguments checker script scripts/cwt/local/make_args_check.sh ..."
+  echo "Creating cache file scripts/cwt/local/cache/make.sh ..."
 
-  cat > scripts/cwt/local/make_args_check.sh <<'SHELL_SCRIPT_HEAD'
+  # Including the hardcoded ones (this is only used for the safety check).
+  u_make_list_hardcoded
+
+  local cache_file='scripts/cwt/local/cache/make.sh'
+  local make_entries_code_gen=''
+  local real_scripts_code_gen=''
+
+  # Replace contents in case cache file exists.
+  cat > "$cache_file" <<'SHELL_SCRIPT_HEAD'
 
 ##
-# Make entry points arguments safety check.
-#
-# This ensures none of the "arguments" passed in make calls would trigger
-# unwanted targets (since we use it as a kind of aliases list).
+# Cache the list of make entry points.
 #
 # This script is generated during "instance init".
 #
@@ -287,77 +278,94 @@ $task:
 # @see u_make_generate() in cwt/make/make.inc.sh
 #
 
-# We'll provide fallback command to use as feedback.
-make_entry_point="$1"
-shift
-rest_of_args="$@"
+make_entries=()
+real_scripts=()
 
 SHELL_SCRIPT_HEAD
 
-  local reserved_values=''
-  local feedback_code=''
+  for i in "${!make_entries[@]}"; do
+    make_entry_point="${make_entries[i]}"
+    real_script="${real_scripts[i]}"
 
-  feedback_code+='case "$make_entry_point" in
-'
-
-  # Manually add our own hardcoded entries.
-  # @see cwt/make/default.mk
-  mk_tasks+=('init')
-  mk_entry_points+=('cwt/instance/init.make.sh')
-  mk_tasks+=('init-debug')
-  mk_entry_points+=('cwt/instance/init.make.sh -d -r')
-  mk_tasks+=('setup')
-  mk_entry_points+=('cwt/instance/setup.sh')
-  mk_tasks+=('hook')
-  mk_entry_points+=('cwt/instance/hook.make.sh')
-  mk_tasks+=('hook-debug')
-  mk_entry_points+=('cwt/instance/hook.make.sh -d -t')
-  mk_tasks+=('globals-lp')
-  mk_entry_points+=('cwt/env/global_lookup_paths.make.sh')
-  mk_tasks+=('self-test')
-  mk_entry_points+=('cwt/test/self_test.sh')
-
-  for index in "${!mk_entry_points[@]}"; do
-    task="${mk_tasks[index]}"
-    script="${mk_entry_points[index]}"
-
-    reserved_values+="$task "
-
-    feedback_code+="        $task)
+    make_entries_code_gen+="make_entries+=('$make_entry_point')
 "
-    feedback_code+="          echo \"$script \$rest_of_args\" >&2
-"
-    feedback_code+="          ;;
+    real_scripts_code_gen+="real_scripts+=('$real_script')
 "
   done
 
-  feedback_code+='      esac
-'
+  echo '' >> "$cache_file"
+  echo "$make_entries_code_gen" >> "$cache_file"
+  echo '' >> "$cache_file"
+  echo "$real_scripts_code_gen" >> "$cache_file"
 
-  echo "reserved_values=\"$reserved_values\"" >> scripts/cwt/local/make_args_check.sh
-
-  cat >> scripts/cwt/local/make_args_check.sh <<SHELL_SCRIPT_BODY
-
-while [ \$# -gt 0 ]; do
-  for entry in \$reserved_values; do
-    case "\$1" in "\$entry")
-      echo >&2
-      echo "The value '\$1' is reserved as a Make entry point." >&2
-      echo "Use the following equivalent command instead :" >&2
-      echo >&2
-
-      $feedback_code
-
-      echo >&2
-      exit 1
-    esac
-  done
-
-  shift
-done
-
-SHELL_SCRIPT_BODY
-
-  echo "Writing arguments checker script scripts/cwt/local/make_args_check.sh : done."
+  echo "Creating cache file scripts/cwt/local/cache/make.sh : done."
   echo
+}
+
+##
+# Single source of truth for hardcoded Make entry points.
+#
+# Manually list our own hardcoded entries.
+#
+# @see cwt/make/default.mk
+#
+# This function writes its result to variables subject to collision in calling
+# scope :
+#
+# @var make_entries
+# @var real_scripts
+#
+# @example
+#   make_entries=()
+#   real_scripts=()
+#   u_make_list_hardcoded
+#
+u_make_list_hardcoded() {
+  make_entries+=('init')
+  real_scripts+=('cwt/instance/init.make.sh')
+  make_entries+=('init-debug')
+  real_scripts+=('cwt/instance/init.make.sh -d -r')
+  # make_entries+=('reinit')
+  # real_scripts+=('cwt/instance/reinit.sh')
+  make_entries+=('setup')
+  real_scripts+=('cwt/instance/setup.sh')
+  make_entries+=('hook')
+  real_scripts+=('cwt/instance/hook.make.sh')
+  make_entries+=('hook-debug')
+  real_scripts+=('cwt/instance/hook.make.sh -d -t')
+  make_entries+=('globals-lp')
+  real_scripts+=('cwt/env/global_lookup_paths.make.sh')
+  make_entries+=('self-test')
+  real_scripts+=('cwt/test/self_test.sh')
+  make_entries+=('debug')
+  real_scripts+=('cwt/make/echo.make.sh')
+}
+
+##
+# Make cannot handle the '=' sign (by design).
+#
+# TODO [evol] find better workaround than the '∓' swap.
+#
+# @see cwt/escape.sh
+# @see cwt/make/call_wrap.make.sh
+#
+u_make_unescape() {
+  local p_arg="$1"
+  local p_var_name="$2"
+
+  if [[ -z "$p_var_name" ]]; then
+    p_var_name='unescaped_arg'
+  fi
+
+  unescaped_arg="$p_arg"
+
+  case "$p_arg" in *'∓'*)
+    unescaped_arg="${unescaped_arg//'\$'/'$'}"
+    unescaped_arg="${unescaped_arg//'∓'/'='}"
+  esac
+
+  # Debug
+  # echo "u_make_unescape $p_var_name = $unescaped_arg"
+
+  printf -v "$p_var_name" '%s' "$unescaped_arg"
 }

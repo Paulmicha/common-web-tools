@@ -23,5 +23,7 @@ if [[ -z "$p_remote_id" ]]; then
   p_remote_id='prod'
 fi
 
+u_remote_check_id "$p_remote_id"
+
 cwt/extensions/remote/remote/exec.sh "$p_remote_id" \
   cwt/instance/registry_get.sh 'traefik_dashboard_creds'

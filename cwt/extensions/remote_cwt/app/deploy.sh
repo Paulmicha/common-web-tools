@@ -26,5 +26,7 @@ if [[ -z "$p_remote_id" ]]; then
   p_remote_id='prod'
 fi
 
+u_remote_check_id "$remote_id"
+
 cwt/extensions/remote_cwt/remote/exec.sh "$p_remote_id" \
   'cwt/app/update.sh'

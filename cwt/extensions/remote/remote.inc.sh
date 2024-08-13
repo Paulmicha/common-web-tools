@@ -944,9 +944,76 @@ u_remote_purge_instances() {
 u_remote_get_instances() {
   local file=''
 
-  u_fs_file_list 'scripts/cwt/local/remote-instances'
+  # Cache results.
+  if [[ -f scripts/cwt/local/cache/remote_instance_ids.sh ]]; then
+    . scripts/cwt/local/cache/remote_instance_ids.sh
+  else
+    local file
+    local remote_id
+    local remote_instance_ids_cache_str=''
 
-  for file in $file_list; do
-    instance_ids+=("${file%.sh}")
+    u_fs_file_list 'scripts/cwt/local/remote-instances'
+
+    for file in $file_list; do
+      remote_id="${file%.sh}"
+      instance_ids+=("$remote_id")
+      remote_instance_ids_cache_str+="instance_ids+=('$remote_id')
+"
+    done
+
+    mkdir -p scripts/cwt/local/cache
+    cat > scripts/cwt/local/cache/remote_instance_ids.sh <<CACHE
+#!/usr/bin/env bash
+
+##
+# Generated cache file for getting the list of valid remote IDs.
+#
+# @see u_remote_get_instances() in cwt/extensions/remote/remote.inc.sh
+#
+
+$remote_instance_ids_cache_str
+
+CACHE
+  fi
+}
+
+##
+# Immediately exit when given argument is not a valid remote ID.
+#
+# @example
+#   u_remote_check_id 'my_remote_id'
+#
+u_remote_check_id() {
+  local p_remote_id="$1"
+
+  if [[ -z "$p_remote_id" ]]; then
+    echo >&2
+    echo "Error in u_remote_check_id() - $BASH_SOURCE line $LINENO: missing remote ID." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    exit 1
+  fi
+
+  local instance_id
+  local instance_ids=()
+  local ko=1
+
+  u_remote_get_instances
+
+  for instance_id in "${instance_ids[@]}"; do
+    case "$p_remote_id" in "$instance_id")
+      ko=0
+    esac
   done
+
+  if [[ $ko -eq 1 ]]; then
+    echo >&2
+    echo "Error in u_remote_check_id() - $BASH_SOURCE line $LINENO: given remote ID is not valid." >&2
+    echo "Check value, or that remote instances have been properly initialized." >&2
+    echo "(i.e. run 'make reinit' or 'make setup')" >&2
+    echo "@see cwt/extensions/remote/instance/post_init.hook.sh" >&2
+    echo "-> Aborting (2)." >&2
+    echo >&2
+    exit 2
+  fi
 }

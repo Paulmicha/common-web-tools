@@ -43,13 +43,7 @@ remote_subfolder="$2"
 db_id="$3"
 remote_file="$4"
 
-if [[ -z "$remote_id" ]]; then
-  echo >&2
-  echo "Missing param 1 : remote ID." >&2
-  echo "-> Aborting (1)." >&2
-  echo >&2
-  exit 1
-fi
+u_remote_check_id "$remote_id"
 
 if [[ -z "$remote_subfolder" ]]; then
   remote_subfolder='local'

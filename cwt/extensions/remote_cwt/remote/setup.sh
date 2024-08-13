@@ -19,6 +19,8 @@
 #   cwt/extensions/remote_cwt/remote/setup.sh 'lan' -t 'prod' -h 'local'
 #
 
+u_remote_check_id "$1"
+
 cwt/extensions/remote_cwt/remote/init.sh $@
 
 if [[ $? -ne 0 ]]; then

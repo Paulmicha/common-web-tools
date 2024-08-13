@@ -2,6 +2,16 @@
 ##
 # Default CWT tasks.
 #
+# Uses a "call wrap" script as an entry point to any other CWT script.
+#
+# @see cwt/make/call_wrap.make.sh
+#
+# It forwards escaped arguments to maintain the possibility to use values (in
+# single quotes) with space, $, ", etc.
+#
+# Like :
+# $ make drush ev '$test = "Hello Drupal php"; print $test;'
+#
 # By default, CWT provides the following tasks for all project instances :
 # - [default] 'init': the 1st common step necessary to actually make CWT & its
 #   extensions useful;
@@ -40,30 +50,34 @@
 #   make self-test
 #
 
-# .PHONY: init init-debug setup hook hook-debug globals-lp self-test debug
-.PHONY: init init-debug setup hook hook-debug globals-lp self-test
+.PHONY: init init-debug setup hook hook-debug globals-lp self-test debug
+# .PHONY: init init-debug reinit setup hook hook-debug globals-lp self-test debug
 
 init:
-	@ cwt/make/default.hardcoded_check_args.make.sh $(MAKECMDGOALS) && instance/init.sh $(filter-out $@,$(MAKECMDGOALS))
+	@ cwt/make/call_wrap.make.sh cwt/instance/init.sh $(MAKECMDGOALS)
 
 init-debug:
-	@ cwt/make/default.hardcoded_check_args.make.sh $(MAKECMDGOALS) && instance/init.sh -d -r $(filter-out $@,$(MAKECMDGOALS))
+	@ cwt/make/call_wrap.make.sh cwt/instance/init.sh -d -r $(MAKECMDGOALS)
 
-# Make this shortcut available before instance init.
+# TODO [evol] is this really overridden by scripts/cwt/local/generated.mk ?
+# reinit:
+# 	@ cwt/make/call_wrap.make.sh cwt/instance/reinit.sh $(MAKECMDGOALS)
+
 setup:
-	@ cwt/make/default.hardcoded_check_args.make.sh $(MAKECMDGOALS) && instance/setup.sh $(filter-out $@,$(MAKECMDGOALS))
+	@ cwt/make/call_wrap.make.sh cwt/instance/setup.sh $(MAKECMDGOALS)
 
 hook:
-	@ cwt/make/default.hardcoded_check_args.make.sh $(MAKECMDGOALS) && instance/hook.make.sh $(filter-out $@,$(MAKECMDGOALS))
+	@ cwt/make/call_wrap.make.sh cwt/instance/hook.make.sh $(MAKECMDGOALS)
 
 hook-debug:
-	@ cwt/make/default.hardcoded_check_args.make.sh $(MAKECMDGOALS) && instance/hook.make.sh -d -t $(filter-out $@,$(MAKECMDGOALS))
+	@ cwt/make/call_wrap.make.sh cwt/instance/hook.make.sh -d -t $(MAKECMDGOALS)
 
 globals-lp:
-	@ cwt/make/default.hardcoded_check_args.make.sh $(MAKECMDGOALS) && env/global_lookup_paths.make.sh $(filter-out $@,$(MAKECMDGOALS))
+	@ cwt/make/call_wrap.make.sh cwt/env/global_lookup_paths.make.sh $(MAKECMDGOALS)
 
 self-test:
-	@ cwt/make/default.hardcoded_check_args.make.sh $(MAKECMDGOALS) && test/self_test.sh $(filter-out $@,$(MAKECMDGOALS))
+	@ cwt/make/call_wrap.make.sh cwt/test/self_test.sh $(MAKECMDGOALS)
 
-# debug:
-# 	@ cwt/make/default.hardcoded_check_args.make.sh $(MAKECMDGOALS) && scripts/cwt/local/debug.sh $(filter-out $@,$(MAKECMDGOALS))
+debug:
+	@ echo "debug MAKECMDGOALS (unescaped, wrapped in single quotes) = '$(MAKECMDGOALS)'";
+	@ cwt/make/call_wrap.make.sh cwt/make/echo.make.sh $(MAKECMDGOALS)

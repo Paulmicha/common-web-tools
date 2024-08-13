@@ -36,6 +36,8 @@ if [[ -z "$remote_id" ]]; then
   remote_id='prod'
 fi
 
+u_remote_check_id "$remote_id"
+
 echo "Fetching files from '$remote_id' remote ..."
 
 u_remote_instance_load "$remote_id"
@@ -56,10 +58,10 @@ for suffix in $CWT_REMOTE_FILES_SUFFIXES; do
   u_str_sanitize_var_name "$suffix" 'suffix'
   u_str_uppercase "$suffix" 'SUFFIX'
 
-  var="REMOTE_INSTANCE_DATA_FILES_${SUFFIX}_REMOTE"
+  var="REMOTE_INSTANCE_FILES_${SUFFIX}_REMOTE"
   remote_dir="${!var}"
 
-  var="REMOTE_INSTANCE_DATA_FILES_${SUFFIX}_LOCAL"
+  var="REMOTE_INSTANCE_FILES_${SUFFIX}_LOCAL"
   local_dir="${!var}"
 
   if [[ -z "$remote_dir" ]] || [[ -z "$local_dir" ]]; then

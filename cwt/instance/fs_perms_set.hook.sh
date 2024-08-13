@@ -86,6 +86,7 @@ done
 # CWT make shortcut scripts as well.
 file_list=''
 u_fs_file_list './cwt' '*.make.sh' 32
+file_list+=' escape.sh'
 for f in $file_list; do
   chmod "$FS_E_FILES" "./cwt/$f"
   check_chmod=$?

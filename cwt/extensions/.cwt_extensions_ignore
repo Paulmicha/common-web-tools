@@ -4,6 +4,7 @@ db
 docker-compose
 drupalwt
 drupalwt_d4d
+drush
 moodle_d4php
 mysql
 node

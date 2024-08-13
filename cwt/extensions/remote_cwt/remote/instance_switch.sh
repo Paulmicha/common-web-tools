@@ -33,6 +33,9 @@ p_new_type="$2"
 if [[ -z "$p_remote_id" ]]; then
   p_remote_id='prod'
 fi
+
+u_remote_check_id "$p_remote_id"
+
 if [[ -z "$p_new_type" ]]; then
   p_new_type='prod'
 fi

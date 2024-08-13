@@ -10,5 +10,4 @@
 # @see cwt/bootstrap.sh
 #
 
-alias drush="drush --root=${SERVER_DOCROOT:=/var/www/html}"
 alias drupal="${APP_DOCROOT:=app}/vendor/drupal/console/bin/drupal --root=${SERVER_DOCROOT:=/var/www/html}"

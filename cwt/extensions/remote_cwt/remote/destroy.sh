@@ -16,5 +16,9 @@
 
 . cwt/bootstrap.sh
 
-cwt/extensions/remote_cwt/remote/exec.sh "$1" \
+p_remote_id="$1"
+
+u_remote_check_id "$p_remote_id"
+
+cwt/extensions/remote_cwt/remote/exec.sh "$p_remote_id" \
   'cwt/instance/destroy.sh && find . -delete'

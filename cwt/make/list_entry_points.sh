@@ -14,15 +14,15 @@
 
 . cwt/bootstrap.sh
 
-mk_tasks=()
-mk_entry_points=()
+make_entries=()
+real_scripts=()
 output=()
 
 u_make_list_entry_points
 
-for index in "${!mk_entry_points[@]}"; do
-  task="${mk_tasks[index]}"
-  script="${mk_entry_points[index]}"
+for index in "${!real_scripts[@]}"; do
+  task="${make_entries[index]}"
+  script="${real_scripts[index]}"
 
   output+=("$task
   → $script")

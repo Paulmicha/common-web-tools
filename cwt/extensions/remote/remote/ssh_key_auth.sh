@@ -19,6 +19,8 @@
 p_id="$1"
 p_key="$2"
 
+u_remote_check_id "$p_id"
+
 public_key_path="$HOME/.ssh/id_rsa.pub"
 
 if [[ -n "$CWT_SSH_PUBKEY" ]]; then

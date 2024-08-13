@@ -25,30 +25,12 @@
 #   cwt/extensions/db/db/exec.sh
 #
 
-case "$DB_NAME" in
-  '*')
-    mysql --default_character_set="$SQL_CHARSET" \
-      --user="$DB_USER" \
-      --password="$DB_PASS" \
-      --host="$DB_HOST" \
-      --port="$DB_PORT" \
-      -B < "$db_dump_file"
-    ;;
-  *)
-    mysql --default_character_set="$SQL_CHARSET" \
-      --user="$DB_USER" \
-      --password="$DB_PASS" \
-      --host="$DB_HOST" \
-      --port="$DB_PORT" \
-      -B \
-      "$DB_NAME" < "$db_dump_file"
-    ;;
-esac
+drush sql:query --file="$db_dump_file"
 
 if [[ $? -ne 0 ]]; then
   echo >&2
   echo "Error in $BASH_SOURCE line $LINENO: unable to exec the queries in file '$db_dump_file' into $DB_DRIVER DB '$DB_NAME'." >&2
-  echo "-> Aborting (2)." >&2
+  echo "-> Aborting (1)." >&2
   echo >&2
-  exit 2
+  exit 1
 fi

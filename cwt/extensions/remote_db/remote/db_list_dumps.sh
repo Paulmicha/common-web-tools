@@ -42,6 +42,8 @@ if [[ -z "$remote_id" ]]; then
   remote_id='prod'
 fi
 
+u_remote_check_id "$remote_id"
+
 if [[ -z "$subfolder" ]]; then
   subfolder='local'
 fi

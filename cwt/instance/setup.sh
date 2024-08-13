@@ -101,8 +101,8 @@ fi
 purge_list=()
 purge_list+=('.env')
 purge_list+=('scripts/cwt/local/global.vars.sh')
-purge_list+=('scripts/cwt/local/default.mk')
-purge_list+=('scripts/cwt/local/make_args_check.sh')
+purge_list+=('scripts/cwt/local/generated.mk')
+purge_list+=('scripts/cwt/local/cache/make.sh')
 
 for entry in "${purge_list[@]}"; do
   if [[ -f "$entry" ]]; then

@@ -25,16 +25,6 @@
 #   cwt/extensions/db/db/exec.sh
 #
 
-# Prereq check :
-# The source file "$db_dump_file" MUST exist and be accessible.
-if [[ ! -f "$db_dump_file" ]]; then
-  echo >&2
-  echo "Error in $BASH_SOURCE line $LINENO: the DB dump file '$db_dump_file' is missing or inaccessible." >&2
-  echo "-> Aborting (1)." >&2
-  echo >&2
-  exit 1
-fi
-
 # PostgreSQL utilities use the environment variables supported by libpq.
 # See https://www.postgresql.org/docs/current/libpq-envars.html
 PGPASSWORD="$DB_PASS"

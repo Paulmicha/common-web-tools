@@ -39,6 +39,8 @@ if [[ -z "$remote_id" ]]; then
   remote_id='prod'
 fi
 
+u_remote_check_id "$remote_id"
+
 echo "Creating DB dumps on remote instance '$remote_id' ..."
 
 u_remote_instance_load "$remote_id"

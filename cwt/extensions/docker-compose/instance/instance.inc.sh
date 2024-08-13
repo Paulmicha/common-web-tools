@@ -18,7 +18,24 @@ u_dc_instance_start() {
   echo "Starting $INSTANCE_DOMAIN containers ..."
 
   docker compose pull
+
+  if [[ $? -ne 0 ]]; then
+    echo >&2
+    echo "Error in u_dc_instance_start() - $BASH_SOURCE line $LINENO : 'docker compose pull' exited with non-zero status." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    exit 1
+  fi
+
   docker compose up -d --remove-orphans
+
+  if [[ $? -ne 0 ]]; then
+    echo >&2
+    echo "Error in u_dc_instance_start() - $BASH_SOURCE line $LINENO : 'docker compose up -d --remove-orphans' exited with non-zero status." >&2
+    echo "-> Aborting (2)." >&2
+    echo >&2
+    exit 2
+  fi
 
   # Create an opportunity for containers like databases to wait until their
   # service(s) are ready / accept connections. Examples :

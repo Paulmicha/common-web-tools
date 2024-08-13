@@ -36,6 +36,8 @@ if [[ -z "$remote_id" ]]; then
   remote_id='prod'
 fi
 
+u_remote_check_id "$remote_id"
+
 echo "Downloading DB dumps from remote instance '$remote_id' ..."
 
 declare -A dumps_dict

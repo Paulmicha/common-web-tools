@@ -12,8 +12,8 @@
 #
 
 # CWT_REMOTE_FILES_SUFFIXES is used to build other variables, like :
-# - REMOTE_INSTANCE_DATA_FILES_PUBLIC
-# - REMOTE_INSTANCE_DATA_FILES_PRIVATE
+# - REMOTE_INSTANCE_FILES_PUBLIC
+# - REMOTE_INSTANCE_FILES_PRIVATE
 # - etc.
 # @see u_remote_instances_setup() in cwt/extensions/remote/remote.inc.sh
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ##
-# Implements u_hook_most_specific -s 'db' -a 'exec' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
+# Implements u_hook_most_specific -s 'db' -a 'clear' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
 #
 # This file is dynamically included when the "hook" is triggered.
 # @see u_db_exec() in cwt/extensions/db/db.inc.sh
@@ -20,35 +20,17 @@
 # @see u_db_set() in cwt/extensions/db/db.inc.sh
 #
 # @example
-#   make db-exec
+#   make db-clear
 #   # Or :
-#   cwt/extensions/db/db/exec.sh
+#   cwt/extensions/db/db/clear.sh
 #
 
-case "$DB_NAME" in
-  '*')
-    mysql --default_character_set="$SQL_CHARSET" \
-      --user="$DB_USER" \
-      --password="$DB_PASS" \
-      --host="$DB_HOST" \
-      --port="$DB_PORT" \
-      -B < "$db_dump_file"
-    ;;
-  *)
-    mysql --default_character_set="$SQL_CHARSET" \
-      --user="$DB_USER" \
-      --password="$DB_PASS" \
-      --host="$DB_HOST" \
-      --port="$DB_PORT" \
-      -B \
-      "$DB_NAME" < "$db_dump_file"
-    ;;
-esac
+drush sql-drop -y
 
 if [[ $? -ne 0 ]]; then
   echo >&2
-  echo "Error in $BASH_SOURCE line $LINENO: unable to exec the queries in file '$db_dump_file' into $DB_DRIVER DB '$DB_NAME'." >&2
-  echo "-> Aborting (2)." >&2
+  echo "Error in $BASH_SOURCE line $LINENO: unable to clear existing data in $DB_DRIVER DB '$DB_NAME'." >&2
+  echo "-> Aborting (1)." >&2
   echo >&2
-  exit 2
+  exit 1
 fi

@@ -14,4 +14,9 @@
 #   (. cwt/bootstrap.sh && . cwt/extensions/remote/instance/post_init.hook.sh)
 #
 
+echo "Writing generated remote instance definitions ..."
+
 u_remote_instances_setup
+
+echo "Writing generated remote instance definitions : done."
+echo

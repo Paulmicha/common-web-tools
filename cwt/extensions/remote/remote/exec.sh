@@ -17,7 +17,7 @@
 #   # Warning : experimental shortcuts (ab)using 'make'.
 #   # If used, commands with arguments MUST be quoted.
 #   make remote-exec my_short_id 'cat .env'
-#   make remote-exec my_short_id git status
+#   make remote-exec my_short_id 'git status'
 #   make remote-exec my_short_id 'git reset --hard'
 #   make remote-exec my_short_id cwt/test/cwt/global.test.sh
 #   # Or :
@@ -30,14 +30,17 @@
 . cwt/bootstrap.sh
 
 raw_args=$@
+remote_id="$1"
+
+u_remote_check_id "$remote_id"
+
+cmd="$2"
+args=''
+
+shift 2
 
 # Sanitize the arguments of this script for hook call below (the variable 'args'
 # will contain the sanitized input, which is what hook implementations will use).
-remote_id="$1"
-u_str_sanitize_var_name "$remote_id" 'remote_id'
-cmd="$2"
-shift 2
-args=''
 if [[ -n "$@" ]]; then
   printf -v args '%q ' "$@"
 fi

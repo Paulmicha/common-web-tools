@@ -139,6 +139,45 @@ u_str_convert_tokens() {
 }
 
 ##
+# Single quotes escaping trick.
+#
+# The escaping is done in a way compatible with the way shell concatenates
+# input strings.
+#
+# I.e. :
+#   'test with 'single' quotes.'
+# becomes :
+#   'test with '"'"'single'"'"' quotes.'
+#
+# @link https://stackoverflow.com/a/1250279
+#
+# @see cwt/escape.sh
+# @see cwt/make/call_wrap.make.sh
+#
+u_str_escape_single_quotes() {
+  local p_arg="$1"
+  local p_var_name="$2"
+
+  if [[ -z "$p_var_name" ]]; then
+    p_var_name='escaped_arg'
+  fi
+
+  escaped_arg="$p_arg"
+
+  case "$p_arg" in
+    *' '*|*'$'*|*'#'*|*'['*|*']'*|*'*|*'*|*'&'*|*'*'*|*'"'*|*"'"*|*'='*)
+      p_arg="${p_arg//\'/"'\"'\"'"}"
+      escaped_arg="'${p_arg}'"
+      ;;
+  esac
+
+  # Debug
+  # echo "escape $p_var_name = $escaped_arg"
+
+  printf -v "$p_var_name" '%s' "$escaped_arg"
+}
+
+##
 # Encodes a single HTTP BasicAuth login/pass pair.
 #
 # Uses htpasswd encryption, which is also used for docker-compose Traefik labels.

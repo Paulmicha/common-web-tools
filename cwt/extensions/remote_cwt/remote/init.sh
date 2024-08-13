@@ -20,6 +20,7 @@
 . cwt/bootstrap.sh
 
 remote_id="$1"
+u_remote_check_id "$remote_id"
 shift
 
 u_remote_instance_load "$remote_id"
