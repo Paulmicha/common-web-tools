@@ -4,7 +4,7 @@ services:
   # See https://github.com/wodby/apache
   apache:
     image: wodby/apache:$APACHE_TAG
-    container_name: "${DC_NS}_apache"
+    container_name: "${STACK_VERSION}_apache"
     restart: on-failure:5
     depends_on:
       - php
@@ -23,7 +23,7 @@ services:
   # See https://github.com/wodby/php
   php:
     image: wodby/php:$PHP_TAG
-    container_name: "${DC_NS}_php"
+    container_name: "${STACK_VERSION}_php"
     restart: on-failure:5
     depends_on:
       - "mariadb"
@@ -46,7 +46,7 @@ services:
 
   crond:
     image: wodby/php:$PHP_TAG
-    container_name: "${DC_NS}_crond"
+    container_name: "${STACK_VERSION}_crond"
     restart: on-failure:5
     environment:
       CRONTAB: "${MOODLE_CRON_FREQ} php ${APP_DOCROOT_C} admin/cron.php"
@@ -68,7 +68,7 @@ services:
   # See https://github.com/wodby/mariadb
   mariadb:
     image: wodby/mariadb:$MARIADB_TAG
-    container_name: "${DC_NS}_mariadb"
+    container_name: "${STACK_VERSION}_mariadb"
     restart: on-failure:5
     stop_grace_period: 30s
     environment:

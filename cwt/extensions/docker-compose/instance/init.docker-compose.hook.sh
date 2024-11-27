@@ -15,5 +15,6 @@
 #
 
 case "$DC_MODE" in 'generate')
+  # @see cwt/extensions/docker-compose/docker-compose.inc.sh
   u_dc_write_yml
 esac

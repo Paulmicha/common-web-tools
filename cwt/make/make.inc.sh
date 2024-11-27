@@ -224,7 +224,6 @@ u_make_generate() {
   echo "Writing Makefile include scripts/cwt/local/generated.mk ..."
 
   cat > scripts/cwt/local/generated.mk <<'EOF'
-SHELL := /usr/bin/env bash
 
 ##
 # Current instance Makefile include.
@@ -268,6 +267,7 @@ $make_entry_point:
 
   # Replace contents in case cache file exists.
   cat > "$cache_file" <<'SHELL_SCRIPT_HEAD'
+#!/usr/bin/env bash
 
 ##
 # Cache the list of make entry points.
@@ -359,8 +359,11 @@ u_make_unescape() {
 
   unescaped_arg="$p_arg"
 
-  case "$p_arg" in *'∓'*)
+  case "$p_arg" in *'\$'*)
     unescaped_arg="${unescaped_arg//'\$'/'$'}"
+  esac
+
+  case "$p_arg" in *'∓'*)
     unescaped_arg="${unescaped_arg//'∓'/'='}"
   esac
 

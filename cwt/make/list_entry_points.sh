@@ -7,7 +7,7 @@
 # @see cwt/make/default.mk
 #
 # @example
-#   make list-entry-points
+#   make make-list-entry-points
 #   # Or :
 #   cwt/make/list_entry_points.sh
 #

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ##
-# Implements u_hook_most_specific -s 'db' -a 'exec' -v 'DB_DRIVER HOST_TYPE INSTANCE_TYPE'
+# Implements u_hook_most_specific -s 'db' -a 'exec' -v 'DB_DRIVER DB_ID INSTANCE_TYPE PROVISION_USING'
 #
 # This file is dynamically included when the "hook" is triggered.
 # @see u_db_exec() in cwt/extensions/db/db.inc.sh
@@ -25,6 +25,14 @@
 #   cwt/extensions/db/db/exec.sh
 #
 
+# When using docker-compose (executing drush inside container), this yields :
+# Error : "mysql: command not found".
+# @see cwt/extensions/drush/cwt/alias.docker-compose.hook.sh
+# $(drush sql:connect) < "$db_dump_file"
+
+# So we need Docker compose paths conversion.
+# -> use a dedicated (more specific) hook implementation :
+# @see cwt/extensions/drush/db/exec.drush.docker-compose.hook.sh
 drush sql:query --file="$db_dump_file"
 
 if [[ $? -ne 0 ]]; then

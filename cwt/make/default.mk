@@ -12,17 +12,6 @@
 # Like :
 # $ make drush ev '$test = "Hello Drupal php"; print $test;'
 #
-# By default, CWT provides the following tasks for all project instances :
-# - [default] 'init': the 1st common step necessary to actually make CWT & its
-#   extensions useful;
-# - 'hook', a convenience wrapper to CWT hook() calls;
-# - 'hook-debug', the same except it will just print out the lookup paths.
-#   Useful for looking up positive matches to then provide overrides and/or
-#   complements;
-# - 'globals-lp', to show every globals lookup paths checked for aggregation
-#   during instance init for current project instance;
-# - 'self-test', to execute a few tests locally.
-#
 # @example
 #   # Initialize current project instance = trigger "instance init" :
 #   make
@@ -57,7 +46,7 @@ init:
 	@ cwt/make/call_wrap.make.sh cwt/instance/init.sh $(MAKECMDGOALS)
 
 init-debug:
-	@ cwt/make/call_wrap.make.sh cwt/instance/init.sh -d -r $(MAKECMDGOALS)
+	@ cwt/make/call_wrap.make.sh cwt/instance/init.sh $@ -d -r $(filter-out $@,$(MAKECMDGOALS))
 
 # TODO [evol] is this really overridden by scripts/cwt/local/generated.mk ?
 # reinit:
@@ -70,7 +59,7 @@ hook:
 	@ cwt/make/call_wrap.make.sh cwt/instance/hook.make.sh $(MAKECMDGOALS)
 
 hook-debug:
-	@ cwt/make/call_wrap.make.sh cwt/instance/hook.make.sh -d -t $(MAKECMDGOALS)
+	@ cwt/make/call_wrap.make.sh cwt/instance/hook.make.sh $@ -d -t $(filter-out $@,$(MAKECMDGOALS))
 
 globals-lp:
 	@ cwt/make/call_wrap.make.sh cwt/env/global_lookup_paths.make.sh $(MAKECMDGOALS)
@@ -79,5 +68,5 @@ self-test:
 	@ cwt/make/call_wrap.make.sh cwt/test/self_test.sh $(MAKECMDGOALS)
 
 debug:
-	@ echo "debug MAKECMDGOALS (unescaped, wrapped in single quotes) = '$(MAKECMDGOALS)'";
+	@ echo "debug MAKECMDGOALS (escaped) = $(MAKECMDGOALS)";
 	@ cwt/make/call_wrap.make.sh cwt/make/echo.make.sh $(MAKECMDGOALS)

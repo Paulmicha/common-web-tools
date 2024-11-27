@@ -86,6 +86,11 @@ u_db_set() {
   local db_id
   local reg_val
 
+  # Debug.
+  if [[ -n "$CWT_DB_DEBUG" ]]; then
+    echo "u_db_set $p_db_id"
+  fi
+
   if [[ -z "$p_db_id" ]]; then
     if [[ -n "$CWT_DB_ID" ]]; then
       db_id="$CWT_DB_ID"
@@ -101,8 +106,12 @@ u_db_set() {
     # If DB credentials vars are already exported in current shell scope for given
     # db_id, no need to reload (unless explicitly asked).
     if [[ "$DB_ID" == "$db_id" ]] && [[ -z "$p_force_reload" ]]; then
+      # TODO [evol] more checks to be sure those don't need reload / re-apply.
+      # hook -s 'db' -a 'env_preset' -v 'INSTANCE_TYPE PROVISION_USING DB_ID'
+      # hook -s 'cwt' -a 'alias' -v 'PROVISION_USING'
       return
     fi
+
     # When DB_ID was previously set in current shell scope AND it is different
     # (or the force reload is requested), then we first need to UNSET all the
     # unprefixed DB_* variables so that the default values are properly set
@@ -113,8 +122,9 @@ u_db_set() {
   export DB_ID="$db_id"
 
   # Give a chance to other extensions to preset non-readonly env vars, including
-  # per DB_ID.
-  hook -s 'db' -a 'env_preset' -v 'INSTANCE_TYPE PROVISION_USING DB_ID'
+  # per STACK_VERSION and DB_ID.
+  # make hook-debug s:db a:env_preset v:INSTANCE_TYPE PROVISION_USING STACK_VERSION DB_ID
+  hook -s 'db' -a 'env_preset' -v 'INSTANCE_TYPE PROVISION_USING STACK_VERSION DB_ID'
 
   case "$CWT_DB_MODE" in
     # Some environments do not require CWT to handle DB credentials at all.
@@ -356,6 +366,11 @@ u_db_set() {
 # @see u_db_set()
 #
 u_db_unset() {
+  # Debug.
+  if [[ -n "$CWT_DB_DEBUG" ]]; then
+    echo "u_db_unset"
+  fi
+
   local v
 
   u_db_vars_list
@@ -497,7 +512,16 @@ u_db_exists() {
   local db_exists=''
 
   u_db_set "$p_db_id" "$p_force_reload_flag"
-  u_hook_most_specific -s 'db' -a 'exists' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
+
+  # Debug.
+  if [[ -n "$CWT_DB_DEBUG" ]]; then
+    db_exists=true
+    echo "u_db_exists $p_db_name $p_db_id"
+    echo "  DB_HOST = $DB_HOST"
+    echo "  DB_NAME = $DB_NAME"
+  else
+    u_hook_most_specific -s 'db' -a 'exists' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
+  fi
 
   case "$db_exists" in true)
     return 0
@@ -535,7 +559,15 @@ u_db_create() {
   local p_force_reload_flag="$2"
 
   u_db_set "$p_db_id" "$p_force_reload_flag"
-  u_hook_most_specific -s 'db' -a 'create' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
+
+  # Debug.
+  if [[ -n "$CWT_DB_DEBUG" ]]; then
+    echo "u_db_create $p_db_id"
+    echo "  DB_HOST = $DB_HOST"
+    echo "  DB_NAME = $DB_NAME"
+  else
+    u_hook_most_specific -s 'db' -a 'create' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
+  fi
 }
 
 ##
@@ -568,7 +600,15 @@ u_db_destroy() {
   local p_force_reload_flag="$2"
 
   u_db_set "$p_db_id" "$p_force_reload_flag"
-  u_hook_most_specific -s 'db' -a 'destroy' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
+
+  # Debug.
+  if [[ -n "$CWT_DB_DEBUG" ]]; then
+    echo "u_db_destroy $p_db_id"
+    echo "  DB_HOST = $DB_HOST"
+    echo "  DB_NAME = $DB_NAME"
+  else
+    u_hook_most_specific -s 'db' -a 'destroy' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
+  fi
 }
 
 ##
@@ -586,10 +626,10 @@ u_db_destroy() {
 # @var db_dump_file
 #
 # To list all the possible paths that can be used, use :
-# $ make hook-debug s:db a:exec v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:db a:exec v:DB_DRIVER DB_ID INSTANCE_TYPE PROVISION_USING
 #
 # To check the most specific match (if any is found) :
-# $ make hook-debug ms s:db a:exec v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug ms s:db a:exec v:DB_DRIVER DB_ID INSTANCE_TYPE PROVISION_USING
 #
 # @param 1 String : the dump file path.
 # @param 2 [optional] String : the database ID ($DB_ID), see u_db_set().
@@ -622,44 +662,62 @@ u_db_exec() {
 
   db_dump_file="$p_dump_file_path"
 
+  # Debug.
+  if [[ -n "$CWT_DB_DEBUG" ]]; then
+    echo "u_db_exec $p_dump_file_path $p_db_id"
+    echo "  DB_HOST = $DB_HOST"
+    echo "  DB_NAME = $DB_NAME"
+  fi
+
+  # Query file may or may not be an archive. If it is, uncompress it.
+  local extracted_file=''
+  local compressed_file=''
+
   u_fs_extract_in_place "$db_dump_file"
-  file_was_uncompressed=$?
+
+  # Debug.
+  if [[ -n "$CWT_DB_DEBUG" ]]; then
+    echo "  extracted_file = $extracted_file"
+  fi
 
   # When input file is an archive, we assume the uncompressed file will be
   # named exactly like the archive without its extension, e.g. :
   # - my-dump.sql.tgz -> my-dump.sql
   # - my-dump.sql.tar.gz -> my-dump.sql
-  if [[ $file_was_uncompressed -eq 0 ]]; then
+  if [[ -f "$extracted_file" ]]; then
+    echo "  Input file was compressed -> using extracted file '$extracted_file' as input."
+    compressed_file="$db_dump_file"
+    db_dump_file="$extracted_file"
 
-    # Deal with some compression formats using a double extension.
-    case "$db_dump_file" in *.tar.bz2|*.tar.gz|*.tar.xz)
-      leaf="${db_dump_file##*.}"
-      db_dump_file="${db_dump_file%.$leaf}"
-      leaf="${db_dump_file##*.}"
-      db_dump_file="${db_dump_file%.$leaf}"
-    esac
-
-    # Deal with some compression formats using a single extension.
-    case "$db_dump_file" in *.cbt|*.tbz2|*.tgz|*.txz|*.tar|*.gz|*.zip|*.bz2|*.z)
-      leaf="${db_dump_file##*.}"
-      db_dump_file="${db_dump_file%.$leaf}"
-    esac
-
-    if [[ ! -f "$db_dump_file" ]]; then
-      echo >&2
-      echo "Error in u_db_exec() - $BASH_SOURCE line $LINENO: missing uncompressed dump file '$db_dump_file'." >&2
-      echo "-> Aborting (2)." >&2
-      echo >&2
-      exit 2
+    # Debug.
+    if [[ -n "$CWT_DB_DEBUG" ]]; then
+      echo "  compressed_file = $compressed_file"
+      echo "  db_dump_file = $db_dump_file"
     fi
+  elif [[ -n "$CWT_DB_DEBUG" ]]; then
+    # Debug.
+    echo "  db_dump_file = $db_dump_file"
+  fi
+
+  if [[ ! -f "$db_dump_file" ]]; then
+    echo >&2
+    echo "Error in u_db_exec() - $BASH_SOURCE line $LINENO: missing uncompressed dump file :" >&2
+    echo "  $db_dump_file" >&2
+    echo "  -> Aborting (2)." >&2
+    echo >&2
+    exit 2
   fi
 
   # Implementations MUST use var $db_dump_file as input path (source file).
-  u_hook_most_specific -s 'db' -a 'exec' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
+  if [[ -z "$CWT_DB_DEBUG" ]]; then
+    u_hook_most_specific -s 'db' -a 'exec' -v 'DB_DRIVER DB_ID INSTANCE_TYPE PROVISION_USING'
+  fi
 
   # Remove uncompressed version of the dump when we're done.
-  if [[ $file_was_uncompressed -eq 0 ]]; then
-    rm "$db_dump_file"
+  if [[ -f "$extracted_file" ]]; then
+    echo "  Removing uncompressed file '$extracted_file' (now that it's restored)."
+
+    rm "$extracted_file"
 
     if [[ $? -ne 0 ]]; then
       echo >&2
@@ -751,7 +809,13 @@ u_db_dump() {
   fi
 
   # Implementations MUST use var $db_dump_file as output path (resulting file).
-  u_hook_most_specific -s 'db' -a 'dump' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
+  if [[ -n "$CWT_DB_DEBUG" ]]; then
+    echo "u_db_dump $p_dump_file_path $p_db_id"
+    echo "  DB_HOST = $DB_HOST"
+    echo "  DB_NAME = $DB_NAME"
+  else
+    u_hook_most_specific -s 'db' -a 'dump' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
+  fi
 
   if [ ! -f "$db_dump_file" ]; then
     echo >&2
@@ -772,6 +836,10 @@ u_db_dump() {
     echo "-> Aborting (3)." >&2
     echo >&2
     exit 3
+  fi
+
+  if [[ ! -f "$db_dump_file" ]]; then
+    return
   fi
 
   rm "$db_dump_file"
@@ -814,7 +882,15 @@ u_db_clear() {
   local p_force_reload_flag="$2"
 
   u_db_set "$p_db_id" "$p_force_reload_flag"
-  u_hook_most_specific -s 'db' -a 'clear' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
+
+  # Debug.
+  if [[ -n "$CWT_DB_DEBUG" ]]; then
+    echo "u_db_clear $p_db_id"
+    echo "  DB_HOST = $DB_HOST"
+    echo "  DB_NAME = $DB_NAME"
+  else
+    u_hook_most_specific -s 'db' -a 'clear' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
+  fi
 }
 
 ##
@@ -1078,8 +1154,16 @@ u_db_setup() {
 
   u_db_set "$p_db_id" "$p_force_reload_flag"
 
+  # Debug.
+  if [[ -n "$CWT_DB_DEBUG" ]]; then
+    echo
+    echo "u_db_setup $p_db_id"
+    echo "  DB_HOST = $DB_HOST"
+    echo "  DB_NAME = $DB_NAME"
+  fi
+
   # Only create the database if it does not already exist.
-  if u_db_exists "$DB_NAME"; then
+  if u_db_exists "$DB_NAME" "$p_db_id"; then
     echo "The $DB_ID database ('$DB_NAME') exists already."
   else
     echo "Creating $DB_ID database '$DB_NAME' ..."
@@ -1098,6 +1182,8 @@ u_db_setup() {
 
 ##
 # Restores any dump found that matches given DB ID.
+#
+# Attempts to download a remote dump corresponding to DB ID if none is found.
 #
 # The dump file can be in any subfolder, as long as it corresponds to the
 # corrrect DB ID.
@@ -1118,10 +1204,12 @@ u_db_restore_any() {
 
   u_db_set "$p_db_id" "$p_force_reload_flag"
 
-  # Only move on to the initial DB import if configured to do so.
-  # if [[ "$CWT_DB_INITIAL_IMPORT" != 'true' ]]; then
-  #   return
-  # fi
+  # Debug.
+  if [[ -n "$CWT_DB_DEBUG" ]]; then
+    echo "u_db_restore_any $p_db_id"
+    echo "  DB_HOST = $DB_HOST"
+    echo "  DB_NAME = $DB_NAME"
+  fi
 
   # The initial dump file can be in any subfolder, as long as it corresponds to
   # the corrrect DB ID. We'll try the following folders, and use the first dump
@@ -1134,12 +1222,14 @@ u_db_restore_any() {
   # downloaded. We can check if extension is enabled by verifying that the
   # function u_remote_get_instances() is defined.
   # @see cwt/extensions/remote/remote.inc.sh
+  local instance_id
+  local instance_ids=()
+
   if type u_remote_get_instances >/dev/null 2>&1 ; then
-    local instance_id
-    local instance_ids=()
-
     u_remote_get_instances
+  fi
 
+  if [[ -n "${instance_ids[@]}" ]]; then
     for instance_id in "${instance_ids[@]}"; do
       lookup_subdirs+=("$instance_id")
     done
@@ -1149,12 +1239,39 @@ u_db_restore_any() {
   lookup_subdirs+=('local')
 
   for lookup_subdir in "${lookup_subdirs[@]}"; do
+    if [[ ! -d "$CWT_DB_DUMPS_BASE_PATH/$lookup_subdir/$DB_ID" ]]; then
+      continue
+    fi
+
     initial_dump_file="$(u_fs_get_most_recent "$CWT_DB_DUMPS_BASE_PATH/$lookup_subdir/$DB_ID" '*.gz')"
 
     if [[ -f "$initial_dump_file" ]]; then
       break
     fi
   done
+
+  # If there is no local DB dump found, and if the "remote_db" extension exists,
+  # attempt to fetch latest remote dump file for given DB ID.
+  if [[ ! -f "$initial_dump_file" ]] && [[ -n "${instance_ids[@]}" ]]; then
+    for instance_id in "${instance_ids[@]}"; do
+      # Debug.
+      if [[ -n "$CWT_DB_DEBUG" ]]; then
+        echo "  [debug] would download $DB_ID DB from $instance_id"
+      else
+        cwt/extensions/remote_db/remote/db_download.sh "$instance_id" "$DB_ID"
+      fi
+
+      if [[ ! -d "$CWT_DB_DUMPS_BASE_PATH/$instance_id/$DB_ID" ]]; then
+        continue
+      fi
+
+      initial_dump_file="$(u_fs_get_most_recent "$CWT_DB_DUMPS_BASE_PATH/$instance_id/$DB_ID" '*.gz')"
+
+      if [[ -f "$initial_dump_file" ]]; then
+        break
+      fi
+    done
+  fi
 
   if [[ ! -f "$initial_dump_file" ]]; then
     echo >&2

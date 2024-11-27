@@ -6,7 +6,7 @@ services:
   # See https://github.com/wodby/varnish
   # varnish:
   #   image: wodby/varnish:$VARNISH_TAG
-  #   container_name: "${DC_NS}_varnish"
+  #   container_name: "${STACK_VERSION}_varnish"
   #   restart: on-failure:5
   #   depends_on:
   #     - nginx
@@ -21,7 +21,7 @@ services:
   # See https://github.com/wodby/nginx
   nginx:
     image: wodby/nginx:$NGINX_TAG
-    container_name: "${DC_NS}_nginx"
+    container_name: "${STACK_VERSION}_nginx"
     restart: on-failure:5
     depends_on:
       - php
@@ -39,7 +39,7 @@ services:
   # See https://github.com/wodby/mariadb
   mariadb:
     image: wodby/mariadb:$MARIADB_TAG
-    container_name: "${DC_NS}_mariadb"
+    container_name: "${STACK_VERSION}_mariadb"
     restart: on-failure:5
     stop_grace_period: 30s
     environment:
@@ -53,7 +53,7 @@ services:
   # See https://github.com/wodby/postgres/
   # postgres:
   #   image: wodby/postgres:$POSTGRES_TAG
-  #   container_name: "${DC_NS}_postgres"
+  #   container_name: "${STACK_VERSION}_postgres"
   #   restart: on-failure:5
   #   stop_grace_period: 30s
   #   environment:
@@ -68,7 +68,7 @@ services:
   # See https://github.com/wodby/drupal-php
   php:
     image: wodby/drupal-php:$PHP_TAG
-    container_name: "${DC_NS}_php"
+    container_name: "${STACK_VERSION}_php"
     restart: on-failure:5
     depends_on:
       - "mariadb"
@@ -93,7 +93,7 @@ services:
 
   crond:
     image: wodby/drupal-php:$PHP_TAG
-    container_name: "${DC_NS}_crond"
+    container_name: "${STACK_VERSION}_crond"
     restart: on-failure:5
     environment:
       CRONTAB: "${DWT_CRON_FREQ} drush -r ${APP_DOCROOT_C} cron"
@@ -117,13 +117,13 @@ services:
   # See https://github.com/wodby/redis
   redis:
     image: wodby/redis:$REDIS_TAG
-    container_name: "${DC_NS}_redis"
+    container_name: "${STACK_VERSION}_redis"
     restart: on-failure:5
 
   # See https://github.com/wodby/solr
   # solr:
   #   image: wodby/solr:$SOLR_TAG
-  #   container_name: "${DC_NS}_solr"
+  #   container_name: "${STACK_VERSION}_solr"
   #   restart: on-failure:5
   #   environment:
   #     SOLR_DEFAULT_CONFIG_SET: $SOLR_CONFIG_SET
@@ -132,7 +132,7 @@ services:
   # See https://github.com/apache/tika-docker
   # tika:
   #   image: apache/tika:$TIKA_TAG
-  #   container_name: "${DC_NS}_tika"
+  #   container_name: "${STACK_VERSION}_tika"
   #   restart: on-failure:5
 
 volumes:

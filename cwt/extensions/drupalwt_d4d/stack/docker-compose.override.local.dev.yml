@@ -18,7 +18,7 @@ services:
   # See https://github.com/wodby/adminer
   adminer:
     image: wodby/adminer:$ADMINER_TAG
-    container_name: "${DC_NS}_adminer"
+    container_name: "${STACK_VERSION}_adminer"
     environment:
       ADMINER_DEFAULT_DB_DRIVER: $DB_DRIVER
       ADMINER_DEFAULT_DB_HOST: $DB_HOST
@@ -28,7 +28,7 @@ services:
 
   mailhog:
     image: mailhog/mailhog
-    container_name: "${DC_NS}_mailhog"
+    container_name: "${STACK_VERSION}_mailhog"
     ports:
       - "8025:8025" # HTTP (UI)
       # - "1025:1025" # SMTP (no exposition needed)

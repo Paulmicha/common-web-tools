@@ -38,16 +38,16 @@ if [[ -n "$dc_drush_service_name" ]]; then
   # echo "  aliases set or updated :"
 
   if [[ -n "$SERVER_DOCROOT_C" ]]; then
-    alias drush="docker compose exec $DC_TTY $dc_drush_service_name drush --root='$SERVER_DOCROOT_C'"
+    alias drush="docker compose exec $DC_TTY $dc_drush_service_name $DRUSH_BIN --root='$SERVER_DOCROOT_C'"
 
     # Debug.
-    # echo "    drush = docker compose exec $DC_TTY $dc_drush_service_name drush --root='$SERVER_DOCROOT_C'"
+    # echo "    drush = docker compose exec $DC_TTY $dc_drush_service_name $DRUSH_BIN --root='$SERVER_DOCROOT_C'"
     # echo
   else
-    alias drush="docker compose exec $DC_TTY $dc_drush_service_name drush"
+    alias drush="docker compose exec $DC_TTY $dc_drush_service_name $DRUSH_BIN"
 
     # Debug.
-    # echo "    drush = docker compose exec $DC_TTY $dc_drush_service_name drush"
+    # echo "    drush = docker compose exec $DC_TTY $dc_drush_service_name $DRUSH_BIN"
     # echo
   fi
 fi

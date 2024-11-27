@@ -24,7 +24,7 @@
 #
 # @example
 #   # Uploads latest DB dump file found in 'local' subfolder to 'dev' remote
-#   # inside 'incoming' subfolder :
+#   # inside 'manually-uploaded' subfolder :
 #   make remote-db-upload 'dev'
 #   # Or :
 #   cwt/extensions/remote_db/remote/db_upload.sh 'dev'

@@ -47,6 +47,7 @@ global INSTANCE_DOMAIN "[default]='$(u_instance_domain)' [help]='This value is u
 global PROVISION_USING "[default]=docker-compose [help]='Generic differenciator used by many hooks. It does not have to be explicitly named after the host provisioning tool used. It could be any distinction used as variants in hook implementations.'"
 global HOST_TYPE "[default]=local [help]='Idem. E.g. local, remote...'"
 global HOST_OS "$(u_host_os)"
+global STACK_VERSION "[default]=v1 [help]='A string that is used for example when we upgrade one or more services (or the whole stack). See cwt/extensions/docker-compose/stack/switch.sh'"
 
 # [optional] Provide additional custom makefile includes, and short subjects
 # or actions replacements used for generating Makefile task names.

@@ -5,13 +5,13 @@ services:
     labels:
       # Traefik configuration for the dashboard
       - "traefik.enable=true"
-      - "traefik.http.services.${DC_NS}-http.loadbalancer.server.port=8080"
-      - "traefik.http.routers.${DC_NS}-https.entrypoints=websecure"
-      - "traefik.http.routers.${DC_NS}-https.rule=Host(`${INSTANCE_DOMAIN}`)"
-      - "traefik.http.middlewares.${DC_NS}-auth.basicauth.users=${TRAEFIK_BASIC_AUTH_USERS}"
-      - "traefik.http.routers.${DC_NS}-https.middlewares=${DC_NS}-auth"
-      - "traefik.http.routers.${DC_NS}-https.tls=true"
-      - "traefik.http.routers.${DC_NS}-https.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.${DC_NS}-https.service=api@internal"
+      - "traefik.http.services.${STACK_VERSION}-http.loadbalancer.server.port=8080"
+      - "traefik.http.routers.${STACK_VERSION}-https.entrypoints=websecure"
+      - "traefik.http.routers.${STACK_VERSION}-https.rule=Host(`${INSTANCE_DOMAIN}`)"
+      - "traefik.http.middlewares.${STACK_VERSION}-auth.basicauth.users=${TRAEFIK_BASIC_AUTH_USERS}"
+      - "traefik.http.routers.${STACK_VERSION}-https.middlewares=${STACK_VERSION}-auth"
+      - "traefik.http.routers.${STACK_VERSION}-https.tls=true"
+      - "traefik.http.routers.${STACK_VERSION}-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.${STACK_VERSION}-https.service=api@internal"
     volumes:
       - ./data/logs:/logs

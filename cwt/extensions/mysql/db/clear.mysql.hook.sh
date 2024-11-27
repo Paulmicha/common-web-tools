@@ -25,14 +25,20 @@
 #   cwt/extensions/db/db/clear.sh
 #
 
+echo "Clearing DB $DB_NAME from $DB_HOST ..."
+
 # This generates a query that drops all tables, then executes it.
+# Update 2024/08/16 - Workaround errors like :
+# ERROR 1451 (23000) at line 7: Cannot delete or update a parent row: a foreign
+# key constraint fails
+# @link https://stackoverflow.com/a/18889743/2592338
 mysqldump --no-data --add-drop-table \
   --user="$DB_USER" \
   --password="$DB_PASS" \
   --host="$DB_HOST" \
   --port="$DB_PORT" \
   "$DB_NAME" \
-  | grep ^DROP \
+  | grep -e '^DROP \| FOREIGN_KEY_CHECKS' \
   | mysql \
     --user="$DB_USER" \
     --password="$DB_PASS" \
@@ -47,3 +53,5 @@ if [[ $? -ne 0 ]]; then
   echo >&2
   exit 1
 fi
+
+echo "Clearing DB $DB_NAME from $DB_HOST : done."

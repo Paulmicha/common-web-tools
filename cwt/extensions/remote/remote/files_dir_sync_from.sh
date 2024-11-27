@@ -86,7 +86,7 @@ for suffix in $CWT_REMOTE_FILES_SUFFIXES; do
     echo "  (also created missing local dir $local_dir)"
   fi
 
-  rsync -av "$REMOTE_INSTANCE_PREFIX:$remote_dir" "$local_dir/"
+  rsync -avL "$REMOTE_INSTANCE_PREFIX:$remote_dir" "$local_dir/"
 done
 
 echo "Fetching files from '$remote_id' remote : done."

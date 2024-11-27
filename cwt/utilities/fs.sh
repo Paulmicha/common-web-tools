@@ -739,15 +739,51 @@ u_fs_compress_in_place() {
 }
 
 ##
+# Utility to trim any coopression extension from a file name or file path.
+#
+# @example
+#   uncompressed_file=''
+#   u_fs_trim_compression_ext 'data/db-dumps/prod/default/2024-08-07.16-41-31_site_foobar.com.sql.gz'
+#   echo "uncompressed_file = $uncompressed_file"
+#   # Yields 'data/db-dumps/prod/default/2024-08-07.16-41-31_site_foobar.com.sql'
+#
+u_fs_trim_compression_ext() {
+  local p_filepath="$1"
+  local p_output_var="$2"
+
+  if [[ -z "$p_output_var" ]]; then
+    p_output_var='uncompressed_file'
+  fi
+
+  local ext
+  local result
+  local compressed_extensions='.tar.gz .tar.bz2 .tar.xz .gz .zip .tgz .7z .cbt .tbz2 .txz .tar .bz2 .z'
+
+  for ext in $compressed_extensions; do
+    result="${p_filepath%$ext}"
+
+    # Any result of this replace that changes the input file path means that
+    # the extension matched (we can stop here).
+    if [[ "$result" != "$p_filepath" ]]; then
+      # Write result to var in calling scope.
+      printf -v "$p_output_var" '%s' "$result"
+      return
+    fi
+  done
+}
+
+##
 # Extracts given archive file(s). Supports various formats.
 #
 # This function uses a return value to indicate wether the file was uncompressed
 # or not. It also sets the uncompressed file names to a variable
 # subject to collision in calling scope :
+#
 # @var extracted_files
 #
 # If the archive contained a single file, it will set its name to the following
 # variable subject to collision in calling scope :
+#
 # @var extracted_file
 #
 # @param 1 String : the archive file to extract.
@@ -795,14 +831,38 @@ u_fs_extract() {
     return 3
   fi
 
-  local untouched=0
+  # Reset calling scope vars receiving the result.
+  extracted_file=''
+  extracted_files=''
+
+  # Debug.
+  if [[ -n "$CWT_DB_DEBUG" ]]; then
+    echo "u_fs_extract $p_file $p_folder"
+  fi
+
+  local untouched=1
   local needs_copy='y'
   local original_file="$p_file"
+
+  # If the uncompressed file already exists, consider it was uncompressed.
+  local uncompressed_file=''
+
+  u_fs_trim_compression_ext "$p_file"
+
+  if [[ -n "$uncompressed_file" && -f "$uncompressed_file" ]]; then
+    echo "Uncompressed file $uncompressed_file already exists."
+    echo "  -> Skip uncompress (but still produce the same result as if archive was successfully uncompressed)."
+
+    extracted_file="$uncompressed_file"
+
+    return
+  fi
 
   # In order to correctly handle the 2nd parameter (destination folder), we
   # process the 'tar' command separately.
   case "$p_file" in *.cbt|*.tar.bz2|*.tar.gz|*.tar.xz|*.tbz2|*.tgz|*.txz|*.tar)
     needs_copy='n'
+    uncompressed_file="${p_file%$ext}"
 
     # Get archive contents.
     # TODO Untested : *.tar.bz2 archives may need the '-j' flag.
@@ -810,11 +870,14 @@ u_fs_extract() {
     # TODO Too slow for big archives -> make optional ?
     local contents_list_str=$(tar -tf "$p_file")
     local contents_list_arr=($contents_list_str)
+
     if [[ ${#contents_list_arr[@]} -gt 1 ]]; then
       extracted_files="$contents_list_str"
+
       if [[ -n "$p_folder" ]]; then
         extracted_files=''
         local i
+
         for i in "${contents_list_arr[@]}"; do
           extracted_files+="$p_folder/$i
 "
@@ -822,14 +885,27 @@ u_fs_extract() {
       fi
     else
       extracted_file="$contents_list_str"
+
       if [[ -n "$p_folder" ]]; then
         extracted_file="$p_folder/$contents_list_str"
       fi
     fi
 
     if [[ -n "$p_folder" ]]; then
+      # Debug.
+      if [[ -n "$CWT_DB_DEBUG" ]]; then
+        echo "  tar -xf $p_file -C $p_folder"
+      fi
+
+      untouched=0
       tar -xf "$p_file" -C "$p_folder"
     else
+      # Debug.
+      if [[ -n "$CWT_DB_DEBUG" ]]; then
+        echo "  tar -xf $p_file"
+      fi
+
+      untouched=0
       tar -xf "$p_file"
     fi
 
@@ -841,37 +917,121 @@ u_fs_extract() {
       exit 4
     fi
 
-    return
+    return $untouched
   esac
 
-  # TODO [wip] check other programs behaviors (if they uncompress in place or
-  # inside current folder).
-  # if [[ -n "$p_folder" ]] && [[ "$needs_copy" == 'y' ]]; then
-  #   cp "$p_file" "$p_folder/"
-  #   p_file="$p_folder/${p_file##*/}"
-  # fi
+  untouched=1
 
-  # TODO [wip] untested + list contents.
+  # TODO [wip] not all formats and programs were tested from this list.
   # See https://github.com/xvoland/Extract
   case "$p_file" in
     *.7z|*.arj|*.cab|*.cb7|*.chm|*.deb|*.dmg|*.iso|*.lzh|*.msi|*.pkg|*.rpm|*.udf|*.wim|*.xar)
-                        7z x "$p_file" ;;
-    *.gz)               gunzip -k "$p_file" ;;
-    *.cbz|*.epub|*.zip) unzip "$p_file" ;;
-    *.bz2)              bunzip2 "$p_file" ;;
-    *.cbr|*.rar)        unrar x -ad "$p_file" ;;
-    *.z)                uncompress "$p_file" ;;
-    *.lzma)             unlzma "$p_file" ;;
-    *.xz)               unxz "$p_file" ;;
-    *.exe)              cabextract "$p_file" ;;
-    *.cpio)             cpio -id < "$p_file" ;;
-    *.cba|*.ace)        unace x "$p_file" ;;
-    *)                  untouched=1 ;;
+      if [[ -n "$CWT_DB_DEBUG" ]]; then
+        echo "  7z x $p_file"
+      fi
+      untouched=0
+      7z x "$p_file"
+      ;;
+
+    *.gz)
+      if [[ -n "$CWT_DB_DEBUG" ]]; then
+        echo "  gunzip -k $p_file"
+      fi
+      untouched=0
+      gunzip -k "$p_file"
+      ;;
+
+    *.cbz|*.epub|*.zip)
+      if [[ -n "$CWT_DB_DEBUG" ]]; then
+        echo "  unzip $p_file"
+      fi
+      untouched=0
+      unzip "$p_file"
+      ;;
+
+    *.bz2)
+      if [[ -n "$CWT_DB_DEBUG" ]]; then
+        echo "  bunzip2 $p_file"
+      fi
+      untouched=0
+      bunzip2 "$p_file"
+      ;;
+
+    *.cbr|*.rar)
+      if [[ -n "$CWT_DB_DEBUG" ]]; then
+        echo "  unrar $p_file"
+      fi
+      untouched=0
+      unrar x -ad "$p_file"
+      ;;
+
+    *.z)
+      if [[ -n "$CWT_DB_DEBUG" ]]; then
+        echo "  uncompress $p_file"
+      fi
+      untouched=0
+      uncompress "$p_file"
+      ;;
+
+    *.lzma)
+      if [[ -n "$CWT_DB_DEBUG" ]]; then
+        echo "  uncompress $p_file"
+      fi
+      untouched=0
+      unlzma "$p_file"
+      ;;
+
+    *.xz)
+      if [[ -n "$CWT_DB_DEBUG" ]]; then
+        echo "  unxz $p_file"
+      fi
+      untouched=0
+      unxz "$p_file"
+      ;;
+
+    *.exe)
+      if [[ -n "$CWT_DB_DEBUG" ]]; then
+        echo "  cabextract $p_file"
+      fi
+      untouched=0
+      cabextract "$p_file"
+      ;;
+
+    *.cpio)
+      if [[ -n "$CWT_DB_DEBUG" ]]; then
+        echo "  cpio $p_file"
+      fi
+      untouched=0
+      cpio -id < "$p_file"
+      ;;
+
+    *.cba|*.ace)
+      if [[ -n "$CWT_DB_DEBUG" ]]; then
+        echo "  unace $p_file"
+      fi
+      untouched=0
+      unace x "$p_file"
+      ;;
   esac
 
-  # if [[ -n "$p_folder" ]] && [[ "$needs_copy" == 'y' ]]; then
-  #   rm "$p_file"
-  # fi
+  if [[ $? -ne 0 ]]; then
+    echo >&2
+    echo "Error in u_fs_extract() - $BASH_SOURCE line $LINENO: the extract command exited with non-zero code." >&2
+    echo "Aborting (5)." >&2
+    echo >&2
+    exit 5
+  fi
+
+  if [[ $untouched -eq 0 ]]; then
+    u_fs_trim_compression_ext "$p_file"
+
+    if [[ -n "$uncompressed_file" && -f "$uncompressed_file" ]]; then
+      echo "File was uncompressed successfully to :"
+      echo "  $uncompressed_file"
+
+      extracted_file="$uncompressed_file"
+    fi
+  fi
 
   return $untouched
 }
@@ -883,14 +1043,23 @@ u_fs_extract() {
 #
 # @see u_fs_extract()
 #
+# @var extracted_file
+# @var extracted_files
+#
 # @example
 #   # Will extract given archive file in its folder :
 #   u_fs_extract_in_place path/to/file.ext.tgz
+#   echo "extracted_file = $extracted_file"
 #
 u_fs_extract_in_place() {
   local p_file_to_extract_in_place="$1"
+
   local leaf="${p_file_to_extract_in_place##*/}"
   local base_path="${p_file_to_extract_in_place%/$leaf}"
+
+  # Reset calling scope vars receiving the result.
+  extracted_file=''
+  extracted_files=''
 
   u_fs_extract \
     "$p_file_to_extract_in_place" \

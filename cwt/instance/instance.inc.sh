@@ -92,8 +92,8 @@ u_instance_init() {
       if [[ -n "$YAML_INSTANCE_DOMAIN" ]]; then
         p_cwtii_instance_domain="$YAML_INSTANCE_DOMAIN"
       fi
-      if [[ -n "$YAML_DC_NS" ]]; then
-        p_cwtii_dc_ns="$YAML_DC_NS"
+      if [[ -n "$YAML_STACK_VERSION" ]]; then
+        p_cwtii_dc_ns="$YAML_STACK_VERSION"
       fi
     fi
   fi

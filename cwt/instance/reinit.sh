@@ -7,7 +7,7 @@
 # set - for the following global env. vars :
 # - $INSTANCE_TYPE
 # - $INSTANCE_DOMAIN
-# - $DC_NS
+# - $STACK_VERSION
 # - $HOST_TYPE
 # - $PROVISION_USING
 # - $CWT_SSH_PUBKEY
@@ -36,7 +36,7 @@ if [[ -f '.env' ]]; then
       'INSTANCE_DOMAIN='*)
         eval "$line"
         ;;
-      'DC_NS='*)
+      'STACK_VERSION='*)
         eval "$line"
         ;;
       'HOST_TYPE='*)
@@ -66,7 +66,7 @@ env -i \
   cwt/instance/init.sh \
     -t "$INSTANCE_TYPE" \
     -d "$INSTANCE_DOMAIN" \
-    -c "$DC_NS" \
+    -c "$STACK_VERSION" \
     -h "$HOST_TYPE" \
     -p "$PROVISION_USING" \
     -y

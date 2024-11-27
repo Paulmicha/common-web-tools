@@ -16,10 +16,14 @@
 #   fi
 #
 
+# Debug.
+# echo "DRUSH DB Driver : Test if database '${p_db_name}' exists (user=$DB_USER, password="$DB_PASS", host="$DB_HOST", port="$DB_PORT")..."
+
 fallback_hook_implementation="cwt/extensions/${DRUSH_DB_DRIVER_FALLBACK}/db/exists.${DRUSH_DB_DRIVER_FALLBACK}.hook.sh"
 
 if u_cwt_extension_exists "$DRUSH_DB_DRIVER_FALLBACK"; then
-  echo "Ok, the '$DRUSH_DB_DRIVER_FALLBACK' extension exists and is enabled."
+  echo "Drush DB Driver fallback for 'exists' action :"
+  echo "  OK, the '$DRUSH_DB_DRIVER_FALLBACK' extension exists and is enabled."
 else
   echo >&2
   echo "Error in $BASH_SOURCE line $LINENO: the '$DRUSH_DB_DRIVER_FALLBACK' extension appears to be missing or is not enabled." >&2

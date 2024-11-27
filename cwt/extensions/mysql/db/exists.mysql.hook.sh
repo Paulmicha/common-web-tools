@@ -17,7 +17,7 @@
 #
 
 # Debug.
-# echo "Test if database '${p_db_name}' exists (user=$DB_USER, password="$DB_PASS", host="$DB_HOST", port="$DB_PORT")..."
+# echo "MySQL DB Driver : Test if database '${p_db_name}' exists (user=$DB_USER, password="$DB_PASS", host="$DB_HOST", port="$DB_PORT")..."
 
 # See https://stackoverflow.com/a/59708674
 if mysql --user="$DB_USER" --password="$DB_PASS" --host="$DB_HOST" \

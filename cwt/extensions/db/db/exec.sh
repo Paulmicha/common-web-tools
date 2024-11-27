@@ -15,10 +15,10 @@
 # @var db_dump_file
 #
 # To list all the possible paths that can be used, use :
-# $ make hook-debug s:db a:exec v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:db a:exec v:DB_DRIVER DB_ID INSTANCE_TYPE PROVISION_USING
 #
 # To check the most specific match (if any is found) :
-# $ make hook-debug ms s:db a:exec v:DB_DRIVER HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug ms s:db a:exec v:DB_DRIVER DB_ID INSTANCE_TYPE PROVISION_USING
 #
 # @param 1 String : the dump file path.
 # @param 2 [optional] String : the database ID ($DB_ID), see u_db_set().

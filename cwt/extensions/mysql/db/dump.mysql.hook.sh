@@ -89,7 +89,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # Debug
-# echo "mysqldump --user='$DB_USER' --password='***' --host='$DB_HOST' --port='$DB_PORT' --single-transaction --no-create-info '${skip_data[@]}' --allow-keywords $mysqldump_last_arg >> '$db_dump_file'"
+# echo "mysqldump --user='$DB_USER' --password='***' --host='$DB_HOST' --port='$DB_PORT' --single-transaction --no-create-info --allow-keywords ${skip_data[@]} $mysqldump_last_arg >> '$db_dump_file'"
 
 # 2. Data.
 mysqldump \
@@ -97,7 +97,7 @@ mysqldump \
   --password="$DB_PASS" \
   --host="$DB_HOST" \
   --port="$DB_PORT" \
-  --single-transaction --no-create-info "${skip_data[@]}" --allow-keywords \
+  --single-transaction --no-create-info --allow-keywords "${skip_data[@]}" \
   $mysqldump_last_arg >> "$db_dump_file"
 
 if [[ $? -ne 0 ]]; then

@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
 ##
-# Implements hook -s 'db' -a 'env_preset' -v 'HOST_TYPE INSTANCE_TYPE PROVISION_USING'.
+# Implements hook -s 'db' -a 'env_preset' -v 'INSTANCE_TYPE PROVISION_USING STACK_VERSION DB_ID'.
+#
+# make hook-debug s:db a:env_preset v:INSTANCE_TYPE PROVISION_USING STACK_VERSION DB_ID
 #
 # This hook is used to preset DB_* values by DB_ID, which is available in the
 # calling scope of this hook.

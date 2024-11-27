@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
 ##
-# Implements hook -s 'db' -a 'env_preset' -v 'INSTANCE_TYPE PROVISION_USING DB_ID'.
+# Implements hook -s 'db' -a 'env_preset' -v 'INSTANCE_TYPE PROVISION_USING STACK_VERSION DB_ID'.
+#
+# make hook-debug s:db a:env_preset v:INSTANCE_TYPE PROVISION_USING STACK_VERSION DB_ID
 #
 # This implementation provides generic default DB credentials for "normal"
 # Drupal setups.

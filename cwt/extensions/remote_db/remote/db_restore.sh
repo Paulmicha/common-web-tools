@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 ##
+# TODO [wip]
 # Restore DB dump on remote.
 #
 # By default, this remotely restores a DB dump created on that same instance.
@@ -18,20 +19,20 @@
 #   determine where is the dump inside the remote dumps base dir.
 #   Defaults to 'local'.
 # @param 3 [optional] String : DB id.
-#   Defaults to '', meaning : upload dumps of all DB IDs defined in the remote.
+#   Defaults to '', meaning : restore dumps of all DB IDs defined in the remote.
 # @param 4 [optional] String : remote DB dump file path (relative to the
 #   REMOTE_INSTANCE_DOCROOT, but absolute paths work too).
 #
 # @example
-#   # Uploads latest DB dump file found in 'local' subfolder to 'dev' remote
-#   # inside 'incoming' subfolder :
-#   make remote-db-upload 'dev'
+#   # Restore latest DB dump file found in 'local' subfolder to 'dev' remote
+#   # inside 'manually-uploaded' subfolder :
+#   make remote-db-restore 'dev'
 #   # Or :
 #   cwt/extensions/remote_db/remote/db_restore.sh 'dev'
 #
-#   # Uploads latest DB dump file found in local 'prod' subfolder to 'dev'
+#   # Restore latest DB dump file found in local 'prod' subfolder to 'dev'
 #   # remote inside 'prod' subfolder :
-#   make remote-db-upload 'dev' 'prod'
+#   make remote-db-restore 'dev' 'prod'
 #   # Or :
 #   cwt/extensions/remote_db/remote/db_restore.sh 'dev' 'prod'
 #
@@ -42,6 +43,15 @@ remote_id="$1"
 remote_subfolder="$2"
 db_id="$3"
 remote_file="$4"
+
+# TODO [evol] more control over this.
+case "$remote_id" in 'prod'|'prod_'*)
+  echo >&2
+  echo "Error in $BASH_SOURCE line $LINENO: importing dumps in production is disallowed." >&2
+  echo "-> Aborting (1)." >&2
+  echo >&2
+  exit 1
+esac
 
 u_remote_check_id "$remote_id"
 
@@ -63,15 +73,6 @@ if [[ -n "$from" ]]; then
       fi
     esac
   done
-fi
-
-# TODO [wip] datestamp filtering of local DB dump file to upload.
-if [[ -n "$datestamp" ]]; then
-  echo >&2
-  echo "TODO in $BASH_SOURCE line $LINENO: datestamp filtering not done yet." >&2
-  echo "-> Aborting." >&2
-  echo >&2
-  exit 99
 fi
 
 echo "Restoring DB dump(s) on remote instance '$remote_id' ..."

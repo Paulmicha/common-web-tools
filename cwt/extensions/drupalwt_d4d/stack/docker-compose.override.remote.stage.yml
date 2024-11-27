@@ -5,27 +5,27 @@ services:
   # varnish:
   #   labels:
   #     - "traefik.enable=true"
-  #     - "traefik.http.services.${DC_NS}-varnish-https.loadbalancer.server.port=6081"
-  #     - "traefik.http.routers.${DC_NS}-varnish-https.rule=Host(`varnish${DC_SUBDOMAIN_SEP}${INSTANCE_DOMAIN}`)"
-  #     - "traefik.http.middlewares.${DC_NS}-varnish-auth.basicauth.users=${D4D_BASIC_AUTH_USERS}"
-  #     - "traefik.http.routers.${DC_NS}-varnish--https.middlewares=${DC_NS}-varnish-auth"
-  #     - "traefik.http.routers.${DC_NS}-varnish-https.tls=true"
-  #     - "traefik.http.routers.${DC_NS}-varnish-https.tls.certresolver=letsencrypt"
-  #     - "traefik.http.routers.${DC_NS}-varnish-https.service=${DC_NS}-varnish-https"
+  #     - "traefik.http.services.${STACK_VERSION}-varnish-https.loadbalancer.server.port=6081"
+  #     - "traefik.http.routers.${STACK_VERSION}-varnish-https.rule=Host(`varnish${DC_SUBDOMAIN_SEP}${INSTANCE_DOMAIN}`)"
+  #     - "traefik.http.middlewares.${STACK_VERSION}-varnish-auth.basicauth.users=${D4D_BASIC_AUTH_USERS}"
+  #     - "traefik.http.routers.${STACK_VERSION}-varnish--https.middlewares=${STACK_VERSION}-varnish-auth"
+  #     - "traefik.http.routers.${STACK_VERSION}-varnish-https.tls=true"
+  #     - "traefik.http.routers.${STACK_VERSION}-varnish-https.tls.certresolver=letsencrypt"
+  #     - "traefik.http.routers.${STACK_VERSION}-varnish-https.service=${STACK_VERSION}-varnish-https"
 
   # TODO [evol] Allocate port 80 + default domain to Varnish by default if
   # enabled ?
   nginx:
     labels:
       - "traefik.enable=true"
-      - "traefik.http.services.${DC_NS}-nginx-https.loadbalancer.server.port=80"
-      - "traefik.http.routers.${DC_NS}-nginx-https.entrypoints=websecure"
-      - "traefik.http.routers.${DC_NS}-nginx-https.rule=Host(`${INSTANCE_DOMAIN}`)"
-      - "traefik.http.middlewares.${DC_NS}-nginx-auth.basicauth.users=${D4D_BASIC_AUTH_USERS}"
-      - "traefik.http.routers.${DC_NS}-nginx-https.middlewares=${DC_NS}-nginx-auth"
-      - "traefik.http.routers.${DC_NS}-nginx-https.tls=true"
-      - "traefik.http.routers.${DC_NS}-nginx-https.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.${DC_NS}-nginx-https.service=${DC_NS}-nginx-https"
+      - "traefik.http.services.${STACK_VERSION}-nginx-https.loadbalancer.server.port=80"
+      - "traefik.http.routers.${STACK_VERSION}-nginx-https.entrypoints=websecure"
+      - "traefik.http.routers.${STACK_VERSION}-nginx-https.rule=Host(`${INSTANCE_DOMAIN}`)"
+      - "traefik.http.middlewares.${STACK_VERSION}-nginx-auth.basicauth.users=${D4D_BASIC_AUTH_USERS}"
+      - "traefik.http.routers.${STACK_VERSION}-nginx-https.middlewares=${STACK_VERSION}-nginx-auth"
+      - "traefik.http.routers.${STACK_VERSION}-nginx-https.tls=true"
+      - "traefik.http.routers.${STACK_VERSION}-nginx-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.${STACK_VERSION}-nginx-https.service=${STACK_VERSION}-nginx-https"
 
   php:
     environment:
@@ -33,36 +33,36 @@ services:
 
   mailhog:
     image: mailhog/mailhog
-    container_name: "${DC_NS}_mailhog"
+    container_name: "${STACK_VERSION}_mailhog"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.services.${DC_NS}-mailhog-https.loadbalancer.server.port=8025"
-      - "traefik.http.routers.${DC_NS}-mailhog-https.entrypoints=websecure"
-      - "traefik.http.routers.${DC_NS}-mailhog-https.rule=Host(`mailhog${DC_SUBDOMAIN_SEP}${INSTANCE_DOMAIN}`)"
-      - "traefik.http.middlewares.${DC_NS}-mailhog-auth.basicauth.users=${D4D_BASIC_AUTH_USERS}"
-      - "traefik.http.routers.${DC_NS}-mailhog-https.middlewares=${DC_NS}-mailhog-auth"
-      - "traefik.http.routers.${DC_NS}-mailhog-https.tls=true"
-      - "traefik.http.routers.${DC_NS}-mailhog-https.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.${DC_NS}-mailhog-https.service=${DC_NS}-mailhog-https"
+      - "traefik.http.services.${STACK_VERSION}-mailhog-https.loadbalancer.server.port=8025"
+      - "traefik.http.routers.${STACK_VERSION}-mailhog-https.entrypoints=websecure"
+      - "traefik.http.routers.${STACK_VERSION}-mailhog-https.rule=Host(`mailhog${DC_SUBDOMAIN_SEP}${INSTANCE_DOMAIN}`)"
+      - "traefik.http.middlewares.${STACK_VERSION}-mailhog-auth.basicauth.users=${D4D_BASIC_AUTH_USERS}"
+      - "traefik.http.routers.${STACK_VERSION}-mailhog-https.middlewares=${STACK_VERSION}-mailhog-auth"
+      - "traefik.http.routers.${STACK_VERSION}-mailhog-https.tls=true"
+      - "traefik.http.routers.${STACK_VERSION}-mailhog-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.${STACK_VERSION}-mailhog-https.service=${STACK_VERSION}-mailhog-https"
 
   # solr:
   #   labels:
   #     - "traefik.enable=true"
-  #     - "traefik.http.services.${DC_NS}-solr-https.loadbalancer.server.port=8983"
-  #     - "traefik.http.routers.${DC_NS}-solr-https.rule=Host(`solr${DC_SUBDOMAIN_SEP}${INSTANCE_DOMAIN}`)"
-  #     - "traefik.http.middlewares.${DC_NS}-solr-auth.basicauth.users=${D4D_BASIC_AUTH_USERS}"
-  #     - "traefik.http.routers.${DC_NS}-solr-https.middlewares=${DC_NS}-solr-auth"
-  #     - "traefik.http.routers.${DC_NS}-solr-https.tls=true"
-  #     - "traefik.http.routers.${DC_NS}-solr-https.tls.certresolver=letsencrypt"
-  #     - "traefik.http.routers.${DC_NS}-solr-https.service=${DC_NS}-solr-https"
+  #     - "traefik.http.services.${STACK_VERSION}-solr-https.loadbalancer.server.port=8983"
+  #     - "traefik.http.routers.${STACK_VERSION}-solr-https.rule=Host(`solr${DC_SUBDOMAIN_SEP}${INSTANCE_DOMAIN}`)"
+  #     - "traefik.http.middlewares.${STACK_VERSION}-solr-auth.basicauth.users=${D4D_BASIC_AUTH_USERS}"
+  #     - "traefik.http.routers.${STACK_VERSION}-solr-https.middlewares=${STACK_VERSION}-solr-auth"
+  #     - "traefik.http.routers.${STACK_VERSION}-solr-https.tls=true"
+  #     - "traefik.http.routers.${STACK_VERSION}-solr-https.tls.certresolver=letsencrypt"
+  #     - "traefik.http.routers.${STACK_VERSION}-solr-https.service=${STACK_VERSION}-solr-https"
 
   # tika:
   #   labels:
   #     - "traefik.enable=true"
-  #     - "traefik.http.services.${DC_NS}-tika-https.loadbalancer.server.port=9998"
-  #     - "traefik.http.routers.${DC_NS}-tika-https.rule=Host(`tika${DC_SUBDOMAIN_SEP}${INSTANCE_DOMAIN}`)"
-  #     - "traefik.http.middlewares.${DC_NS}-tika-auth.basicauth.users=${D4D_BASIC_AUTH_USERS}"
-  #     - "traefik.http.routers.${DC_NS}-tika-https.middlewares=${DC_NS}-tika-auth"
-  #     - "traefik.http.routers.${DC_NS}-tika-https.tls=true"
-  #     - "traefik.http.routers.${DC_NS}-tika-https.tls.certresolver=letsencrypt"
-  #     - "traefik.http.routers.${DC_NS}-tika-https.service=${DC_NS}-tika-https"
+  #     - "traefik.http.services.${STACK_VERSION}-tika-https.loadbalancer.server.port=9998"
+  #     - "traefik.http.routers.${STACK_VERSION}-tika-https.rule=Host(`tika${DC_SUBDOMAIN_SEP}${INSTANCE_DOMAIN}`)"
+  #     - "traefik.http.middlewares.${STACK_VERSION}-tika-auth.basicauth.users=${D4D_BASIC_AUTH_USERS}"
+  #     - "traefik.http.routers.${STACK_VERSION}-tika-https.middlewares=${STACK_VERSION}-tika-auth"
+  #     - "traefik.http.routers.${STACK_VERSION}-tika-https.tls=true"
+  #     - "traefik.http.routers.${STACK_VERSION}-tika-https.tls.certresolver=letsencrypt"
+  #     - "traefik.http.routers.${STACK_VERSION}-tika-https.service=${STACK_VERSION}-tika-https"

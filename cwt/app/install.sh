@@ -29,6 +29,11 @@
 #   # Or :
 #   cwt/app/install.sh
 #
+#   # To debug the DB operations that this would trigger :
+#   CWT_DB_DEBUG=1 make app-install
+#   # Or :
+#   CWT_DB_DEBUG=1 cwt/app/install.sh
+#
 
 . cwt/bootstrap.sh
 

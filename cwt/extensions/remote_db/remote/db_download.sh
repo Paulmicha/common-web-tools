@@ -21,9 +21,9 @@
 #   cwt/extensions/remote_db/remote/db_download.sh 'prod'
 #
 #   # Fetch a specific remote DB dump file :
-#   make remote-db-download 'prod' 'api' data/db-dumps/local/api/2024-08-07.15-34-23_api_foobar.localhost.sql.gz
+#   make remote-db-download 'prod_api' 'api' data/db-dumps/local/api/2024-08-07.15-34-23_api_foobar.localhost.sql.gz
 #   # Or :
-#   cwt/extensions/remote_db/remote/db_download.sh 'prod' 'api' data/db-dumps/local/api/2024-08-07.15-34-23_api_foobar.localhost.sql.gz
+#   cwt/extensions/remote_db/remote/db_download.sh 'prod_api' 'api' data/db-dumps/local/api/2024-08-07.15-34-23_api_foobar.localhost.sql.gz
 #
 
 . cwt/bootstrap.sh

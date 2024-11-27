@@ -84,12 +84,6 @@ fi
 
 if [[ -n "$3" ]]; then
   instance_domain="$3"
-else
-  # Generates a default domain name based on current dir name and local host IP.
-  . cwt/host/host.inc.sh
-  . cwt/utilities/string.sh
-  . cwt/instance/instance.inc.sh
-  instance_domain=$(u_instance_domain)
 fi
 
 if [[ -n "$4" ]]; then

@@ -79,7 +79,7 @@ u_remote_sync_db_to() {
     return 2
   fi
 
-  # The dump file path on the remote will be placed inside an 'incoming-sync'
+  # The dump file path on the remote will be placed inside an 'manually-uploaded-sync'
   # subfolder in order to avoid collisions risks while limiting fragmentation.
 
   # 1. Get the dump file relative path.
@@ -91,7 +91,7 @@ u_remote_sync_db_to() {
   relative_path=''
   u_fs_relative_path "$CWT_DB_DUMPS_BASE_PATH"
   rst_dump_local_base_path="$relative_path/local/$DB_ID"
-  rst_dump_remote_base_path="$relative_path/incoming-sync/$DB_ID"
+  rst_dump_remote_base_path="$relative_path/manually-uploaded-sync/$DB_ID"
   rst_dump_file_on_remote="${rst_dump_file_relative_path//$rst_dump_local_base_path/$rst_dump_remote_base_path}"
 
   # 3. Create the containing folder on the remote (if it doesn't exist yet).

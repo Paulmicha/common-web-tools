@@ -14,7 +14,7 @@
 #   This allows to also list the dump files previously uploaded on that remote.
 #
 # @example
-#   # On 'prod' remote by default : all DB IDs defined in 'prod' are dumped.
+#   # On 'prod' remote by default : all DB IDs defined in 'prod' are listed.
 #   make remote-db-list-dumps
 #   # Or :
 #   cwt/extensions/remote_db/remote/db_list_dumps.sh
