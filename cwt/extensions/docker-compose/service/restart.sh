@@ -36,4 +36,4 @@ echo
 # This needs to happen before the "post-start" hook, for some implementations
 # may depend on this check.
 # @see cwt/instance/start.sh
-hook -s 'instance' -a 'wait_for' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+hook -s 'instance' -a 'wait_for' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'

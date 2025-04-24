@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ##
-# Implements hook -a 'fs_perms_set' -s 'app instance' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'.
+# Implements hook -a 'fs_perms_set' -s 'app instance' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'.
 #
 # Applies writeable permissions for multisite setups.
 #
@@ -10,7 +10,7 @@
 #
 # To verify which files can be used (and will be sourced) when this hook is
 # triggered :
-# $ make hook-debug s:app instance a:fs_perms_set v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:app instance a:fs_perms_set v:STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE
 #
 
 case "$DWT_MULTISITE" in 'true')

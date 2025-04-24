@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ##
-# Implements hook -a 'fs_perms_set' -s 'app instance' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'.
+# Implements hook -a 'fs_perms_set' -s 'app instance' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'.
 #
 # (Re)sets project root filesystem permissions (except application sources).
 #
@@ -10,7 +10,7 @@
 #
 # To verify which files can be used (and will be sourced) when this hook is
 # triggered :
-# $ make hook-debug s:app instance a:fs_perms_set v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:app instance a:fs_perms_set v:STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE
 #
 
 # Sets 'normal' file permissions (644 by default) to every single file in
@@ -121,3 +121,9 @@ if [[ -d './scripts' ]]; then
   find './scripts' -type d -exec chmod "$FS_NW_DIRS" {} +
   find './scripts' -type f -exec chmod "$FS_E_FILES" {} +
 fi
+
+# TODO should CWT enforce this ? Loop through env vars named like :
+#   - PROTECTED_FILES
+#   - EXECUTABLE_FILES
+#   - WRITEABLE_DIRS
+#   - WRITEABLE_FILES

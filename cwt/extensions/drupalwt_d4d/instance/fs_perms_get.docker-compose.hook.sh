@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ##
-# Implements hook -s 'app instance' -a 'fs_perms_get' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+# Implements hook -s 'app instance' -a 'fs_perms_get' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'
 #
 # Provide the user who must be set as owner of dirs and files writeable by php.
 # To apply, run :
@@ -28,7 +28,7 @@
 #
 # To verify which files can be used (and will be sourced) when this hook is
 # triggered :
-# $ make hook-debug s:app instance a:fs_perms_get v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:app instance a:fs_perms_get v:STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE
 #
 
 # TODO [hack] Workaround docker-related ownership issue (make writeable dirs &

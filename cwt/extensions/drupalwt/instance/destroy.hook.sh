@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
 ##
-# Implements hook -s 'instance' -a 'destroy' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+# Implements hook -s 'instance' -a 'destroy' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'
 #
 # This file is dynamically included when the "hook" is triggered.
 #
 # Debug lookup paths (make sure this file gets picked up) :
-# $ make hook-debug s:instance a:destroy v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:instance a:destroy v:STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE
 #
 # @example
 #   make destroy

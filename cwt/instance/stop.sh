@@ -13,9 +13,9 @@
 #
 # To list all the possible paths that can be used among which existing files
 # will be sourced when the hook is triggered, run (in this order) :
-# $ make hook-debug s:instance p:pre a:stop v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
-# $ make hook-debug s:instance a:stop v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
-# $ make hook-debug s:instance p:post a:stop v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:instance p:pre a:stop v:STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:instance a:stop v:STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:instance p:post a:stop v:STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE
 #
 # @example
 #   make stop
@@ -25,6 +25,6 @@
 
 . cwt/bootstrap.sh
 
-hook -s 'instance' -p 'pre' -a 'stop' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
-hook -s 'instance' -a 'stop' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
-hook -s 'instance' -p 'post' -a 'stop' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+hook -s 'instance' -p 'pre' -a 'stop' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+hook -s 'instance' -a 'stop' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+hook -s 'instance' -p 'post' -a 'stop' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'

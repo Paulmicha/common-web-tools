@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
 
 ##
-# Combines commonly required actions to start a new project.
+# Combines commonly required actions to instanciate a fully functional project.
 #
 # Executes in this order the following actions :
-#   - instance init
-#   - start services (if any are implemented)
-#   - app install (if any operations are implemented)
+#   - instance init (.env + makefiles generation)
+#   - build + start services (if any are implemented)
+#   - run stage2 & post-setup hooks (if any are implemented), which are :
+#     - "stage2" to create databases, import initial DB dumps, then :
+#     - "post_setup" to run vendor install, config import, cache clear, etc.
+#
+# To check post-setup hooks :
+# make hook-debug s:instance p:stage2 a:setup v:STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE
+# make hook-debug s:instance p:post a:setup v:STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE
 #
 # NB : each step is idempotent (can be run several times without incidence, even
 # if current instance was already initialized or services are already running).
@@ -19,9 +25,8 @@
 #   Defaults to 'dev'.
 # @param 2 [optional] String : HOST_TYPE global value (flags instance as remote).
 #   Defaults to 'local'.
-# @param 3 [optional] String : INSTANCE_DOMAIN global value. Defaults to a
-#   fictional local domain generated using PROJECT_DOCROOT's folder name.
-#   @see u_instance_domain() in cwt/instance/instance.inc.sh
+# @param 3 [optional] String : STACK_VERSION global value. Defaults to an empty
+#   string.
 # @param 4 [optional] String : PROVISION_USING global value. Defaults to
 #   'docker-compose'.
 #
@@ -38,9 +43,9 @@
 #   make setup prod
 #
 #   # Init remote instance using production config provisionned manually (LAMP).
-#   cwt/instance/setup.sh prod remote test.my-cwt-project.com lamp
+#   cwt/instance/setup.sh prod remote myproject-2024 lamp
 #   # Or :
-#   make setup prod remote test.my-cwt-project.com lamp
+#   make setup prod remote myproject-2024 lamp
 #
 
 # Prerequisites check : can't guarantee idempotence if CWT globals were already
@@ -57,21 +62,10 @@ if [[ -n "$CWT_MAKE_INC" ]]; then
   exit 1
 fi
 
-# TODO [wip] check no longer required + remove.
-# Also, calling cwt/instance/init.sh the way it is done below requires the YAML
-# file to be present in $PROJECT_DOCROOT.
-# if [[ ! -f 'cwt.yml' ]]; then
-#   echo >&2
-#   echo "Error in $BASH_SOURCE line $LINENO: the 'cwt.yml' file is required." >&2
-#   echo "Please copy/paste 'sample.cwt.yml' to 'cwt.yml' & edit accordingly, then retry." >&2
-#   echo "-> Aborting (2)." >&2
-#   echo >&2
-#   exit 2
-# fi
-
 # Defaults (overridable using parameters to this script).
 instance_type='dev'
 host_type='local'
+stack_version=''
 provision_using='docker-compose'
 
 if [[ -n "$1" ]]; then
@@ -83,7 +77,7 @@ if [[ -n "$2" ]]; then
 fi
 
 if [[ -n "$3" ]]; then
-  instance_domain="$3"
+  stack_version="$3"
 fi
 
 if [[ -n "$4" ]]; then
@@ -101,7 +95,7 @@ purge_list+=('scripts/cwt/local/cache/make.sh')
 for entry in "${purge_list[@]}"; do
   if [[ -f "$entry" ]]; then
     echo >&2
-    echo "Error in $BASH_SOURCE line $LINENO: First, uninit." >&2
+    echo "Setup cannot run, because first, uninit is required." >&2
     echo >&2
     echo "If we setup an instance previously initialized, it needs to be cleaned up first :" >&2
     echo '$ make stop' >&2
@@ -122,16 +116,30 @@ for entry in "${purge_list[@]}"; do
   fi
 done
 
+feedback="Setup $host_type $instance_type $provision_using instance"
+
+if [[ -n "$stack_version" ]]; then
+  feedback="Setup $host_type $instance_type $provision_using instance version $stack_version"
+fi
+
 echo
-echo "Setup $host_type instance '$instance_domain' (type : $instance_type) using $provision_using ..."
+echo "$feedback ..."
 
 # Step 1 : init.
-cwt/instance/init.sh \
-  -t "$instance_type" \
-  -d "$instance_domain" \
-  -h "$host_type" \
-  -p "$provision_using" \
-  -y
+if [[ -n "$stack_version" ]]; then
+  cwt/instance/init.sh \
+    -t "$instance_type" \
+    -s "$stack_version" \
+    -h "$host_type" \
+    -p "$provision_using" \
+    -y
+else
+  cwt/instance/init.sh \
+    -t "$instance_type" \
+    -h "$host_type" \
+    -p "$provision_using" \
+    -y
+fi
 
 if [[ $? -ne 0 ]]; then
   echo >&2
@@ -152,16 +160,13 @@ if [[ $? -ne 0 ]]; then
   exit 4
 fi
 
-# Step 3 : app install.
-cwt/app/install.sh
+# Step 3 : post-setup hooks - i.e. "stage2" to create databases, import initial
+# DB dumps, then "post_setup" to run vendor install, cache clear, etc. (*after*
+# the optional DB dumps initial import)...
+# @see cwt/extensions/db/instance/post_setup.hook.sh
+. cwt/bootstrap.sh
+hook -s 'instance' -p 'stage2' -a 'setup' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+hook -s 'instance' -p 'post' -a 'setup' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'
 
-if [[ $? -ne 0 ]]; then
-  echo >&2
-  echo "Error in $BASH_SOURCE line $LINENO: 'app install' failed." >&2
-  echo "-> Aborting (5)." >&2
-  echo >&2
-  exit 5
-fi
-
-echo "Setup $host_type instance '$instance_domain' (type : $instance_type) using $provision_using : done."
+echo "$feedback : done."
 echo

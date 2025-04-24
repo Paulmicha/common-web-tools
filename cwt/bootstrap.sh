@@ -72,11 +72,11 @@ CACHE
   # the "pre_bootstrap" hook before.
   # To verify which files can be used (and will be sourced) when these hooks are
   # triggered, use the following commands *in this order* :
-  # $ make hook-debug s:cwt a:pre_bootstrap v:PROVISION_USING
-  # $ make hook-debug s:cwt a:alias v:PROVISION_USING
-  # $ make hook-debug s:cwt a:bootstrap v:PROVISION_USING
-  hook -s 'cwt' -a 'pre_bootstrap' -v 'PROVISION_USING'
-  hook -s 'cwt' -a 'alias' -v 'PROVISION_USING'
+  # $ make hook-debug s:cwt a:pre_bootstrap v:STACK_VERSION PROVISION_USING
+  # $ make hook-debug s:cwt a:alias v:STACK_VERSION PROVISION_USING
+  # $ make hook-debug s:cwt a:bootstrap v:STACK_VERSION PROVISION_USING
+  hook -s 'cwt' -a 'pre_bootstrap' -v 'STACK_VERSION PROVISION_USING'
+  hook -s 'cwt' -a 'alias' -v 'STACK_VERSION PROVISION_USING'
 
   # Load additional includes (including extensions').
   if [[ -n "$CWT_INC" ]]; then
@@ -93,5 +93,5 @@ CACHE
   fi
 
   # Allow extensions to implement custom additional env. variables.
-  hook -s 'cwt' -a 'bootstrap' -v 'PROVISION_USING'
+  hook -s 'cwt' -a 'bootstrap' -v 'STACK_VERSION PROVISION_USING'
 fi

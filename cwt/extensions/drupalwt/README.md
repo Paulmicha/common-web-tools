@@ -5,7 +5,7 @@ This extension :
 - provides global environment variables specific to common Drupal settings
 - ensures gitignored folders exist (e.g. for private or public uploads)
 - implements permissions and ownership in application sources (i.e. applied during instance init)
-- can automatically generate settings files (after *instance init* and after *instance rebuild*) - e.g. using template for Drupal settings, for ex. `cwt/extensions/drupalwt/app/drupal_settings.8.tpl.php`
+- can automatically generate settings files (after *instance init* and after *instance rebuild*) - e.g. using template for Drupal settings, for ex. `cwt/extensions/drupalwt/site/drupal_settings.8.tpl.php`
 - provides optional crontab setup during *app install* on current host (see the `DWT_USE_CRONTAB` global)
 
 This extension does not provide any "stack". There's a separate extension depending on `cwt/extensions/docker-compose` using [docker4drupal](https://github.com/wodby/docker4drupal) containers if needed, see `cwt/extensions/drupalwt_d4d`.
@@ -33,7 +33,7 @@ EOF
 # Create basic settings (server docroot folder name is 'web' by default, but
 # here we choose to use 'docroot' as in distributions like 'lightning' and
 # 'thunder').
-cat > 'cwt.yml' <<EOF
+cat > 'env.yml' <<EOF
 app:
   repo: git@my-git-host.com:TheGitUserAccount/the.project.repo.git
   docroot: app

@@ -6,7 +6,7 @@
 # The following hook is provided for letting extensions clean up their own
 # generated files and/or alter the purge_list :
 #
-# $ make hook-debug s:instance a:uninit v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:instance a:uninit v:STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE
 #
 # These implementations may optionally alter entries to the following var in
 # calling scope :
@@ -23,13 +23,15 @@
 
 purge_list=()
 
-# Manual cleanup of CWT "core" global env vars.
+# Manual cleanup of CWT global env vars.
 purge_list+=('.env')
 purge_list+=('scripts/cwt/local/global.vars.sh')
+
+# CWT make shortcuts too.
 purge_list+=('scripts/cwt/local/generated.mk')
 
 # Let extensions clean up their own generated files and/or alter the purge_list.
-hook -s 'instance' -a 'uninit' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+hook -s 'instance' -a 'uninit' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'
 
 # Process the purge_list.
 for entry in "${purge_list[@]}"; do
@@ -62,4 +64,4 @@ for entry in "${purge_list[@]}"; do
 done
 
 # Clear all CWT cache entries.
-. cwt/cache/clear.sh
+. cwt/instance/cwt_cache_clear.sh

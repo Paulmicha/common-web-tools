@@ -24,12 +24,12 @@ fi
 echo "Starting the '$p_service' service ..."
 
 # TODO [wip] Differenciate single service pre-start hook ?
-hook -s 'instance' -p 'pre' -a 'start' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+hook -s 'instance' -p 'pre' -a 'start' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'
 
 docker compose start "$p_service"
 
 # TODO [wip] Differenciate single service post-start hook ?
-hook -s 'instance' -p 'post' -a 'start' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+hook -s 'instance' -p 'post' -a 'start' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'
 
 echo "Starting the '$p_service' service : done."
 echo
@@ -42,4 +42,4 @@ echo
 # This needs to happen before the "post-start" hook, for some implementations
 # may depend on this check.
 # @see cwt/instance/start.sh
-hook -s 'instance' -a 'wait_for' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+hook -s 'instance' -a 'wait_for' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'

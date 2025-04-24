@@ -79,7 +79,7 @@ wait_for() {
   set -e
 
   if [[ -z "$p_max_try" ]]; then
-    p_max_try=24
+    p_max_try=10
   fi
   if [[ -z "$p_wait_seconds" ]]; then
     p_wait_seconds=2
@@ -97,16 +97,17 @@ wait_for() {
       started=1
       break
     fi
-    echo "${p_service} is starting..."
+    echo "Waiting for ${p_service} to start..."
     sleep "${p_wait_seconds}"
   done
 
   if [[ $started -eq 0 ]]; then
-    echo >&2 "Error. ${p_service} is unreachable."
-    exit 1
+    echo
+    echo "Notice : wait_for(${p_service}) has not responded after $p_max_try tries of ${p_wait_seconds}s."
+    echo
+  else
+    echo "${p_service} has started!"
   fi
-
-  echo "${p_service} has started!"
 
   # Unset temporary flag to exit immediately if a command exits with a non-zero
   # status.

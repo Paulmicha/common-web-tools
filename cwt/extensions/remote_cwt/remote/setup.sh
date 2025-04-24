@@ -15,7 +15,7 @@
 #   # Sets up a new LAN instance of type 'prod' without interactive terminal
 #   # prompts, overriding the host type to 'local' (to avoid being assigned
 #   # the 'prod remote' INSTANCE_DOMAIN when we're using the local YAML settings
-#   # overrides - i.e. scripts/cwt/override/.cwt-local.remote.prod.yml):
+#   # overrides - i.e. scripts/cwt/override/.env-local.remote.prod.yml):
 #   cwt/extensions/remote_cwt/remote/setup.sh 'lan' -t 'prod' -h 'local'
 #
 

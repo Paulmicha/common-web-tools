@@ -7,6 +7,8 @@
 # in order to give other extensions a chance to react (e.g. to whitelist or
 # blacklist some actions per instance).
 #
+# make hook-debug s:remote a:exec
+#
 # Implementations of this (optional) hook MUST use the following variables :
 # - String $remote_id : remote instance's id (short name).
 # - String $cmd : command or file path of a script to execute remotely - which

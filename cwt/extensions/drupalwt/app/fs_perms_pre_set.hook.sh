@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ##
-# Implements hook -a 'fs_perms_pre_set' -s 'app instance' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'.
+# Implements hook -a 'fs_perms_pre_set' -s 'app instance' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'.
 #
 # (Re)sets filesystem permissions in application source files. This hook is
 # triggered before the 'normal' hook so that specific lists of paths (which may
@@ -15,7 +15,7 @@
 #
 # To verify which files can be used (and will be sourced) when this hook is
 # triggered :
-# $ make hook-debug s:app instance a:fs_perms_pre_set v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:app instance a:fs_perms_pre_set v:STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE
 #
 
 # Handle projects using different Git repos for dev-stack and app.

@@ -31,12 +31,17 @@
 #   value.
 #
 # @example
-#   # Use the default naming convention :
+#   # Given the following variables in calling scope :
+#   USER='paul'
+#   DB_ID='site'
 #   DUMP_FILE_EXTENSION='sql'
+#   CWT_DB_DUMPS_LOCAL_PATTERN='{{ %Y-%m-%d.%H-%M-%S }}_local-{{ DB_ID }}.{{ USER }}.{{ DUMP_FILE_EXTENSION }}'
+#
+#   # You can use the default output var naming convention (lowercase) :
 #   u_str_convert_tokens CWT_DB_DUMPS_LOCAL_PATTERN
 #   echo "cwt_db_dumps_local_pattern = '$cwt_db_dumps_local_pattern'"
 #
-#   # Provide a specific var name for reading the result :
+#   # Or provide a specific var name for reading the result :
 #   u_str_convert_tokens CWT_DB_DUMPS_LOCAL_PATTERN 'my_var_name'
 #   echo "my_var_name = '$my_var_name'"
 #

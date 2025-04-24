@@ -15,4 +15,4 @@
 # from the remote, instead of having a local file named after the symlink. The
 # extra wait allows to maintain a local downloaded file name typically
 # containing a datestamp.
-global CWT_REMOTE_DB_SYMLINK_DL "[default]='yes'"
+global CWT_REMOTE_DB_SYMLINK_DL "[default]='no'"

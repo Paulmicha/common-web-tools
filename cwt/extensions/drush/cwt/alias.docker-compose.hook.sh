@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ##
-# Implements hook -s 'cwt' -a 'alias' -v 'PROVISION_USING'.
+# Implements hook -s 'cwt' -a 'alias' -v 'STACK_VERSION PROVISION_USING'.
 #
 # Declares default bash aliases for current project instance using drush *with*
 # docker compose provisionning. If that's *not* the case, the other

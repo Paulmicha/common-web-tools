@@ -9,6 +9,8 @@
 #   cwt/extensions/remote/remote/definitions_update.sh
 #
 
+. cwt/bootstrap.sh
+
 echo "(re)Writing generated remote instance definitions ..."
 
 u_remote_instances_setup

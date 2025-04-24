@@ -10,9 +10,9 @@
 #
 # To list all the possible paths that can be used among which existing files
 # will be sourced when the hook is triggered, run (in this order) :
-# $ make hook-debug s:instance p:pre a:destroy v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
-# $ make hook-debug s:instance a:destroy v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
-# $ make hook-debug s:instance p:post a:destroy v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:instance p:pre a:destroy v:STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:instance a:destroy v:STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE
+# $ make hook-debug s:instance p:post a:destroy v:STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE
 #
 # @example
 #   make destroy
@@ -22,6 +22,6 @@
 
 . cwt/bootstrap.sh
 
-hook -s 'instance' -p 'pre' -a 'destroy' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
-hook -s 'instance' -a 'destroy' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
-hook -s 'instance' -p 'post' -a 'destroy' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+hook -s 'instance' -p 'pre' -a 'destroy' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+hook -s 'instance' -a 'destroy' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+hook -s 'instance' -p 'post' -a 'destroy' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'

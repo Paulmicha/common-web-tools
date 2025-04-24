@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ##
-# Implements hook -s 'instance' -a 'destroy' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+# Implements hook -s 'instance' -a 'destroy' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'
 #
 # Deletes VHost potentially generated for this local instance.
 #

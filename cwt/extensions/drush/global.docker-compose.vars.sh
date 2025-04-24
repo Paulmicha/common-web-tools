@@ -15,4 +15,4 @@
 #
 
 global DRUSH_SERVICE_NAME "[default]=site"
-global DRUSH_BIN "[default]=$APP_DOCROOT_C/vendor/bin/drush"
+global DRUSH_BIN "[default]=$SITE_DOCROOT_C/vendor/bin/drush"

@@ -24,12 +24,12 @@ fi
 echo "Building the '$p_service' service ..."
 
 # TODO [wip] Differenciate single service pre-build hook ?
-hook -s 'instance' -p 'pre' -a 'build' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+hook -s 'instance' -p 'pre' -a 'build' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'
 
 docker compose build --no-cache "$p_service"
 
 # TODO [wip] Differenciate single service post-build hook ?
-hook -s 'instance' -p 'post' -a 'build' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+hook -s 'instance' -p 'post' -a 'build' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'
 
 echo "Building the '$p_service' service : done."
 echo

@@ -11,10 +11,14 @@
 # @see cwt/bootstrap.sh
 #
 
-global DC_BIN_PATH "[default]=/usr/local/bin"
+# Docker bind mount volumes file ownership : adapt to your local machine. E.g. :
+# $ id -u # <- print the user ID (uid)
+# $ id -g # <- print the group ID (gid)
+global DEV_UID "[default]=$(id -u)"
+global DEV_GID "[default]=$(id -g)"
 
 # @see cwt/extensions/docker-compose/service/exec.sh
-global DC_SERVICE_EXEC_FALLBACK "[default]=bash"
+global DC_SERVICE_EXEC_FALLBACK "[default]=sh"
 
 # Important note : when using relative paths in docker-compose.yml files, the
 # folder of the file itself is the reference.
@@ -28,7 +32,7 @@ global DC_MODE "[default]=generate [help]='Specifies if and how docker-compose w
 case "$DC_MODE" in
   auto|generate)
     global DC_YML_LOOKUP "[default]='compose docker-compose compose.override docker-compose.override' [help]='Determine the compose file paths to look for when generating the YAML files.'"
-    global DC_YML_VARIANTS "[default]='$HOST_TYPE $INSTANCE_TYPE $STACK_VERSION' [help]='Hook variants to determine which compose.yml / docker-compose.yml (and optionally compose.override.yml / docker-compose.override.yml) will be matched for use in current project instance. Defaults to ’HOST_TYPE INSTANCE_TYPE STACK_VERSION’.'"
+    global DC_YML_VARIANTS "[default]='$STACK_VERSION $HOST_TYPE $INSTANCE_TYPE' [help]='Hook variants to determine which compose.yml / docker-compose.yml (and optionally compose.override.yml / docker-compose.override.yml) will be matched for use in current project instance. Defaults to ’STACK_VERSION HOST_TYPE INSTANCE_TYPE’.'"
     ;;
   manual)
     global DC_YML "[default]='docker-compose.yml' [help]='Specifies where docker-compose will find the YAML declaration file to use for current project instance.'"
@@ -44,3 +48,4 @@ global DC_SUBDOMAIN_SEP "[default]='.' [help]='Subdomain or prefix separator for
 global CWT_MAKE_TASKS_SHORTER "[append]='docker-compose/dc'"
 global CWT_MAKE_TASKS_SHORTER "[append]='service-exec/se'"
 global CWT_MAKE_TASKS_SHORTER "[append]='service-run/sr'"
+global CWT_MAKE_TASKS_SHORTER "[append]='service-logs/sl'"

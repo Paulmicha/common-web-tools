@@ -81,6 +81,14 @@ u_global_write() {
   local has_double_quote=0
   local has_single_quote=0
 
+  # Update : global vars related to DB must *not* be readonly in order to
+  # simplify manipulations targeting several DBs on the same stack.
+  local readonly
+  local v
+  local db_id
+  local db_var
+  local prefixed_db_var
+
   if [ -z "$GLOBALS_COUNT" ]; then
     echo >&2
     echo "Error in u_global_write() - $BASH_SOURCE line $LINENO: nothing to write." >&2
@@ -135,19 +143,45 @@ EOF
       echo
     fi
 
-    if [[ -z "$global_val" ]]; then
-      echo "readonly $global_name=''" >> scripts/cwt/local/global.vars.sh
-    else
-      if [[ $has_single_quote != 1 ]]; then
-        echo "readonly $global_name='$global_val'" >> scripts/cwt/local/global.vars.sh
-      else
-        # TODO do we want to escape any '$' sign when using double quotes ?
-        echo "readonly $global_name=\"$global_val\"" >> scripts/cwt/local/global.vars.sh
-      fi
+    # Update : global vars related to DB must not be readonly in order to
+    # simplify manipulations targeting several DBs on the same stack.
+    readonly='readonly '
+    db_vars_list=''
+    v=''
+
+    if [[ -n "$CWT_DB_IDS" ]]; then
+      u_db_vars_list
+
+      for v in $db_vars_list; do
+        db_var="DB_$v"
+
+        for db_id in $CWT_DB_IDS; do
+          prefixed_db_var="${db_id}_${db_var}"
+          u_str_uppercase "$prefixed_db_var" 'prefixed_db_var'
+
+          # Debug.
+          # echo "$global_name = $db_var or $prefixed_db_var ?"
+
+          case "$global_name" in "$db_var"|"$prefixed_db_var")
+            readonly=''
+          esac
+        done
+      done
     fi
 
     # Debug.
-    # echo "global_name = $global_name -> value : '${!global_name}'"
+    # echo "readonly = '$readonly'"
+
+    if [[ -z "$global_val" ]]; then
+      echo "${readonly}$global_name=''" >> scripts/cwt/local/global.vars.sh
+    else
+      if [[ $has_single_quote != 1 ]]; then
+        echo "${readonly}$global_name='$global_val'" >> scripts/cwt/local/global.vars.sh
+      else
+        # TODO do we want to escape any '$' sign when using double quotes ?
+        echo "${readonly}$global_name=\"$global_val\"" >> scripts/cwt/local/global.vars.sh
+      fi
+    fi
 
     # Also write globals to git-ignored '.env' file for Makefile and other tools
     # like docker-compose.

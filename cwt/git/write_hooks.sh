@@ -7,7 +7,7 @@
 # "$PROJECT_DOCROOT/.git/hooks".
 #
 # CWT hook triggers will have the following format :
-# $ hook -s 'git' -a "$git_hook" -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+# $ hook -s 'git' -a "$git_hook" -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'
 #
 # TODO [evol] Examine opt-in alternative to use a custom value for "git config
 # core.hooksPath" (instead of just generating scripts in "$GIT_DIR/hooks").

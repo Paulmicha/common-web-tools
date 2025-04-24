@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ##
-# Implements hook -s 'cwt' -a 'alias' -v 'PROVISION_USING'.
+# Implements hook -s 'cwt' -a 'alias' -v 'STACK_VERSION PROVISION_USING'.
 #
 # Implement custom bash alias for the 'docker-compose' program given 'DC_MODE'
 # value, which specifies if and how docker-compose will choose a YAML

@@ -67,6 +67,9 @@ u_dc_write_yml() {
     compose_file="$compose_name.yml"
     hook_most_specific_dry_run_match=''
 
+    # Debug.
+    # hook -s 'stack' -a "$compose_name" -c "yml" -v 'DC_YML_VARIANTS' -t -r -d
+
     # Remove existing files if previously generated.
     if [[ -f "$compose_file" ]]; then
       rm "$compose_file"

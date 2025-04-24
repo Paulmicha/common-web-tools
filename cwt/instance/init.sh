@@ -3,26 +3,30 @@
 ##
 # Instance initialization process ("instance init").
 #
+# Uses env.yml files.
+# @see u_instance_init() in cwt/instance/instance.inc.sh
+#
 # @example
 #   # Calling this script without any arguments will use prompts in terminal
 #   # to provide values for every globals.
 #   cwt/instance/init.sh
+#   # Or :
+#   make init
 #
-#   # Initializes an instance of type 'dev', host type 'local', provisionned
-#   # using 'ansible', identified by domain 'dev.cwt.com', using 'cwt_dev' as
-#   # docker-compose namespace, with git origin
-#   'git@my-git-origin.org:my-git-account/cwt.git', app sources cloned in 'dist',
-#   # and using 'dist/web' as app dir - without terminal prompts (-y flag).
-#   cwt/instance/init.sh \
-#     -t 'dev' \
-#     -h 'local' \
-#     -p 'ansible' \
-#     -d 'dev.cwt.com' \
-#     -c 'cwt_dev' \
-#     -g 'git@my-git-origin.org:my-git-account/cwt.git' \
-#     -a 'dist' \
-#     -s 'dist/web' \
-#     -y
+#   # Initializes given stack version without prompts (i.e. default values) :
+#   cwt/instance/init.sh -s 'myproject-2024' -y
+#   # Or :
+#   make init -- -s 'myproject-2024' -y
+#
+#   # Init with instance type = prod :
+#   cwt/instance/init.sh -t 'prod' -y
+#   # Or :
+#   make init -- -t 'prod' -y
+#
+#   # Init with host type = remote :
+#   cwt/instance/init.sh -h 'remote' -y
+#   # Or :
+#   make init -- -h 'remote' -y
 #
 
 # This action can be (re)launched after local instance was already initialized,
@@ -33,4 +37,4 @@ CWT_BS_SKIP_GLOBALS=1
 
 . cwt/bootstrap.sh
 
-u_instance_init "$@"
+u_instance_init $@

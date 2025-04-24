@@ -33,7 +33,7 @@
 #   # Print lookup paths for "instance start" using PROVISION_USING variant :
 #   make hook-debug s:instance a:start v:PROVISION_USING
 #   # Same but using more variants :
-#   make hook-debug s:instance a:start v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+#   make hook-debug s:instance a:start v:STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE
 #
 #   # Trigger "test self_test" manually :
 #   make self-test

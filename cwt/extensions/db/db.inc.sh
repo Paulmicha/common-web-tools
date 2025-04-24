@@ -13,7 +13,7 @@
 # Some values may be generated and stored once on first call, e.g. passwords
 # when CWT_DB_MODE is set to 'auto' (or prompted when set to 'manual').
 #
-# @exports DB_ID - defaults to 'default'.
+# @exports DB_ID - defaults to the first entry in CWT_IDS or 'default'.
 # @exports DB_DRIVER - defaults to 'mysql'.
 # @exports DB_HOST - defaults to 'localhost'.
 # @exports DB_PORT - defaults to '3306' or '5432' if DB_DRIVER is 'pgsql'.
@@ -84,6 +84,7 @@ u_db_set() {
   local p_db_id="$1"
   local p_force_reload="$2"
   local db_id
+  local cwt_db_id
   local reg_val
 
   # Debug.
@@ -92,25 +93,34 @@ u_db_set() {
   fi
 
   if [[ -z "$p_db_id" ]]; then
+    # TODO deprecate fallback to probably unused CWT_DB_ID ?
     if [[ -n "$CWT_DB_ID" ]]; then
       db_id="$CWT_DB_ID"
+    elif [[ -n "$CWT_DB_IDS" ]]; then
+      for cwt_db_id in $CWT_DB_IDS; do
+        db_id="$cwt_db_id"
+        break
+      done
     else
       db_id='default'
     fi
   else
     db_id="$p_db_id"
   fi
+
   u_str_sanitize_var_name "$db_id" 'db_id'
 
   if [[ -n "$DB_ID" ]]; then
     # If DB credentials vars are already exported in current shell scope for given
     # db_id, no need to reload (unless explicitly asked).
-    if [[ "$DB_ID" == "$db_id" ]] && [[ -z "$p_force_reload" ]]; then
-      # TODO [evol] more checks to be sure those don't need reload / re-apply.
-      # hook -s 'db' -a 'env_preset' -v 'INSTANCE_TYPE PROVISION_USING DB_ID'
-      # hook -s 'cwt' -a 'alias' -v 'PROVISION_USING'
-      return
-    fi
+    case "$DB_ID" in "$db_id")
+      if [[ -z "$p_force_reload" ]]; then
+        if [[ -n "$CWT_DB_DEBUG" ]]; then
+          echo "DB_ID:$DB_ID == db_id:$db_id -> skip reload"
+        fi
+        return
+      fi
+    esac
 
     # When DB_ID was previously set in current shell scope AND it is different
     # (or the force reload is requested), then we first need to UNSET all the
@@ -120,6 +130,34 @@ u_db_set() {
   fi
 
   export DB_ID="$db_id"
+
+  # Presetting unprefixed env vars for '$DB_ID' DB based on prefixed globals,
+  # if they exist (and if their values aren't empty).
+  local v=''
+  local db_var=''
+  local prefixed_db_var=''
+
+  u_db_vars_list
+
+  for v in $db_vars_list; do
+    case "$v" in 'ID')
+      continue
+    esac
+
+    db_var="DB_$v"
+    prefixed_db_var="${db_id}_${db_var}"
+    u_str_uppercase "$prefixed_db_var" 'prefixed_db_var'
+
+    if [[ -z "${!prefixed_db_var}" ]]; then
+      continue
+    fi
+
+    if [[ -n "$CWT_DB_DEBUG" ]]; then
+      echo "preset $db_var from $prefixed_db_var = '${!prefixed_db_var}'"
+    fi
+
+    export "$db_var=${!prefixed_db_var}"
+  done
 
   # Give a chance to other extensions to preset non-readonly env vars, including
   # per STACK_VERSION and DB_ID.
@@ -339,9 +377,9 @@ u_db_set() {
   esac
 
   # Finally, export prefixed DB_* vars.
-  local v
-  local db_var
-  local prefixed_db_var
+  v=''
+  db_var=''
+  prefixed_db_var=''
 
   u_db_vars_list
 
@@ -354,7 +392,7 @@ u_db_set() {
 
   # Allow bash aliases to be adapted to the currently active DB_ID.
   # @see cwt/extensions/mysql/cwt/alias.docker-compose.hook.sh
-  hook -s 'cwt' -a 'alias' -v 'PROVISION_USING'
+  hook -s 'cwt' -a 'alias' -v 'STACK_VERSION PROVISION_USING'
 }
 
 ##
@@ -405,14 +443,22 @@ u_db_get_ids() {
   local multi_db_ids=''
 
   # Support multi-DB projects defined using the "append"-type global CWT_DB_IDS.
+  # Defaults to CWT_APPS.
   if [[ -n "$CWT_DB_IDS" ]]; then
     for db_id in $CWT_DB_IDS; do
       u_array_add_once "$db_id" db_ids
     done
+  elif [[ -n "$CWT_APPS" ]]; then
+    for cwt_app in $CWT_APPS; do
+      u_array_add_once "$cwt_app" db_ids
+    done
   fi
 
   # Let extensions define their own additional DB_IDs.
+  # They need to append values to the string :
+  # @var multi_db_ids
   hook -s 'db' -a 'set_multi_db_ids' -v 'INSTANCE_TYPE'
+
   if [[ -n "$multi_db_ids" ]]; then
     for db_id in $multi_db_ids; do
       u_array_add_once "$db_id" db_ids
@@ -528,6 +574,161 @@ u_db_exists() {
   esac
 
   return 1
+}
+
+##
+# Checks if given DB has already been flagged using local registry.
+#
+# It checks by default the flag to know if the DB is already setup (created).
+# This allows to skip wait_for() calls for DB services started but with DBs not
+# created yet.
+#
+# @see cwt/instance/setup.sh
+# @see cwt/extensions/drush/instance/wait_for.docker-compose.hook.sh
+# @see u_instance_registry_get() in cwt/instance/instance.inc.sh
+#
+# @param 1 String : the database ID ($DB_ID).
+# @param 2 [optional] String : the flag. Defaults to 'is_already_setup'.
+#
+# @example
+#   # Checks the default flag - to know if the DB is already setup (created).
+#   if u_db_is_flagged 'my_db_id'; then
+#     echo "Yes, 'my_db_id' was already setup."
+#   else
+#     echo "No."
+#   fi
+#
+#   # Works for any flag. Negative check example :
+#   if ! u_db_is_flagged 'my_db_id' 'is_locked'; then
+#     echo "No, 'my_db_id' is not locked."
+#   fi
+#
+u_db_is_flagged() {
+  local reg_val
+
+  u_db_get_flag_key $@
+  u_instance_registry_get "$key"
+
+  if [[ -n "$reg_val" ]]; then
+    return 0
+  fi
+
+  return 1
+}
+
+##
+# Flags given DB as already setup (created) using local registry.
+#
+# @see u_db_is_already_setup()
+# @see cwt/instance/setup.sh
+# @see cwt/extensions/drush/instance/wait_for.docker-compose.hook.sh
+# @see u_instance_registry_set() in cwt/instance/instance.inc.sh
+#
+# @param 1 String : the database ID ($DB_ID).
+# @param 2 [optional] String : the flag. Defaults to 'is_already_setup'.
+#
+# @example
+#   u_db_mark_as_already_setup 'site'
+#
+u_db_flag() {
+  u_db_get_flag_key $@
+  u_instance_registry_set "$key" true
+}
+
+##
+# Flags all defined DB_IDs using local registry.
+#
+# @see u_db_unflag()
+#
+# @param 1 [optional] String : the flag. Defaults to 'is_already_setup'.
+#
+# @example
+#   u_db_flag_all
+#
+u_db_flag_all() {
+  local db_id
+  local db_ids=()
+
+  u_db_get_ids
+
+  if [[ -n "${db_ids[@]}" ]]; then
+    for db_id in "${db_ids[@]}"; do
+      u_db_flag "$db_id" "$1"
+    done
+  fi
+}
+
+##
+# Unflags given DB as already setup (created) using local registry.
+#
+# @see u_db_is_already_setup()
+# @see cwt/instance/setup.sh
+# @see cwt/extensions/drush/instance/wait_for.docker-compose.hook.sh
+# @see u_instance_registry_del() in cwt/instance/instance.inc.sh
+#
+# @param 1 String : the database ID ($DB_ID).
+# @param 2 [optional] String : the flag. Defaults to 'is_already_setup'.
+#
+# @example
+#   u_db_mark_as_already_setup 'site'
+#
+u_db_unflag() {
+  u_db_get_flag_key $@
+  u_instance_registry_del "$key"
+}
+
+##
+# Unflags all defined DB_IDs using local registry.
+#
+# @see u_db_unflag()
+#
+# @param 1 [optional] String : the flag. Defaults to 'is_already_setup'.
+#
+# @example
+#   u_db_unflag_all
+#
+u_db_unflag_all() {
+  local db_id
+  local db_ids=()
+
+  u_db_get_ids
+
+  if [[ -n "${db_ids[@]}" ]]; then
+    for db_id in "${db_ids[@]}"; do
+      u_db_unflag "$db_id" "$1"
+    done
+  fi
+}
+
+##
+# Single source of truth for DB flags registry keys.
+#
+# Uses STACK_VERSION if set.
+# This funtion writes its result to a variable subject to collision in calling
+# scope :
+#
+# @var key
+#
+# @param 1 String : the database ID ($DB_ID).
+# @param 2 [optional] String : the flag. Defaults to 'is_already_setup'.
+#
+# @example
+#   u_db_get_flag_key 'site' 'is_already_setup'
+#   echo "key = $key"
+#
+u_db_get_flag_key() {
+  local p_db_id="$1"
+  local p_flag="$2"
+
+  if [[ -z "$p_flag" ]]; then
+    p_flag='is_already_setup'
+  fi
+
+  key="db_${p_db_id}_flag_${p_flag}"
+
+  if [[ -n "$STACK_VERSION" ]]; then
+    key="db_${STACK_VERSION}_${p_db_id}_flag_${p_flag}"
+  fi
 }
 
 ##
@@ -730,6 +931,48 @@ u_db_exec() {
 }
 
 ##
+# Same as u_db_exec() but for running inline query.
+#
+# To list all the possible paths that can be used, use :
+# $ make hook-debug s:db a:query v:DB_DRIVER DB_ID INSTANCE_TYPE PROVISION_USING
+#
+# To check the most specific match (if any is found) :
+# $ make hook-debug ms s:db a:query v:DB_DRIVER DB_ID INSTANCE_TYPE PROVISION_USING
+#
+# @param 1 String : the query.
+# @param 2 [optional] String : the database ID ($DB_ID), see u_db_set().
+#   Defaults to 'default'.
+# @param 3 [optional] String : force reload flag (bypasses optimization) if the
+#   DB credentials vars are already exported in current shell scope.
+#   TODO deprecate this argument and export a specific variable instead.
+#
+# @example
+#   u_db_query 'UPDATE users SET name = "foobar" WHERE email = "foo@bar.com";'
+#
+u_db_query() {
+  local p_query="$1"
+  local p_db_id="$2"
+  local p_force_reload_flag="$3"
+
+  u_db_set "$p_db_id" "$p_force_reload_flag"
+
+  echo "Running query in $DB_DRIVER DB '$DB_NAME' ..."
+
+  # Implementations MUST use var $p_query as input.
+  if [[ -z "$CWT_DB_DEBUG" ]]; then
+    u_hook_most_specific -s 'db' -a 'query' -v 'DB_DRIVER DB_ID INSTANCE_TYPE PROVISION_USING'
+  else
+    echo
+    echo "[debug] would run query :"
+    echo "$p_query"
+    echo
+  fi
+
+  echo "Running query in $DB_DRIVER DB '$DB_NAME' : done."
+  echo
+}
+
+##
 # [abstract] Dumps database to a compressed (gz) dump file.
 #
 # This function does not implement the creation of the "raw" DB dump file, but
@@ -882,6 +1125,12 @@ u_db_clear() {
   local p_force_reload_flag="$2"
 
   u_db_set "$p_db_id" "$p_force_reload_flag"
+
+  # Only attempt to clear if DB exists.
+  if ! u_db_exists "$DB_NAME" "$p_db_id"; then
+    echo "Notice: DB name '$DB_NAME' does not appear to exist -> skip clearing."
+    return;
+  fi
 
   # Debug.
   if [[ -n "$CWT_DB_DEBUG" ]]; then
@@ -1166,18 +1415,26 @@ u_db_setup() {
   if u_db_exists "$DB_NAME" "$p_db_id"; then
     echo "The $DB_ID database ('$DB_NAME') exists already."
   else
-    echo "Creating $DB_ID database '$DB_NAME' ..."
-
     u_db_create "$DB_ID" "$p_force_reload_flag"
-
-    echo "Creating $DB_ID database '$DB_NAME' : done."
-    echo
   fi
 
   # Only move on to the initial DB import if configured to do so.
   case "$CWT_DB_INITIAL_IMPORT" in true)
     u_db_restore_any "$DB_ID"
   esac
+
+  # Flag the DB as already setup.
+  if u_db_exists "$DB_NAME" "$p_db_id"; then
+    u_db_flag "$DB_ID"
+  else
+    u_db_unflag "$DB_ID"
+
+    echo >&2
+    echo "Error in u_db_setup() - $BASH_SOURCE line $LINENO: the $DB_ID database '$DB_NAME' was not created." >&2
+    echo "-> Aborting (2)." >&2
+    echo >&2
+    exit 2
+  fi
 }
 
 ##
@@ -1238,22 +1495,36 @@ u_db_restore_any() {
   # Also look into local dumps.
   lookup_subdirs+=('local')
 
-  for lookup_subdir in "${lookup_subdirs[@]}"; do
-    if [[ ! -d "$CWT_DB_DUMPS_BASE_PATH/$lookup_subdir/$DB_ID" ]]; then
-      continue
-    fi
+  # The 'prod' remote (if it exists) dumps take priority.
+  if [[ -d "$CWT_DB_DUMPS_BASE_PATH/prod/$DB_ID" ]]; then
+    initial_dump_file="$(u_fs_get_most_recent "$CWT_DB_DUMPS_BASE_PATH/prod/$DB_ID" '*.gz')"
+  fi
 
-    initial_dump_file="$(u_fs_get_most_recent "$CWT_DB_DUMPS_BASE_PATH/$lookup_subdir/$DB_ID" '*.gz')"
+  if [[ ! -f "$initial_dump_file" ]]; then
+    for lookup_subdir in "${lookup_subdirs[@]}"; do
+      if [[ ! -d "$CWT_DB_DUMPS_BASE_PATH/$lookup_subdir/$DB_ID" ]]; then
+        continue
+      fi
 
-    if [[ -f "$initial_dump_file" ]]; then
-      break
-    fi
-  done
+      initial_dump_file="$(u_fs_get_most_recent "$CWT_DB_DUMPS_BASE_PATH/$lookup_subdir/$DB_ID" '*.gz')"
+
+      if [[ -f "$initial_dump_file" ]]; then
+        break
+      fi
+    done
+  fi
 
   # If there is no local DB dump found, and if the "remote_db" extension exists,
   # attempt to fetch latest remote dump file for given DB ID.
   if [[ ! -f "$initial_dump_file" ]] && [[ -n "${instance_ids[@]}" ]]; then
     for instance_id in "${instance_ids[@]}"; do
+
+      # TODO [evol] do not attempt to download dump from remotes that do not
+      # host given DB_ID.
+
+      # Also this implies dependency on the remote_db extension, not always
+      # enabled.
+
       # Debug.
       if [[ -n "$CWT_DB_DEBUG" ]]; then
         echo "  [debug] would download $DB_ID DB from $instance_id"
@@ -1275,7 +1546,7 @@ u_db_restore_any() {
 
   if [[ ! -f "$initial_dump_file" ]]; then
     echo >&2
-    echo "Error in u_db_setup() - $BASH_SOURCE line $LINENO: no dump file was found." >&2
+    echo "Error in u_db_restore_any() - $BASH_SOURCE line $LINENO: no dump file was found." >&2
     echo "-> Aborting (1)." >&2
     echo >&2
     exit 1

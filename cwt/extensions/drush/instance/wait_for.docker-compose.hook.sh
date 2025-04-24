@@ -1,13 +1,21 @@
 #!/usr/bin/env bash
 
 ##
-# Implements hook -s 'instance' -a 'wait_for' -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
+# Implements hook -s 'instance' -a 'wait_for' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'
 #
 
 db_ids=()
 u_db_get_ids
 
 for db_id in "${db_ids[@]}"; do
+  # We need to make sure our database exists (i.e. has been previously
+  # created) for the wait to make sense. Using a "registry" entry for now.
+  # Update : this prevents to import initial dumps during setup
+  # -> we can't depend on the DB existing for this check to work. Abort.
+  # if ! u_db_is_flagged "$db_id"; then
+  #   continue
+  # fi
+
   u_str_uppercase "${db_id}_DB_DRIVER"
 
   case "${!uppercase}" in 'drush')

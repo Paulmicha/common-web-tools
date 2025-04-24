@@ -7,7 +7,7 @@
 # @see cwt/extensions/docker-compose/global.vars.sh
 #
 # @example
-#   # Execute the value of "$DC_SERVICE_EXEC_FALLBACK" (defaults to 'bash') :
+#   # Execute the value of "$DC_SERVICE_EXEC_FALLBACK" (defaults to 'sh') :
 #   make se 'foobar-service'
 #   # Or :
 #   cwt/extensions/docker-compose/service/exec.sh 'foobar-service'
@@ -40,7 +40,7 @@ fi
 shift 1
 
 # When nothing is sent in arguments to be executed, default to exec whatever is
-# the value of "$DC_SERVICE_EXEC_FALLBACK" (defaults to 'bash').
+# the value of "$DC_SERVICE_EXEC_FALLBACK" (defaults to 'sh').
 if [[ -z "$@" && -n "$DC_SERVICE_EXEC_FALLBACK" ]]; then
   docker compose exec "$p_service" "$DC_SERVICE_EXEC_FALLBACK"
 else
