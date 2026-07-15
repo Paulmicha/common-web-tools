@@ -15,4 +15,5 @@
 
 if [[ -d scripts/cwt/local/cache ]]; then
   rm -rf scripts/cwt/local/cache
+  echo "Cleared local scripts/cwt/local/cache dir."
 fi

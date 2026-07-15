@@ -179,6 +179,13 @@ EOF
         echo "${readonly}$global_name='$global_val'" >> scripts/cwt/local/global.vars.sh
       else
         # TODO do we want to escape any '$' sign when using double quotes ?
+        # TODO [evol] see if there's a better workaround for quotes. Right now,
+        # we have to trim any ' or " prefix + suffix manually here.
+        # @see cwt/vendor/bash-yaml/script/yaml.sh
+        global_val="${global_val%\'}"
+        global_val="${global_val#\'}"
+        global_val="${global_val%\"}"
+        global_val="${global_val#\"}"
         echo "${readonly}$global_name=\"$global_val\"" >> scripts/cwt/local/global.vars.sh
       fi
     fi
@@ -233,7 +240,7 @@ EOF
 #   # - scripts/global.<PROVISION_USING>.vars.sh
 #   # -> Ex :
 #   # - cwt/app/global.vars.sh
-#   # - cwt/app/global.docker-compose.vars.sh
+#   # - cwt/app/global.compose.vars.sh
 #   # - ...
 #
 u_global_lookup_paths() {
@@ -258,11 +265,14 @@ u_global_lookup_paths() {
     done
   fi
 
-  # 2. Files using variant in their name (i.e. 'global.docker-compose.vars.sh')
-  hook_dry_run_matches=''
-  hook -a 'global' -c "${PROVISION_USING}.vars.sh" -t
-  for f in $hook_dry_run_matches; do
-    global_lookup_paths+="$f "
+  # 2. Files using variant in their name (i.e. 'global.compose.vars.sh')
+  local provision_suffix
+  for provision_suffix in $(u_provision_using_lookup_values); do
+    hook_dry_run_matches=''
+    hook -a 'global' -c "${provision_suffix}.vars.sh" -t
+    for f in $hook_dry_run_matches; do
+      global_lookup_paths+="$f "
+    done
   done
   # ... including extra lookup paths at the root of extensions' folders.
   if [ -n "$CWT_EXTENSIONS" ]; then
@@ -270,9 +280,11 @@ u_global_lookup_paths() {
     for extension in $CWT_EXTENSIONS; do
       ext_path=''
       u_cwt_extension_path "$extension"
-      if [ -f "$ext_path/$extension/global.${PROVISION_USING}.vars.sh" ]; then
-        global_lookup_paths+="$ext_path/$extension/global.${PROVISION_USING}.vars.sh "
-      fi
+      for provision_suffix in $(u_provision_using_lookup_values); do
+        if [ -f "$ext_path/$extension/global.${provision_suffix}.vars.sh" ]; then
+          global_lookup_paths+="$ext_path/$extension/global.${provision_suffix}.vars.sh "
+        fi
+      done
     done
   fi
 }

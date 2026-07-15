@@ -1,0 +1,6 @@
+test_demo_two
+assert failure
+
+Ran 1 test.
+
+FAILED (failures=1)

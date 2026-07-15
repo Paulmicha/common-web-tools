@@ -8,7 +8,7 @@ This extension :
 - can automatically generate settings files (after *instance init* and after *instance rebuild*) - e.g. using template for Drupal settings, for ex. `cwt/extensions/drupalwt/site/drupal_settings.8.tpl.php`
 - provides optional crontab setup during *app install* on current host (see the `DWT_USE_CRONTAB` global)
 
-This extension does not provide any "stack". There's a separate extension depending on `cwt/extensions/docker-compose` using [docker4drupal](https://github.com/wodby/docker4drupal) containers if needed, see `cwt/extensions/drupalwt_d4d`.
+This extension does not provide any "stack". There's a separate extension depending on `cwt/extensions/compose` using [docker4drupal](https://github.com/wodby/docker4drupal) containers if needed, see `cwt/extensions/drupalwt_d4d`.
 
 ## Getting started ex. : creating a new Drupal 8 project
 
@@ -50,10 +50,10 @@ EOF
 make setup
 ```
 
-If using the `drupalwt_d4d` extension, details about the `docker-compose` "stack" that will be installed can be found in :
+If using the `drupalwt_d4d` extension, details about the compose stack that will be installed can be found in :
 
-- `cwt/extensions/drupalwt_d4d/stack/docker-compose.yml`
-- `cwt/extensions/drupalwt_d4d/stack/docker-compose.override.local.dev.yml`
+- `cwt/extensions/drupalwt_d4d/stack/compose.yml`
+- `cwt/extensions/drupalwt_d4d/stack/compose.override.local.dev.yml`
 
 ### 3. Choose a Composer template and do the first install
 

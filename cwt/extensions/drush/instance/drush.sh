@@ -16,7 +16,7 @@
 # This may be called from contexts with or without docker-compose.
 # The docroot option is implemented here :
 # @see cwt/extensions/drush/cwt/alias.hook.sh
-# @see cwt/extensions/drush/cwt/alias.docker-compose.hook.sh
+# @see cwt/extensions/drush/cwt/alias.compose.hook.sh
 # This extension does not deal with multi-site Drupal setups. For that, see the
 # "drupalwt" extension.
 if [[ -n "$DRUSH_DEFAULT_URI" ]]; then

@@ -66,6 +66,7 @@ if [[ ! -f "$p_real_script" ]]; then
   exit 1
 fi
 
+invoked_make_target="$1"
 make_entry_point="$1"
 shift
 
@@ -148,4 +149,11 @@ done
 # echo "  $p_real_script $escaped_args"
 # echo
 
-eval "$p_real_script $escaped_args"
+case "$p_real_script" in
+  */test/case.run.sh)
+    eval "$p_real_script $(printf '%q' "$invoked_make_target") $escaped_args"
+    ;;
+  *)
+    eval "$p_real_script $escaped_args"
+    ;;
+esac

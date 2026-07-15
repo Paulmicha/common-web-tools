@@ -1,0 +1,8 @@
+test_u_test_results_parse_shunit_suite
+ASSERT:missing case one output
+ASSERT:missing case two output
+ASSERT:missing tree file
+grep: /tmp/tmp.dlhBaelmTS/test-results/test/batch.yml: No such file or directory
+ASSERT:case one should PASS expected:<0> but was:<1>
+grep: /tmp/tmp.dlhBaelmTS/test-results/test/batch.yml: No such file or directory
+ASSERT:case two should FAIL expected:<0> but was:<1>

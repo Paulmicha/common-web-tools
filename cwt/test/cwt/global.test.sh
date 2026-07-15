@@ -20,7 +20,7 @@
 #
 
 . cwt/bootstrap.sh
-. cwt/test/self_test.inc.sh
+. cwt/test/cwt.inc.sh
 
 ##
 # Creates temporary files for verification purposes in current test case.
@@ -31,7 +31,15 @@ oneTimeSetUp() {
   local s
   local s_upper
 
+  # Hook dry-run results are cached at init/warmup; clear those before creating
+  # temporary global.vars.sh files so u_global_lookup_paths can see them.
+  # @see hook() in cwt/utilities/hook.sh
+  rm -f scripts/cwt/local/cache/hook.*global*vars*
+
   for s in $CWT_SUBJECTS; do
+    # Skip subjects whose folder is not a normal subject namespace (bootstrap
+    # phases live under cwt/bootstrap/ without being a hook subject dir).
+    case "$s" in bootstrap) continue ;; esac
     u_str_uppercase "$s" 's_upper'
     cat > "cwt/$s/global.vars.sh" <<EOF
 #!/usr/bin/env bash
@@ -58,7 +66,7 @@ EOF
     exit 3
   fi
 
-  mkdir -p "cwt/extensions/nftcwtgevdehnc/app"
+  mkdir -p "cwt/extensions/nftcwtgevdehnc/instance"
 
   # Failsafe : cannot carry on without successful temporary extension dir creation.
   if [[ $? -ne 0 ]]; then
@@ -74,9 +82,9 @@ EOF
 global NFTCWTGEVHNC_VAR_1 'test'
 EOF
 
-  cat > "cwt/extensions/nftcwtgevdehnc/app/global.vars.sh" <<'EOF'
+  cat > "cwt/extensions/nftcwtgevdehnc/instance/global.vars.sh" <<'EOF'
 #!/usr/bin/env bash
-global NFTCWTGEVHNC_APP_VAR_1 'test'
+global NFTCWTGEVHNC_EXT_INSTANCE_VAR_1 'test'
 EOF
 
   # Forces detection of our newly created temporary extension.
@@ -97,6 +105,7 @@ test_cwt_global_aggregate() {
   GLOBALS_COUNT=0
   GLOBALS_UNIQUE_NAMES=()
   GLOBALS_UNIQUE_KEYS=()
+  GLOBALS_DRY_RUN=0
 
   u_global_aggregate
   # u_global_debug
@@ -105,13 +114,14 @@ test_cwt_global_aggregate() {
   local s_upper
   local s_varname
   for s in $CWT_SUBJECTS; do
+    case "$s" in bootstrap) continue ;; esac
     u_str_uppercase "$s" 's_upper'
     s_varname="NFTCWTGEVHNC_VAR_CWT_${s_upper}"
     assertEquals "Value of NFTCWTGEVHNC_VAR_CWT_$s_upper is missing or incorrect." "test" "${!s_varname}"
   done
 
   assertEquals 'Value of NFTCWTGEVHNC_VAR_1 is missing or incorrect.' "test" "$NFTCWTGEVHNC_VAR_1"
-  assertEquals 'Value of NFTCWTGEVHNC_APP_VAR_1 is missing or incorrect.' "test" "$NFTCWTGEVHNC_APP_VAR_1"
+  assertEquals 'Value of NFTCWTGEVHNC_EXT_INSTANCE_VAR_1 is missing or incorrect.' "test" "$NFTCWTGEVHNC_EXT_INSTANCE_VAR_1"
 }
 
 ##
@@ -122,6 +132,7 @@ test_cwt_global_aggregate() {
 oneTimeTearDown() {
   local s
   for s in $CWT_SUBJECTS; do
+    case "$s" in bootstrap) continue ;; esac
     rm -f "cwt/$s/global.vars.sh"
   done
   rm -fr 'cwt/extensions/nftcwtgevdehnc'

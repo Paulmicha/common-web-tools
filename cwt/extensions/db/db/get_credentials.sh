@@ -24,33 +24,25 @@
 #   DB credentials vars are already exported in current shell scope.
 #
 # @example
-#   # Prints out a recap of the 'default' DB credentials (unless CWT_DB_ID is
-#   # set to another value in current shell scope).
+#   # Prints out DB creds of all locally defined databases at once.
 #   make db-get-credentials
 #   # Or :
 #   cwt/extensions/db/db/get_credentials.sh
 #
-#   # Prints out a recap of the 'my_custom_db_id' DB credentials.
+#   # Prints out a recap of the 'my_custom_db_id' DB credentials only.
 #   make db-get-credentials my_custom_db_id
 #   # Or :
 #   cwt/extensions/db/db/get_credentials.sh my_custom_db_id
-#
-#   # All locally defined databases at once.
-#   make db-get-credentials '%'
-#   # Or :
-#   cwt/extensions/db/db/get_credentials.sh '%'
 #
 
 . cwt/bootstrap.sh
 
 db_ids=()
 
-if [[ "$1" == '%' ]]; then
-  u_db_get_ids
-elif [[ -n "$1" ]]; then
+if [[ -n "$1" ]]; then
   db_ids+=("$1")
 else
-  db_ids+=('default')
+  u_db_get_ids
 fi
 
 u_db_vars_list

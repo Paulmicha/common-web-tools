@@ -3,7 +3,7 @@
 ##
 # Implements hook -s 'instance' -p 'pre' -a 'rebuild' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'
 #
-# Rewrites locally generated CWT files - e.g. docker-compose.yml, settings
+# Rewrites locally generated CWT files - e.g. compose.yml, settings
 # files, etc. based on the values previously set for the following global global
 # env. vars :
 # - $CWT_APPS

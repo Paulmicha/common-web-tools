@@ -22,9 +22,9 @@
 p_subdir="$1"
 p_db_id="$2"
 
-if [[ -z "$CWT_DB_DUMPS_BASE_PATH" ]]; then
+if [[ -z "$CWT_DB_DUMPS_DIR" ]]; then
   echo >&2
-  echo "Error in $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_BASE_PATH' is undefined." >&2
+  echo "Error in $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_DIR' is undefined." >&2
   echo "Current instance must be (re)initialized with the 'db' extension enabled." >&2
   echo "-> Aborting (1)." >&2
   echo >&2
@@ -35,7 +35,7 @@ subdir=''
 db_ids=()
 
 u_db_get_ids
-u_fs_dir_list "$CWT_DB_DUMPS_BASE_PATH"
+u_fs_dir_list "$CWT_DB_DUMPS_DIR"
 
 echo "Listing dumps in :"
 
@@ -54,7 +54,7 @@ for subdir in $dir_list; do
   fi
 
   for db_id in "${db_ids[@]}"; do
-    dir="$CWT_DB_DUMPS_BASE_PATH/$subdir/$db_id"
+    dir="$CWT_DB_DUMPS_DIR/$subdir/$db_id"
 
     u_fs_relative_path "$dir"
 

@@ -1,0 +1,1 @@
+test_cwt_has_essential_globals

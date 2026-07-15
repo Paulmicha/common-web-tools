@@ -7,7 +7,7 @@
 # during this action - e.g. docker-compose.
 #
 # @see cwt/instance/start.sh
-# @see cwt/extensions/docker-compose/instance/start.docker-compose.hook.sh
+# @see cwt/extensions/compose/instance/start.compose.hook.sh
 #
 
 u_db_set_all

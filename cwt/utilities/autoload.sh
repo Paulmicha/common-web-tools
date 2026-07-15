@@ -116,7 +116,7 @@ u_autoload_print_lookup_paths() {
 #
 # @example
 #   # Add entries in the 'lookup_paths' array as in hooks' lookups,
-#   # e.g. : pre_bootstrap.docker-compose.hook.sh
+#   # e.g. : pre_bootstrap.compose.hook.sh
 #   for x_val in $prefixes; do
 #     for v_val in $str_subsequences; do
 #       u_autoload_add_lookup_level "${x_val}_${a}." "$suffix" "$v_val" lookup_paths

@@ -68,7 +68,7 @@ u_remote_sync_db_to() {
       esac
     fi
   else
-    rst_dump_file="$(u_fs_get_most_recent $CWT_DB_DUMPS_BASE_PATH)"
+    rst_dump_file="$(u_fs_get_most_recent $CWT_DB_DUMPS_DIR)"
   fi
 
   if [[ ! -f "$rst_dump_file" ]]; then
@@ -89,7 +89,7 @@ u_remote_sync_db_to() {
 
   # 2. Transform its path for use on the remote.
   relative_path=''
-  u_fs_relative_path "$CWT_DB_DUMPS_BASE_PATH"
+  u_fs_relative_path "$CWT_DB_DUMPS_DIR"
   rst_dump_local_base_path="$relative_path/local/$DB_ID"
   rst_dump_remote_base_path="$relative_path/manually-uploaded-sync/$DB_ID"
   rst_dump_file_on_remote="${rst_dump_file_relative_path//$rst_dump_local_base_path/$rst_dump_remote_base_path}"
@@ -181,7 +181,7 @@ u_remote_sync_db_from() {
   # after the remote instance id in order to avoid any risks of collision.
   rsf_leaf="${rsf_remote_dump_file##*/}"
   relative_path=''
-  u_fs_relative_path "$CWT_DB_DUMPS_BASE_PATH"
+  u_fs_relative_path "$CWT_DB_DUMPS_DIR"
   rsf_dump_local_base_path="$relative_path/$p_id/$DB_ID"
   rsf_dump_remote_base_path="$relative_path/local/$DB_ID"
   rsf_local_dump_file="${rsf_remote_dump_file//$rsf_dump_remote_base_path/$rsf_dump_local_base_path}"
@@ -271,7 +271,7 @@ u_remote_download_db_from() {
   # after the remote instance id in order to avoid any risks of collision.
   rsf_leaf="${rsf_remote_dump_file##*/}"
   relative_path=''
-  u_fs_relative_path "$CWT_DB_DUMPS_BASE_PATH"
+  u_fs_relative_path "$CWT_DB_DUMPS_DIR"
   rsf_dump_local_base_path="$relative_path/$p_id/$DB_ID"
   rsf_dump_remote_base_path="$relative_path/local/$DB_ID"
   rsf_local_dump_file="${rsf_remote_dump_file//$rsf_dump_remote_base_path/$rsf_dump_local_base_path}"

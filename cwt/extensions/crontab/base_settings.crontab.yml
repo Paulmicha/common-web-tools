@@ -1,0 +1,11 @@
+includes:
+  defaults:
+    enabled: true
+    wrap: lt              # lt | thread | direct
+    lock: skip            # skip | wait | queue | parallel  (pile-up policy)
+    user: ""              # empty = crontab owner / current user
+  scheduled_job:
+    includes: defaults
+    retry:
+      max: 0
+      delay: 10s

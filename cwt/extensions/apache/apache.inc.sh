@@ -66,8 +66,8 @@ u_apache_write_vhost_conf() {
         # both -> use variable name convention : if a variable named like the
         # current one with a '_C' suffix, it will automatically be used instead.
         # TODO [evol] Caveat : does not work if suffixed var value is empty.
-        # @see cwt/extensions/drupalwt/app/global.docker-compose.vars.sh
-        case "$PROVISION_USING" in docker-compose)
+        # @see cwt/extensions/drupalwt/app/global.compose.vars.sh
+        case "$PROVISION_USING" in compose|docker-compose)
           var_name_c="${var_name}_C"
           if [[ -n "${!var_name_c}" ]]; then
             var_val="${!var_name_c}"

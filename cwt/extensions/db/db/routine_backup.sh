@@ -4,7 +4,7 @@
 # Routine local DB dump (backup).
 #
 # The dump file path will be determined by the following globals :
-#   - CWT_DB_DUMPS_BASE_PATH
+#   - CWT_DB_DUMPS_DIR
 #   - CWT_DB_DUMPS_LOCAL_PATTERN
 #
 # @see cwt/extensions/db/global.vars.sh

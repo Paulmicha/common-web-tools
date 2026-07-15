@@ -7,19 +7,19 @@
 # *not* using docker-compose. In that case, the other implementation will be
 # loaded instead :
 #
-# @see cwt/extensions/drush/cwt/alias.docker-compose.hook.sh
+# @see cwt/extensions/drush/cwt/alias.compose.hook.sh
 #
 # This file is dynamically included when the "hook" is triggered.
 # @see cwt/bootstrap.sh
 #
-# Uses the docker exec interactive flag from 'docker-compose' extension.
-# @see cwt/extensions/docker-compose/cwt/pre_bootstrap.docker-compose.hook.sh
+# Uses the docker exec interactive flag from 'compose' extension.
+# @see cwt/extensions/compose/cwt/pre_bootstrap.compose.hook.sh
 #
 # This hook will be called once during bootstrap, then once more during "db set"
 # where a local variable may be used to overwrite those aliases in order to
 # target the correct service.
 #
-# @see cwt/extensions/drush/cwt/global.docker-compose.vars.sh
+# @see cwt/extensions/drush/cwt/global.compose.vars.sh
 # @see u_db_set() in cwt/extensions/db/db.inc.sh
 #
 

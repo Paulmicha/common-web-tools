@@ -91,7 +91,7 @@ for key in "${!dumps_dict[@]}"; do
   # echo "$key = '${dumps_dict[$key]}'"
   # echo "db_id = $db_id"
 
-  local_dir="$CWT_DB_DUMPS_BASE_PATH/$local_subfolder/$db_id"
+  local_dir="$CWT_DB_DUMPS_DIR/$local_subfolder/$db_id"
 
   # Can't carry on if we have no file to upload.
   if [[ -z "$local_file" && ! -d "$local_dir" ]]; then

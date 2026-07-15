@@ -28,7 +28,7 @@
 # @param 3 [optional] String : STACK_VERSION global value. Defaults to an empty
 #   string.
 # @param 4 [optional] String : PROVISION_USING global value. Defaults to
-#   'docker-compose'.
+#   'compose'.
 #
 # @example
 #
@@ -66,7 +66,7 @@ fi
 instance_type='dev'
 host_type='local'
 stack_version=''
-provision_using='docker-compose'
+provision_using='compose'
 
 if [[ -n "$1" ]]; then
   instance_type="$1"

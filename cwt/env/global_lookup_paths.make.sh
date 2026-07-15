@@ -38,7 +38,7 @@ if [ -n "$CWT_EXTENSIONS" ]; then
   done
 fi
 
-# 2. Files using variant in their name (i.e. 'global.docker-compose.vars.sh')
+# 2. Files using variant in their name (i.e. 'global.compose.vars.sh')
 if [[ -n "$PROVISION_USING" ]]; then
   hook -a 'global' -c "${PROVISION_USING}.vars.sh" -t -d
   if [ -n "$CWT_EXTENSIONS" ]; then

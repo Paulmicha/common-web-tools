@@ -3,16 +3,18 @@
 ##
 # Reinitializes current project instance without changing existing settings.
 #
-# TODO [wip] check which vars are really essential to be kept (hardcoded).
-#
 # Rewrites locally generated CWT files while keeping the values - if previously
 # set - for the following global env. vars :
+# - $STACK_VERSION
+# - $CWT_APPS
+# - $CWT_SSH_PUBKEY
 # - $INSTANCE_TYPE
 # - $INSTANCE_DOMAIN
-# - $STACK_VERSION
 # - $HOST_TYPE
 # - $PROVISION_USING
-# - $CWT_SSH_PUBKEY
+#
+# If the .env file is missing, calling reinit attempts to get the values from
+# the env.yml (if it exists).
 #
 # @example
 #   make reinit
@@ -38,19 +40,16 @@ if [[ -f '.env' ]]; then
       'CWT_APPS='*)
         eval "$line"
         ;;
+      'CWT_SSH_PUBKEY='*)
+        eval "$line"
+        ;;
       'INSTANCE_TYPE='*)
         eval "$line"
         ;;
-      # 'INSTANCE_DOMAIN='*)
-      #   eval "$line"
-      #   ;;
       'HOST_TYPE='*)
         eval "$line"
         ;;
       'PROVISION_USING='*)
-        eval "$line"
-        ;;
-      'CWT_SSH_PUBKEY='*)
         eval "$line"
         ;;
     esac
@@ -63,6 +62,25 @@ if [[ -f '.env' ]]; then
       done
     fi
   done < '.env'
+elif [[ -f 'env.yml' ]]; then
+  # The file env.yml, if it exists, is the "fallback" source of truth.
+  . cwt/utilities/shell.sh
+  . cwt/utilities/string.sh
+  . cwt/utilities/yaml.sh
+
+  eval "$(u_yaml_parse 'env.yml' 'yaml_')"
+
+  if [[ -n "$yaml_stack_version" ]]; then
+    STACK_VERSION="$yaml_stack_version"
+  fi
+
+  if [[ -n "$yaml_cwt_apps" ]]; then
+    CWT_APPS="$yaml_cwt_apps"
+  fi
+
+  if [[ -n "$yaml_cwt_ssh_pubkey" ]]; then
+    CWT_SSH_PUBKEY="$yaml_cwt_ssh_pubkey"
+  fi
 fi
 
 # Wipe out env vars to avoid pile-ups for 'append' type globals during reinit.

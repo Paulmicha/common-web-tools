@@ -1,0 +1,5 @@
+test_cwt_global_aggregate
+
+Ran 1 test.
+
+OK

@@ -1,0 +1,5 @@
+test_cwt_autoload_override_works
+
+Ran 2 tests.
+
+OK

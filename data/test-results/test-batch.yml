@@ -1,0 +1,6 @@
+batch: batch
+updated: 2026-07-15T20:17:24-03:00
+exit: 0
+demo:
+  test_demo_one: PASS
+  test_demo_two: FAIL

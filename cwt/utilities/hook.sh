@@ -10,6 +10,51 @@
 #
 
 ##
+# Return space-separated provision variant tokens for file/hook lookups.
+#
+# Dual-compat: compose and docker-compose resolve to both.
+#
+u_provision_using_lookup_values() {
+  local p_provision_using="${1:-${PROVISION_USING:-}}"
+
+  case "$p_provision_using" in
+    compose|docker-compose)
+      printf '%s' 'compose docker-compose'
+      ;;
+    *)
+      if [[ -n "$p_provision_using" ]]; then
+        printf '%s' "$p_provision_using"
+      fi
+      ;;
+  esac
+}
+
+##
+# Append variant value(s) to a space-separated lookup list.
+#
+# Expands PROVISION_USING via u_provision_using_lookup_values().
+#
+u_hook_variant_values_add() {
+  local p_v_prim="$1"
+  local p_v_val="$2"
+  local p_v_values_var_name="$3"
+  local current="${!p_v_values_var_name}"
+  local alias_val
+
+  if [[ "$p_v_prim" == 'PROVISION_USING' ]]; then
+    for alias_val in $(u_provision_using_lookup_values "$p_v_val"); do
+      if [[ "$current" != *"$alias_val"* ]]; then
+        current+="$alias_val "
+      fi
+    done
+  elif [[ -n "$p_v_val" ]] && [[ "$current" != *"$p_v_val"* ]]; then
+    current+="$p_v_val "
+  fi
+
+  printf -v "$p_v_values_var_name" '%s' "$current"
+}
+
+##
 # Triggers an "event" optionally filtered by primitives.
 #
 # Arguments are all optional, but this function requires at least either
@@ -35,10 +80,10 @@
 # Variants are combinatory. Each variant value must be an existing glabal var
 # which will generate the following lookup paths given the call :
 # $ hook -a 'my_action' -s 'my_subject' -v 'PROVISION_USING INSTANCE_TYPE'
-# + the values PROVISION_USING='docker-compose' and INSTANCE_TYPE='dev' :
+# + the values PROVISION_USING='compose' and INSTANCE_TYPE='dev' :
 # - cwt/my_subject/my_action.hook.sh
-# - cwt/my_subject/my_action.docker-compose.hook.sh
-# - cwt/my_subject/my_action.docker-compose.dev.hook.sh
+# - cwt/my_subject/my_action.compose.hook.sh
+# - cwt/my_subject/my_action.compose.dev.hook.sh
 # - cwt/my_subject/my_action.dev.hook.sh
 #
 # @requires the following global variables in calling scope :
@@ -205,6 +250,12 @@ hook() {
   local extension
   local uppercase
   local ext_path
+
+  # Doc contract: without -v, still suggest INSTANCE_TYPE variants.
+  # @see function docblock above (Important notes about the 'variants' argument)
+  if [[ -z "$p_variants_filter" ]]; then
+    variants='INSTANCE_TYPE'
+  fi
 
   # Allow using only a particular extension (see the '-p' argument).
   if [ -n "$p_extensions_filter" ]; then
@@ -488,15 +539,13 @@ u_hook_build_lookup_by_subject() {
         # Finally, add the variants suggestions.
         for v_prim in $variants; do
           v_val="${!v_prim}"
-          if [[ "$v_values" != *"$v_val"* ]]; then
-            v_values+="$v_val "
-          fi
+          u_hook_variant_values_add "$v_prim" "$v_val" 'v_values'
         done
 
         # Now that we fetched variants actual values, add them as as suggestions
         # unless excluded (see prefixes). These are combinatory, e.g. :
         # - init.local.dev.hook.sh
-        # - bootstrap.docker-compose.dev.hook.sh
+        # - bootstrap.compose.dev.hook.sh
         # - bootstrap.docker-compose.prod.remote.hook.sh
         u_str_subsequences "$v_values" '.'
         if [[ -z "$p_prefixes_filter" ]]; then
@@ -506,7 +555,7 @@ u_hook_build_lookup_by_subject() {
         fi
 
         # Implement prefix + variant lookup paths, e.g. :
-        # pre_bootstrap.docker-compose.hook.sh
+        # pre_bootstrap.compose.hook.sh
         for x_val in $prefixes; do
           for v_val in $str_subsequences; do
             u_autoload_add_lookup_level "$bp/$p_subject/${x_val}_${a}." "$suffix" "$v_val" lookup_paths
@@ -576,15 +625,13 @@ u_hook_build_project_root_dir_lookup() {
   # Finally, add the variants suggestions.
   for v_prim in $variants; do
     v_val="${!v_prim}"
-    if [[ "$v_values" != *"$v_val"* ]]; then
-      v_values+="$v_val "
-    fi
+    u_hook_variant_values_add "$v_prim" "$v_val" 'v_values'
   done
 
   # Now that we fetched variants actual values, add them as as suggestions
   # unless excluded (see prefixes). These are combinatory, e.g. :
   # - init.local.dev.hook.sh
-  # - bootstrap.docker-compose.dev.hook.sh
+  # - bootstrap.compose.dev.hook.sh
   # - bootstrap.docker-compose.prod.remote.hook.sh
   u_str_subsequences "$v_values" '.'
   if [[ -z "$p_prefixes_filter" ]]; then
@@ -594,7 +641,7 @@ u_hook_build_project_root_dir_lookup() {
   fi
 
   # Implement prefix + variant lookup paths, e.g. :
-  # pre_bootstrap.docker-compose.hook.sh
+  # pre_bootstrap.compose.hook.sh
   for x_val in $prefixes; do
     for v_val in $str_subsequences; do
       u_autoload_add_lookup_level "${x_val}_${a}." "$suffix" "$v_val" lookup_paths
@@ -612,9 +659,9 @@ u_hook_build_project_root_dir_lookup() {
 # This "score" - a simple addition of slash & dot count in the filepath - allows
 # to differenciate CWT's file-name-based implementations (hooks, globals,
 # etc.) because of the way its patterns work :
-#   - multiple extension (i.e. variants : pre_bootstrap.docker-compose.hook.sh)
-#   - complements (e.g. scripts/complements/test/self_test.hook.sh)
-#   - overrides (e.g. scripts/overrides/extensions/docker-compose/instance/init.docker-compose.hook.sh)
+#   - multiple extension (i.e. variants : pre_bootstrap.compose.hook.sh)
+#   - complements (e.g. scripts/cwt/extend/test/cwt.hook.sh)
+#   - overrides (e.g. scripts/overrides/extensions/compose/instance/init.compose.hook.sh)
 # @see hook()
 #
 # NB : We must give some advantage to the project-specific 'scripts' path in
@@ -633,10 +680,10 @@ u_hook_build_project_root_dir_lookup() {
 #   u_hook_most_specific -s 'instance' -a 'registry_get' -v 'HOST_TYPE'
 #
 #   # Dry run example.
-#   # @see u_stack_template() in cwt/extensions/docker-compose/stack/stack.inc.sh
+#   # @see u_stack_template() in cwt/extensions/compose/stack/stack.inc.sh
 #   hook_most_specific_dry_run_match=''
-#   u_hook_most_specific 'dry-run' -s 'stack' -a 'docker-compose' -c "yml" -v 'DC_YML_VARIANTS' -t
-#   echo "$hook_most_specific_dry_run_match" # <- Prints the most specific "docker-compose.yml" found.
+#   u_hook_most_specific 'dry-run' -s 'stack' -a 'compose' -c "yml" -v 'DC_YML_VARIANTS' -t
+#   echo "$hook_most_specific_dry_run_match" # <- Prints the most specific "compose.yml" found.
 #
 u_hook_most_specific() {
   local msdr_flag=0

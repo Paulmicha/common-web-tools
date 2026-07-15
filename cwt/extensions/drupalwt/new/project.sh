@@ -120,7 +120,7 @@ fi
 # When using docker-compose, 'composer' is likely an alias running from a
 # container -> deal with path conversion.
 destination_dir="$APP_DOCROOT"
-case "$PROVISION_USING" in 'docker-compose')
+case "$PROVISION_USING" in compose|docker-compose)
   if [[ -n "$APP_DOCROOT_C" ]]; then
     destination_dir="$APP_DOCROOT_C"
   fi

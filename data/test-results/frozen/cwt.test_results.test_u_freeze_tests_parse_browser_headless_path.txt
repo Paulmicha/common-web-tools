@@ -1,0 +1,8 @@
+test_u_freeze_tests_parse_browser_headless_path
+cwt/test/cwt/test_results.test.sh: line 74: u_freeze_tests_parse_subset: command not found
+ASSERT:plan should have one item expected:<1> but was:<0>
+ASSERT:plan item expected:<browser:headless:preprod:as-user> but was:<>
+
+Ran 3 tests.
+
+FAILED (failures=8)

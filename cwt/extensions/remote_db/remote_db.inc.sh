@@ -437,9 +437,9 @@ u_remote_db_prepare_downloads() {
   local p_dump_file="$3"
 
   # To download dumps, we need to have a place to store them locally.
-  if [[ -z "$CWT_DB_DUMPS_BASE_PATH" ]]; then
+  if [[ -z "$CWT_DB_DUMPS_DIR" ]]; then
     echo >&2
-    echo "Error in u_remote_db_prepare_paths() - $BASH_SOURCE line $LINENO: missing CWT_DB_DUMPS_BASE_PATH env var." >&2
+    echo "Error in u_remote_db_prepare_paths() - $BASH_SOURCE line $LINENO: missing CWT_DB_DUMPS_DIR env var." >&2
     echo "-> Aborting (1)." >&2
     echo >&2
     return 1
@@ -468,6 +468,10 @@ u_remote_db_prepare_downloads() {
     # Skip any remote that has no definition for this DB ID (i.e. it does not
     # have this DB).
     if [[ -z "${dumps_dict[${db_id}.base_dir]}" ]]; then
+      # TODO [wip] default local path for downloaded DB dumps :
+      # @see cwt/extensions/db/global.vars.sh
+      # local_dumps_dir="$CWT_DB_DUMPS_DIR/$remote_id/$db_id"
+
       continue
     fi
 
@@ -486,7 +490,7 @@ u_remote_db_prepare_downloads() {
     # manipulate DB dumps from other instances (e.g. 'prod' dumps on a 'dev'
     # instance).
     dumps_dict["${db_id}.remote_dump_dir"]="${dumps_dict[${db_id}.base_dir]}/local/${db_id}"
-    dumps_dict["${db_id}.local_dump_dir"]="${CWT_DB_DUMPS_BASE_PATH}/${p_remote_id}/${db_id}"
+    dumps_dict["${db_id}.local_dump_dir"]="${CWT_DB_DUMPS_DIR}/${p_remote_id}/${db_id}"
 
     if [[ -n "$p_dump_file" ]]; then
       dumps_dict["${db_id}.remote_dump_file"]="$p_dump_file"

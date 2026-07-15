@@ -25,22 +25,49 @@
 #   cwt/extensions/db/db/exec.sh
 #
 
-# TODO [wip] debug : no idea why some dump files begin like :
-# 2024-08-07.16-31-35_service_foobar.comsql0000644000175000017500367165423314654745644024306 0ustar  sitesite-- MySQL dump 10.19  Distrib 10.3.39-MariaDB, for debian-linux-gnu (x86_64)
-# --
-# -- Host: service-db    Database: foobar-db-name
-# -- ------------------------------------------------------
-# (snip)
-# Workaround : trim any initial lines containing '--' but not beginning with '--'.
-# @see cwt/extensions/mysql/db/dump.mysql.hook.sh
-dump_first_line="$(head -1 $db_dump_file)"
+# Workaround : some .sql.gz dumps are tar.gz (legacy dump_reduce) or gunzip leaves a
+# tar archive instead of SQL. Extract or trim until the file begins like a mysqldump.
+# @see cwt/extensions/db/db/dump_reduce.sh
+if file -b "$db_dump_file" 2>/dev/null | grep -q 'tar archive'; then
+  dump_dir="${db_dump_file%/*}"
+  dump_tar_extract_dir="$(mktemp -d "${dump_dir}/.dump_extract.XXXXXX")"
 
-if [[ -n "$dump_first_line" ]]; then
-  case "$dump_first_line" in *'--'*)
-    if [[ "${dump_first_line:0:1}" != '-' ]]; then
-      sed -i '1d' "$db_dump_file"
-    fi
-  esac
+  tar -xf "$db_dump_file" -C "$dump_tar_extract_dir"
+
+  if [[ $? -ne 0 ]]; then
+    rm -rf "$dump_tar_extract_dir"
+    echo >&2
+    echo "Error in $BASH_SOURCE line $LINENO: failed to extract tar archive '$db_dump_file'." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    exit 1
+  fi
+
+  u_fs_file_list "$dump_tar_extract_dir"
+
+  if [[ ${#file_list_arr[@]} -ne 1 ]]; then
+    rm -rf "$dump_tar_extract_dir"
+    echo >&2
+    echo "Error in $BASH_SOURCE line $LINENO: expected a single file in tar archive '$db_dump_file'." >&2
+    echo "-> Aborting (2)." >&2
+    echo >&2
+    exit 2
+  fi
+
+  mv "${dump_tar_extract_dir}/${file_list_arr[0]}" "$db_dump_file"
+  rm -rf "$dump_tar_extract_dir"
+else
+  dump_first_line="$(head -1 "$db_dump_file")"
+
+  if [[ -n "$dump_first_line" ]]; then
+    case "$dump_first_line" in
+      '--'*|'/*'*)
+        ;;
+      *)
+        sed -i '1d' "$db_dump_file"
+        ;;
+    esac
+  fi
 fi
 
 # Update 2024/08/16 - use the --binary-mode by default for error :

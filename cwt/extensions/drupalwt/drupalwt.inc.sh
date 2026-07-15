@@ -276,8 +276,8 @@ EOF
       # both -> use variable name convention : if a variable named like the
       # current one with a '_C' suffix, it will automatically be used instead.
       # TODO [evol] Caveat : does not work if suffixed var value is empty.
-      # @see cwt/extensions/drupalwt/app/global.docker-compose.vars.sh
-      case "$PROVISION_USING" in docker-compose)
+      # @see cwt/extensions/drupalwt/app/global.compose.vars.sh
+      case "$PROVISION_USING" in compose|docker-compose)
         var_name_c="${var_name}_C"
         if [[ -n "${!var_name_c}" ]]; then
           var_val="${!var_name_c}"
@@ -391,7 +391,7 @@ EOF
 
     dwt_sites_writeable_paths=()
     case "$PROVISION_USING" in
-      docker-compose)
+      compose|docker-compose)
         u_dwt_get_sites_writeable_paths "$p_site" 'dc'
         ;;
       *)
@@ -405,9 +405,9 @@ EOF
 
       case "$var_name" in SITE_FILES_DIR|SITE_CONFIG_SYNC_DIR)
         case "$PROVISION_USING" in
-          docker-compose)
+          compose|docker-compose)
             # If the value does not start with '/', in the case of
-            # project instances using docker-compose, we assume it is relative
+            # project instances using compose, we assume it is relative
             # to APP_DOCROOT_C. It must be absolute for the conversion to work.
             if [[ "${var_val:0:1}" != '/' ]] && [[ "${APP_DOCROOT_C:0:1}" == '/' ]]; then
               var_val="$APP_DOCROOT_C/$var_val"
@@ -793,7 +793,7 @@ u_dwt_write_multisite_settings() {
 # @param 2 [optional] String : wether or not to return the docker-compose
 #   "aliases" of those vars. Any non-empty string can be passed. Defaults to
 #   to an empty string, meaning : "I do not want the docker-compose version".
-#   @see cwt/extensions/drupalwt_d4d/app/global.docker-compose.vars.sh
+#   @see cwt/extensions/drupalwt_d4d/app/global.compose.vars.sh
 #
 # This function writes its result to the following variable which MUST be preset
 # in calling scope :

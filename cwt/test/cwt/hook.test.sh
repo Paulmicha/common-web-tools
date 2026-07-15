@@ -12,27 +12,28 @@
 # - nftcwthhnc = name for testing CWT hooks hopefully not colliding
 # - nftcwthdehnc = name for testing CWT hooks dummy extension hopefully not colliding
 #
-# TODO test dotfiles like '.cwt_subjects_ignore' in extensions.
-# TODO test folder names with dots (extensions + subjects + actions + prefixes).
-#
 # @example
 #   cwt/test/cwt/hook.test.sh
 #
 
 . cwt/bootstrap.sh
-. cwt/test/self_test.inc.sh
+. cwt/test/cwt.inc.sh
 
 ##
 # Creates temporary files for verification purposes in current test case.
 #
-# (Internal shunit2 function called before all tests have run.)
-#
 oneTimeSetUp() {
   local s
+
+  # Clear dry-run hook caches so newly touched files are visible.
+  # @see hook() in cwt/utilities/hook.sh
+  rm -f scripts/cwt/local/cache/hook.*nftcwthhnc*
+
   for s in $CWT_SUBJECTS; do
+    # bootstrap/ holds phase includes, not a normal subject action namespace.
+    case "$s" in bootstrap) continue ;; esac
     touch "cwt/$s/nftcwthhnc_dry_run.hook.sh"
 
-    # Failsafe : cannot carry on if touch did not complete without error.
     if [[ $? -ne 0 ]]; then
       echo >&2
       echo "Error (2) in $BASH_SOURCE line $LINENO: cannot create temporary file for testing CWT hooks." >&2
@@ -42,8 +43,6 @@ oneTimeSetUp() {
     fi
   done
 
-  # Also test with a dummy extension (requires bootstrap reload, see below).
-  # Failsafe : cannot carry on without an existing CWT extensions dir.
   if [[ ! -d "cwt/extensions" ]]; then
     echo >&2
     echo "Error (3) in $BASH_SOURCE line $LINENO: CWT extensions dir does not exist." >&2
@@ -52,9 +51,14 @@ oneTimeSetUp() {
     exit 3
   fi
 
-  mkdir -p "cwt/extensions/nftcwthdehnc/app"
+  # Dummy extension subjects reuse core subject names plus extra ones so hook
+  # subject scanning covers extension namespaces (no dependency on removed
+  # core `app` / `presets` subjects).
+  mkdir -p "cwt/extensions/nftcwthdehnc/instance"
+  mkdir -p "cwt/extensions/nftcwthdehnc/stack"
+  mkdir -p "cwt/extensions/nftcwthdehnc/remote"
+  mkdir -p "cwt/extensions/nftcwthdehnc/test"
 
-  # Failsafe : cannot carry on without successful temporary extension dir creation.
   if [[ $? -ne 0 ]]; then
     echo >&2
     echo "Error (4) in $BASH_SOURCE line $LINENO: cannot create temporary extension dir for testing hooks." >&2
@@ -63,23 +67,11 @@ oneTimeSetUp() {
     exit 4
   fi
 
-  mkdir "cwt/extensions/nftcwthdehnc/stack"
-  mkdir "cwt/extensions/nftcwthdehnc/remote"
-  mkdir "cwt/extensions/nftcwthdehnc/test"
-
-  # Empty files are enough to trigger positive detection during CWT primitives
-  # values aggregation during bootstrap and during hook lookup paths generation.
-  # @see u_cwt_extend()
-  # @see hook()
-  touch "cwt/extensions/nftcwthdehnc/app/nftcwthhnc_dry_run.hook.sh"
+  touch "cwt/extensions/nftcwthdehnc/instance/nftcwthhnc_dry_run.hook.sh"
   touch "cwt/extensions/nftcwthdehnc/stack/nftcwthhnc_dry_run.hook.sh"
   touch "cwt/extensions/nftcwthdehnc/remote/nftcwthhnc_dry_run.hook.sh"
   touch "cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.sh"
 
-  # Variants tests require the following globals. We set them with dummy values
-  # if instance init hasn't been run in current instance yet.
-  # @see u_instance_init()
-  # @see cwt/instance/init.sh
   if [[ -z "$INSTANCE_TYPE" ]]; then
     INSTANCE_TYPE='dev'
   fi
@@ -90,14 +82,12 @@ oneTimeSetUp() {
   touch "cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$HOST_TYPE.hook.sh"
   touch "cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$HOST_TYPE.$INSTANCE_TYPE.hook.sh"
 
-  # Prefix tests.
   touch "cwt/extensions/nftcwthdehnc/test/pre_nftcwthhnc_dry_run.hook.sh"
   touch "cwt/extensions/nftcwthdehnc/test/post_nftcwthhnc_dry_run.hook.sh"
   touch "cwt/extensions/nftcwthdehnc/test/post_nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh"
   touch "cwt/extensions/nftcwthdehnc/test/post_nftcwthhnc_dry_run.$HOST_TYPE.hook.sh"
   touch "cwt/extensions/nftcwthdehnc/test/undo_nftcwthhnc_dry_run.$HOST_TYPE.$INSTANCE_TYPE.hook.sh"
 
-  # Forces detection of our newly created temporary extension.
   u_cwt_extend
 }
 
@@ -106,16 +96,20 @@ oneTimeSetUp() {
 #
 test_cwt_hook_single_action() {
   local hook_dry_run_matches=''
-  local expected_list="cwt/app/nftcwthhnc_dry_run.hook.sh
-cwt/extensions/nftcwthdehnc/app/nftcwthhnc_dry_run.hook.sh
-cwt/git/nftcwthhnc_dry_run.hook.sh
-cwt/host/nftcwthhnc_dry_run.hook.sh
-cwt/instance/nftcwthhnc_dry_run.hook.sh
+  local expected_list=''
+  local s
+
+  for s in $CWT_SUBJECTS; do
+    case "$s" in bootstrap) continue ;; esac
+    expected_list+="cwt/$s/nftcwthhnc_dry_run.hook.sh"$'\n'
+  done
+  expected_list+="cwt/extensions/nftcwthdehnc/instance/nftcwthhnc_dry_run.hook.sh
 cwt/extensions/nftcwthdehnc/remote/nftcwthhnc_dry_run.hook.sh
-cwt/test/nftcwthhnc_dry_run.hook.sh
 cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
 cwt/extensions/nftcwthdehnc/stack/nftcwthhnc_dry_run.hook.sh
 "
+
+  rm -f scripts/cwt/local/cache/hook.*nftcwthhnc*
   hook -a 'nftcwthhnc_dry_run' -t
 
   u_test_compare_expected_lookup_paths
@@ -130,6 +124,7 @@ test_cwt_hook_subject() {
   local expected_list="cwt/test/nftcwthhnc_dry_run.hook.sh
 cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh"
 
+  rm -f scripts/cwt/local/cache/hook.*nftcwthhnc*
   hook -a 'nftcwthhnc_dry_run' -s 'test' -t
 
   u_test_compare_expected_lookup_paths
@@ -146,8 +141,7 @@ cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$HOST_TYPE.$INSTANCE_TYPE.ho
 cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$HOST_TYPE.hook.sh
 "
 
-  # hook -a 'nftcwthhnc_dry_run' -s 'test' -e 'nftcwthdehnc' -v 'HOST_TYPE INSTANCE_TYPE' -t -d
-  # echo
+  rm -f scripts/cwt/local/cache/hook.*nftcwthhnc*
   hook -a 'nftcwthhnc_dry_run' -s 'test' -e 'nftcwthdehnc' -v 'HOST_TYPE INSTANCE_TYPE' -t
 
   u_test_compare_expected_lookup_paths
@@ -161,6 +155,7 @@ test_cwt_hook_prefix() {
   local hook_dry_run_matches=''
   local expected_list="cwt/extensions/nftcwthdehnc/test/pre_nftcwthhnc_dry_run.hook.sh"
 
+  rm -f scripts/cwt/local/cache/hook.*nftcwthhnc*
   hook -a 'nftcwthhnc_dry_run' -p 'pre' -t
 
   u_test_compare_expected_lookup_paths
@@ -176,6 +171,7 @@ test_cwt_hook_prefix_variants() {
 cwt/extensions/nftcwthdehnc/test/post_nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
 "
 
+  rm -f scripts/cwt/local/cache/hook.*nftcwthhnc*
   hook -a 'nftcwthhnc_dry_run' -s 'test' -e 'nftcwthdehnc' -p 'post' -t
 
   u_test_compare_expected_lookup_paths
@@ -189,6 +185,7 @@ test_cwt_hook_prefix_combinatory_variants() {
   local hook_dry_run_matches=''
   local expected_list="cwt/extensions/nftcwthdehnc/test/undo_nftcwthhnc_dry_run.$HOST_TYPE.$INSTANCE_TYPE.hook.sh"
 
+  rm -f scripts/cwt/local/cache/hook.*nftcwthhnc*
   hook -a 'nftcwthhnc_dry_run' -s 'test' -v 'HOST_TYPE INSTANCE_TYPE' -p 'undo' -t
 
   u_test_compare_expected_lookup_paths
@@ -198,15 +195,13 @@ test_cwt_hook_prefix_combinatory_variants() {
 ##
 # Cleans up any leftovers from previous tests.
 #
-# (Internal shunit2 function called after all tests have run.)
-#
 oneTimeTearDown() {
   local s
   for s in $CWT_SUBJECTS; do
+    case "$s" in bootstrap) continue ;; esac
     rm -f "cwt/$s/nftcwthhnc_dry_run.hook.sh"
   done
   rm -fr "cwt/extensions/nftcwthdehnc"
 }
 
-# Load and run shUnit2.
 . cwt/vendor/shunit2/shunit2

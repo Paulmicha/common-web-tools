@@ -7,7 +7,7 @@
 # during this action - e.g. docker-compose.
 #
 # @see cwt/instance/destroy.sh
-# @see cwt/extensions/docker-compose/instance/destroy.docker-compose.hook.sh
+# @see cwt/extensions/compose/instance/destroy.compose.hook.sh
 #
 
 u_db_set_all

@@ -9,7 +9,7 @@
 # @requires cwt/vendor/shunit2
 #
 # This file may be dynamically executed.
-# @see cwt/test/self_test.sh
+# @see cwt/test/cwt.sh
 #
 # @example
 #   cwt/test/cwt/required_programs.test.sh
@@ -22,7 +22,7 @@
 #
 test_cwt_required_programs() {
   local p
-  local programs_to_check='git tar'
+  local programs_to_check='nohup git tar'
 
   for p in $programs_to_check; do
     u_test_program_is_executable "$p"

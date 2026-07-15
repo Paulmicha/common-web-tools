@@ -3,7 +3,10 @@
 ##
 # Implements hook -a 'fs_ownership_set' -s 'app instance' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'.
 #
-# (Re)sets filesystem ownership (except in application source files).
+# (Re)sets ownership for CWT-managed paths only.
+#
+# By default, only touches ./cwt, ./scripts/cwt, and ./.git. Application
+# sources and project root entries are handled by extension hooks when needed.
 #
 # This file is dynamically included when the "hook" is triggered.
 # @see u_instance_set_permissions() in cwt/instance/instance.inc.sh
@@ -13,71 +16,19 @@
 # $ make hook-debug s:app instance a:fs_ownership_set v:STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE
 #
 
-# Sets owner + group to every single file in project root dir. Does not apply to
-# files in subfolders.
-file_list=''
-u_fs_file_list
-for f in $file_list; do
-  chown "$FS_OWNER:$FS_GROUP" "$f"
+for base_dir in './data' './cwt' './scripts/cwt' './.git'; do
+  if [[ ! -d "$base_dir" ]]; then
+    continue
+  fi
+
+  chown "$FS_OWNER:$FS_GROUP" "$base_dir" -R
   check_chown=$?
+
   if [ $check_chown -ne 0 ]; then
     echo >&2
     echo "Error in $BASH_SOURCE line $LINENO: chown exited with non-zero status ($check_chown)." >&2
-    echo "-> Aborting (1)." >&2
+    echo "-> Aborting." >&2
     echo >&2
     exit 1
   fi
 done
-
-# Sets owner + group to every single folder in project root dir. Does not apply
-# to subfolders.
-dir_list=''
-u_fs_dir_list
-for d in $dir_list; do
-  chown "$FS_OWNER:$FS_GROUP" "$d"
-  check_chown=$?
-  if [ $check_chown -ne 0 ]; then
-    echo >&2
-    echo "Error in $BASH_SOURCE line $LINENO: chown exited with non-zero status ($check_chown)." >&2
-    echo "-> Aborting (2)." >&2
-    echo >&2
-    exit 2
-  fi
-done
-
-# Set all CWT source files ownership.
-chown "$FS_OWNER:$FS_GROUP" './cwt' -R
-check_chown=$?
-if [ $check_chown -ne 0 ]; then
-  echo >&2
-  echo "Error in $BASH_SOURCE line $LINENO: chown exited with non-zero status ($check_chown)." >&2
-  echo "-> Aborting (3)." >&2
-  echo >&2
-  exit 3
-fi
-
-# Git folder ownership.
-if [[ -d './.git' ]]; then
-  chown "$FS_OWNER:$FS_GROUP" './.git' -R
-  check_chown=$?
-  if [ $check_chown -ne 0 ]; then
-    echo >&2
-    echo "Error in $BASH_SOURCE line $LINENO: chown exited with non-zero status ($check_chown)." >&2
-    echo "-> Aborting (4)." >&2
-    echo >&2
-    exit 4
-  fi
-fi
-
-# Custom scripts ownership.
-if [[ -d './scripts' ]]; then
-  chown "$FS_OWNER:$FS_GROUP" './scripts' -R
-  check_chown=$?
-  if [ $check_chown -ne 0 ]; then
-    echo >&2
-    echo "Error in $BASH_SOURCE line $LINENO: chown exited with non-zero status ($check_chown)." >&2
-    echo "-> Aborting (5)." >&2
-    echo >&2
-    exit 5
-  fi
-fi

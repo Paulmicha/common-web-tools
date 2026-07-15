@@ -1,0 +1,51 @@
+test_cwt_has_essential_globals
+test_cwt_autoload_override_works
+
+Ran 2 tests.
+
+OK
+test_cwt_can_create_dir
+test_cwt_can_chmod
+test_cwt_can_create_file
+
+Ran 3 tests.
+
+OK
+test_cwt_global_aggregate
+
+Ran 1 test.
+
+OK
+test_cwt_hook_single_action
+test_cwt_hook_subject
+test_cwt_hook_combinatory_variants
+test_cwt_hook_prefix
+test_cwt_hook_prefix_variants
+test_cwt_hook_prefix_combinatory_variants
+
+Ran 6 tests.
+
+OK
+test_cwt_required_programs
+
+Ran 1 test.
+
+OK
+test_u_test_results_parse_shunit_suite
+ASSERT:missing case one output
+ASSERT:missing case two output
+ASSERT:missing tree file
+grep: /tmp/tmp.dlhBaelmTS/test-results/test/batch.yml: No such file or directory
+ASSERT:case one should PASS expected:<0> but was:<1>
+grep: /tmp/tmp.dlhBaelmTS/test-results/test/batch.yml: No such file or directory
+ASSERT:case two should FAIL expected:<0> but was:<1>
+test_u_freeze_tests_parse_subset_rejects_env_before_kind
+ASSERT:env-before-kind should fail expected:<1> but was:<127>
+test_u_freeze_tests_parse_browser_headless_path
+cwt/test/cwt/test_results.test.sh: line 74: u_freeze_tests_parse_subset: command not found
+ASSERT:plan should have one item expected:<1> but was:<0>
+ASSERT:plan item expected:<browser:headless:preprod:as-user> but was:<>
+
+Ran 3 tests.
+
+FAILED (failures=8)

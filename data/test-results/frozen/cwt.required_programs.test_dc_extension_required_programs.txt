@@ -1,0 +1,5 @@
+test_dc_extension_required_programs
+
+Ran 1 test.
+
+OK

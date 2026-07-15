@@ -250,6 +250,8 @@ $make_entry_point:
 
   done
 
+  u_make_generate_test_cases
+
   echo "Writing Makefile include scripts/cwt/local/generated.mk : done."
   echo
 
@@ -293,6 +295,17 @@ SHELL_SCRIPT_HEAD
 "
   done
 
+  if [[ -f scripts/cwt/local/cache/test-cases.sh ]]; then
+    # shellcheck disable=SC1090
+    . scripts/cwt/local/cache/test-cases.sh
+    for make_entry_point in "${test_case_registry_targets[@]}"; do
+      make_entries_code_gen+="make_entries+=('$make_entry_point')
+"
+      real_scripts_code_gen+="real_scripts+=('cwt/test/case.run.sh')
+"
+    done
+  fi
+
   echo '' >> "$cache_file"
   echo "$make_entries_code_gen" >> "$cache_file"
   echo '' >> "$cache_file"
@@ -335,8 +348,6 @@ u_make_list_hardcoded() {
   real_scripts+=('cwt/instance/hook.make.sh -d -t')
   make_entries+=('globals-lp')
   real_scripts+=('cwt/env/global_lookup_paths.make.sh')
-  make_entries+=('self-test')
-  real_scripts+=('cwt/test/self_test.sh')
   make_entries+=('debug')
   real_scripts+=('cwt/make/echo.make.sh')
 }
@@ -371,4 +382,104 @@ u_make_unescape() {
   # echo "u_make_unescape $p_var_name = $unescaped_arg"
 
   printf -v "$p_var_name" '%s' "$unescaped_arg"
+}
+
+##
+# Append per-case make targets and write test-case registry cache.
+#
+# Uses make_entries and real_scripts arrays from calling scope (u_make_generate).
+#
+u_make_generate_test_cases() {
+  local batch_task=''
+  local batch_script=''
+  local case_stem=''
+  local case_target=''
+  local cache_file="${CWT_TEST_CASE_CACHE:-scripts/cwt/local/cache/test-cases.sh}"
+  local cache_dir
+  local i=''
+
+  local -a tc_targets=()
+  local -a tc_batch_tasks=()
+  local -a tc_stems=()
+  local -a tc_modes=()
+  local -a tc_batch_dirs=()
+  local -a tc_batch_scripts=()
+
+  if [[ -z "$cache_file" ]]; then
+    cache_file='scripts/cwt/local/cache/test-cases.sh'
+  fi
+
+  cache_dir="${cache_file%/*}"
+  mkdir -p "$cache_dir"
+
+  for i in "${!make_entries[@]}"; do
+    batch_task="${make_entries[i]}"
+    batch_script="${real_scripts[i]}"
+
+    test_case_mode=''
+    test_case_batch_dir=''
+    test_case_stems=''
+
+    u_test_discover_batch_cases "$batch_script" || continue
+
+    for case_stem in $test_case_stems; do
+      case_target="$(u_test_case_make_target "$batch_task" "$case_stem")"
+
+      if u_in_array "$case_target" 'tc_targets'; then
+        continue
+      fi
+
+      tc_targets+=("$case_target")
+      tc_batch_tasks+=("$batch_task")
+      tc_stems+=("$case_stem")
+      tc_modes+=("$test_case_mode")
+      tc_batch_dirs+=("$test_case_batch_dir")
+      tc_batch_scripts+=("$batch_script")
+
+      echo ".PHONY: $case_target
+$case_target:
+	@ cwt/make/call_wrap.make.sh cwt/test/case.run.sh \$(MAKECMDGOALS)
+" >> scripts/cwt/local/generated.mk
+    done
+  done
+
+  if [[ ${#tc_targets[@]} -eq 0 ]]; then
+    rm -f "$cache_file"
+    return 0
+  fi
+
+  echo "Writing test-case registry ${cache_file} ..."
+
+  cat > "$cache_file" <<'EOF'
+#!/usr/bin/env bash
+
+##
+# Generated test-case registry for u_test_run_case_by_target().
+#
+# @see u_make_generate_test_cases() in cwt/make/make.inc.sh
+#
+
+test_case_registry_targets=()
+test_case_registry_batch_tasks=()
+test_case_registry_stems=()
+test_case_registry_modes=()
+test_case_registry_batch_dirs=()
+test_case_registry_batch_scripts=()
+
+EOF
+
+  {
+    for i in "${!tc_targets[@]}"; do
+      echo "test_case_registry_targets+=('${tc_targets[i]}')"
+      echo "test_case_registry_batch_tasks+=('${tc_batch_tasks[i]}')"
+      echo "test_case_registry_stems+=('${tc_stems[i]}')"
+      echo "test_case_registry_modes+=('${tc_modes[i]}')"
+      echo "test_case_registry_batch_dirs+=('${tc_batch_dirs[i]}')"
+      echo "test_case_registry_batch_scripts+=('${tc_batch_scripts[i]}')"
+      echo ''
+    done
+  } >> "$cache_file"
+
+  echo "Writing test-case registry ${cache_file} : done."
+  echo
 }

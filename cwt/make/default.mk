@@ -35,12 +35,12 @@
 #   # Same but using more variants :
 #   make hook-debug s:instance a:start v:STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE
 #
-#   # Trigger "test self_test" manually :
-#   make self-test
+#   # Run low-level CWT base-stack tests (core + enabled extensions) :
+#   make test-cwt
 #
 
-.PHONY: init init-debug setup hook hook-debug globals-lp self-test debug
-# .PHONY: init init-debug reinit setup hook hook-debug globals-lp self-test debug
+.PHONY: init init-debug setup hook hook-debug globals-lp debug
+# .PHONY: init init-debug reinit setup hook hook-debug globals-lp debug
 
 init:
 	@ cwt/make/call_wrap.make.sh cwt/instance/init.sh $(MAKECMDGOALS)
@@ -63,9 +63,6 @@ hook-debug:
 
 globals-lp:
 	@ cwt/make/call_wrap.make.sh cwt/env/global_lookup_paths.make.sh $(MAKECMDGOALS)
-
-self-test:
-	@ cwt/make/call_wrap.make.sh cwt/test/self_test.sh $(MAKECMDGOALS)
 
 debug:
 	@ echo "debug MAKECMDGOALS (escaped) = $(MAKECMDGOALS)";

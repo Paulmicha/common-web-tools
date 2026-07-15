@@ -210,24 +210,24 @@ u_remote_exec_wrapper() {
   local remote_cmd=''
 
   if [[ -n "$@" ]]; then
+    # TODO [wip] debug aws cli. Workaround :
+    # ----------ERROR-------
+    # Unable to start command: Failed to start pty: exec:
+    # "cd": executable file not found in $PATH
     remote_cmd="$@"
 
-    if [[ -n "$REMOTE_INSTANCE_SSH_EXEC_PREFIX" ]]; then
-      remote_cmd="$REMOTE_INSTANCE_SSH_EXEC_PREFIX $@"
-    fi
+    # Always execute remotely from REMOTE_INSTANCE_DOCROOT, and inject the remote
+    # exec commands prefix code (if any is defined in given remote instance).
+    # remote_cmd="$REMOTE_INSTANCE_SSH_EXEC_PREFIX cd $REMOTE_INSTANCE_DOCROOT && $@"
 
-    case "$REMOTE_INSTANCE_CD" in Y*|y*|true|1)
-      remote_cmd="cd $REMOTE_INSTANCE_DOCROOT && $@"
-
-      if [[ -n "$REMOTE_INSTANCE_SSH_EXEC_PREFIX" ]]; then
-        remote_cmd="$REMOTE_INSTANCE_SSH_EXEC_PREFIX cd $REMOTE_INSTANCE_DOCROOT && $@"
-      fi
-    esac
+    # if [[ -z "$REMOTE_INSTANCE_SSH_EXEC_PREFIX" ]]; then
+    #   remote_cmd="cd $REMOTE_INSTANCE_DOCROOT && $@"
+    # fi
   fi
 
   # Debug.
   if [[ -n "$DEBUG_MODE" ]]; then
-    echo "[debug] u_remote_exec_wrapper() debug mode - command that would be executed :"
+    echo "u_remote_exec_wrapper() debug mode - command :"
     echo "  $REMOTE_INSTANCE_SSH_CONNECT_CMD \"$remote_cmd\""
     return
   fi

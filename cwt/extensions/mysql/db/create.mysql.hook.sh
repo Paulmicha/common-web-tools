@@ -27,8 +27,7 @@
 
 echo "Creating $DB_ID $DB_DRIVER database '$DB_NAME' on $DB_HOST ..."
 
-echo "CREATE DATABASE IF NOT EXISTS $DB_NAME;
-GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'$DB_HOST' IDENTIFIED BY '$DB_PASS';" \
+echo "CREATE DATABASE IF NOT EXISTS \`$DB_NAME\`;" \
   | mysql \
     --user="$DB_ADMIN_USER" \
     --password="$DB_ADMIN_PASS" \

@@ -1,0 +1,25 @@
+batch: cwt
+updated: 2026-07-15T20:17:24-03:00
+exit: 1
+bootstrap:
+  test_cwt_autoload_override_works: PASS
+  test_cwt_has_essential_globals: PASS
+fsop:
+  test_cwt_can_chmod: PASS
+  test_cwt_can_create_dir: PASS
+  test_cwt_can_create_file: PASS
+global:
+  test_cwt_global_aggregate: PASS
+hook:
+  test_cwt_hook_combinatory_variants: PASS
+  test_cwt_hook_prefix_combinatory_variants: PASS
+  test_cwt_hook_prefix: PASS
+  test_cwt_hook_prefix_variants: PASS
+  test_cwt_hook_single_action: PASS
+  test_cwt_hook_subject: PASS
+required_programs:
+  test_cwt_required_programs: PASS
+test_results:
+  test_u_freeze_tests_parse_browser_headless_path: FAIL
+  test_u_freeze_tests_parse_subset_rejects_env_before_kind: PASS
+  test_u_test_results_parse_shunit_suite: PASS

@@ -1,0 +1,5 @@
+test_cwt_hook_prefix_combinatory_variants
+
+Ran 6 tests.
+
+OK

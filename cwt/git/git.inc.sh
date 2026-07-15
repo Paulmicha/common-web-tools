@@ -778,13 +778,82 @@ u_git_get_unmerged_paths() {
 }
 
 ##
-# Wraps git calls to exec commands from PROJECT_DOCROOT for different repos.
+# Wraps git calls to exec commands from another dir.
 #
-# @uses the following [optional] vars in calling scope :
-# - $p_git_work_tree - String : the git "working dir". Defaults to
-#   APP_DOCROOT if it exists in calling scope, or none.
-# - $p_git_dir - String : the git dir. Defaults to none or
-#   "$p_git_work_tree/.git".
+# Uses the following variables in calling scope if available :
+# @var p_git_work_tree # Defaults to current dir.
+# @var p_git_dir # Defaults to "$p_git_work_tree/.git" if $p_git_work_tree is set.
+# @var p_git_debug # When not empty, prints the git command without running it.
+#
+# The path to the git working dir (git work tree) defaults to current dir. It
+# falls back to normal git calls in this case. All arguments are directly
+# forwarded to the git program.
+#
+# @example
+#   p_git_work_tree=/path/to/git/work-tree
+#   giw status
+#
+function giw() {
+  # Args must be "pre-processed" in order to allow params with spaces or special
+  # characters like git log messages.
+  local arg
+  local args=()
+  local escaped_args=''
+
+  for arg in "$@"; do
+    case "$arg" in
+      *' '*|*'$'*|*'#'*|*'['*|*']'*|*'*|*'*|*'&'*|*'*'*|*'"'*|*"'"*|*'='*)
+        # In this case, because we're going to eval, we only need to escape the
+        # double quotes and the "$" sign.
+        arg="${arg//\"/\\\"}"
+        arg="${arg//\$/\\\$}"
+        escaped_args+="\"${arg}\" "
+        ;;
+      *)
+        escaped_args+="$arg "
+        ;;
+    esac
+  done
+
+  # Debug.
+  # echo "escaped_args :"
+  # echo "  $escaped_args"
+  # return
+
+  if [[ -n "$p_git_work_tree" ]]; then
+    local git_dir="$p_git_work_tree/.git"
+
+    if [[ -n "$p_git_dir" ]]; then
+      git_dir="$p_git_dir"
+    fi
+
+    if [[ -n "$p_git_debug" ]]; then
+      echo "giw() debug :"
+      echo "git --git-dir=$git_dir --work-tree=$p_git_work_tree $escaped_args"
+    else
+      eval "git --git-dir=$git_dir --work-tree=$p_git_work_tree $escaped_args"
+    fi
+  else
+    if [[ -n "$p_git_debug" ]]; then
+      echo "giw() debug :"
+      echo "git $escaped_args"
+    else
+      eval "git $escaped_args"
+    fi
+  fi
+
+  if [[ $? -ne 0 ]]; then
+    echo >&2
+    echo "Error in $BASH_SOURCE line $LINENO in $FUNCNAME() - non-zero status returned by :" >&2
+    echo "  git $escaped_args" >&2
+    echo >&2
+    return 1
+  fi
+}
+
+##
+# Legacy CWT wrapper.
+# TODO @deprecated
 #
 # @example
 #   u_git_wrapper status
@@ -794,23 +863,16 @@ u_git_get_unmerged_paths() {
 #   u_git_wrapper status
 #
 u_git_wrapper() {
-  local cmd=''
   local work_tree="$p_git_work_tree"
 
   if [[ -z "$work_tree" ]] && [[ -n "$APP_DOCROOT" ]]; then
-    work_tree="$APP_DOCROOT"
+    p_git_work_tree="$APP_DOCROOT"
+    giw $@
+  else
+    giw $@
   fi
 
-  if [[ -n "$work_tree" ]]; then
-    local git_dir="$work_tree/.git"
-
-    if [[ -n "$p_git_dir" ]]; then
-      git_dir="$p_git_dir"
-    fi
-
-    eval "git --git-dir=$git_dir --work-tree=$work_tree $@"
-
-  else
-    eval "git $@"
+  if [[ $? -ne 0 ]]; then
+    return 1
   fi
 }

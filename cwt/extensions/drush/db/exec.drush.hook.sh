@@ -27,12 +27,12 @@
 
 # When using docker-compose (executing drush inside container), this yields :
 # Error : "mysql: command not found".
-# @see cwt/extensions/drush/cwt/alias.docker-compose.hook.sh
+# @see cwt/extensions/drush/cwt/alias.compose.hook.sh
 # $(drush sql:connect) < "$db_dump_file"
 
 # So we need Docker compose paths conversion.
 # -> use a dedicated (more specific) hook implementation :
-# @see cwt/extensions/drush/db/exec.drush.docker-compose.hook.sh
+# @see cwt/extensions/drush/db/exec.drush.compose.hook.sh
 drush sql:query --file="$db_dump_file"
 
 if [[ $? -ne 0 ]]; then

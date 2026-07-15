@@ -26,11 +26,11 @@
 # 1. Mandatory CWT "core" globals.
 global PROJECT_DOCROOT "[default]='$PWD' [help]='Absolute path to project instance. All scripts using CWT *must* be run from this dir. No trailing slash.'"
 
-global STACK_VERSION "[default]=v1 [help]='A string that is used for example when we upgrade one or more services (or the whole stack). See cwt/extensions/docker-compose/stack/switch.sh'"
+global STACK_VERSION "[default]=v1 [help]='A string that is used for example when we upgrade one or more services (or the whole stack). See cwt/extensions/compose/stack/switch.sh'"
 
 global INSTANCE_TYPE "[default]=dev [help]='E.g. dev, stage, prod... It is used as the default variant for hook calls that do not pass any in args.'"
 
-global PROVISION_USING "[default]=docker-compose [help]='Generic differenciator used by many hooks. It does not have to be explicitly named after the host provisioning tool used. It could be any distinction used as variants in hook implementations.'"
+global PROVISION_USING "[default]=cwt [help]='Generic differenciator used by many hooks. It does not have to be explicitly named after the host provisioning tool used. It could be any distinction used as variants in hook implementations.'"
 
 global HOST_TYPE "[default]=local [help]='Idem. E.g. local, remote...'"
 
@@ -42,7 +42,13 @@ global HOST_OS "$(u_host_os)"
 # @see u_make_task_name()
 # @see Makefile
 global CWT_MAKE_INC "[append]='$(u_cwt_extensions_get_makefiles)'"
-global CWT_MAKE_TASKS_SHORTER "[append]='registry/reg lookup-path/lp'"
+global CWT_MAKE_TASKS_SHORTER "[append]='registry/reg lookup-path/pl logged-thread/lt logged-batch/lb logged-chain/lc logged-sequence/ls logged-loop/ll logged-pipe/lp'"
+
+# Per-case test registry written by u_make_generate_test_cases() during reinit.
+# @see u_make_generate_test_cases() in cwt/make/make.inc.sh
+# @see u_test_case_cache_load() in cwt/test/test.inc.sh
+global CWT_TEST_CASE_CACHE "[default]='scripts/cwt/local/cache/test-cases.sh'"
+global CWT_TEST_CASE_ENVS "[default]='local preprod recette prod'"
 
 # 2. CWT "apps" (or components) enforce a naming convention for dynamically
 # generated globals var names. Space-separated list. Defaults to "site".
@@ -78,7 +84,7 @@ global CWT_APPS "[default]='site' [help]='CWT apps allow for example to provide 
 # value automatically generated, use the ':' as separator. E.g. :
 # mandatory_globals+=('{{ APP }}_{{ SERVICE }}_DB_ID:{{ APP }}')
 # mandatory_globals+=('{{ APP }}_{{ SERVICE }}_DB_DRIVER:mysql')
-# @see cwt/presets/db/list_mandatory_globals.hook.tpl.sh
+# @see cwt/extensions/preset/preset/db/list_mandatory_globals.hook.tpl.sh
 
 # TODO [refacto] wip: CWT_DB_IDS : allow multiple databases per component.
 # For now, provided on an opt-in basis like :
@@ -86,11 +92,3 @@ global CWT_APPS "[default]='site' [help]='CWT apps allow for example to provide 
 # SITE_MYSQL_SERVICE_PRESET='db'
 # SITE_MYSQL_DB_ID='site' # -> default to {{ APP }} + to be automatically
 # added to CWT_DB_IDS
-
-# TODO implement default dynamic globals based on CWT_APPS.
-# [optional] Set these values for applications having their own separate repo.
-# @see cwt/git/init.hook.sh
-global APP_GIT_ORIGIN "[help]='Optional. Ex: git@my-git-origin.org:my-git-account/cwt.git. Allows projects to have their own separate repo.'"
-global APP_GIT_INIT_CLONE "[ifnot-APP_GIT_ORIGIN]='' [default]=yes [help]='(y/n) Specify if the APP_GIT_ORIGIN repo should automatically be cloned (once) during \"instance init\".'"
-global APP_GIT_INIT_HOOK "[ifnot-APP_GIT_ORIGIN]='' [default]=no [help]='(y/n) Specify if some Git hooks should automatically trigger corresponding CWT hooks.
- WARNING : will overwrite existing git hook scripts during instance init.'"

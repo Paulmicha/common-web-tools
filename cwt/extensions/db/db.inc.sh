@@ -23,14 +23,18 @@
 # @exports DB_ADMIN_USER - defaults to DB_USER.
 # @exports DB_ADMIN_PASS - defaults to DB_PASS.
 # @exports DB_TABLES_SKIP_DATA - defaults to an empty string.
+# @exports DB_DUMP_FILE_EXTENSION - defaults to 'sql'.
+# @exports DB_DUMPS_LOCAL_DIR - defaults to "$CWT_DB_DUMPS_DIR/$DB_ID/local".
+# @exports DB_DUMPS_PATTERN - defaults to :
+#   "{{ %Y-%m-%d.%H-%M-%S }}_${db_id}.${DB_DUMP_FILE_EXTENSION}"
 #
 # This function also exports a prefixed version of each variable with DB_ID.
 # @exports <DB_ID>_DB_* (ex: if DB_ID='default', will export DEFAULT_DB_NAME, etc.)
 #
 # @requires the following globals in calling scope :
-# - INSTANCE_DOMAIN
+# - CWT_DB_IDS
 # - CWT_DB_MODE
-# - CWT_DB_DUMPS_BASE_PATH
+# - CWT_DB_DUMPS_DIR
 # @see cwt/extensions/db/global.vars.sh
 #
 # Uses the following env. var. if it is defined in current shell scope to select
@@ -102,6 +106,7 @@ u_db_set() {
         break
       done
     else
+      # TODO @deprecated : check unused + remove.
       db_id='default'
     fi
   else
@@ -164,59 +169,43 @@ u_db_set() {
   # make hook-debug s:db a:env_preset v:INSTANCE_TYPE PROVISION_USING STACK_VERSION DB_ID
   hook -s 'db' -a 'env_preset' -v 'INSTANCE_TYPE PROVISION_USING STACK_VERSION DB_ID'
 
+  # <Hardcoded defaults provided by CWT "core">
+  export DB_DRIVER="${DB_DRIVER:-"mysql"}"
+  # TODO @deprecated [evol] Remove wildcard support (leave empty instead).
+  export DB_NAME="${DB_NAME:-""}"
+  export DB_HOST="${DB_HOST:-"localhost"}"
+
+  # TODO [evol] should CWT hardcode generic ports mapping or delegate to
+  # extensions (more hooks...) ?
+  case "$DB_DRIVER" in
+    pgsql)  export DB_PORT="${DB_PORT:-"5432"}" ;;
+    *)      export DB_PORT="${DB_PORT:-"3306"}" ;;
+  esac
+
+  export DB_TABLES_SKIP_DATA="${DB_TABLES_SKIP_DATA:-""}"
+  export DB_DUMP_FILE_EXTENSION="${DB_TABLES_SKIP_DATA:-"sql"}"
+  export DB_DUMPS_LOCAL_DIR="${DB_DUMPS_LOCAL_DIR:-"$CWT_DB_DUMPS_DIR/local/$DB_ID"}"
+  export DB_DUMPS_PATTERN="${DB_DUMPS_PATTERN:-"{{ %Y-%m-%d.%H-%M-%S }}_${db_id}.${DB_DUMP_FILE_EXTENSION}"}"
+  # </Hardcoded defaults provided by CWT "core">
+
   case "$CWT_DB_MODE" in
     # Some environments do not require CWT to handle DB credentials at all.
     # In these cases, the following global env vars should be provided in
-    # calling scope :
+    # calling scope - e.g. in the env preset hook (see above) :
     # - $DB_USER
     # - $DB_PASS
-    # These fallback values are provided if not set :
-    # - $DB_DRIVER defaults to mysql
-    # - $DB_NAME defaults to *
-    # - $DB_HOST defaults to localhost
-    # - $DB_PORT defaults to 3306 or 5432 if DB_DRIVER is 'pgsql'
-    # - $DB_ADMIN_USER defaults to $DB_USER
-    # - $DB_ADMIN_PASS defaults to $DB_PASS
-    # - $DB_TABLES_SKIP_DATA defaults to an empty string
     none)
-      if [[ -z "$DB_DRIVER" ]]; then
-        export DB_DRIVER='mysql'
-      else
-        export DB_DRIVER
-      fi
-      if [[ -z "$DB_NAME" ]]; then
-        export DB_NAME='*'
-      else
-        export DB_NAME
-      fi
-      if [[ -z "$DB_HOST" ]]; then
-        export DB_HOST='localhost'
-      else
-        export DB_HOST
-      fi
-      if [[ -z "$DB_PORT" ]]; then
-        case "$DB_DRIVER" in
-          pgsql)  export DB_PORT='5432' ;;
-          *)      export DB_PORT='3306' ;;
-        esac
-      else
-        export DB_PORT
-      fi
-      if [[ -z "$DB_ADMIN_USER" ]]; then
-        export DB_ADMIN_USER="$DB_USER"
-      else
-        export DB_ADMIN_USER
-      fi
-      if [[ -z "$DB_ADMIN_PASS" ]]; then
-        export DB_ADMIN_PASS="$DB_PASS"
-      else
-        export DB_ADMIN_PASS
-      fi
-      if [[ -z "$DB_TABLES_SKIP_DATA" ]]; then
-        export DB_TABLES_SKIP_DATA=""
-      else
-        export DB_TABLES_SKIP_DATA
-      fi
+      case "$DB_DRIVER" in
+        # Most MySQL tasks (create DB/user/grants) require an admin account.
+        mysql)
+          export DB_ADMIN_USER="${DB_ADMIN_USER:-"root"}"
+          export DB_ADMIN_PASS="${DB_ADMIN_PASS:-"$DB_PASS"}"
+          ;;
+        *)
+          export DB_ADMIN_USER="${DB_ADMIN_USER:-"$DB_USER"}"
+          export DB_ADMIN_PASS="${DB_ADMIN_PASS:-"$DB_PASS"}"
+          ;;
+      esac
       return
       ;;
 
@@ -233,16 +222,6 @@ u_db_set() {
     # - $DB_ADMIN_PASS defaults to $DB_PASS
     # - $DB_TABLES_SKIP_DATA defaults to an empty string
     auto)
-      if [[ -z "$DB_DRIVER" ]]; then
-        export DB_DRIVER='mysql'
-      else
-        export DB_DRIVER
-      fi
-      if [[ -z "$DB_NAME" ]]; then
-        export DB_NAME='*'
-      else
-        export DB_NAME
-      fi
       if [[ -z "$DB_USER" ]]; then
         export DB_USER="$DB_ID"
         # Limit automatically generated user name to 16 or 32 characters,
@@ -253,26 +232,6 @@ u_db_set() {
           pgsql) DB_USER="${DB_USER:0:32}" ;;
           mysql) DB_USER="${DB_USER:0:16}" ;;
         esac
-      else
-        export DB_USER
-      fi
-      if [[ -z "$DB_HOST" ]]; then
-        export DB_HOST='localhost'
-      else
-        export DB_HOST
-      fi
-      if [[ -z "$DB_PORT" ]]; then
-        case "$DB_DRIVER" in
-          pgsql)  export DB_PORT='5432' ;;
-          *)      export DB_PORT='3306' ;;
-        esac
-      else
-        export DB_PORT
-      fi
-      if [[ -z "$DB_TABLES_SKIP_DATA" ]]; then
-        export DB_TABLES_SKIP_DATA=""
-      else
-        export DB_TABLES_SKIP_DATA
       fi
 
       if [[ -z "$DB_PASS" ]]; then
@@ -292,87 +251,19 @@ u_db_set() {
         else
           export DB_PASS="$reg_val"
         fi
-      else
-        export DB_PASS
       fi
 
-      export DB_ADMIN_USER="${DB_ADMIN_USER:=$DB_USER}"
-      export DB_ADMIN_PASS="${DB_ADMIN_PASS:=$DB_PASS}"
-    ;;
-
-    # 'manual' mode requires terminal (prompts) on first call.
-    manual)
-      local var
-      local val
-      local val_default
-      local vars_to_getset='DB_DRIVER DB_HOST DB_PORT DB_NAME DB_USER DB_PASS DB_ADMIN_USER DB_ADMIN_PASS'
-
-      for var in $vars_to_getset; do
-        val=''
-        val_default=''
-        reg_val=''
-        u_instance_registry_get "${db_id}.${var}"
-
-        # Value is not found in registry (secrets store)
-        # -> init & store.
-        if [[ -z "$reg_val" ]]; then
-          case "$var" in
-            DB_DRIVER)
-              val_default='mysql'
-              ;;
-            DB_HOST)
-              val_default='localhost'
-              ;;
-            DB_PORT)
-              val_default='3306'
-              case "$DB_DRIVER" in pgsql)
-                val_default='5432'
-              esac
-              ;;
-            DB_NAME)
-              val_default='*'
-              ;;
-            DB_USER)
-              val_default="${DB_ID:0:16}"
-              # Limit automatically generated user name to 16 or 32 characters,
-              # depending on the driver used by current database ID. Prevents errors
-              # like "MySQL ERROR 1470 (HY000) String is too long for user name".
-              # Warning : this creates naming collision risks (considered edge case).
-              case "$DB_DRIVER" in
-                pgsql)  val_default="${val_default:0:32}" ;;
-                mysql)  val_default="${val_default:0:16}" ;;
-              esac
-              ;;
-            DB_PASS)
-              val_default=`< /dev/urandom tr -dc A-Za-z0-9 | head -c14; echo`
-              ;;
-            DB_ADMIN_USER)
-              val_default="$DB_USER"
-              ;;
-            DB_ADMIN_PASS)
-              val_default="$DB_PASS"
-              ;;
-            DB_TABLES_SKIP_DATA)
-              val_default=""
-              ;;
-          esac
-
-          read -p "Enter $var value, or leave blank to use the default : $val_default : " val
-
-          if [[ -z "$val" ]]; then
-            export "$var=$val_default"
-            u_instance_registry_set "${db_id}.${var}" "$val_default"
-          else
-            export "$var=$val"
-            u_instance_registry_set "${db_id}.${var}" "$val"
-          fi
-
-        # Value was previously stored in registry (secrets store)
-        # -> just export it.
-        else
-          export "$var=$reg_val"
-        fi
-      done
+      case "$DB_DRIVER" in
+        # Most MySQL tasks (create DB/user/grants) require an admin account.
+        mysql)
+          export DB_ADMIN_USER="${DB_ADMIN_USER:-"root"}"
+          export DB_ADMIN_PASS="${DB_ADMIN_PASS:-"$DB_PASS"}"
+          ;;
+        *)
+          export DB_ADMIN_USER="${DB_ADMIN_USER:-$DB_USER}"
+          export DB_ADMIN_PASS="${DB_ADMIN_PASS:-$DB_PASS}"
+          ;;
+      esac
     ;;
   esac
 
@@ -391,8 +282,17 @@ u_db_set() {
   done
 
   # Allow bash aliases to be adapted to the currently active DB_ID.
-  # @see cwt/extensions/mysql/cwt/alias.docker-compose.hook.sh
+  # @see cwt/extensions/mysql/cwt/alias.compose.hook.sh
   hook -s 'cwt' -a 'alias' -v 'STACK_VERSION PROVISION_USING'
+
+  # Failsafe.
+  if [[ -z "$DB_NAME" ]]; then
+    echo >&2
+    echo "Error in u_db_set() - $BASH_SOURCE line $LINENO: DB_NAME is empty." >&2
+    echo "-> Aborting (1)." >&2
+    echo >&2
+    exit 1
+  fi
 }
 
 ##
@@ -419,7 +319,7 @@ u_db_unset() {
 
   # Also need to reset the variable allowing to target a specific docker-compose
   # service depending on the currently active DB_ID.
-  # @see cwt/extensions/mysql/cwt/alias.docker-compose.hook.sh
+  # @see cwt/extensions/mysql/cwt/alias.compose.hook.sh
   if [[ -n "$dc_db_service_name" ]]; then
     unset dc_db_service_name
   fi
@@ -518,7 +418,7 @@ u_db_set_all() {
 #   echo "$db_vars_list"
 #
 u_db_vars_list() {
-  db_vars_list='ID DRIVER HOST PORT NAME USER PASS ADMIN_USER ADMIN_PASS TABLES_SKIP_DATA'
+  db_vars_list='ID DRIVER HOST PORT NAME USER PASS ADMIN_USER ADMIN_PASS TABLES_SKIP_DATA DUMP_FILE_EXTENSION DUMPS_LOCAL_DIR DUMPS_PATTERN'
 }
 
 ##
@@ -584,7 +484,7 @@ u_db_exists() {
 # created yet.
 #
 # @see cwt/instance/setup.sh
-# @see cwt/extensions/drush/instance/wait_for.docker-compose.hook.sh
+# @see cwt/extensions/drush/instance/wait_for.compose.hook.sh
 # @see u_instance_registry_get() in cwt/instance/instance.inc.sh
 #
 # @param 1 String : the database ID ($DB_ID).
@@ -621,7 +521,7 @@ u_db_is_flagged() {
 #
 # @see u_db_is_already_setup()
 # @see cwt/instance/setup.sh
-# @see cwt/extensions/drush/instance/wait_for.docker-compose.hook.sh
+# @see cwt/extensions/drush/instance/wait_for.compose.hook.sh
 # @see u_instance_registry_set() in cwt/instance/instance.inc.sh
 #
 # @param 1 String : the database ID ($DB_ID).
@@ -663,7 +563,7 @@ u_db_flag_all() {
 #
 # @see u_db_is_already_setup()
 # @see cwt/instance/setup.sh
-# @see cwt/extensions/drush/instance/wait_for.docker-compose.hook.sh
+# @see cwt/extensions/drush/instance/wait_for.compose.hook.sh
 # @see u_instance_registry_del() in cwt/instance/instance.inc.sh
 #
 # @param 1 String : the database ID ($DB_ID).
@@ -769,6 +669,8 @@ u_db_create() {
   else
     u_hook_most_specific -s 'db' -a 'create' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
   fi
+
+  u_db_ensure_creds "$p_db_id" "$p_force_reload_flag"
 }
 
 ##
@@ -1010,9 +912,9 @@ u_db_dump() {
   local p_db_id="$2"
   local p_force_reload_flag="$3"
 
-  if [[ -z "$CWT_DB_DUMPS_BASE_PATH" ]]; then
+  if [[ -z "$CWT_DB_DUMPS_DIR" ]]; then
     echo >&2
-    echo "Error in u_db_dump() - $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_BASE_PATH' is undefined." >&2
+    echo "Error in u_db_dump() - $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_DIR' is undefined." >&2
     echo "Current instance must be (re)initialized with the 'db' extension enabled." >&2
     echo "-> Aborting (1)." >&2
     echo >&2
@@ -1177,7 +1079,7 @@ u_db_restore() {
 # Empties database + imports the last (= most recent) dump file available.
 #
 # @see u_fs_get_most_recent()
-# @requires globals CWT_DB_DUMPS_BASE_PATH in calling scope.
+# @requires globals CWT_DB_DUMPS_DIR in calling scope.
 #
 # @param 1 [optional] String : the database ID ($DB_ID), see u_db_set().
 #   Defaults to 'default'.
@@ -1195,18 +1097,18 @@ u_db_restore_last() {
   local p_subdir="$2"
   local p_force_reload_flag="$3"
 
-  if [[ -z "$CWT_DB_DUMPS_BASE_PATH" ]]; then
+  if [[ -z "$CWT_DB_DUMPS_DIR" ]]; then
     echo >&2
-    echo "Error in u_db_restore_last() - $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_BASE_PATH' is undefined." >&2
+    echo "Error in u_db_restore_last() - $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_DIR' is undefined." >&2
     echo "Current instance must be (re)initialized with the 'db' extension enabled." >&2
     echo "-> Aborting (1)." >&2
     echo >&2
     exit 1
   fi
 
-  if [[ ! -d "$CWT_DB_DUMPS_BASE_PATH" ]]; then
+  if [[ ! -d "$CWT_DB_DUMPS_DIR" ]]; then
     echo >&2
-    echo "Error in u_db_restore_last() - $BASH_SOURCE line $LINENO: the dir $CWT_DB_DUMPS_BASE_PATH does not exist." >&2
+    echo "Error in u_db_restore_last() - $BASH_SOURCE line $LINENO: the dir $CWT_DB_DUMPS_DIR does not exist." >&2
     echo "-> Aborting (2)." >&2
     echo >&2
     exit 2
@@ -1221,7 +1123,7 @@ u_db_restore_last() {
   fi
 
   u_db_restore \
-    "$(u_fs_get_most_recent $CWT_DB_DUMPS_BASE_PATH/$p_subdir/$p_db_id)" \
+    "$(u_fs_get_most_recent $CWT_DB_DUMPS_DIR/$p_subdir/$p_db_id)" \
     "$p_db_id" \
     "$p_force_reload_flag"
 }
@@ -1230,7 +1132,7 @@ u_db_restore_last() {
 # Routine local DB dump (backup).
 #
 # The dump file path will be determined by the following globals :
-#   - CWT_DB_DUMPS_BASE_PATH
+#   - CWT_DB_DUMPS_DIR
 #   - CWT_DB_DUMPS_LOCAL_PATTERN
 #
 # @see cwt/extensions/db/global.vars.sh
@@ -1257,9 +1159,9 @@ u_db_routine_backup() {
   local p_db_id="$1"
   local p_force_reload_flag="$2"
 
-  if [[ -z "$CWT_DB_DUMPS_BASE_PATH" ]]; then
+  if [[ -z "$CWT_DB_DUMPS_DIR" ]]; then
     echo >&2
-    echo "Error in u_db_routine_backup() - $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_BASE_PATH' is undefined." >&2
+    echo "Error in u_db_routine_backup() - $BASH_SOURCE line $LINENO: the required global 'CWT_DB_DUMPS_DIR' is undefined." >&2
     echo "Current instance must be (re)initialized with the 'db' extension enabled." >&2
     echo "-> Aborting (1)." >&2
     echo >&2
@@ -1305,7 +1207,7 @@ u_db_routine_backup() {
   # echo "db_routine_new_backup_file = '$db_routine_new_backup_file'"
 
   u_db_dump \
-    "$CWT_DB_DUMPS_BASE_PATH/local/$DB_ID/$db_routine_new_backup_file" \
+    "$CWT_DB_DUMPS_DIR/local/$DB_ID/$db_routine_new_backup_file" \
     "$p_db_id" \
     "$p_force_reload_flag"
 
@@ -1363,7 +1265,7 @@ u_db_get_dump() {
 
   case "$p_option" in
     'last')
-      dump_to_return="$(u_fs_get_most_recent "$CWT_DB_DUMPS_BASE_PATH/$p_subdir/$p_db_id")"
+      dump_to_return="$(u_fs_get_most_recent "$CWT_DB_DUMPS_DIR/$p_subdir/$p_db_id")"
       ;;
 
     # The 'new' option means create immediately a new routine dump and return
@@ -1375,12 +1277,43 @@ u_db_get_dump() {
 
     # Any other value is a "find" file name filter.
     *)
-      dump_to_return="$(u_fs_get_most_recent "$CWT_DB_DUMPS_BASE_PATH/$p_subdir/$p_db_id" "$p_option")"
+      dump_to_return="$(u_fs_get_most_recent "$CWT_DB_DUMPS_DIR/$p_subdir/$p_db_id" "$p_option")"
       ;;
   esac
 
   if [[ -f "$dump_to_return" ]]; then
     echo "$dump_to_return"
+  fi
+}
+
+##
+# Ensures the DB credentials are setup (DB user exists, has grants, etc).
+#
+# @param 1 [optional] String : the database ID ($DB_ID), see u_db_set().
+#   Defaults to 'default'.
+# @param 2 [optional] String : force reload flag (bypasses optimization) if the
+#   DB credentials vars are already exported in current shell scope.
+#   TODO deprecate this argument and export a specific variable instead.
+#
+# @example
+#   u_db_ensure_creds
+#   u_db_ensure_creds 'custom_db_id'
+#
+u_db_ensure_creds() {
+  local p_db_id="$1"
+  local p_force_reload_flag="$2"
+
+  u_db_set "$p_db_id" "$p_force_reload_flag"
+
+  # Debug.
+  if [[ -n "$CWT_DB_DEBUG" ]]; then
+    echo
+    echo "u_db_ensure_creds $p_db_id"
+    echo "  DB_HOST = $DB_HOST"
+    echo "  DB_NAME = $DB_NAME"
+    echo "  DB_USER = $DB_USER"
+  else
+    u_hook_most_specific -s 'db' -a 'ensure_creds' -v 'DB_DRIVER DB_ID INSTANCE_TYPE'
   fi
 }
 
@@ -1496,17 +1429,17 @@ u_db_restore_any() {
   lookup_subdirs+=('local')
 
   # The 'prod' remote (if it exists) dumps take priority.
-  if [[ -d "$CWT_DB_DUMPS_BASE_PATH/prod/$DB_ID" ]]; then
-    initial_dump_file="$(u_fs_get_most_recent "$CWT_DB_DUMPS_BASE_PATH/prod/$DB_ID" '*.gz')"
+  if [[ -d "$CWT_DB_DUMPS_DIR/prod/$DB_ID" ]]; then
+    initial_dump_file="$(u_fs_get_most_recent "$CWT_DB_DUMPS_DIR/prod/$DB_ID" '*.gz')"
   fi
 
   if [[ ! -f "$initial_dump_file" ]]; then
     for lookup_subdir in "${lookup_subdirs[@]}"; do
-      if [[ ! -d "$CWT_DB_DUMPS_BASE_PATH/$lookup_subdir/$DB_ID" ]]; then
+      if [[ ! -d "$CWT_DB_DUMPS_DIR/$lookup_subdir/$DB_ID" ]]; then
         continue
       fi
 
-      initial_dump_file="$(u_fs_get_most_recent "$CWT_DB_DUMPS_BASE_PATH/$lookup_subdir/$DB_ID" '*.gz')"
+      initial_dump_file="$(u_fs_get_most_recent "$CWT_DB_DUMPS_DIR/$lookup_subdir/$DB_ID" '*.gz')"
 
       if [[ -f "$initial_dump_file" ]]; then
         break
@@ -1532,11 +1465,11 @@ u_db_restore_any() {
         cwt/extensions/remote_db/remote/db_download.sh "$instance_id" "$DB_ID"
       fi
 
-      if [[ ! -d "$CWT_DB_DUMPS_BASE_PATH/$instance_id/$DB_ID" ]]; then
+      if [[ ! -d "$CWT_DB_DUMPS_DIR/$instance_id/$DB_ID" ]]; then
         continue
       fi
 
-      initial_dump_file="$(u_fs_get_most_recent "$CWT_DB_DUMPS_BASE_PATH/$instance_id/$DB_ID" '*.gz')"
+      initial_dump_file="$(u_fs_get_most_recent "$CWT_DB_DUMPS_DIR/$instance_id/$DB_ID" '*.gz')"
 
       if [[ -f "$initial_dump_file" ]]; then
         break

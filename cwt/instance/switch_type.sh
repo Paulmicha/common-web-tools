@@ -7,8 +7,10 @@
 #
 # @example
 #   make switch-type 'dev'
+#   make rebuild
 #   # Or :
 #   cwt/instance/switch_type.sh 'dev'
+#   cwt/instance/rebuild.sh
 #
 
 # Force the new instance type value alone.

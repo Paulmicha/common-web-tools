@@ -196,3 +196,96 @@ u_yaml_get_keys() {
     u_array_add_once "$parsed_var_split" yaml_keys
   done <<< "$p_yaml_str"
 }
+
+##
+# Escapes a string for use inside double-quoted YAML scalars.
+#
+# NB : for performance reasons (to avoid using a subshell), this function
+# writes its result to a variable subject to collision in calling scope.
+# The default variable name is overridable : see arg 2.
+#
+# @param 1 String : raw value.
+# @param 2 [optional] String : variable name in calling scope for the result.
+#   Defaults to : 'yaml_escaped'.
+#
+# @example
+#   u_yaml_escape_double 'say "hi"'
+#   echo "$yaml_escaped"
+#   # -> say \"hi\"
+#
+#   u_yaml_escape_double 'a\b' 'my_esc'
+#   echo "$my_esc"
+#
+u_yaml_escape_double() {
+  local p_val="$1"
+  local p_var_name="$2"
+
+  if [[ -z "$p_var_name" ]]; then
+    p_var_name='yaml_escaped'
+  fi
+
+  p_val="${p_val//'\'/'\\'}"
+  p_val="${p_val//\"/\\\"}"
+  printf -v "$p_var_name" '%s' "$p_val"
+}
+
+##
+# Writes a bash-yaml-compatible flat YAML file (scalars + simple lists).
+#
+# Limits : no nested maps / keyed list objects — only root scalars and root
+# simple string lists (what u_yaml_parse / bash-yaml can reload cleanly).
+#
+# @param 1 String : output file path.
+# @param 2 String : name of associative array of scalar key -> value.
+# @param 3 String : name of normal array listing scalar keys in write order.
+# @param … [optional] Pairs : list_key list_array_name (simple lists).
+#
+# @example
+#   declare -A y_sc=([entry]="foo" [status]="running")
+#   y_keys=(entry status)
+#   y_tree=("123:bash" "1:systemd")
+#   u_yaml_write 'data/threads/foo.yml' y_sc y_keys tree y_tree
+#
+u_yaml_write() {
+  local p_yml_file="$1"
+  local p_scalars_name="$2"
+  local p_keys_name="$3"
+  local yaml_dir
+  local k
+  local list_key
+  local list_arr_name
+  local item
+  local yaml_escaped
+  local yaml_buf=''
+
+  shift 3
+
+  declare -n __yaml_scalars="$p_scalars_name"
+  declare -n __yaml_keys="$p_keys_name"
+
+  yaml_dir="${p_yml_file%/*}"
+
+  if [[ "$yaml_dir" != "$p_yml_file" && ! -d "$yaml_dir" ]]; then
+    mkdir -p "$yaml_dir"
+  fi
+
+  for k in "${__yaml_keys[@]}"; do
+    u_yaml_escape_double "${__yaml_scalars[$k]}" 'yaml_escaped'
+    yaml_buf+="${k}: \"${yaml_escaped}\""$'\n'
+  done
+
+  while [[ $# -ge 2 ]]; do
+    list_key="$1"
+    list_arr_name="$2"
+    shift 2
+    declare -n __yaml_list="$list_arr_name"
+    yaml_buf+="${list_key}:"$'\n'
+
+    for item in "${__yaml_list[@]}"; do
+      u_yaml_escape_double "$item" 'yaml_escaped'
+      yaml_buf+="  - \"${yaml_escaped}\""$'\n'
+    done
+  done
+
+  printf '%s' "$yaml_buf" > "$p_yml_file"
+}

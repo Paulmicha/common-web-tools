@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+##
+# Implements hook -a 'init' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'.
+#
+# This global specifies if and how docker compose will choose a YAML declaration
+# file for current project instance.
+#
+# When set to 'generate', the compose.yml file will be written during
+# 'instance init'.
+#
+# @see cwt/extensions/compose/global.vars.sh
+# @see u_dc_write_yml() in cwt/extensions/compose/compose.inc.sh
+# @see u_instance_init() in cwt/instance/instance.inc.sh
+#
+
+case "$DC_MODE" in 'generate')
+  # @see cwt/extensions/compose/compose.inc.sh
+  u_dc_write_yml
+esac
