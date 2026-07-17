@@ -15,7 +15,7 @@
 
 # These files are automatically generated during instance init.
 -include .env
--include scripts/cwt/local/generated.mk
+-include data/cwt/generated.mk
 
 # Project-specific tasks.
 ifdef CWT_MAKE_INC
