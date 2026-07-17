@@ -56,10 +56,19 @@ u_make_check_args() {
 # Converts given string to a task name - e.g. for use as Make task.
 #
 # During conversion, some terms are abbreviated - e.g. :
+#   - cwt-cache-clear -> cc
+#   - host-dependency -> dep
+#   - logged-thread -> lt
+#   - logged-batch -> lb
+#   - logged-chain -> lc
+#   - logged-sequence -> ls
+#   - logged-loop -> ll
+#   - logged-pipe -> lp
+#   - lookup-path -> pl
 #   - registry -> reg
-#   - lookup-path -> lp
-#   - docker-compose -> dc
-#   - drupalwt -> dwt
+#
+# Stored in global CWT_MAKE_TASKS_SHORTER entries. E.g. :
+# @see cwt/env/global.vars.sh
 #
 # @param 1 String : input to convert.
 # @param 2 [optional] String : the variable name in calling scope which will be

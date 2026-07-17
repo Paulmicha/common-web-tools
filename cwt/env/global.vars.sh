@@ -43,7 +43,8 @@ global HOST_OS "$(u_host_os)"
 # @see Makefile
 global CWT_MAKE_INC "[append]='$(u_cwt_extensions_get_makefiles)'"
 
-global CWT_MAKE_TASKS_SHORTER "[append]='dependency/dep'"
+global CWT_MAKE_TASKS_SHORTER "[append]='cwt-cache-clear/cc'"
+global CWT_MAKE_TASKS_SHORTER "[append]='host-dependency/dep'"
 global CWT_MAKE_TASKS_SHORTER "[append]='logged-thread/lt'"
 global CWT_MAKE_TASKS_SHORTER "[append]='logged-batch/lb'"
 global CWT_MAKE_TASKS_SHORTER "[append]='logged-chain/lc'"
