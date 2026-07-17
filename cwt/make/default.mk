@@ -40,17 +40,12 @@
 #
 
 .PHONY: init init-debug setup hook hook-debug globals-lp debug
-# .PHONY: init init-debug reinit setup hook hook-debug globals-lp debug
 
 init:
 	@ cwt/make/call_wrap.make.sh cwt/instance/init.sh $(MAKECMDGOALS)
 
 init-debug:
 	@ cwt/make/call_wrap.make.sh cwt/instance/init.sh $@ -d -r $(filter-out $@,$(MAKECMDGOALS))
-
-# TODO [evol] is this really overridden by data/cwt/generated.mk ?
-# reinit:
-# 	@ cwt/make/call_wrap.make.sh cwt/instance/reinit.sh $(MAKECMDGOALS)
 
 setup:
 	@ cwt/make/call_wrap.make.sh cwt/instance/setup.sh $(MAKECMDGOALS)

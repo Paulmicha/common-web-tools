@@ -551,8 +551,8 @@ u_cwt_get_actions() {
 # Prints a list of Makefiles includes.
 #
 # The default location is a file called 'make.mk' inside the extension folder.
-# This function merely lists these locations (separated by a space) for each
-# currently active extensions.
+# Only paths that exist are listed (space-separated) for each currently active
+# extension. Missing files are skipped so CWT_MAKE_INC stays free of ghosts.
 #
 # @example
 #   lookup_paths="$(u_cwt_extensions_get_makefiles)"
@@ -562,11 +562,16 @@ u_cwt_extensions_get_makefiles() {
   local mk_includes_lp=''
   local cwt_gm_ext=''
   local ext_path=''
+  local mk_file=''
 
   for cwt_gm_ext in $CWT_EXTENSIONS; do
     ext_path=''
     u_cwt_extension_path "$cwt_gm_ext"
-    mk_includes_lp+="$ext_path/$cwt_gm_ext/make.mk "
+    mk_file="$ext_path/$cwt_gm_ext/make.mk"
+
+    if [[ -f "$mk_file" ]]; then
+      mk_includes_lp+="$mk_file "
+    fi
   done
 
   echo "$mk_includes_lp"

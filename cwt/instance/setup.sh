@@ -53,10 +53,13 @@
 # incompatible with the globals aggregation and assignment process.
 # @see u_instance_init() in cwt/instance/instance.inc.sh
 # @see global() + u_global_assign_value() in cwt/utilities/global.sh
-if [[ -n "$CWT_MAKE_INC" ]]; then
+# Detect via a core readonly (CWT_MAKE_INC may be empty when no extension
+# ships a make.mk).
+if declare -p PROJECT_DOCROOT 2>/dev/null | grep -qE '^declare -[^ ]*r'; then
   echo >&2
   echo "Error in $BASH_SOURCE line $LINENO: the 'instance init' step requires that no CWT globals be loaded in current shell scope, otherwise idempotence of step 1 (instance init) can't be guaranteed." >&2
   echo "Try running this script in a new terminal session or isolated (using 'env -i ...')." >&2
+  echo "Or : use 'instance reinit'." >&2
   echo "-> Aborting (1)." >&2
   echo >&2
   exit 1
