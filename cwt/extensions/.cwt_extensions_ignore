@@ -5,9 +5,11 @@ cognition
 compose
 crontab
 db
+docker
 drupalwt
 drupalwt_d4d
 drush
+entity
 git_crypt
 gpt
 hosts_file
