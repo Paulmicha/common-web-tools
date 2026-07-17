@@ -1,0 +1,18 @@
+actions:
+  create:
+    includes: cwt.entity
+  define:
+    includes: cwt.entity
+  delete:
+    includes: cwt.entity
+    access: sudo
+  list:
+    includes: cwt.entity
+  read:
+    includes: cwt.entity
+  update:
+    includes: cwt.entity
+    access: sudo
+  install:
+    includes: cwt.entity
+    access: sudo

@@ -42,7 +42,17 @@ global HOST_OS "$(u_host_os)"
 # @see u_make_task_name()
 # @see Makefile
 global CWT_MAKE_INC "[append]='$(u_cwt_extensions_get_makefiles)'"
-global CWT_MAKE_TASKS_SHORTER "[append]='registry/reg lookup-path/pl logged-thread/lt logged-batch/lb logged-chain/lc logged-sequence/ls logged-loop/ll logged-pipe/lp transcribe-transcribe/transcribe'"
+
+global CWT_MAKE_TASKS_SHORTER "[append]='dependency/dep'"
+global CWT_MAKE_TASKS_SHORTER "[append]='lookup-path/pl'"
+global CWT_MAKE_TASKS_SHORTER "[append]='logged-thread/lt'"
+global CWT_MAKE_TASKS_SHORTER "[append]='logged-batch/lb'"
+global CWT_MAKE_TASKS_SHORTER "[append]='logged-chain/lc'"
+global CWT_MAKE_TASKS_SHORTER "[append]='logged-sequence/ls'"
+global CWT_MAKE_TASKS_SHORTER "[append]='logged-loop/ll'"
+global CWT_MAKE_TASKS_SHORTER "[append]='logged-pipe/lp'"
+global CWT_MAKE_TASKS_SHORTER "[append]='registry/reg'"
+# global CWT_MAKE_TASKS_SHORTER "[append]='transcribe-transcribe/transcribe'"
 
 # Per-case test registry written by u_make_generate_test_cases() during reinit.
 # @see u_make_generate_test_cases() in cwt/make/make.inc.sh
