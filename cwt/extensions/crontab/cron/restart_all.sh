@@ -12,7 +12,7 @@
 u_cron_require_crontab || exit 1
 u_cron_crontab_write_block ''
 
-if [[ ! -d scripts/cwt/local/cron ]]; then
+if [[ ! -d data/cwt/cron ]]; then
   u_cron_settings_setup || exit 1
 fi
 

@@ -16,7 +16,7 @@ echo "=== Effective crontab definitions ==="
 echo
 
 shopt -s nullglob
-for f in scripts/cwt/local/cron/*.sh; do
+for f in data/cwt/cron/*.sh; do
   # shellcheck disable=SC1090
   . "$f"
   echo "entry      : $CWT_CRON_ENTRY"

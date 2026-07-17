@@ -11,19 +11,17 @@
 
 . cwt/bootstrap.sh
 
-u_thread_dir
-
-if [[ ! -d "$thread_dir" ]]; then
-  echo "No threads directory ($thread_dir)."
+if [[ ! -d data/threads ]]; then
+  echo "No threads directory (data/threads)."
 
   exit 0
 fi
 
 shopt -s nullglob
-yml_files=("$thread_dir"/*.yml)
+yml_files=(data/threads/*.yml)
 
 if [[ ${#yml_files[@]} -eq 0 ]]; then
-  echo "No thread YAML files in $thread_dir."
+  echo "No thread YAML files in data/threads."
 
   exit 0
 fi

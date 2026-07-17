@@ -6,9 +6,6 @@
 # Host-level thread monitor sweep: mark stale, reclaim locks, heal sibling index
 # under $HOME/.local/share/cwt/threads/. Gated by CWT_MONITORING / CWT_HOST_THREAD_MONITOR.
 #
-# This file is generated from template :
-# @see cwt/extensions/preset/preset/thread/monitor.hook.tpl.sh
-#
 # @example
 #   hook -s thread -a monitor
 #

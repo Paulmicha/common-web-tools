@@ -5,17 +5,14 @@
 #
 # Composition: log/wrap → loop/wrap (systemd user unit for long-running entries).
 #
-# This file is generated from template :
-# @see cwt/extensions/preset/preset/loop/logged_loop.tpl.sh
-#
 # @example
 #   # Manually hardcoded shortcut :
 #   # @see CWT_MAKE_TASKS_SHORTER in cwt/env/global.vars.sh
-#   make ll e:agent-loop
+#   make ll e:blueprint-generate
 #   # Equivalent to :
-#   make logged-loop e:agent-loop
+#   make logged-loop e:blueprint-generate
 #   # Or :
-#   cwt/instance/logged_loop.sh e:agent-loop
+#   cwt/instance/logged_loop.sh e:blueprint-generate
 #
 
 . cwt/bootstrap.sh

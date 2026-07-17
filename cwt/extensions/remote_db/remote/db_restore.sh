@@ -10,7 +10,7 @@
 # remote instance.
 #
 # @see cwt/extensions/remote_db/remote/db_upload.sh
-# @see scripts/cwt/local/remote-instances/${p_remote_id}.sh
+# @see data/cwt/remote-instances/${p_remote_id}.sh
 # @see u_remote_instances_setup() in cwt/extensions/remote/remote.inc.sh
 #
 # @param 1 String : destination remote host ID.

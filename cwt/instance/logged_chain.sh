@@ -3,9 +3,6 @@
 ##
 # Logged chain composition: log/wrap → instance/chain → thread/sequence.
 #
-# This file is generated from template :
-# @see cwt/extensions/preset/preset/chain/logged_chain.tpl.sh
-#
 # @example
 #   # Manually hardcoded shortcut :
 #   # @see CWT_MAKE_TASKS_SHORTER in cwt/env/global.vars.sh

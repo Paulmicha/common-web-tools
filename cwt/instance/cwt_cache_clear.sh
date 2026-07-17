@@ -13,7 +13,7 @@
 #   cwt/instance/cwt_cache_clear.sh
 #
 
-if [[ -d scripts/cwt/local/cache ]]; then
-  rm -rf scripts/cwt/local/cache
-  echo "Cleared local scripts/cwt/local/cache dir."
+if [[ -d data/cwt/cache ]]; then
+  rm -rf data/cwt/cache
+  echo "Cleared local data/cwt/cache dir."
 fi

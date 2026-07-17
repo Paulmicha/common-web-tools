@@ -197,7 +197,7 @@ u_make_list_entry_points() {
 }
 
 ##
-# Writes make entrypoints to scripts/cwt/local/generated.mk
+# Writes make entrypoints to data/cwt/generated.mk
 #
 # Generates a Makefile include with tasks corresponding to every subject-action
 # in current instance.
@@ -221,9 +221,9 @@ u_make_generate() {
     return
   fi
 
-  echo "Writing Makefile include scripts/cwt/local/generated.mk ..."
+  echo "Writing Makefile include data/cwt/generated.mk ..."
 
-  cat > scripts/cwt/local/generated.mk <<'EOF'
+  cat > data/cwt/generated.mk <<'EOF'
 
 ##
 # Current instance Makefile include.
@@ -246,24 +246,24 @@ EOF
     echo ".PHONY: $make_entry_point
 $make_entry_point:
 	@ cwt/make/call_wrap.make.sh $real_script \$(MAKECMDGOALS)
-" >> scripts/cwt/local/generated.mk
+" >> data/cwt/generated.mk
 
   done
 
   u_make_generate_test_cases
 
-  echo "Writing Makefile include scripts/cwt/local/generated.mk : done."
+  echo "Writing Makefile include data/cwt/generated.mk : done."
   echo
 
   # We'll also need to generate a "normal" shell script (not bash) to check
   # that among all arguments sent to a Make entry point, none are "reserved"
   # values - i.e. that would trigger unwanted other targets.
-  echo "Creating cache file scripts/cwt/local/cache/make.sh ..."
+  echo "Creating cache file data/cwt/cache/make.sh ..."
 
   # Including the hardcoded ones (this is only used for the safety check).
   u_make_list_hardcoded
 
-  local cache_file='scripts/cwt/local/cache/make.sh'
+  local cache_file='data/cwt/cache/make.sh'
   local make_entries_code_gen=''
   local real_scripts_code_gen=''
 
@@ -295,9 +295,9 @@ SHELL_SCRIPT_HEAD
 "
   done
 
-  if [[ -f scripts/cwt/local/cache/test-cases.sh ]]; then
+  if [[ -f data/cwt/cache/test-cases.sh ]]; then
     # shellcheck disable=SC1090
-    . scripts/cwt/local/cache/test-cases.sh
+    . data/cwt/cache/test-cases.sh
     for make_entry_point in "${test_case_registry_targets[@]}"; do
       make_entries_code_gen+="make_entries+=('$make_entry_point')
 "
@@ -311,7 +311,7 @@ SHELL_SCRIPT_HEAD
   echo '' >> "$cache_file"
   echo "$real_scripts_code_gen" >> "$cache_file"
 
-  echo "Creating cache file scripts/cwt/local/cache/make.sh : done."
+  echo "Creating cache file data/cwt/cache/make.sh : done."
   echo
 }
 
@@ -394,7 +394,7 @@ u_make_generate_test_cases() {
   local batch_script=''
   local case_stem=''
   local case_target=''
-  local cache_file="${CWT_TEST_CASE_CACHE:-scripts/cwt/local/cache/test-cases.sh}"
+  local cache_file="${CWT_TEST_CASE_CACHE:-data/cwt/cache/test-cases.sh}"
   local cache_dir
   local i=''
 
@@ -406,7 +406,7 @@ u_make_generate_test_cases() {
   local -a tc_batch_scripts=()
 
   if [[ -z "$cache_file" ]]; then
-    cache_file='scripts/cwt/local/cache/test-cases.sh'
+    cache_file='data/cwt/cache/test-cases.sh'
   fi
 
   cache_dir="${cache_file%/*}"
@@ -439,7 +439,7 @@ u_make_generate_test_cases() {
       echo ".PHONY: $case_target
 $case_target:
 	@ cwt/make/call_wrap.make.sh cwt/test/case.run.sh \$(MAKECMDGOALS)
-" >> scripts/cwt/local/generated.mk
+" >> data/cwt/generated.mk
     done
   done
 

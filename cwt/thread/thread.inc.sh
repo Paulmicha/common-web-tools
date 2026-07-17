@@ -3,8 +3,11 @@
 ##
 # Thread-related utility functions.
 #
-# This file is sourced during core CWT bootstrap (subject include).
+# Eager subject include (CWT_INC / bootstrap phase 60) — must stay *.inc.sh.
+# Used by thread actions and cross-subject callers (log/wrap pile-up, cron
+# hooks); *.opt-inc.sh would not load for those callers.
 # @see cwt/bootstrap.sh
+# @see changelog/2026/07/16-cwt-opt-inc-eager-audit.md
 #
 # Convention : functions names are all prefixed by "u" (for "utility").
 #
@@ -362,15 +365,6 @@ u_thread_output_mtime_ms() {
 }
 
 ##
-# Instance threads directory (relative to PROJECT_DOCROOT).
-#
-# Writes thread_dir in calling scope.
-#
-u_thread_dir() {
-  thread_dir='data/threads'
-}
-
-##
 # Host sibling index directory ($HOME/.local/share/cwt/threads).
 #
 # Writes thread_host_index_dir in calling scope.
@@ -481,11 +475,11 @@ u_thread_run_make_step() {
 
   # Reject unknown entries: Makefile has a silent catch-all (%:) that would
   # otherwise make missing goals look successful.
-  if [[ -f scripts/cwt/local/cache/make.sh ]]; then
+  if [[ -f data/cwt/cache/make.sh ]]; then
     # Fresh arrays (cache uses +=).
     make_entries=()
     real_scripts=()
-    . scripts/cwt/local/cache/make.sh
+    . data/cwt/cache/make.sh
     for e in "${make_entries[@]}"; do
       if [[ "$e" == "$p_entry" ]]; then
         found=1

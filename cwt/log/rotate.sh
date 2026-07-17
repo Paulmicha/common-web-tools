@@ -22,9 +22,8 @@
 
 p_entry="$1"
 p_max_bytes="${2:-1048576}"
-log_dir='data/logs'
 
-if [[ ! -d "$log_dir" ]]; then
+if [[ ! -d data/logs ]]; then
   exit 0
 fi
 
@@ -56,13 +55,13 @@ u_log_rotate_file() {
 
 if [[ -n "$p_entry" ]]; then
   p_entry=${p_entry#'e:'}
-  u_log_rotate_file "${log_dir}/${p_entry}.txt"
+  u_log_rotate_file "data/logs/${p_entry}.txt"
 
   exit 0
 fi
 
 shopt -s nullglob
-log_files=("$log_dir"/*.txt)
+log_files=(data/logs/*.txt)
 
 for p_log_file in "${log_files[@]}"; do
   case "$p_log_file" in

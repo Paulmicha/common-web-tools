@@ -19,17 +19,17 @@ echo "Project : $marker"
 echo "crontab : $(command -v crontab)"
 echo
 
-if [[ -d scripts/cwt/local/cron ]]; then
+if [[ -d data/cwt/cron ]]; then
   echo "=== Generated entries ==="
   shopt -s nullglob
-  for f in scripts/cwt/local/cron/*.sh; do
+  for f in data/cwt/cron/*.sh; do
     # shellcheck disable=SC1090
     . "$f"
     echo "- $CWT_CRON_ENTRY  enabled=$CWT_CRON_ENABLED  preset=$CWT_CRON_PRESET  schedule=$CWT_CRON_SCHEDULE"
   done
   echo
 else
-  echo "(no generated scripts/cwt/local/cron yet)"
+  echo "(no generated data/cwt/cron yet)"
   echo
 fi
 

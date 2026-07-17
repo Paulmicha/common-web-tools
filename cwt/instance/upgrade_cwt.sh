@@ -36,10 +36,10 @@
 
 echo "Upgrading CWT from the source repo on Github..."
 
-tmp_dir="scripts/cwt/local/tmp-core-upgrade"
+tmp_dir="data/cwt/tmp-core-upgrade"
 
-if [[ ! -d 'scripts/cwt/local' ]]; then
-  mkdir -p 'scripts/cwt/local'
+if [[ ! -d 'data/cwt' ]]; then
+  mkdir -p 'data/cwt'
 fi
 
 # Support retries without having to re-download the sources from remote repo

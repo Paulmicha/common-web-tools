@@ -48,7 +48,7 @@ init:
 init-debug:
 	@ cwt/make/call_wrap.make.sh cwt/instance/init.sh $@ -d -r $(filter-out $@,$(MAKECMDGOALS))
 
-# TODO [evol] is this really overridden by scripts/cwt/local/generated.mk ?
+# TODO [evol] is this really overridden by data/cwt/generated.mk ?
 # reinit:
 # 	@ cwt/make/call_wrap.make.sh cwt/instance/reinit.sh $(MAKECMDGOALS)
 

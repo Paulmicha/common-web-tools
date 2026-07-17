@@ -4,7 +4,7 @@
 # Download DB dump(s) from remote.
 #
 # @see cwt/extensions/remote_db/remote/db_dump.sh
-# @see scripts/cwt/local/remote-instances/${p_remote_id}.sh
+# @see data/cwt/remote-instances/${p_remote_id}.sh
 # @see u_remote_instances_setup() in cwt/extensions/remote/remote.inc.sh
 #
 # @param 1 [optional] String : remote host ID.

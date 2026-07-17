@@ -22,6 +22,8 @@
 !/scripts/cwt/local/README.md
 
 # Instance data, logs, etc.
+/data/cwt/*
+!/data/cwt/README.md
 /data/db/*
 !/data/db/README.md
 /data/db-dumps/*
@@ -34,6 +36,12 @@
 !/data/tmp/README.md
 /data/logs/*
 !/data/logs/README.md
+/data/threads/*
+!/data/threads/README.md
+/data/loops/*
+!/data/loops/README.md
+/data/cronjobs/*
+!/data/cronjobs/README.md
 
 # Misc.
 docker-runtime

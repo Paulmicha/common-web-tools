@@ -24,8 +24,8 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./scripts/cwt/local/traefik.yml:/traefik.yml
-      - ./scripts/cwt/local/acme.json:/acme.json
+      - ./data/cwt/traefik.yml:/traefik.yml
+      - ./data/cwt/acme.json:/acme.json
     labels:
       # Always redirect HTTP to HTTPS for all domains.
       # See https://github.com/traefik/blog-posts/blob/master/2019_09_10-101_docker/docker-compose-09.yml

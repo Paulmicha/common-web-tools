@@ -30,17 +30,17 @@
 #   # Or :
 #   cwt/extensions/nested_cwt/nested_cwt/exec.sh my-project reinit
 #
-#   make nested-cwt-exec my-project e:preset-write defaults
-#   # Or :
-#   cwt/extensions/nested_cwt/nested_cwt/exec.sh my-project preset-write defaults
-#
 #   make nested-cwt-exec my-project e:git-write-hooks
 #   # Or :
 #   cwt/extensions/nested_cwt/nested_cwt/exec.sh my-project git-write-hooks
 #
+#   make nested-cwt-exec my-project -- ls -la
+#   # Or :
+#   cwt/extensions/nested_cwt/nested_cwt/exec.sh my-project -- ls -la
+#
 #   # Path-like script : raw in child (no make wrap)
 #   cwt/extensions/nested_cwt/nested_cwt/exec.sh my-project \
-#     cwt/extensions/preset/preset/write.sh defaults
+#     cwt/instance/reinit.sh
 #
 #   # Raw commands : use "--"
 #   make nested-cwt-exec my-project -- git status

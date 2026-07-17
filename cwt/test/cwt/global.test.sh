@@ -34,7 +34,7 @@ oneTimeSetUp() {
   # Hook dry-run results are cached at init/warmup; clear those before creating
   # temporary global.vars.sh files so u_global_lookup_paths can see them.
   # @see hook() in cwt/utilities/hook.sh
-  rm -f scripts/cwt/local/cache/hook.*global*vars*
+  rm -f data/cwt/cache/hook.*global*vars*
 
   for s in $CWT_SUBJECTS; do
     # Skip subjects whose folder is not a normal subject namespace (bootstrap

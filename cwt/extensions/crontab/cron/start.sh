@@ -15,7 +15,7 @@ if [[ -z "$p_entry" ]]; then
   exit 1
 fi
 
-if [[ ! -d scripts/cwt/local/cron ]]; then
+if [[ ! -d data/cwt/cron ]]; then
   u_cron_settings_setup || exit 1
 fi
 

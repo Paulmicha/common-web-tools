@@ -15,7 +15,7 @@
 # This can be opted-out by setting the flag CWT_BS_SKIP_GLOBALS to 1.
 # @see cwt/instance/init.sh
 if [[ $CWT_BS_SKIP_GLOBALS -ne 1 ]]; then
-  if [[ -f scripts/cwt/local/global.vars.sh ]]; then
-    . scripts/cwt/local/global.vars.sh
+  if [[ -f data/cwt/global.vars.sh ]]; then
+    . data/cwt/global.vars.sh
   fi
 fi

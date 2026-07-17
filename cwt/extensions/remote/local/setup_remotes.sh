@@ -3,7 +3,7 @@
 ##
 # Re-generates (local) remote instances definitions.
 #
-# @see scripts/cwt/local/remote-instances/${REMOTE_ID}.sh
+# @see data/cwt/remote-instances/${REMOTE_ID}.sh
 #
 # @example
 #   make local-setup-remotes

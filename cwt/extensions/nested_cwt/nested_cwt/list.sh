@@ -253,7 +253,7 @@ u_nested_cwt_print() {
       else
         echo "  │       ├── extend/   ← [optional] missing"
       fi
-      if [[ -d "$p_docroot/scripts/cwt/local" ]]; then
+      if [[ -d "$p_docroot/data/cwt" ]]; then
         echo "  │       ├── local/    ← [git-ignored] Generated files specific to this local instance"
       else
         echo "  │       ├── local/    ← [git-ignored] missing"

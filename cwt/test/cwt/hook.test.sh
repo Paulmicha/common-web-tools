@@ -27,7 +27,7 @@ oneTimeSetUp() {
 
   # Clear dry-run hook caches so newly touched files are visible.
   # @see hook() in cwt/utilities/hook.sh
-  rm -f scripts/cwt/local/cache/hook.*nftcwthhnc*
+  rm -f data/cwt/cache/hook.*nftcwthhnc*
 
   for s in $CWT_SUBJECTS; do
     # bootstrap/ holds phase includes, not a normal subject action namespace.
@@ -109,7 +109,7 @@ cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
 cwt/extensions/nftcwthdehnc/stack/nftcwthhnc_dry_run.hook.sh
 "
 
-  rm -f scripts/cwt/local/cache/hook.*nftcwthhnc*
+  rm -f data/cwt/cache/hook.*nftcwthhnc*
   hook -a 'nftcwthhnc_dry_run' -t
 
   u_test_compare_expected_lookup_paths
@@ -124,7 +124,7 @@ test_cwt_hook_subject() {
   local expected_list="cwt/test/nftcwthhnc_dry_run.hook.sh
 cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh"
 
-  rm -f scripts/cwt/local/cache/hook.*nftcwthhnc*
+  rm -f data/cwt/cache/hook.*nftcwthhnc*
   hook -a 'nftcwthhnc_dry_run' -s 'test' -t
 
   u_test_compare_expected_lookup_paths
@@ -141,7 +141,7 @@ cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$HOST_TYPE.$INSTANCE_TYPE.ho
 cwt/extensions/nftcwthdehnc/test/nftcwthhnc_dry_run.$HOST_TYPE.hook.sh
 "
 
-  rm -f scripts/cwt/local/cache/hook.*nftcwthhnc*
+  rm -f data/cwt/cache/hook.*nftcwthhnc*
   hook -a 'nftcwthhnc_dry_run' -s 'test' -e 'nftcwthdehnc' -v 'HOST_TYPE INSTANCE_TYPE' -t
 
   u_test_compare_expected_lookup_paths
@@ -155,7 +155,7 @@ test_cwt_hook_prefix() {
   local hook_dry_run_matches=''
   local expected_list="cwt/extensions/nftcwthdehnc/test/pre_nftcwthhnc_dry_run.hook.sh"
 
-  rm -f scripts/cwt/local/cache/hook.*nftcwthhnc*
+  rm -f data/cwt/cache/hook.*nftcwthhnc*
   hook -a 'nftcwthhnc_dry_run' -p 'pre' -t
 
   u_test_compare_expected_lookup_paths
@@ -171,7 +171,7 @@ test_cwt_hook_prefix_variants() {
 cwt/extensions/nftcwthdehnc/test/post_nftcwthhnc_dry_run.$INSTANCE_TYPE.hook.sh
 "
 
-  rm -f scripts/cwt/local/cache/hook.*nftcwthhnc*
+  rm -f data/cwt/cache/hook.*nftcwthhnc*
   hook -a 'nftcwthhnc_dry_run' -s 'test' -e 'nftcwthdehnc' -p 'post' -t
 
   u_test_compare_expected_lookup_paths
@@ -185,7 +185,7 @@ test_cwt_hook_prefix_combinatory_variants() {
   local hook_dry_run_matches=''
   local expected_list="cwt/extensions/nftcwthdehnc/test/undo_nftcwthhnc_dry_run.$HOST_TYPE.$INSTANCE_TYPE.hook.sh"
 
-  rm -f scripts/cwt/local/cache/hook.*nftcwthhnc*
+  rm -f data/cwt/cache/hook.*nftcwthhnc*
   hook -a 'nftcwthhnc_dry_run' -s 'test' -v 'HOST_TYPE INSTANCE_TYPE' -p 'undo' -t
 
   u_test_compare_expected_lookup_paths

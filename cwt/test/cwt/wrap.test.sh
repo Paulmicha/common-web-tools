@@ -12,17 +12,15 @@
 . cwt/bootstrap.sh
 
 p_test_entry='make-list-entry-points'
-p_thread_dir='data/threads'
-p_log_dir='data/logs'
 
 oneTimeTearDown() {
   rm -f \
-    "${p_thread_dir}/${p_test_entry}.txt" \
-    "${p_thread_dir}/${p_test_entry}.changelog.txt" \
-    "${p_thread_dir}/${p_test_entry}.pid" \
-    "${p_thread_dir}/${p_test_entry}.yml" \
-    "${p_log_dir}/${p_test_entry}.txt" \
-    "${p_log_dir}/${p_test_entry}.changelog.txt"
+    "data/threads/${p_test_entry}.txt" \
+    "data/threads/${p_test_entry}.changelog.txt" \
+    "data/threads/${p_test_entry}.pid" \
+    "data/threads/${p_test_entry}.yml" \
+    "data/logs/${p_test_entry}.txt" \
+    "data/logs/${p_test_entry}.changelog.txt"
 }
 
 test_wrap_rejects_invalid_entry() {
@@ -36,9 +34,9 @@ test_wrap_rejects_invalid_entry() {
 test_thread_wrap_starts_debug() {
   local output=''
   local exit_code=0
-  local p_yml="${p_thread_dir}/${p_test_entry}.yml"
+  local p_yml="data/threads/${p_test_entry}.yml"
 
-  rm -f "$p_yml" "${p_thread_dir}/${p_test_entry}.pid"
+  rm -f "$p_yml" "data/threads/${p_test_entry}.pid"
 
   output="$(cwt/thread/wrap.sh "$p_test_entry" 2>&1)" || exit_code=$?
 
@@ -49,9 +47,9 @@ test_thread_wrap_starts_debug() {
   assertTrue 'yaml record must exist' "[[ -f '$p_yml' ]]"
   assertTrue 'output mentions PID' "[[ '$output' == *'Thread started'* ]]"
   assertFalse 'thread output file must not exist' \
-    "[[ -f '${p_thread_dir}/${p_test_entry}.txt' ]]"
+    "[[ -f 'data/threads/${p_test_entry}.txt' ]]"
   assertFalse 'legacy pid file must not exist' \
-    "[[ -f '${p_thread_dir}/${p_test_entry}.pid' ]]"
+    "[[ -f 'data/threads/${p_test_entry}.pid' ]]"
 
   unset thread_tree
   u_thread_yml_load "$p_test_entry"
@@ -67,11 +65,11 @@ test_thread_wrap_starts_debug() {
 test_log_wrap_chains_thread_wrap() {
   local output=''
   local exit_code=0
-  local p_yml="${p_thread_dir}/${p_test_entry}.yml"
+  local p_yml="data/threads/${p_test_entry}.yml"
 
   rm -f \
-    "${p_log_dir}/${p_test_entry}.txt" \
-    "${p_log_dir}/${p_test_entry}.changelog.txt" \
+    "data/logs/${p_test_entry}.txt" \
+    "data/logs/${p_test_entry}.changelog.txt" \
     "$p_yml"
 
   output="$(cwt/log/wrap.sh cwt/thread/wrap.sh "$p_test_entry" 2>&1)" || exit_code=$?
@@ -80,13 +78,13 @@ test_log_wrap_chains_thread_wrap() {
 
   assertEquals 'log wrap chain must succeed' 0 "$exit_code"
   assertTrue 'log changelog must exist' \
-    "[[ -f '${p_log_dir}/${p_test_entry}.changelog.txt' ]]"
+    "[[ -f 'data/logs/${p_test_entry}.changelog.txt' ]]"
   assertTrue 'log output must exist' \
-    "[[ -f '${p_log_dir}/${p_test_entry}.txt' ]]"
+    "[[ -f 'data/logs/${p_test_entry}.txt' ]]"
   assertTrue 'output mentions PID' "[[ '$output' == *'Log started'* ]]"
   assertTrue 'yaml record must exist' "[[ -f '$p_yml' ]]"
   assertFalse 'thread output file must not exist' \
-    "[[ -f '${p_thread_dir}/${p_test_entry}.txt' ]]"
+    "[[ -f 'data/threads/${p_test_entry}.txt' ]]"
 }
 
 . cwt/vendor/shunit2/shunit2

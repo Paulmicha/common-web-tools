@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
 
 ##
-# [abstract] Software status.
-#
-# Determines if the local machine has its Software installed or not, and if an
-# upgrade is available.
+# Software status: compare manifests to installed tools (no apply).
 #
 # @example
 #   make software-status
@@ -14,4 +11,4 @@
 
 . cwt/bootstrap.sh
 
-# TODO
+u_software_provision status

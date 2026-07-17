@@ -10,8 +10,8 @@
 # instance is initialized and the generated cache file does not exist yet.
 #
 # @see cwt/make/default.mk
-# @see scripts/cwt/local/generated.mk
-# @see scripts/cwt/local/cache/make.sh
+# @see data/cwt/generated.mk
+# @see data/cwt/cache/make.sh
 # @see u_instance_init() in cwt/instance/instance.inc.sh
 # @see u_make_generate() in cwt/make/make.inc.sh
 #
@@ -74,8 +74,8 @@ make_entries=()
 real_scripts=()
 
 # Use the complete generated list of entries if it exists.
-if [[ -f scripts/cwt/local/cache/make.sh ]]; then
-  . scripts/cwt/local/cache/make.sh
+if [[ -f data/cwt/cache/make.sh ]]; then
+  . data/cwt/cache/make.sh
 else
   # Default to hardcoded values.
   u_make_list_hardcoded

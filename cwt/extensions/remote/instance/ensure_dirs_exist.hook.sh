@@ -7,7 +7,7 @@
 # @see u_instance_init() in cwt/instance/instance.inc.sh
 #
 
-if [[ ! -d "scripts/cwt/local/remote-instances" ]]; then
-  echo "Creating required dir scripts/cwt/local/remote-instances"
-  mkdir -p "scripts/cwt/local/remote-instances"
+if [[ ! -d "data/cwt/remote-instances" ]]; then
+  echo "Creating required dir data/cwt/remote-instances"
+  mkdir -p "data/cwt/remote-instances"
 fi

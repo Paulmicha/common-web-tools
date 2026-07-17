@@ -71,7 +71,7 @@ u_global_list() {
 #
 # Resulting generated files (git-ignored) :
 #   - .env
-#   - scripts/cwt/local/global.vars.sh
+#   - data/cwt/global.vars.sh
 #
 # @see u_instance_init()
 #
@@ -97,11 +97,11 @@ u_global_write() {
     return 1
   fi
 
-  echo "Writing global (env) vars to scripts/cwt/local/global.vars.sh ..."
+  echo "Writing global (env) vars to data/cwt/global.vars.sh ..."
 
   # (Re)init destination files (make empty).
   echo -n '' > .env
-  cat > scripts/cwt/local/global.vars.sh <<'EOF'
+  cat > data/cwt/global.vars.sh <<'EOF'
 #!/usr/bin/env bash
 
 ##
@@ -173,10 +173,10 @@ EOF
     # echo "readonly = '$readonly'"
 
     if [[ -z "$global_val" ]]; then
-      echo "${readonly}$global_name=''" >> scripts/cwt/local/global.vars.sh
+      echo "${readonly}$global_name=''" >> data/cwt/global.vars.sh
     else
       if [[ $has_single_quote != 1 ]]; then
-        echo "${readonly}$global_name='$global_val'" >> scripts/cwt/local/global.vars.sh
+        echo "${readonly}$global_name='$global_val'" >> data/cwt/global.vars.sh
       else
         # TODO do we want to escape any '$' sign when using double quotes ?
         # TODO [evol] see if there's a better workaround for quotes. Right now,
@@ -186,7 +186,7 @@ EOF
         global_val="${global_val#\'}"
         global_val="${global_val%\"}"
         global_val="${global_val#\"}"
-        echo "${readonly}$global_name=\"$global_val\"" >> scripts/cwt/local/global.vars.sh
+        echo "${readonly}$global_name=\"$global_val\"" >> data/cwt/global.vars.sh
       fi
     fi
 
@@ -209,7 +209,7 @@ EOF
     fi
   done
 
-  echo "Writing global (env) vars to scripts/cwt/local/global.vars.sh : done."
+  echo "Writing global (env) vars to data/cwt/global.vars.sh : done."
   echo
 }
 

@@ -25,10 +25,10 @@ purge_list=()
 
 # Manual cleanup of CWT global env vars.
 purge_list+=('.env')
-purge_list+=('scripts/cwt/local/global.vars.sh')
+purge_list+=('data/cwt/global.vars.sh')
 
 # CWT make shortcuts too.
-purge_list+=('scripts/cwt/local/generated.mk')
+purge_list+=('data/cwt/generated.mk')
 
 # Let extensions clean up their own generated files and/or alter the purge_list.
 hook -s 'instance' -a 'uninit' -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'

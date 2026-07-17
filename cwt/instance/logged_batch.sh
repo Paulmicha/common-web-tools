@@ -3,17 +3,14 @@
 ##
 # Logged batch composition: log/wrap → thread/batch.
 #
-# This file is generated from template :
-# @see cwt/extensions/preset/preset/batch/logged_batch.tpl.sh
-#
 # @example
 #   # Manually hardcoded shortcut :
 #   # @see CWT_MAKE_TASKS_SHORTER in cwt/env/global.vars.sh
-#   make lb e:agent-implement-last-plan e:transcribe-all
+#   make lb e:blueprint-generate e:transcribe-all
 #   # Equivalent to :
-#   make logged-batch e:agent-implement-last-plan e:transcribe-all
+#   make logged-batch e:blueprint-generate e:transcribe-all
 #   # Or :
-#   cwt/instance/logged_batch.sh e:agent-implement-last-plan e:transcribe-all
+#   cwt/instance/logged_batch.sh e:blueprint-generate e:transcribe-all
 #
 
 . cwt/bootstrap.sh

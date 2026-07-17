@@ -3,22 +3,71 @@
 ##
 # Report systemd --user loop instances (registry + is-active).
 #
-# This file is generated from template :
-# @see cwt/extensions/preset/preset/loop/status.tpl.sh
-#
 # @example
 #   make loop-status
-#   make loop-status e:agent-loop
+#   make loop-status e:blueprint-generate
 #
 
 . cwt/bootstrap.sh
 
-u_hook_most_specific 'dry-run' -s 'loop' -a 'monitor' \
-  -v 'STACK_VERSION PROVISION_USING HOST_TYPE HOST_OS'
-if [[ -n "${hook_most_specific_dry_run_match:-}" && -f "$hook_most_specific_dry_run_match" ]]; then
+u_loop_monitor_enabled() {
+  case "${CWT_MONITORING:-1}" in 0|false|FALSE|off|OFF) return 1 ;; esac
+  case "${CWT_LOOP_MONITOR:-1}" in 0|false|FALSE|off|OFF) return 1 ;; esac
+  return 0
+}
+
+u_loop_monitor_one() {
+  local p_id="$1"
+  local reg="data/cwt/loop/${p_id}.sh"
+  local unit=''
+  local state=''
+
+  if [[ ! -f "$reg" ]]; then
+    echo "loop-monitor: no registry for '$p_id'"
+    return 1
+  fi
+
   # shellcheck disable=SC1090
-  . "$hook_most_specific_dry_run_match" "${1:-}"
-else
-  echo >&2 "Error: no loop/monitor hook."
-  exit 1
-fi
+  . "$reg"
+  unit="${CWT_LOOP_UNIT:-}"
+  if [[ -z "$unit" ]]; then
+    echo "loop-monitor: empty unit for '$p_id'"
+    return 1
+  fi
+
+  state="$(systemctl --user is-active "$unit" 2>/dev/null || echo unknown)"
+  printf '%-40s %-12s %s\n' "$p_id" "$state" "$unit"
+}
+
+u_loop_monitor_default() {
+  local p_filter="${1:-}"
+  local f
+  local id
+
+  if ! u_loop_monitor_enabled; then
+    echo "loop-monitor: skipped (CWT_MONITORING / CWT_LOOP_MONITOR off)."
+    return 0
+  fi
+
+  if [[ -n "$p_filter" ]]; then
+    p_filter="${p_filter#e:}"
+    u_loop_monitor_one "$p_filter"
+    return $?
+  fi
+
+  if [[ ! -d data/cwt/loop ]]; then
+    echo "loop-monitor: no registry dir."
+    return 0
+  fi
+
+  printf '%-40s %-12s %s\n' 'INSTANCE' 'STATE' 'UNIT'
+  shopt -s nullglob
+  for f in data/cwt/loop/*.sh; do
+    id="${f##*/}"
+    id="${id%.sh}"
+    u_loop_monitor_one "$id"
+  done
+  shopt -u nullglob
+}
+
+u_loop_monitor_default "$@"

@@ -55,6 +55,120 @@ u_hook_variant_values_add() {
 }
 
 ##
+# Append dir-local *.opt-inc.sh candidates for a *.hook.sh filepath.
+#
+# For path <dir>/<name>[.<variants>].hook.sh appends (if they exist, deduped):
+#   <dir>/<subject>.opt-inc.sh   # subject = last component of <dir>
+#   <dir>/<action>.opt-inc.sh    # action = <name> before first '.'
+#
+# Non-*.hook.sh paths are ignored (e.g. custom -c suffix lookups).
+#
+# @param 1 String : hook filepath
+# @param 2 String : name of array in calling scope to append to
+#
+# @see hook()
+# @see changelog/2026/07/16-cwt-include-splitting-hook-mapped-deps.md
+#
+u_hook_opt_inc_append_candidates() {
+  local p_hook_path="$1"
+  local -n p_out_arr="$2"
+  local dir
+  local base
+  local subject
+  local action
+  local candidate
+  local existing
+  local found
+
+  if [[ -z "$p_hook_path" ]]; then
+    return 0
+  fi
+
+  base="${p_hook_path##*/}"
+
+  case "$base" in
+    *.hook.sh) ;;
+    *) return 0 ;;
+  esac
+
+  dir="${p_hook_path%/*}"
+
+  if [[ "$dir" == "$p_hook_path" ]]; then
+    dir='.'
+  fi
+
+  base="${base%.hook.sh}"
+  action="${base%%.*}"
+  subject="${dir##*/}"
+
+  for candidate in \
+    "${dir}/${subject}.opt-inc.sh" \
+    "${dir}/${action}.opt-inc.sh"
+  do
+    if [[ ! -f "$candidate" ]]; then
+      continue
+    fi
+
+    found=0
+
+    for existing in "${p_out_arr[@]}"; do
+      if [[ "$existing" == "$candidate" ]]; then
+        found=1
+        break
+      fi
+    done
+
+    if [[ $found -eq 1 ]]; then
+      continue
+    fi
+
+    p_out_arr+=("$candidate")
+  done
+}
+
+##
+# Resolve scripts/overrides counterpart for a path (if any).
+#
+# Echoes the override path when it exists, otherwise the original.
+#
+# @param 1 String : filepath relative to PROJECT_DOCROOT
+#
+# @see u_autoload_override()
+#
+u_hook_resolve_source_path() {
+  local p_path="$1"
+  local override="${p_path/cwt/scripts/overrides}"
+
+  if [[ -f "$override" ]]; then
+    echo "$override"
+  else
+    echo "$p_path"
+  fi
+}
+
+##
+# Source dir-local opt-incs for one hook path (most-specific / ad hoc).
+#
+# @param 1 String : hook filepath
+#
+# @see u_hook_opt_inc_append_candidates()
+# @see u_hook_most_specific()
+#
+u_hook_source_opt_incs_for_path() {
+  local p_hook_path="$1"
+  local opt_incs=()
+  local oi
+  local src
+
+  u_hook_opt_inc_append_candidates "$p_hook_path" opt_incs
+
+  for oi in "${opt_incs[@]}"; do
+    src="$(u_hook_resolve_source_path "$oi")"
+    . "$src"
+  done
+}
+
+##
 # Triggers an "event" optionally filtered by primitives.
 #
 # Arguments are all optional, but this function requires at least either
@@ -188,7 +302,7 @@ hook() {
 
   p_cache_key="${p_cache_key// -/-}"
   u_str_sanitize_var_name "$p_cache_key" 'p_cache_key'
-  local hook_cache_file="scripts/cwt/local/cache/hook.${p_cache_key}.sh"
+  local hook_cache_file="data/cwt/cache/hook.${p_cache_key}.sh"
 
   if [[ -f "$hook_cache_file" ]]; then
     . "$hook_cache_file"
@@ -403,8 +517,15 @@ hook() {
   fi
 
   # Source each file include (with optional override mecanism).
+  # Non-dry-run: seed colocated *.opt-inc.sh into the same cache file (1a).
   # @see cwt/utilities/autoload.sh
+  # @see u_hook_opt_inc_append_candidates()
   local inc
+  local src
+  local oi
+  local matched_hooks=()
+  local opt_incs=()
+
   for inc in "${lookup_paths[@]}"; do
     if [ -f "$inc" ]; then
       # Note : for tests, the "dry run" option prevents "override" alterations.
@@ -416,30 +537,55 @@ hook() {
         continue
       fi
 
-      # Update 2024-06 cache results.
-      # Update 2025-04 cache warmup.
-      local override=${p_script_path/cwt/"scripts/overrides"}
+      # Derive opt-incs from the lookup path (extension/project location), not
+      # from an override path under scripts/overrides.
+      u_hook_opt_inc_append_candidates "$inc" opt_incs
 
-      if [[ -f "$override" ]]; then
-        hook_cache_contents+=". $override
-"
-        if [[ $p_cache_warmup -ne 1 ]]; then
-          . "$override"
-        fi
-        continue
-      fi
-
-      hook_cache_contents+=". $inc
-"
-      if [[ $p_cache_warmup -ne 1 ]]; then
-        . "$inc"
-      fi
+      src="$(u_hook_resolve_source_path "$inc")"
+      matched_hooks+=("$src")
     fi
   done
 
-  # Update 2024-06 cache results.
-  if [[ $p_dry_run -eq 1 ]]; then
+  if [ $p_dry_run -eq 1 ]; then
     hook_cache_contents+="hook_dry_run_matches=\"$hook_dry_run_matches\""
+  else
+    if [[ ${#opt_incs[@]} -gt 0 ]]; then
+      hook_cache_contents+="# --- opt-inc (seeded) ---
+"
+
+      for oi in "${opt_incs[@]}"; do
+        src="$(u_hook_resolve_source_path "$oi")"
+        hook_cache_contents+=". $src
+"
+
+        if [[ $p_cache_warmup -ne 1 ]]; then
+          . "$src"
+        fi
+      done
+    fi
+
+    if [[ ${#matched_hooks[@]} -gt 0 ]]; then
+      hook_cache_contents+="# --- hooks ---
+"
+
+      for src in "${matched_hooks[@]}"; do
+        hook_cache_contents+=". $src
+"
+
+        if [[ $p_cache_warmup -ne 1 ]]; then
+          . "$src"
+        fi
+      done
+    fi
+  fi
+
+  if [[ $p_debug -eq 1 && ${#opt_incs[@]} -gt 0 ]]; then
+    echo
+    echo "Seeded opt-inc paths :"
+
+    for oi in "${opt_incs[@]}"; do
+      echo "  - $oi"
+    done
   fi
 
   cat > "$hook_cache_file" <<CACHE
@@ -752,6 +898,10 @@ u_hook_most_specific() {
       hook_most_specific_dry_run_match="$most_specific_match"
       return
     fi
+
+    # Seed implementer opt-incs before the hook body (same derivation as hook 1a).
+    # @see u_hook_source_opt_incs_for_path()
+    u_hook_source_opt_incs_for_path "$most_specific_match"
 
     u_autoload_override "$most_specific_match" 'continue'
     eval "$inc_override_evaled_code"

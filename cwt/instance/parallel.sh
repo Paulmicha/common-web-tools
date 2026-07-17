@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ##
-# TODO
+# Unlogged parallel alias → thread/batch (`&` + wait).
 #
 # @example
 #   make parallel e:transcribe-ogg e:transcribe-ocr

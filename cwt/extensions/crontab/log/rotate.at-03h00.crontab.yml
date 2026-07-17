@@ -1,5 +1,5 @@
-# Ideal: nightly size-based rotate of data/logs/*.txt via make log-rotate.
-# Materialized by preset-write → cwt/extensions/crontab/log/rotate.at-03h00.crontab.yml
+# Nightly size-based rotate of data/logs/*.txt via make log-rotate.
+# (Former preset-write dogfood path retired — see changelog/2026/07/16-cwt-home-tip-drift.md)
 # @see changelog/2026/07/14-thread-log-wrap-retry-pileup-cron.md §3.5a
 includes: crontab.defaults
 enabled: true

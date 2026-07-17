@@ -6,7 +6,7 @@
 # This file (and every others named like it in CWT extensions and in the CWT
 # customization dir) is used during "instance init" to generate a single script :
 #
-# scripts/cwt/local/global.vars.sh
+# data/cwt/global.vars.sh
 #
 # That script file will contain declarations for every global variables found in
 # this project instance as readonly. It is git-ignored and loaded on every
@@ -42,12 +42,12 @@ global HOST_OS "$(u_host_os)"
 # @see u_make_task_name()
 # @see Makefile
 global CWT_MAKE_INC "[append]='$(u_cwt_extensions_get_makefiles)'"
-global CWT_MAKE_TASKS_SHORTER "[append]='registry/reg lookup-path/pl logged-thread/lt logged-batch/lb logged-chain/lc logged-sequence/ls logged-loop/ll logged-pipe/lp'"
+global CWT_MAKE_TASKS_SHORTER "[append]='registry/reg lookup-path/pl logged-thread/lt logged-batch/lb logged-chain/lc logged-sequence/ls logged-loop/ll logged-pipe/lp transcribe-transcribe/transcribe'"
 
 # Per-case test registry written by u_make_generate_test_cases() during reinit.
 # @see u_make_generate_test_cases() in cwt/make/make.inc.sh
 # @see u_test_case_cache_load() in cwt/test/test.inc.sh
-global CWT_TEST_CASE_CACHE "[default]='scripts/cwt/local/cache/test-cases.sh'"
+global CWT_TEST_CASE_CACHE "[default]='data/cwt/cache/test-cases.sh'"
 global CWT_TEST_CASE_ENVS "[default]='local preprod recette prod'"
 
 # 2. CWT "apps" (or components) enforce a naming convention for dynamically
@@ -84,7 +84,7 @@ global CWT_APPS "[default]='site' [help]='CWT apps allow for example to provide 
 # value automatically generated, use the ':' as separator. E.g. :
 # mandatory_globals+=('{{ APP }}_{{ SERVICE }}_DB_ID:{{ APP }}')
 # mandatory_globals+=('{{ APP }}_{{ SERVICE }}_DB_DRIVER:mysql')
-# @see cwt/extensions/preset/preset/db/list_mandatory_globals.hook.tpl.sh
+# @see cwt/extensions/builder/templates/services/db/list_mandatory_globals.hook.tpl.sh
 
 # TODO [refacto] wip: CWT_DB_IDS : allow multiple databases per component.
 # For now, provided on an opt-in basis like :

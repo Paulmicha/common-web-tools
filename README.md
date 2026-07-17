@@ -346,9 +346,9 @@ By default, CWT generates the following *make* shortcuts correponding to these *
 - `**` : The `instance` is implicit and omitted for default CWT actions' `make` shortcuts.
 - `***` : Some exceptions are hardcoded in this repo's `./Makefile`. Others can be added using the `CWT_MAKE_INC` global. Ex : `global CWT_MAKE_INC "[append]='path/to/make_include.mk'"`
 
-#### Logged composition entry points (shortcuts)
+#### Log wrappers (shortcuts)
 
-CWT ships **logged** composition entry points under `cwt/instance/logged_*.sh`. Each one stacks an optional **log wrap** on top of a **thread-level** runner (or loop wrap). After `instance init` / `reinit`, make task names are generated from those scripts and then shortened via `CWT_MAKE_TASKS_SHORTER` (see `u_make_task_name()` in `cwt/make/make.inc.sh`).
+CWT ships **log wrappers** under `cwt/instance/logged_*.sh` — notably logged-chain (lc), logged-batch (lb), logged-pipe (lp), plus logged-thread (lt), logged-sequence (ls), logged-loop (ll). Each one stacks an optional **log wrap** on top of a **thread-level** runner (or loop wrap). After `instance init` / `reinit`, make task names are generated from those scripts and then shortened via `CWT_MAKE_TASKS_SHORTER` (see `u_make_task_name()` in `cwt/make/make.inc.sh`).
 
 Canonical short aliases (normative — do **not** reuse `lp` for batch or for `lookup-path`) :
 
@@ -377,7 +377,7 @@ global CWT_MAKE_TASKS_SHORTER "[append]='registry/reg lookup-path/pl logged-thre
 
 Each `search/replace` pair is applied by bash `${task//search/replace}` inside `u_make_task_name()` — so `logged-pipe` becomes `lp`, `logged-batch` becomes `lb`, `logged-sequence` becomes `ls`, etc. Note that **`lookup-path` must shorten to `pl`** (not `lp`) so generated task names never collide with `logged-pipe`.
 
-Historical exception: `make globals-lp` (print global lookup paths) remains a **hardcoded** target in `cwt/make/default.mk` / `u_make_generate()` — it is *not* the `lp` → `logged-pipe` short alias. New code should prefer the logged-composition meaning of `lp` above; do not add more shortcuts that steal `lp`.
+Historical exception: `make globals-lp` (print global lookup paths) remains a **hardcoded** target in `cwt/make/default.mk` / `u_make_generate()` — it is *not* the `lp` → `logged-pipe` short alias. New code should prefer the logged-pipe meaning of `lp` above; do not add more shortcuts that steal `lp`.
 
 Typical calls :
 

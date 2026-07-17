@@ -88,9 +88,9 @@ fi
 # the setup script before uninit.
 purge_list=()
 purge_list+=('.env')
-purge_list+=('scripts/cwt/local/global.vars.sh')
-purge_list+=('scripts/cwt/local/generated.mk')
-purge_list+=('scripts/cwt/local/cache/make.sh')
+purge_list+=('data/cwt/global.vars.sh')
+purge_list+=('data/cwt/generated.mk')
+purge_list+=('data/cwt/cache/make.sh')
 
 for entry in "${purge_list[@]}"; do
   if [[ -f "$entry" ]]; then

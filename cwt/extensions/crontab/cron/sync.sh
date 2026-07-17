@@ -11,7 +11,7 @@
 . cwt/bootstrap.sh
 
 # Ensure generated defs exist.
-if [[ ! -d scripts/cwt/local/cron ]] || [[ -z "$(echo scripts/cwt/local/cron/*.sh 2>/dev/null)" ]]; then
+if [[ ! -d data/cwt/cron ]] || [[ -z "$(echo data/cwt/cron/*.sh 2>/dev/null)" ]]; then
   u_cron_settings_setup || exit 1
 fi
 

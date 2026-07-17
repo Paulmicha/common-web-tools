@@ -42,7 +42,7 @@ u_file_registry_get_path() {
   local slug
 
   u_str_sanitize "$p_key" '-' 'slug'
-  reg_file_path="scripts/cwt/local/registry"
+  reg_file_path="data/cwt/registry"
 
   if [[ -n "$p_namespace" ]]; then
     local namespace
