@@ -8,9 +8,9 @@
 # @see cwt/utilities/hook.sh
 #
 # @example
-#   make cwt-cache-clear
+#   make cc
 #   # Or :
-#   cwt/instance/cwt_cache_clear.sh
+#   cwt/cwt/cache_clear.sh
 #
 
 if [[ -d data/cwt/cache ]]; then

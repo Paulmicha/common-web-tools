@@ -67,7 +67,7 @@ Typical eager includes (depends on enabled extensions): `cwt/git/git.inc.sh`, `c
 Phase 40 prefers `data/cwt/cache/cwt.sh`. Miss → `u_cwt_extend` then write cache.
 
 ```bash
-make cwt-cache-clear
+make cc
 make reinit
 ```
 

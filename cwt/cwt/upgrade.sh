@@ -10,26 +10,26 @@
 # The remote git URL is overridable using a global named 'CWT_REPO'.
 #
 # @example
-#   make upgrade-cwt
+#   make cwt-upgrade
 #   # Or :
-#   cwt/instance/upgrade_cwt.sh
+#   cwt/cwt/upgrade.sh
 #
 #   # If the temporary directory already exists, use existing folder without
 #   # prompt :
-#   make upgrade-cwt n
+#   make cwt-upgrade n
 #   # Or :
-#   cwt/instance/upgrade_cwt.sh n
+#   cwt/cwt/upgrade.sh n
 #
 #   # If the temporary directory already exists, force re-download the sources
 #   # from remote repo without prompt :
-#   make upgrade-cwt y
+#   make cwt-upgrade y
 #   # Or :
-#   cwt/instance/upgrade_cwt.sh y
+#   cwt/cwt/upgrade.sh y
 #
 #   # To keep the temporary directory once completed, use arg 2 (value 'k') :
-#   make upgrade-cwt n k
+#   make cwt-upgrade n k
 #   # Or :
-#   cwt/instance/upgrade_cwt.sh n k
+#   cwt/cwt/upgrade.sh n k
 #
 
 . cwt/bootstrap.sh

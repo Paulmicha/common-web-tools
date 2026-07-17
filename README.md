@@ -258,8 +258,8 @@ After init, `data/cwt/generated.mk` adds subject/action targets. Typical core sh
 | *instance logged-\** | `cwt/instance/logged_*.sh` | `make lt` / `lc` / `ls` / `lb` / `lp` / `ll` |
 | *instance switch-stack-version* | `cwt/instance/switch_stack_version.sh` | `make switch-stack-version` |
 | *instance uninit* | `cwt/instance/uninit.sh` | `make uninit` |
-| *instance upgrade-cwt* | `cwt/instance/upgrade_cwt.sh` | `make upgrade-cwt` |
-| *instance cwt-cache-clear* | `cwt/instance/cwt_cache_clear.sh` | `make cwt-cache-clear` |
+| *cwt upgrade* | `cwt/cwt/upgrade.sh` | `make cwt-upgrade` |
+| *cwt cache-clear* | `cwt/cwt/cache_clear.sh` | `make cc` |
 | *test cwt* | `cwt/test/cwt.sh` | `make test-cwt` |
 
 Logged runners and operators: [docs/cwt/observability.md](docs/cwt/observability.md), [docs/cwt/layers.md](docs/cwt/layers.md).

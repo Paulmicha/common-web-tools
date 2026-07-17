@@ -66,6 +66,6 @@ make hook-debug ms s:instance a:stop v:PROVISION_USING HOST_TYPE   # most-specif
 make hook s:instance a:start
 ```
 
-Cache: `data/cwt/cache/hook.*.sh` (clear with `make cwt-cache-clear`).
+Cache: `data/cwt/cache/hook.*.sh` (clear with `make cc`).
 
 SoT: `cwt/utilities/hook.sh`, `cwt/test/cwt/hook.test.sh`.

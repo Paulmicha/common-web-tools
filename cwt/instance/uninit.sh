@@ -64,4 +64,4 @@ for entry in "${purge_list[@]}"; do
 done
 
 # Clear all CWT cache entries.
-. cwt/instance/cwt_cache_clear.sh
+. cwt/cwt/cache_clear.sh
