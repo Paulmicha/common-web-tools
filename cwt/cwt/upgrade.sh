@@ -7,12 +7,16 @@
 # Preserves extensions that aren't part of the list bundled with CWT (based on
 # the latest remote sources).
 #
-# The remote git URL is overridable using a global named 'CWT_REPO'.
+# The remote branch/tag is overridable using a global named 'CWT_BRANCH'
+# (defaults to 'v2.0.0').
 #
 # @example
 #   make cwt-upgrade
 #   # Or :
 #   cwt/cwt/upgrade.sh
+#
+#   # Upgrade from a specific branch or tag :
+#   CWT_BRANCH=main make cwt-upgrade
 #
 #   # If the temporary directory already exists, use existing folder without
 #   # prompt :
@@ -64,7 +68,11 @@ case "$proceed_with_download" in y*|Y*)
     rm -rf "$tmp_dir"
   fi
 
-  git clone --depth 1 "${CWT_REPO:=https://github.com/Paulmicha/common-web-tools.git}" "$tmp_dir"
+  cwt_upstream_git='https://github.com/Paulmicha/common-web-tools.git'
+  cwt_branch="${CWT_BRANCH:-v2.0.0}"
+  u_str_sanitize "$cwt_branch" '-' 'cwt_branch'
+
+  git clone --depth 1 -b "$cwt_branch" "$cwt_upstream_git" "$tmp_dir"
 
   if [[ $? -ne 0 ]]; then
     echo >&2
