@@ -4,7 +4,7 @@
 # Log wrapper to run a make entry point in the background.
 #
 # Writes stdout + stderr to data/logs/{entrypoint}.txt and records each run
-# in data/logs/{entrypoint}.changelog.txt.
+# in data/logs/{entrypoint}.sidecar.txt.
 #
 # @param 1 String : path to wrapped script or make entry point name.
 #
@@ -12,7 +12,7 @@
 #   # This will write stdout + stderr to the following log file :
 #   # data/logs/transcribe-all.txt
 #   # And also add a new line in its corresponding "registry file" :
-#   # data/logs/transcribe-all.changelog.txt
+#   # data/logs/transcribe-all.sidecar.txt
 #   cwt/log/wrap.sh \
 #     cwt/extensions/transcription/transcribe/all.sh
 #
@@ -26,7 +26,7 @@
 #   # Or :
 #   cwt/instance/logged_thread.sh transcribe-all
 #   # Yields :
-#   #   data/logs/transcribe-all.txt (+ changelog); PID in data/threads/
+#   #   data/logs/transcribe-all.txt (+ sidecar); PID in data/threads/
 #   # Equivalent (without pre-process and post-process hooks) :
 #   cwt/log/wrap.sh cwt/thread/wrap.sh transcribe-all
 #

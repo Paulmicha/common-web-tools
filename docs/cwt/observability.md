@@ -21,7 +21,7 @@ Plain `make chain` → `instance/chain` → `thread/sequence` (no `cwt/chain/`).
 | Path | Role |
 |------|------|
 | `data/logs/<entry>.txt` | Flat stdout/stderr stream |
-| `data/logs/<entry>.changelog.txt` | Launch audit lines (also see [changelog-wrap.md](changelog-wrap.md)) |
+| `data/logs/<entry>.sidecar.txt` | Launch audit lines (also see [sidecar-wrap.md](sidecar-wrap.md)) |
 | `data/threads/<entry>.yml` | Lifecycle (pid, status, owner, attempts) |
 | `data/threads/<entry>.lock` | flock pile-up lock |
 | `data/logs/<kind>/$emitter/$receiver/YYYY/MM/DD/…` | Structured wrap traces |

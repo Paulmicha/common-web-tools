@@ -4,7 +4,7 @@
 # Smoke tests for log wrappers logged-chain (lc), logged-batch (lb), logged-pipe (lp).
 #
 # Parent observability = log/wrap flat capture under data/logs/<entry>.txt
-# (+ changelog). Semantics for fail-fast / pipefail are covered on the
+# (+ sidecar). Semantics for fail-fast / pipefail are covered on the
 # unlogged runners where useful.
 #
 # @requires cwt/vendor/shunit2
@@ -39,11 +39,11 @@ _u_test_wait_pid() {
 oneTimeTearDown() {
   rm -f \
     data/logs/chain.txt \
-    data/logs/chain.changelog.txt \
+    data/logs/chain.sidecar.txt \
     data/logs/thread-batch.txt \
-    data/logs/thread-batch.changelog.txt \
+    data/logs/thread-batch.sidecar.txt \
     data/logs/thread-pipe.txt \
-    data/logs/thread-pipe.changelog.txt
+    data/logs/thread-pipe.sidecar.txt
 }
 
 test_logged_chain_parent_observability() {
@@ -52,7 +52,7 @@ test_logged_chain_parent_observability() {
   local pid=''
   local marker="cwt-logged-wrappers-smoke-chain-$$"
 
-  rm -f data/logs/chain.txt data/logs/chain.changelog.txt
+  rm -f data/logs/chain.txt data/logs/chain.sidecar.txt
 
   # Two quiet steps: make debug (echo.make.sh) via e:N: ordering.
   output="$(cwt/instance/logged_chain.sh \
@@ -68,10 +68,10 @@ test_logged_chain_parent_observability() {
   assertTrue 'PID parsed' "[[ -n '$pid' ]]"
   assertTrue 'background chain finished' "_u_test_wait_pid '$pid'"
 
-  assertTrue 'changelog exists' "[[ -f data/logs/chain.changelog.txt ]]"
+  assertTrue 'sidecar exists' "[[ -f data/logs/chain.sidecar.txt ]]"
   assertTrue 'output log exists' "[[ -f data/logs/chain.txt ]]"
-  assertTrue 'changelog records chain.sh' \
-    "grep -q 'cwt/instance/chain.sh' data/logs/chain.changelog.txt"
+  assertTrue 'sidecar records chain.sh' \
+    "grep -q 'cwt/instance/chain.sh' data/logs/chain.sidecar.txt"
   assertTrue 'step 1 marker in parent log' \
     "grep -q '${marker}-1' data/logs/chain.txt"
   assertTrue 'step 2 marker in parent log' \
@@ -84,7 +84,7 @@ test_logged_batch_parent_observability() {
   local pid=''
   local marker="cwt-logged-wrappers-smoke-batch-$$"
 
-  rm -f data/logs/thread-batch.txt data/logs/thread-batch.changelog.txt
+  rm -f data/logs/thread-batch.txt data/logs/thread-batch.sidecar.txt
 
   output="$(cwt/instance/logged_batch.sh \
     e:debug a:"${marker}-a" \
@@ -99,11 +99,11 @@ test_logged_batch_parent_observability() {
   assertTrue 'PID parsed' "[[ -n '$pid' ]]"
   assertTrue 'background batch finished' "_u_test_wait_pid '$pid'"
 
-  assertTrue 'changelog exists' \
-    "[[ -f data/logs/thread-batch.changelog.txt ]]"
+  assertTrue 'sidecar exists' \
+    "[[ -f data/logs/thread-batch.sidecar.txt ]]"
   assertTrue 'output log exists' "[[ -f data/logs/thread-batch.txt ]]"
-  assertTrue 'changelog records batch.sh' \
-    "grep -q 'cwt/thread/batch.sh' data/logs/thread-batch.changelog.txt"
+  assertTrue 'sidecar records batch.sh' \
+    "grep -q 'cwt/thread/batch.sh' data/logs/thread-batch.sidecar.txt"
   assertTrue 'branch a in parent log' \
     "grep -q '${marker}-a' data/logs/thread-batch.txt"
   assertTrue 'branch b in parent log' \
@@ -116,7 +116,7 @@ test_logged_pipe_shell_stages_observability() {
   local pid=''
   local marker="cwt-logged-wrappers-smoke-pipe-$$"
 
-  rm -f data/logs/thread-pipe.txt data/logs/thread-pipe.changelog.txt
+  rm -f data/logs/thread-pipe.txt data/logs/thread-pipe.sidecar.txt
 
   output="$(cwt/instance/logged_pipe.sh \
     "echo ${marker}" \
@@ -131,11 +131,11 @@ test_logged_pipe_shell_stages_observability() {
   assertTrue 'PID parsed' "[[ -n '$pid' ]]"
   assertTrue 'background pipe finished' "_u_test_wait_pid '$pid'"
 
-  assertTrue 'changelog exists' \
-    "[[ -f data/logs/thread-pipe.changelog.txt ]]"
+  assertTrue 'sidecar exists' \
+    "[[ -f data/logs/thread-pipe.sidecar.txt ]]"
   assertTrue 'output log exists' "[[ -f data/logs/thread-pipe.txt ]]"
-  assertTrue 'changelog records pipe.sh' \
-    "grep -q 'cwt/thread/pipe.sh' data/logs/thread-pipe.changelog.txt"
+  assertTrue 'sidecar records pipe.sh' \
+    "grep -q 'cwt/thread/pipe.sh' data/logs/thread-pipe.sidecar.txt"
   assertTrue 'piped marker in parent log' \
     "grep -q '${marker}' data/logs/thread-pipe.txt"
   assertFalse 'pipe must not show command-not-found' \

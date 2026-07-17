@@ -122,7 +122,7 @@ make setup prod remote myproject-2024 lamp
   │   ├── git/                ← git hooks integration + utilities
   │   ├── host/               ← host provision, registry, vitals
   │   ├── instance/           ← lifecycle + logged runners + chain/pipe
-  │   ├── log/,changelog/,loop/,thread/ ← core CWT wrappers
+  │   ├── log/,sidecar/,loop/,thread/ ← core CWT wrappers
   │   ├── make/               ← default.mk + call_wrap
   │   ├── test/               ← shunit2 low-level suite
   │   ├── utilities/          ← internal libraries
@@ -367,12 +367,12 @@ Full guide: [docs/cwt/testing.md](docs/cwt/testing.md).
 | [docs/cwt/extensions.md](docs/cwt/extensions.md) | Enable, override, families |
 | [docs/cwt/builder.md](docs/cwt/builder.md) | Builder (ex-preset) |
 | [docs/cwt/nested-cwt.md](docs/cwt/nested-cwt.md) | Nested virgin-env exec |
-| [docs/cwt/changelog-wrap.md](docs/cwt/changelog-wrap.md) | Durable sidecar SoT |
+| [docs/cwt/sidecar-wrap.md](docs/cwt/sidecar-wrap.md) | Durable sidecar SoT |
 
 ## Roadmap
 
 - Keep `make test-cwt` (and per-case targets) current
-- Finish shared changelog wrap body and migrate writers ([docs/cwt/changelog-wrap.md](docs/cwt/changelog-wrap.md))
+- Finish shared sidecar wrap body and migrate writers ([docs/cwt/sidecar-wrap.md](docs/cwt/sidecar-wrap.md))
 - Fix macOS-specific errors
 - Offload more tasks to third-party projects where sensible
 - Reduce bashisms / improve POSIX compatibility where practical

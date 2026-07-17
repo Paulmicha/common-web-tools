@@ -65,7 +65,7 @@ log_files=(data/logs/*.txt)
 
 for p_log_file in "${log_files[@]}"; do
   case "$p_log_file" in
-    *.changelog.txt) continue;;
+    *.sidecar.txt) continue;;
   esac
 
   u_log_rotate_file "$p_log_file"

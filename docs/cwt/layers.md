@@ -15,7 +15,7 @@ Prefer the lowest layer that can own the concern.
 |---|-------|-----------------|----------|-------------|
 | **1** | **Data** | On-disk / host facts (may be private or identifying): paths, entity YAML, logs, dumps | `data/…`, host files (e.g. `/etc/hosts`) | **State only** — never business logic |
 | **2** | **Global ENV vars** | (A) **readonly globals** — aggregated on `make init` / `reinit`, written to gitignored `data/cwt/global.vars.sh` + `.env`; (B) **calling-scope (“mutable”) vars** — ordinary shell vars that change mid-run (e.g. `DB_*` after `u_db_set`) | Declarations: `env.yml`, `.env-local.yml`, `cwt/**/global.vars.sh`, `scripts/cwt/extend/**/global.vars.sh` | **Configuration & execution context** |
-| **3** | **Abstract CWT core entry points** | Abstract actions that are hooks (placeholders) or wrappers with **no** concrete backend | `cwt/<changelog,log,loop,thread>/wrap.sh`, `cwt/instance/<entry>.sh` | **Contracts** — calling-scope vars, hooks to implement |
+| **3** | **Abstract CWT core entry points** | Abstract actions that are hooks (placeholders) or wrappers with **no** concrete backend | `cwt/<sidecar,log,loop,thread>/wrap.sh`, `cwt/instance/<entry>.sh` | **Contracts** — calling-scope vars, hooks to implement |
 | **4** | **CWT core extensions** | Broader abstract actions and/or **minimal** concrete implementations; often disabled by default | `cwt/extensions/<name>` | Abstract e.g. `db`, `gpt`; concrete e.g. `compose`, `mysql`, `ollama` |
 | **5** | **Project extend** | Project wiring, remotes, host policy | `scripts/cwt/extend/**`, project YAML | **Overrides / product** — never dump this into core |
 
@@ -55,7 +55,7 @@ flowchart TB
 4. Generic / minimal implementations → **Layer 4**.
 5. This machine / product schedules, remotes policy → **Layer 5**.
 
-See also [secrets.md](secrets.md) and [changelog-wrap.md](changelog-wrap.md).
+See also [secrets.md](secrets.md) and [sidecar-wrap.md](sidecar-wrap.md).
 
 ---
 

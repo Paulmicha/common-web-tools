@@ -16,11 +16,11 @@ p_test_entry='make-list-entry-points'
 oneTimeTearDown() {
   rm -f \
     "data/threads/${p_test_entry}.txt" \
-    "data/threads/${p_test_entry}.changelog.txt" \
+    "data/threads/${p_test_entry}.sidecar.txt" \
     "data/threads/${p_test_entry}.pid" \
     "data/threads/${p_test_entry}.yml" \
     "data/logs/${p_test_entry}.txt" \
-    "data/logs/${p_test_entry}.changelog.txt"
+    "data/logs/${p_test_entry}.sidecar.txt"
 }
 
 test_wrap_rejects_invalid_entry() {
@@ -69,7 +69,7 @@ test_log_wrap_chains_thread_wrap() {
 
   rm -f \
     "data/logs/${p_test_entry}.txt" \
-    "data/logs/${p_test_entry}.changelog.txt" \
+    "data/logs/${p_test_entry}.sidecar.txt" \
     "$p_yml"
 
   output="$(cwt/log/wrap.sh cwt/thread/wrap.sh "$p_test_entry" 2>&1)" || exit_code=$?
@@ -77,8 +77,8 @@ test_log_wrap_chains_thread_wrap() {
   sleep 0.2
 
   assertEquals 'log wrap chain must succeed' 0 "$exit_code"
-  assertTrue 'log changelog must exist' \
-    "[[ -f 'data/logs/${p_test_entry}.changelog.txt' ]]"
+  assertTrue 'log sidecar must exist' \
+    "[[ -f 'data/logs/${p_test_entry}.sidecar.txt' ]]"
   assertTrue 'log output must exist' \
     "[[ -f 'data/logs/${p_test_entry}.txt' ]]"
   assertTrue 'output mentions PID' "[[ '$output' == *'Log started'* ]]"

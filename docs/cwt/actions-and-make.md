@@ -65,6 +65,6 @@ After changing `CWT_MAKE_TASKS_SHORTER` or adding actions: `make reinit`.
 | `git` | `git-write-hooks`, `git-find-changed-files` |
 | `log` / `loop` / `thread` | wraps, status, batch/pipe/sequence |
 | `test` | `test-cwt`, `test-cwt-*` |
-| `changelog` | `changelog-wrap` |
+| `sidecar` | `sidecar-wrap` |
 
 Launch layering: [layers.md](layers.md). Observability paths: [observability.md](observability.md).

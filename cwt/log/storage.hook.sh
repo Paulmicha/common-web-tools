@@ -20,15 +20,15 @@ fi
 # esac
 
 # Record whenever log file is (re)written.
-log_file_changelog="data/logs/${log_file}.changelog.txt"
+log_file_sidecar="data/logs/${log_file}.sidecar.txt"
 
-if [[ ! -f "$log_file_changelog" ]]; then
-  touch "$log_file_changelog"
+if [[ ! -f "$log_file_sidecar" ]]; then
+  touch "$log_file_sidecar"
 fi
 
 datestamp="$(date +"%Y-%m-%dT%H:%M:%S.%3N")"
 human_user="$(u_print_current_user)"
-echo "$datestamp : $human_user (euid=$(id -u)) : $p_script $*" >> "$log_file_changelog"
+echo "$datestamp : $human_user (euid=$(id -u)) : $p_script $*" >> "$log_file_sidecar"
 
 # Write wrapped call outputs (2>&1) to the $log_file.
 log_file="data/logs/${log_file}.txt"
@@ -43,11 +43,11 @@ p_pid=$!
 
 # Prefer human-owned artifacts when sudoing (S1).
 if [[ -n "${SUDO_USER:-}" ]]; then
-  chown "$SUDO_USER:" "$log_file" "$log_file_changelog" 2>/dev/null || true
+  chown "$SUDO_USER:" "$log_file" "$log_file_sidecar" 2>/dev/null || true
   chown "$SUDO_USER:" data/logs 2>/dev/null || true
 fi
 
 echo "Log started (PID $p_pid)."
 echo "  script    : $p_script $*"
 echo "  output    : $log_file"
-echo "  changelog : $log_file_changelog"
+echo "  sidecar   : $log_file_sidecar"
