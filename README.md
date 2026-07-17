@@ -2,701 +2,347 @@
 
 ## TL;DR
 
-Clone or download / copy / paste the files from this repo, open terminal in chosen dir and :
+Clone or copy this repo into your project docroot, then:
 
 ```sh
-make
+cp SPECIMEN.env.yml env.yml   # edit as needed
+make setup                    # or: make   → instance init
 ```
+
+Deep dives live under [`docs/cwt/`](docs/cwt/). Extension notes: [`cwt/extensions/README.md`](cwt/extensions/README.md).
 
 ## WHAT
 
-CWT is a scaffolding bash shell CLI to usual web project tasks. It's a generic, customizable and extensible toolbox for local (internal) development tasks.
+CWT is a scaffolding bash shell CLI for usual web project tasks — a generic, customizable, extensible toolbox for **local (internal) development**.
 
-CWT is not a program; it's the "glue" between programs. Third-party tools integration is provided by extensions which could have their own respective Git repositories. CWT includes by default (for now) a predefined list of extensions - like in the [DrupalVM](https://www.drupalvm.com/) project.
+CWT is not a program; it is the “glue” between programs. Third-party integration is provided by **extensions** (bundled under `cwt/extensions/`, often disabled by default). Core contains utilities for global environment variables, minimal host operations, optional git hooks, log/thread/loop wrappers, and low-level automated tests (`make test-cwt`).
 
-CWT "core" - this repo - contains common utilities related to managing global environment variables, some minimal local and remote host operations, optional git hooks integration, and low-level automated tests (`make test-cwt`).
-
-CWT is *not* meant to be used in production. It was designed to assist the making of diverse projects for individual developers or teams.
-
-Here's the list of extensions included (in folder `cwt/extensions`) :
-
-| Name | Enabled by default ? | Description |
-|------|:--------------------:|-------------|
-| `apache` |  | Apache web server VHost generation (and deletion) utilities. Very basic implementations for more traditional LAMP stacks (not using docker-compose). |
-| `arangodb` |  | For now, this extension only contains an alias and a Docker image tag default value. |
-| `db` |  | Abstract hooks and entry points for database-related tasks. See the 'mysql' extension for an implementation example. |
-| `docker-compose` |  | Implements instance start, stop, build, and destroy actions. Can be used in different ways : see `DC_MODE` help text (`cwt/extensions/docker-compose/global.vars.sh`). |
-| `drupalwt` |  | Provides generic Drupal-related tasks. See [documentation with a "getting started" step-by-step example](cwt/extensions/drupalwt/README.md). |
-| `drupalwt_d4d` |  | Provides Drupal projects with a default "stack" using `docker-compose` and [docker4drupal](https://github.com/wodby/docker4drupal) containers. |
-| `file_registry` | ✔ | Default storage for CWT "registry" (minimal file-based key/value store scoped by project instance or host). |
-| `mysql` |  | Provides mysql implementations of the abstractions provided by the `db` extension such as database creation, dumps import/export, etc. |
-| `node` |  | For now, this extension only contains a few aliases and a default port value (3000). |
-| `pgsql` |  | Same as `mysql` but for Postgres. |
-| `remote` |  | Utilities to synchronize local instance with remote instance(s). Uses SSH keys loaded in current terminal session. |
-| `remote_db` |  | Uses the `db` and `remote` extensions to provide DB dumps 2-way sync capabilities. |
-| `remote_traefik` |  | Contains default settings for a reverse proxy using Traefik to route traffic to multiple docker-compose instances (supports Https using Let's Encrypt). |
+CWT is **not** meant for production. It helps individual developers or teams keep a common CLI across older and newer projects.
 
 ## PURPOSE
 
-CWT helps individual developers or teams to streamline a similar workflow across older and newer projects. It allows to **maintain a common CLI** and to easily swap out implementations in case we change our minds about technical choices.
+CWT organizes (mostly bash) scripts around conventions so you can swap implementations without rewriting every project’s workflow:
 
-CWT organizes (mostly bash shell) scripts around a set of conventions to implement in a **modular** way e.g. :
-
-- host-level dependencies installation / setup (provisioning required packets/apps/services)
-- get / generate services credentials
-- building / running / stopping / destroying project instances with variants per env. type - e.g. dev, test, live... (i.e. allowing each to have different services or settings)
-- generate / (re)write local app settings
-- continuous (or on-demand) linting / watching / compiling of some project sources
-- host-level setup / removal of periodic task(s) execution (cron jobs)
+- host-level dependencies / provisioning
+- credentials and registries
+- building / running / stopping / destroying instances (variants per env type)
+- generating local app settings
+- linting / watching / compiling
+- cron / long-running loops
 - automated tests
-- deployment
-- create / import / backup database
-- remote 2-way sync
+- remote two-way sync
 - etc.
 
-## HOW
+## HOW (concepts in brief)
 
-By providing some abstractions to complement, combine, replace or add any operations developers might need to work on diverse projects.
+CWT relies on **file structure**, **naming conventions**, and a few primitives:
 
-CWT relies on **file structure**, **naming conventions**, and a few concepts :
+| Concept | Summary | Deep dive |
+|---------|---------|-----------|
+| **Globals** | Instance env vars from `env.yml` / `global.vars.sh`, written to `.env` + `data/cwt/global.vars.sh` | [docs/cwt/globals.md](docs/cwt/globals.md) |
+| **Bootstrap** | `. cwt/bootstrap.sh` → numbered phases; eager `*.inc.sh` vs lazy `*.opt-inc.sh` | [docs/cwt/bootstrap.md](docs/cwt/bootstrap.md) |
+| **Instance init** | Aggregates globals, optional git hooks, generates make shortcuts | `u_instance_init()` in `cwt/instance/instance.inc.sh` |
+| **Actions** | Folders = subjects, files = actions → `data/cwt/generated.mk` | [docs/cwt/actions-and-make.md](docs/cwt/actions-and-make.md) |
+| **Hooks** | File-based events (`*.hook.sh`) with variant combinations | [docs/cwt/hooks.md](docs/cwt/hooks.md) |
 
-- **Globals** are the environment variables related to current project instance. They may be declared in `cwt.yml` or using the `global` function in files named `env.vars.sh` aggregated during initialization.
-- **Bootstrap** deals with the inclusion of all the relevant source files and loads global variables (e.g. host type, instance type, etc) and functions. Any script that includes the file `cwt/bootstrap.sh` can use these. This depends on sourcing shell scripts using relative paths, which is made possible by the fact that *all* scripts (or `make` "shortcut" commands) must be run from the folder `$PROJECT_DOCROOT`. The intended shape of `cwt/bootstrap.sh` is a thin orchestrator of numbered `cwt/bootstrap/*.bootstrap-inc.sh` phases: heavy steps run once per shell (`CWT_BS_FLAG`), and a final phase lazy-loads caller optional includes (see *Automatic includes*). Those phase files are core bootstrap only — they are not subjects and are not registered into `CWT_INC`.
-- **Instance init** is a preliminary step that will setup current project instance. Among other things, it will aggregate and write local values for globals, optionally write application git hooks (opt-in by using the corresponding GIT-related globals - see `cwt/git/init.hook.sh`), and trigger some hooks in order to let extensions implement their own additional setup tasks. See `u_instance_init()` in `cwt/instance/instance.inc.sh` for details and usage example.
-- **Actions** - also referred to as *entry points*, *operations*, *tasks*, or just *commands* - are scoped by subject, e.g. *instance init*, *app compile*, etc. CWT determines a list of available actions by looking up folders and shell scripts matching certain rules.
-- **Hooks** are function calls mimicking events where "listening" or implementing entails creating some specific file(s) in certain path(s) corresponding to filters specified in arguments. They match actions by subjects and provide additional variants - which can use any global, and can either load all matching includes found, or only the most specific. See `hook()` and `u_hook_most_specific()` in `cwt/utilities/hook.sh` for details and usage examples.
+Prefer the lowest of five **implementation layers** (data → globals → abstract entry points → core extensions → project extend). See [docs/cwt/layers.md](docs/cwt/layers.md).
 
-## Preprequisites
+## Prerequisites
 
-- Local host or VM with **Bash shell version 4+** (e.g. MacOS : `brew update && brew install bash && sudo bash -c 'echo /usr/local/bin/bash >> /etc/shells' && chsh -s /usr/local/bin/bash`)
+- Bash **4+** (macOS: install a modern bash via Homebrew and set it as your shell if needed)
 - Git
-- Existing project (new or old)
-- [optional] Remote host accessible via SSH with Bash 4+
-- [optional] *GNU make* in local / remote host(s)
+- An existing or new project directory
+- [optional] Remote host with Bash 4+ over SSH
+- [optional] GNU make
 
-Disclaimer : CWT is currently only tested on Debian-based Linux distros.
+Disclaimer: CWT is primarily tested on Debian-based Linux.
 
 ## Usage / Getting started
 
+### Placement
+
+Two common layouts:
+
+1. Single “monolithic” repo for the whole project
+2. Application code in a separate Git repo (default assumption in this repo’s `.gitignore`)
+
+CWT core (`cwt/`) may sit inside the app (same docroot), in a parent “dev stack” repo (usual), or elsewhere on the host. App paths are typically declared per `CWT_APPS` entry (e.g. `SITE_DOCROOT`) via `env.yml`. **All** CWT scripts and `make` targets must be run from `$PROJECT_DOCROOT`.
+
 ### Step by step
 
-There are 2 ways to use CWT in existing or new projects :
-
-1. Use a single, "monolothic" repo for the whole project
-1. Keep application code in a separate Git repo (this is the default assumption in the `.gitignore` config featured in this repo)
-
-The files contained in CWT core - this repo - may be placed either :
-
-- inside the application code (in this case `APP_DOCROOT` = `PROJECT_DOCROOT`),
-- inside its parent folder (this is the default assumption and usually has its own separate "dev stack" Git repo),
-- or even anywhere else on the host.
-
-So the first step will always be to clone or download / copy / paste the files from this repo to desired location (in relation to your choice for this project instance source files organization described above), then :
-
-1. Review the `.gitignore` file and adapt it to suit your needs.
-1. Override `cwt/extensions/.cwt_extensions_ignore` to enable and/or disable CWT extensions (i.e. copy/paste to `scripts/cwt/override/.cwt_extensions_ignore` and edit).
-1. Copy/paste `sample.cwt.yml` to `cwt.yml` & edit for easier *instance (re)init* implementation. It is meant to contain settings that **do not vary** between the different types of instances (i.e. directory structure & app git remote).
-1. [optional] Implement your own alterations and/or extensions (see the *Adapt / Alter / Extend CWT* section below).
-1. Launch *instance setup* action (e.g. run `make setup`) - executes in this order the following actions :
-    1. *instance init* - the first action to execute in any project instance in order to make CWT useful. It generates readonly global (env) vars, optional Git hooks implementations, convenience "make" shortcuts for all subjects & actions, and any (usually gitignored) dotfiles and/or local files specific to local instance
-    1. start services (if any are implemented) - i.e. *instance start*
-    1. *app install* (if any operations are implemented)
-
-These steps are mere indications. It may be useful to "wrap" some of these tasks in custom scripts (e.g. to preset some arguments, etc), usually in the `./scripts` folder - i.e. to encapsulate what doesn't vary between all project instances.
-
-Finally, example code snippets and detailed explanations are provided in CWT source code comments.
-
-### Getting started examples
-
-By default, the *instance setup* action will use the following values, overridable using parameters in the order shown below. Like all CWT actions, the arguments to the corresponding script are extensively described directly in code comments - reproduced here for clarity (see "docblock" in `cwt/instance/setup.sh`) :
-
-- param 1 [optional] String : instance type (`INSTANCE_TYPE` global value). Defaults to `dev`.
-- param 2 [optional] String : `HOST_TYPE` global value (flags instance as remote). Defaults to `local`.
-- param 3 [optional] String : `INSTANCE_DOMAIN` global value. Defaults to a fictional local domain generated using PROJECT_DOCROOT's folder name. @see `u_instance_domain()` in `cwt/instance/instance.inc.sh`
-- param 4 [optional] String : `PROVISION_USING` global value. Defaults to `docker-compose`.
-
-Here are a few common setup examples (to run AFTER having copied/pasted `sample.cwt.yml` to `cwt.yml` & edited it accordingly) :
+1. Copy this repo’s files into the chosen docroot (or clone and use as the stack root).
+2. Review [`.gitignore`](.gitignore) and adapt it.
+3. Override extension defaults: copy `cwt/extensions/.cwt_extensions_ignore` → `scripts/cwt/override/.cwt_extensions_ignore` and edit (delete a line to **enable** that extension).
+4. Copy [`SPECIMEN.env.yml`](SPECIMEN.env.yml) → `env.yml` and edit. Settings that **do not vary** much between instance types belong here (stack version, apps, paths). Use gitignored `.env-local.yml` for machine-private overrides.
+5. Optionally implement project code under `scripts/cwt/extend/` and overrides under `scripts/cwt/override/`.
+6. Run **instance setup**:
 
 ```sh
-# Init instance using defaults.
-cwt/instance/setup.sh
-# Or :
 make setup
+# Or:
+cwt/instance/setup.sh
 ```
 
+Setup runs, in order:
+
+1. **instance init** — write globals (`.env`, `data/cwt/global.vars.sh`), generate `data/cwt/generated.mk`, optional git hooks, caches
+2. **instance start** — start services if hooks implement them
+3. **stage2 / post setup hooks** — e.g. create DBs, import dumps, vendor install (extension-defined)
+
+Idempotent: safe to re-run. If globals are already `readonly` in the current shell, use a new terminal or `make reinit` instead of `setup` for the init step.
+
+### Setup parameters
+
+From [`cwt/instance/setup.sh`](cwt/instance/setup.sh):
+
+| Param | Global | Default |
+|-------|--------|---------|
+| 1 | `INSTANCE_TYPE` | `dev` |
+| 2 | `HOST_TYPE` | `local` |
+| 3 | `STACK_VERSION` | empty (falls back to global default `v1` on init) |
+| 4 | `PROVISION_USING` | `compose` (note: core global default when undeclared is `cwt`) |
+
+Examples:
+
 ```sh
-# Init instance using production config.
-cwt/instance/setup.sh prod
-# Or :
+make setup
 make setup prod
-```
-
-```sh
-# Init instance using production + remote config provisionned manually (i.e. LAMP in this example).
-cwt/instance/setup.sh prod remote test.my-cwt-project.com lamp
-# Or :
-make setup prod remote test.my-cwt-project.com lamp
+make setup prod remote myproject-2024 lamp
 ```
 
 ## File structure
 
 ```txt
-/path/to/my-project/    ← Project root dir ($PROJECT_DOCROOT)
-  ├── app/              ← [optional+configurable] Application dir ($APP_DOCROOT)
-  │   └── web/          ← [optional+configurable] Publicly accessible web dir ($SERVER_DOCROOT)
-  ├── cwt/              ← CWT "core" source files. Update = delete + replace entire folder
-  │   ├── app/          ← App-level tasks (e.g. watch, compile, lint, etc.)
-  │   ├── env/          ← Default generic global env. vars
-  │   ├── extensions/   ← Bundled generic CWT extensions (opt-in : see .cwt_extensions_ignore)
-  │   ├── git/          ← Integration of Git hooks with CWT hooks + Git-related utilities
-  │   │   └── samples/  ← [doc] Examples of git hooks implementations
-  │   ├── host/         ← Host-level metadata / crontab / network utils + "abstract" provision action
-  │   ├── instance/     ← Actions related to the entire project instance (init, destroy, start, stop)
-  │   ├── test/         ← Automated tests (subject test)
-  │   │   ├── cwt/      ← Core low-level shunit2 cases (*.test.sh)
-  │   │   ├── cwt.sh    ← Entry point : `make test-cwt` (triggers `test cwt` hook)
-  │   │   ├── cwt.hook.sh     ← Core hook impl. : runs cases in cwt/test/cwt/
-  │   │   ├── cwt.inc.sh      ← Shared helpers for core test cases
-  │   │   ├── case.run.sh     ← Shared runner for per-case make targets
-  │   │   └── test.inc.sh     ← Test utilities (discovery, results, batch exec)
-  │   ├── utilities/    ← CWT internal functions (hides complexity)
-  │   └── vendor/       ← Bundled third-party dependencies (only shunit2 by default)
-  ├── scripts/          ← Current project specific scripts
-  │   └── cwt/          ← CWT-related project-specific extension, local files and overrides
-  │       ├── extend/   ← [optional] Custom project-specific CWT extension
-  │       ├── local/    ← [git-ignored] Generated files specific to this local instance
-  │       │   └── cache/
-  │       │       └── test-cases.sh ← [generated] Per-case make target registry (see *Automated tests*)
-  │       └── override/ ← [optional] Allows to replace virtually any file sourced in CWT scripts
-  ├── .gitignore        ← Don't forget to review and edit to suit project needs
-  ├── Makefile          ← The "make" entry point that loads all (optional) makefile includes
-  └── sample.cwt.yml    ← [optional] Copy/paste to "cwt.yml" (and/or ".cwt-local.yml") & edit
+/path/to/my-project/          ← $PROJECT_DOCROOT
+  ├── app/ or site/ …         ← [optional] application trees (per CWT_APPS / env.yml)
+  ├── cwt/                    ← CWT core (update = replace folder)
+  │   ├── bootstrap.sh        ← bootstrap entry
+  │   ├── bootstrap/          ← numbered *.bootstrap-inc.sh phases
+  │   ├── changelog/          ← changelog wrap (sidecar SoT)
+  │   ├── env/                ← core global.vars.sh + helpers
+  │   ├── extensions/         ← bundled extensions (opt-in via ignore file)
+  │   ├── git/                ← git hooks integration + utilities
+  │   ├── host/               ← host provision, registry, vitals
+  │   ├── instance/           ← lifecycle + logged runners + chain/pipe
+  │   ├── log/ · loop/ · thread/
+  │   ├── make/               ← default.mk + call_wrap
+  │   ├── test/               ← shunit2 low-level suite
+  │   ├── utilities/          ← internal libraries
+  │   └── vendor/             ← shunit2, bash-yaml
+  ├── data/                   ← runtime / generated (mostly gitignored)
+  │   └── cwt/                ← global.vars.sh, generated.mk, cache/, registry/
+  ├── docs/cwt/               ← deep-dive guides
+  ├── scripts/cwt/
+  │   ├── extend/             ← project-specific extension
+  │   └── override/           ← replace any sourced CWT path
+  ├── .gitignore
+  ├── Makefile
+  ├── SPECIMEN.env.yml        ← copy to env.yml
+  └── env.yml                 ← [optional] your instance YAML
 ```
 
-## Adapt / Alter / Extend CWT
+Generated (do not hand-edit): `.env`, `data/cwt/global.vars.sh`, `data/cwt/generated.mk`, `data/cwt/cache/*`.
 
-Altering or extending CWT involves either :
+## Five implementation layers
 
-- creating bash shell scripts in the `scripts` dir
-- creating your own generic extension(s) in `cwt/extensions` (1 folder = 1 extension)
-- provide your own operations, globals, or implement CWT hooks in `scripts/cwt/extend`
+| # | Layer | Owns |
+|---|-------|------|
+| 1 | Data | `data/…`, host files — state only |
+| 2 | Global ENV vars | readonly globals vs calling-scope mutables |
+| 3 | Abstract core entry points | wraps / placeholders |
+| 4 | Core extensions | abstract + minimal concrete |
+| 5 | Project extend | `scripts/cwt/extend/**` |
 
-Here are the different ways to adapt CWT to current project needs :
+Full table, mermaid, and **launch** layer stack (raw → thread → log wrap): [docs/cwt/layers.md](docs/cwt/layers.md).
 
-### Globals
+## Adapt / Alter / Extend
 
-Since every entry point sources `cwt/bootstrap.sh` to load CWT functions and globals, these (`readonly`) variables are available everywhere. Their values are assigned during *instance init* which generates (or overwrites) the following git-ignored files :
+- Project scripts under `scripts/`
+- Generic reusable extensions as folders in `cwt/extensions/`
+- Project-only hooks/globals/actions in `scripts/cwt/extend/`
+- Hard replacements via `scripts/cwt/override/`
 
-- `.env`
-- `scripts/cwt/local/global.vars.sh`
+Details: [docs/cwt/extensions.md](docs/cwt/extensions.md).
 
-There are 2 ways to customize or add globals :
+### Globals (summary)
 
-1. by editing `cwt.yml` configuration files. Various names can be used to allow overrides between different project instances, and the YAML syntax is then transformed into globals declarations (and/or `u_instance_init()` arguments override). You can see an example file in this repo's docroot : `sample.cwt.yml`, which you can rename to `cwt.yml` (or `.cwt-local.yml`) to quickly get started.
-1. by providing your own `global.vars.sh` file in current project instance's `scripts` folder. Any extension can provide its own - be it in the folder of the extension directly, or inside any of its subfolder (called *subjects*).
+On init, globals are written to:
 
-The `.cwt.yml` method is meant for simple declarations, while `global.vars.sh` allow things like deferred and/or conditional assignments, dynamic values, and plain bash scripting.
+- `.env` — Makefile and other tools
+- `data/cwt/global.vars.sh` — sourced every bootstrap (phase 30)
 
-If all you need is a constant, the following syntax will not prompt for user input in terminal during *instance init* :
-
-```sh
-global MY_CONSTANT_VALUE "the value"
-```
-
-The same declaration using the `cwt.yml` method can be done in the following *strictly equivalent* ways :
-
-```yaml
-my:
-  constant:
-    value: the value
-```
-
-```yaml
-my_constant:
-  value: the value
-```
-
-```yaml
-my_constant_value: the value
-```
-
-And if you need to always prompt for input during *instance init* (when the `-y` flag is not set), use only the 1st argument :
-
-```sh
-global MUST_INPUT_ON_INIT
-```
-
-See `cwt/utilities/global.sh` for details about the `global()` function, but we'll mention here one of its most commonly useful feature : the ability to stack values on each call with the same var name, which will be separated by space (and can be placed in different files because they will share the same namespace during *instance init*), e.g. :
-
-```sh
-global VALUES_WILL_CONCAT "[append]=path/to/file-1.txt"
-global VALUES_WILL_CONCAT "[append]=path/to/file-2.txt"
-global VALUES_WILL_CONCAT "[append]=path/to/file-3.txt"
-global VALUES_WILL_CONCAT "[append]='(if value has space or special characters, use quotes)'"
-
-# Example usage elsewhere, once "instance init" has run :
-for value in $VALUES_WILL_CONCAT; do
-  echo "$value"
-done
-```
-
-To show where the declarations can be placed in order to get picked up for aggregation - and in which order - during *instance init* in current project instance, you can use the following convenience command :
+Declare via `global NAME "…"` in `global.vars.sh` files, or YAML in `env.yml` / `.env-local.yml`. List aggregation paths:
 
 ```sh
 make globals-lp
-# Or :
-cwt/env/global_lookup_paths.make.sh
 ```
 
-Note that for convenience, if the above helper is run **after** *instance init*, more variants will appear for `cwt.yml` files). This allows more specific targeting of overrides.
-
-The declarations found in `cwt.yml` take precedence over `global.vars.sh` as they get loaded last during the aggregation process.
-
-Also, if you need local, "private" overrides that must NOT be checked out in any git repo, the following file can be used (+ variants) :
-
-```txt
-.cwt-local.yml
-```
-
-CWT provides the followig globals by default (see `cwt/env/global.vars.sh`). These illustrate the syntax to declare default values and optional help text that will be displayed when user input is prompted in terminal during *instance init* when the `-y` flag is not set (otherwise it won't prompt for anything and just use the default value) :
+Selected core defaults (`cwt/env/global.vars.sh`):
 
 ```sh
-global PROJECT_DOCROOT "[default]='$PWD' [help]='Absolute path to project instance. All scripts using CWT *must* be run from this dir. No trailing slash.'"
-global APP_DOCROOT "[default]='app' [help]='*Relative* path to the directory containing the application source code. No prefix dot or slash, and no trailing slash.'"
-global SERVER_DOCROOT "[default]='$APP_DOCROOT/web' [help]='*Relative* path to the directory usually publicly exposed by web servers (where the app « entry point » would normally reside, e.g. index.php). No prefix dot or slash, and no trailing slash.'"
-
-# [optional] Set these values for applications having their own separate repo.
-# @see cwt/git/init.hook.sh
-global APP_GIT_ORIGIN "[help]='Optional. Ex: git@my-git-origin.org:my-git-account/cwt.git. Allows projects to have their own separate repo.'"
-global APP_GIT_INIT_CLONE "[ifnot-APP_GIT_ORIGIN]='' [default]=yes [help]='(y/n) Specify if the APP_GIT_ORIGIN repo should automatically be cloned (once) during \"instance init\".'"
-global APP_GIT_INIT_HOOK "[ifnot-APP_GIT_ORIGIN]='' [default]=no [help]='(y/n) Specify if some Git hooks should automatically trigger corresponding CWT hooks. WARNING : will overwrite existing git hook scripts during instance init.'"
-
-global INSTANCE_TYPE "[default]=dev [help]='E.g. dev, stage, prod... It is used as the default variant for hook calls that do not pass any in args.'"
-global INSTANCE_DOMAIN "[default]='$(u_instance_domain)' [help]='This value is used to identify different project instances and MUST be unique. Allowed characters : a-zA-Z0-9-._'"
-global PROVISION_USING "[default]=docker-compose [help]='Generic differenciator used by many hooks. It does not have to be explicitly named after the host provisioning tool used. It could be any distinction used as variants in hook implementations.'"
-global HOST_TYPE "[default]=local [help]='Idem. E.g. local, remote...'"
+global PROJECT_DOCROOT "[default]='$PWD' …"
+global STACK_VERSION "[default]=v1 …"
+global INSTANCE_TYPE "[default]=dev …"
+global PROVISION_USING "[default]=cwt …"
+global HOST_TYPE "[default]=local …"
 global HOST_OS "$(u_host_os)"
-
-# [optional] Provide additional custom makefile includes, and short subjects
-# or actions replacements used for generating Makefile task names.
-# @see u_instance_write_mk()
-# @see u_instance_task_name()
-# @see Makefile
+global CWT_APPS "[default]='site' …"
 global CWT_MAKE_INC "[append]='$(u_cwt_extensions_get_makefiles)'"
-global CWT_MAKE_TASKS_SHORTER "[append]='registry/reg lookup-path/pl logged-thread/lt logged-batch/lb logged-chain/lc logged-sequence/ls logged-loop/ll logged-pipe/lp'"
+global CWT_MAKE_TASKS_SHORTER "[append]='registry/reg lookup-path/pl logged-thread/lt logged-batch/lb logged-chain/lc logged-sequence/ls logged-loop/ll logged-pipe/lp transcribe-transcribe/transcribe'"
 ```
 
-Once *instance init* has been run, every global env. vars aggregated are (over)written in 2 files :
+More: [docs/cwt/globals.md](docs/cwt/globals.md). Secrets stance: [docs/cwt/secrets.md](docs/cwt/secrets.md).
 
-- `.env` file in `$PROJECT_DOCROOT`, which is meant for Makefile and other programs like `docker-compose` (see the `cwt/extensions/docker-compose` extension, disabled by default)
-- `scripts/cwt/local/global.vars.sh`, which is exporting the resulting read-only shell variables and get loaded on every command that "bootstraps" CWT (see `cwt/bootstrap.sh`).
-
-### Actions
-
-CWT provides generic actions most projects usually need. Some preset commands designed to trigger common tasks (compilation, git hooks, etc) are in place, but except for *instance init* and some permission and ownership generic operations, these are merely "abstract" entry points : they exist so that extensions implement them in a modular way. They do nothing on their own.
-
-`actions` are ordered by `subject`, which is expressed in the file structure like so :
-
-- **folders** represent **subjects**,
-- and their **files** represent **actions**.
-
-Exceptions : folders beginning with a dot (e.g. `.git`), and files using double extensions (e.g. `my_file.inc.sh`) or beginning with a dot (e.g. `.cwt_actions_ignore`).
-
-CWT will look in `./cwt` to determine default CWT actions, then it will do the same for every *enabled* extension folder (in `cwt/extensions`) and `scripts/cwt/extend`. For detailed explanations and examples, see `u_cwt_extend()` in `cwt/utilities/cwt.sh`.
-
-To print the list of available actions in current project instance, you can use the following convenience command :
+### Actions (summary)
 
 ```sh
 make list-actions
-# Or :
-cwt/instance/list_actions.make.sh
 ```
 
-By default, CWT generates the following *make* shortcuts correponding to these *subject / action* pairs - also called *entry points* - during *instance init* (this will differ when extensions are enabled, added and/or removed) :
+Hardcoded shortcuts ([`cwt/make/default.mk`](cwt/make/default.mk)): `init` (also default `make`), `init-debug`, `setup`, `hook`, `hook-debug`, `globals-lp`, `debug`.
+
+After init, `data/cwt/generated.mk` adds subject/action targets. Typical core shortcuts (instance subject often omitted):
 
 | Name | Script | Shortcut |
 |------|--------|----------|
-| *app git* | `cwt/app/git.sh` | `make app-git` |
-| *app install* | `cwt/app/install.sh` | `make app-install` |
-| *app update* | `cwt/app/update.sh` | `make app-update` |
 | *git write-hooks* | `cwt/git/write_hooks.sh` | `make git-write-hooks` |
 | *host provision* | `cwt/host/provision.sh` | `make host-provision` |
-| *host registry-del* | `cwt/host/registry_del.sh` | `make host-reg-del` * |
-| *host registry-get* | `cwt/host/registry_get.sh` | `make host-reg-get` * |
-| *host registry-set* | `cwt/host/registry_set.sh` | `make host-reg-set` * |
-| *instance build* | `cwt/instance/build.sh` | `make build` ** |
-| *instance destroy* | `cwt/instance/destroy.sh` | `make destroy` ** |
-| *instance fix-ownership* | `cwt/instance/fix_ownership.sh` | `make fix-ownership` ** |
-| *instance fix-perms* | `cwt/instance/fix_perms.sh` | `make fix-perms` ** |
-| *instance init* | `cwt/instance/init.sh` | `make init` (or just `make`) *** |
-| *instance rebuild* | `cwt/instance/rebuild.sh` | `make rebuild` ** |
-| *instance registry-del* | `cwt/instance/registry_del.sh` | `make reg-del` ** |
-| *instance registry-get* | `cwt/instance/registry_get.sh` | `make reg-get` ** |
-| *instance registry-set* | `cwt/instance/registry_set.sh` | `make reg-set` ** |
-| *instance reinit* | `cwt/instance/reinit.sh` | `make reinit` ** |
-| *instance restart* | `cwt/instance/restart.sh` | `make restart` ** |
-| *instance setup* | `cwt/instance/setup.sh` | `make setup` ** |
-| *instance start* | `cwt/instance/start.sh` | `make start` ** |
-| *instance stop* | `cwt/instance/stop.sh` | `make stop` ** |
-| *instance uninit* | `cwt/instance/uninit.sh` | `make uninit` ** |
-| *instance upgrade-cwt* | `cwt/instance/upgrade_cwt.sh` | `make upgrade-cwt` ** |
+| *host registry-\** | `cwt/host/registry_*.sh` | `make host-reg-*` |
+| *host vitals* | `cwt/host/vitals.sh` | `make host-vitals` |
+| *instance build* | `cwt/instance/build.sh` | `make build` |
+| *instance destroy* | `cwt/instance/destroy.sh` | `make destroy` |
+| *instance fix-ownership* | `cwt/instance/fix_ownership.sh` | `make fix-ownership` |
+| *instance fix-perms* | `cwt/instance/fix_perms.sh` | `make fix-perms` |
+| *instance init* | `cwt/instance/init.sh` | `make init` / `make` |
+| *instance rebuild* | `cwt/instance/rebuild.sh` | `make rebuild` |
+| *instance registry-\** | `cwt/instance/registry_*.sh` | `make reg-*` |
+| *instance reinit* | `cwt/instance/reinit.sh` | `make reinit` |
+| *instance restart* | `cwt/instance/restart.sh` | `make restart` |
+| *instance setup* | `cwt/instance/setup.sh` | `make setup` |
+| *instance start / stop* | `cwt/instance/start.sh` / `stop.sh` | `make start` / `stop` |
+| *instance chain* | `cwt/instance/chain.sh` | `make chain` |
+| *instance parallel / pipe* | `cwt/instance/parallel.sh` / `pipe.sh` | `make parallel` / `pipe` |
+| *instance logged-\** | `cwt/instance/logged_*.sh` | `make lt` / `lc` / `ls` / `lb` / `lp` / `ll` |
+| *instance switch-stack-version* | `cwt/instance/switch_stack_version.sh` | `make switch-stack-version` |
+| *instance uninit* | `cwt/instance/uninit.sh` | `make uninit` |
+| *instance upgrade-cwt* | `cwt/instance/upgrade_cwt.sh` | `make upgrade-cwt` |
+| *instance cwt-cache-clear* | `cwt/instance/cwt_cache_clear.sh` | `make cwt-cache-clear` |
 | *test cwt* | `cwt/test/cwt.sh` | `make test-cwt` |
 
-- `*` : Shortening rules can be defined using the `CWT_MAKE_TASKS_SHORTER` global. Ex : `global CWT_MAKE_TASKS_SHORTER "[append]='something_too_long_for_make_shortcut/stlfms'"`
-- `**` : The `instance` is implicit and omitted for default CWT actions' `make` shortcuts.
-- `***` : Some exceptions are hardcoded in this repo's `./Makefile`. Others can be added using the `CWT_MAKE_INC` global. Ex : `global CWT_MAKE_INC "[append]='path/to/make_include.mk'"`
-
-#### Log wrappers (shortcuts)
-
-CWT ships **log wrappers** under `cwt/instance/logged_*.sh` — notably logged-chain (lc), logged-batch (lb), logged-pipe (lp), plus logged-thread (lt), logged-sequence (ls), logged-loop (ll). Each one stacks an optional **log wrap** on top of a **thread-level** runner (or loop wrap). After `instance init` / `reinit`, make task names are generated from those scripts and then shortened via `CWT_MAKE_TASKS_SHORTER` (see `u_make_task_name()` in `cwt/make/make.inc.sh`).
-
-Canonical short aliases (normative — do **not** reuse `lp` for batch or for `lookup-path`) :
-
-| Shortcut | Full make target | Script | Layer stack | Shell operator / role |
-|----------|------------------|--------|-------------|------------------------|
-| `lt` | `logged-thread` | `cwt/instance/logged_thread.sh` | `log/wrap` → `thread/wrap` → `make <entry>` | single supervised background job (`&`) |
-| `lc` | `logged-chain` | `cwt/instance/logged_chain.sh` | `log/wrap` → **`instance/chain`** → `thread/sequence` | `&&` (default) or `;` |
-| `ls` | `logged-sequence` | `cwt/instance/logged_sequence.sh` | `log/wrap` → `thread/sequence` | same as chain (`&&` / `;`), direct |
-| `lb` | `logged-batch` | `cwt/instance/logged_batch.sh` | `log/wrap` → `thread/batch` → concurrent `make` steps | `&` + `wait` (worst exit) |
-| `lp` | `logged-pipe` | `cwt/instance/logged_pipe.sh` | `log/wrap` → `thread/pipe` → piped stages | `\|` (`pipefail`) |
-| `ll` | `logged-loop` | `cwt/instance/logged_loop.sh` | `log/wrap` → `loop/wrap` → long-running unit | systemd user loop (not a join operator) |
-
-There is **no** `cwt/chain/` subject folder and **no** `cwt/chain/wrap.sh`. The only official unlogged hardcoded shortcut into the sequencer is :
+Logged runners and operators: [docs/cwt/observability.md](docs/cwt/observability.md), [docs/cwt/layers.md](docs/cwt/layers.md).
 
 ```sh
-make chain    # → cwt/instance/chain.sh → cwt/thread/sequence.sh
+make lt e:some-entry
+make lc e:1:step-a e:2:step-b a:arg
+make lb e:job-a e:job-b
+make lp e:stage-a e:stage-b
+make ll e:long-running
 ```
 
-(`thread-sequence` may also exist as the underlying action name.) Unlogged batch/pipe twins: `parallel` / `thread-batch`, `pipe` / `thread-pipe`.
+After changing `CWT_MAKE_TASKS_SHORTER`: `make reinit`.
 
-How shortening is declared (in `cwt/env/global.vars.sh`, then regenerated into `scripts/cwt/local/global.vars.sh`) :
+### Automatic includes (summary)
 
-```sh
-global CWT_MAKE_TASKS_SHORTER "[append]='registry/reg lookup-path/pl logged-thread/lt logged-batch/lb logged-chain/lc logged-sequence/ls logged-loop/ll logged-pipe/lp'"
-```
+| Pattern | When |
+|---------|------|
+| `$subject/$subject.inc.sh` / `$ext/$ext.inc.sh` | Eager → `CWT_INC` (phase 60) |
+| `$subject/$subject.opt-inc.sh` | Lazy when any action in that subject is the caller |
+| `$subject/$action.opt-inc.sh` | Lazy for that action (also seedable into hook cache) |
 
-Each `search/replace` pair is applied by bash `${task//search/replace}` inside `u_make_task_name()` — so `logged-pipe` becomes `lp`, `logged-batch` becomes `lb`, `logged-sequence` becomes `ls`, etc. Note that **`lookup-path` must shorten to `pl`** (not `lp`) so generated task names never collide with `logged-pipe`.
+More: [docs/cwt/bootstrap.md](docs/cwt/bootstrap.md).
 
-Historical exception: `make globals-lp` (print global lookup paths) remains a **hardcoded** target in `cwt/make/default.mk` / `u_make_generate()` — it is *not* the `lp` → `logged-pipe` short alias. New code should prefer the logged-pipe meaning of `lp` above; do not add more shortcuts that steal `lp`.
-
-Typical calls :
-
-```sh
-make lt e:transcribe-all
-make lc e:1:site-cr e:2:site-composer a:install e:3:api-cr   # via instance/chain
-make ls e:1:site-cr e:2:api-cr                               # direct thread/sequence
-make lb e:transcribe-ogg e:transcribe-ocr
-make lp e:agent-implement-last-plan e:transcribe-all
-make ll e:agent-loop
-```
-
-Equivalence (same run, different surface) :
-
-```sh
-# Manually hardcoded shortcut :
-# @see CWT_MAKE_TASKS_SHORTER in cwt/env/global.vars.sh
-make lp e:agent-implement-last-plan e:transcribe-all
-# Equivalent to :
-make logged-pipe e:agent-implement-last-plan e:transcribe-all
-# Or :
-cwt/instance/logged_pipe.sh e:agent-implement-last-plan e:transcribe-all
-```
-
-That **Manually hardcoded shortcut** `@example` block is the expected docblock model for `cwt/instance/logged_*.sh` (and their preset ideals under `cwt/extensions/preset/preset/*/logged_*.tpl.sh` when using eat-your-own-dogfood). Hand-authored `@example` comments are source of truth; regenerate live files from ideals with `preset-write`, do not invent alternate example styles when touching those headers.
-
-Token prefixes for multi-entry runners (colon only) :
-
-| Token | Meaning |
-|-------|---------|
-| `e:<entry>` | open a step (or pipeline stage) |
-| `e:<N>:<entry>` | ordered step (chain) |
-| `a:<arg>` | append arg to the **current** make step/stage |
-| `join:&&` / `join:;` | chain join type |
-| `workers:<N>` | batch concurrency cap |
-
-Pipe may also accept positional shell strings as stages (e.g. `make pipe 'ls -lah' 'grep foobar'`).
-
-After changing `CWT_MAKE_TASKS_SHORTER`, run `make reinit` so `scripts/cwt/local/generated.mk` and `scripts/cwt/local/global.vars.sh` pick up the new shortcuts.
-
-Additional rules for *subject / action* pairs :
-
-- Dirnames starting with a dot in `cwt/extensions` are excluded from extensions list
-- Manual exclusion is possible for either subjects or actions using gitignore-like files (`.cwt_subjects_ignore` inside an extension folder, and `.cwt_actions_ignore` inside a subject dir). These files contain 1 name per line - the name of the subject or action to exclude (folder name or file name without extension).
-
-### Automatic includes
-
-CWT uses two include tiers during bootstrap:
-
-| Pattern | When loaded | Notes |
-|---------|-------------|--------|
-| `$subject/$subject.inc.sh` (also `$ext/$ext.inc.sh`) | Eager, every first bootstrap (`CWT_INC`) | Discovered by `u_cwt_extend` / extension scanning |
-| `$subject/$subject.opt-inc.sh` | Lazy, when **any** action in that subject is the bootstrap caller | Shared subject helpers; **not** on `CWT_INC` |
-| `$subject/$action.opt-inc.sh` | Lazy, when **that** action is the bootstrap caller | Action-only helpers; loaded after subject-wide if both exist |
-
-Eager includes: during CWT bootstrap, bash shell files named like their containing folder and using the double extension `*.inc.sh` are registered into `CWT_INC` and sourced. This rule applies to extension folders (i.e. `cwt/extensions/*` and `scripts/cwt/extend`), and all `subjects` folders.
-
-Lazy opt-incs are **not** discovered by `u_cwt_extend` and are **not** registered into `CWT_INC`. When an action script sources `cwt/bootstrap.sh`, bootstrap resolves the caller path and loads at most the two named candidates above (subject-wide first, then action-scoped; same path ⇒ once). Interactive `. cwt/bootstrap.sh` with no caller does not load opt-incs. Core phase files under `cwt/bootstrap/*.bootstrap-inc.sh` are unrelated to this table.
-
-By default, the following eager includes are detected (this result will change depending on extensions enabled, added or removed) :
-
-```txt
-cwt/git/git.inc.sh
-cwt/host/host.inc.sh
-cwt/instance/instance.inc.sh
-cwt/test/test.inc.sh
-cwt/extensions/file_registry/file_registry.inc.sh
-```
-
-### Hooks
-
-Most default actions CWT provides out of the box use hooks so that extensions can react and implement their own operations. The convention used allows to predict which filepaths to use for implementing given hooks. To verify which files can be used (and will be sourced if they exist) when a hook is triggered, you can use the following convenience command :
+### Hooks (summary)
 
 ```sh
 make hook-debug a:start
-# Or :
-cwt/instance/hook.make.sh -d -t a:start
+make hook-debug s:instance a:start v:STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE
 ```
 
-Given the example call above, here are the resulting lookup paths out of the box :
+`PROVISION_USING=compose` and `docker-compose` both expand in lookups (dual-compat). Specificity and filters: [docs/cwt/hooks.md](docs/cwt/hooks.md).
 
-```txt
-cwt/app/start.hook.sh
-cwt/git/start.hook.sh
-cwt/host/start.hook.sh
-cwt/extensions/file_registry/host/start.hook.sh
-cwt/instance/start.hook.sh
-cwt/extensions/file_registry/instance/start.hook.sh
-cwt/test/start.hook.sh
-```
-
-This result will differ when extensions are enabled, added and/or removed.
-
-Additional parameters allow to target specific subjects and/or actions. See `cwt/utilities/hook.sh` for detailed examples on using the `hook()` function.
-
-Here's an example illustrating some of the most commonly used filters :
+Example:
 
 ```sh
-# Triggers the 'fs_perms_set' action, filtered by subject ('app' and 'instance')
-# and allowing variants based on 3 different globals :
 hook -s 'app instance' \
   -a 'fs_perms_set' \
-  -v 'PROVISION_USING HOST_TYPE INSTANCE_TYPE'
-
-# To verify which files can be used (and will be sourced) when this hook is
-# triggered :
-make hook-debug s:app instance a:fs_perms_set v:PROVISION_USING HOST_TYPE INSTANCE_TYPE
+  -v 'STACK_VERSION PROVISION_USING HOST_TYPE INSTANCE_TYPE'
 ```
 
-Given the following globals values (which get set during *instance init*) : `PROVISION_USING='docker-compose'`, `HOST_TYPE='local'`, and `INSTANCE_TYPE='dev'`, the example above would output :
+Default `fs_perms_set` only touches CWT-managed paths (`./data`, `./cwt`, `./scripts/cwt`, `./.git`, plus a small whitelist of root files such as `env.yml` / `Makefile`).
 
-```txt
-cwt/app/fs_perms_set.hook.sh
-  exists
-cwt/app/fs_perms_set.docker-compose.hook.sh
-cwt/app/fs_perms_set.docker-compose.local.hook.sh
-cwt/app/fs_perms_set.docker-compose.local.dev.hook.sh
-cwt/app/fs_perms_set.docker-compose.dev.hook.sh
-cwt/app/fs_perms_set.local.hook.sh
-cwt/app/fs_perms_set.local.dev.hook.sh
-cwt/app/fs_perms_set.dev.hook.sh
-cwt/instance/fs_perms_set.hook.sh
-  exists
-cwt/instance/fs_perms_set.docker-compose.hook.sh
-cwt/instance/fs_perms_set.docker-compose.local.hook.sh
-cwt/instance/fs_perms_set.docker-compose.local.dev.hook.sh
-cwt/instance/fs_perms_set.docker-compose.dev.hook.sh
-cwt/instance/fs_perms_set.local.hook.sh
-cwt/instance/fs_perms_set.local.dev.hook.sh
-cwt/instance/fs_perms_set.dev.hook.sh
-cwt/extensions/file_registry/instance/fs_perms_set.hook.sh
-cwt/extensions/file_registry/instance/fs_perms_set.docker-compose.hook.sh
-cwt/extensions/file_registry/instance/fs_perms_set.docker-compose.local.hook.sh
-cwt/extensions/file_registry/instance/fs_perms_set.docker-compose.local.dev.hook.sh
-cwt/extensions/file_registry/instance/fs_perms_set.docker-compose.dev.hook.sh
-cwt/extensions/file_registry/instance/fs_perms_set.local.hook.sh
-cwt/extensions/file_registry/instance/fs_perms_set.local.dev.hook.sh
-cwt/extensions/file_registry/instance/fs_perms_set.dev.hook.sh
-```
+### Extensions (summary)
 
-Another hook function exists when we need to only source the "most specific" match.
+Enable/disable via ignore files (see above). Catalog of bundled folders:
 
-The notion of specificity uses the file having the deepest path and the highest number of dots in its path. In case of equality, the first match will be used. This "score" - a simple addition of slash & dot count in the filepath - allows to differenciate CWT's file-name-based implementations (hooks, globals, etc.) because of the way its patterns work :
+| Name | Default on? | Description |
+|------|:-----------:|-------------|
+| `apache` | | Apache VHost helpers (classic LAMP, non-compose) |
+| `arangodb` | | Alias / image tag defaults |
+| `builder` | | Templates / blueprints / prototypes stubs ([docs/cwt/builder.md](docs/cwt/builder.md)) |
+| `cognition` | | `observe-*` / `recognize-*` stubs |
+| `compose` | | Docker Compose start/stop/build/destroy (`DC_MODE`, stack helpers) |
+| `crontab` | | Host crontab sync helpers |
+| `db` | | Abstract DB hooks |
+| `drupalwt` | | Drupal tasks ([extension README](cwt/extensions/drupalwt/README.md)) |
+| `drupalwt_d4d` | | Drupal + compose / docker4drupal-oriented stack |
+| `drush` | | Drush aliases / hooks |
+| `file_registry` | ✔ | Default file-based registry (instance / host) |
+| `git_crypt` | | Opt-in encryption hooks (stub) |
+| `gpt` | | LLM abstracts (`gpt-start`, …) |
+| `hosts_file` | | `/etc/hosts` helpers |
+| `interaction` | | Interactive prompt helpers |
+| `memory` | | Storage / store stubs |
+| `moodle_d4php` | | Moodle + docker4php-oriented stack |
+| `mysql` | | MySQL implementations of `db` |
+| `nested_cwt` | | Nested instance list/exec ([docs/cwt/nested-cwt.md](docs/cwt/nested-cwt.md)) |
+| `node` | | Aliases / default port |
+| `ollama` | | Default hooks for `gpt-*` via Ollama |
+| `pgsql` | | Postgres implementations of `db` |
+| `remote` | | SSH sync utilities |
+| `remote_cwt` | | Remote CWT helpers |
+| `remote_db` | | DB dump sync via `db` + `remote` |
+| `remote_traefik` | | Traefik / Let’s Encrypt defaults |
+| `rules` | | Rule stubs |
+| `software` | | Host package / provision hooks |
+| `transcription` | | `transcribe` / `transcribe-all` |
+| `views` | | View stubs |
 
-- multiple extension (i.e. variants : `pre_bootstrap.docker-compose.hook.sh`)
-- overrides (e.g. `scripts/cwt/overrides/extensions/docker-compose/instance/init.docker-compose.hook.sh`)
-
-NB : some "artificial" advantage is given to the project-specific `./scripts` path in comparison to generic CWT extensions so that the custom implementations always take precedence over extensions'.
-
-```sh
-# Basic usage - only sources 1 match (the "most specific") :
-u_hook_most_specific -s 'instance' -a 'registry_get' -v 'HOST_TYPE'
-
-# Dry run example.
-# @see u_stack_template() in cwt/extensions/docker-compose/stack/stack.inc.sh
-u_hook_most_specific 'dry-run' -s 'stack' -a 'docker-compose' -c "yml" -v 'DC_YML_VARIANTS' -t
-echo "$hook_most_specific_dry_run_match" # <- Prints the most specific "docker-compose.yml" found.
-```
-
-### Extensions
-
-CWT Extensions can provide additional actions and react to hooks. Any folder present in the `cwt/extensions` dir is recognized as a CWT extension, as well as `scripts/cwt/extend` which is meant for non-reusable, project-specific implementations.
-
-Extensions in `cwt/extensions` can be enabled or disabled by overriding the file `cwt/extensions/.cwt_extensions_ignore` : copy/paste to `scripts/cwt/override/.cwt_extensions_ignore` and edit it (use 1 folder name per line to disable, or delete the line to enable). Leaving that file empty thus means "enable all extensions".
-
-Also, if `scripts/cwt/override/.${PROVISION_USING}.cwt_extensions_ignore` or `scripts/cwt/override/.${INSTANCE_DOMAIN}.cwt_extensions_ignore` exist, they will take precendence (in this order). This allows to have different extensions enabled across different instances of the project.
-
-Additional rules :
-
-- Once *instance init* has run, any file named `make.mk` inside the extension folder will be included when `make` commands are executed - e.g. `cwt/extensions/drupalwt/make.mk`.
-- Any file named `global.vars.sh` inside the extension folder will be aggregated during *instance init*.
-- TODO [evol] CWT could also provide some minimalistic way to declare extensions' dependencies, i.e. as in `cwt/extensions/drupalwt/.cwt_requires` for example.
-
-### Overrides
-
-This mecanism exists so that when some existing functionality or extension from CWT impedes anything specific to a project, we can entirely skip that file and replace it with our own version.
-
-If the "counterpart" of a given script exists in the folder `scripts/cwt/override`, it will be used *instead* of the original file. This allows to replace any includes or hook implementations.
-
-Example : if we want to override `cwt/git/init.hook.sh` - effectively bypassing the existing implementation, we'll create the following file :
-
-```txt
-scripts/cwt/override/git/init.hook.sh
-```
-
-The matching is done by replacing the leading `cwt/` in filepaths with `scripts/cwt/override/`. It works for extensions too. Here's an example using an include instead of a hook implementation :
-
-```txt
-cwt/extensions/docker-compose/docker-compose.inc.sh
--> scripts/cwt/override/extensions/docker-compose/docker-compose.inc.sh
-```
-
-For convenience, `cwt/extensions/.cwt_extensions_ignore` can be overridden using `scripts/cwt/override/.cwt_extensions_ignore` (instead of `scripts/cwt/override/extensions/.cwt_extensions_ignore`).
+Default-on assumes the stock core ignore list (everything listed there is off; `file_registry` is usually the exception). Project overrides win. More: [docs/cwt/extensions.md](docs/cwt/extensions.md), [`cwt/extensions/README.md`](cwt/extensions/README.md).
 
 ## Automated tests
 
-CWT uses [shunit2](cwt/vendor/shunit2) for bash unit tests. The **`test cwt`** hook is the single orchestration point for *low-level* checks that validate the base stack on the current host or instance — CWT core, enabled bundled extensions, and optional project hooks.
-
-### `make test-cwt` (the only top-level entry)
-
-`make test-cwt` is generated during *instance init* / *reinit* from the action script `cwt/test/cwt.sh` (subject `test`, action `cwt`). It does **not** run test cases directly ; it triggers the hook :
-
 ```sh
-hook -s 'test' -a 'cwt' -v 'HOST_TYPE PROVISION_USING'
+make test-cwt
 ```
 
-**Hook chain** (each existing file is sourced in lookup order) :
+Single orchestration hook: `test` / `cwt`. Core cases under `cwt/test/cwt/*.test.sh`; extensions and `scripts/cwt/extend` can append via `test/cwt.hook.sh`. Per-case make targets are generated into `data/cwt/generated.mk` on `reinit` (registry: `data/cwt/cache/test-cases.sh`).
 
-```txt
-cwt/test/cwt.hook.sh                              → u_test_batch_exec 'cwt/test/cwt'
-cwt/extensions/mysql/test/cwt.hook.sh             → …/mysql/test/self   (if extension enabled)
-cwt/extensions/docker-compose/test/cwt.hook.sh    → …/docker-compose/test/self
-cwt/extensions/pgsql/test/cwt.hook.sh             → …/pgsql/test/self
-scripts/cwt/extend/test/cwt.hook.sh               → project-specific low-level checks (optional)
-```
+Full guide: [docs/cwt/testing.md](docs/cwt/testing.md).
 
-Core cases live in `cwt/test/cwt/*.test.sh`. Each hook implementation typically calls `u_test_batch_exec` on its own sibling batch directory.
+## Docs index
 
-**When to use this** : pre-flight on a dev machine, CI smoke, or after upgrading `cwt/` — anything that should answer “can this host/instance run the base CWT layer?”
-
-| Goal | Command |
-|------|---------|
-| Full base-stack low-level suite (hook chain) | `make test-cwt` |
-| One core case only | `make test-cwt-bootstrap` (see *Per-case make targets*) |
-| One test file directly | `cwt/test/cwt/bootstrap.test.sh` |
-| Debug which hook files match | `make hook-debug s:test a:cwt v:HOST_TYPE PROVISION_USING` |
-
-There is **no** separate `make self-test` shortcut ; `test-cwt` replaced the legacy `self_test` action name.
-
-### Contributing low-level tests from an extension
-
-1. Add a hook implementation at `{extension}/test/cwt.hook.sh` (subject `test`, action `cwt`).
-2. From the hook, call `u_test_batch_exec` on a sibling batch directory, e.g. `cwt/extensions/mysql/test/self/`.
-3. Place `*.test.sh` files in that directory.
-4. Optionally add a batch action script (e.g. `…/test/mysql.sh`) if you also want a dedicated `make test-mysql` target and per-case shortcuts — see below.
-
-Project-specific checks in `scripts/cwt/extend/test/cwt.hook.sh` follow the same pattern (e.g. Linux host convenience scripts that must pass on your home dir).
-
-### Per-case make targets (generated during *reinit*)
-
-When `make reinit` regenerates `scripts/cwt/local/generated.mk`, CWT discovers individual test cases for **every registered batch action script** (not only `cwt/test/cwt.sh`) and appends matching make shortcuts.
-
-**Discovery** (`u_test_discover_batch_cases()` in `cwt/test/test.inc.sh`) looks for a **sibling directory** named like the batch script without `.sh` :
-
-```txt
-cwt/test/cwt.sh        →  cwt/test/cwt/
-scripts/cwt/extend/test/browser.sh  →  scripts/cwt/extend/test/browser/
-```
-
-Three layouts are supported :
-
-1. **Flat** — `*.test.sh` files directly inside the batch directory (except `orchestrated.test.sh`, reserved for meta-batches).
-2. **Env subdirs** — cases under `local/`, `preprod/`, `recette/`, `prod/` (see `CWT_TEST_CASE_ENVS` in `test.inc.sh`).
-3. **Manifest** — a `.test-cases` file listing case stems when discovery needs to be explicit.
-
-For each case stem `search_results` in batch `browser-lighthouse`, a target `browser-lighthouse-search-results` is appended to `generated.mk` and registered in `scripts/cwt/local/cache/test-cases.sh`.
-
-**Regenerate** after adding, renaming, or removing `*.test.sh` files :
-
-```sh
-make reinit
-```
-
-### What `case.run.sh` does
-
-`cwt/test/case.run.sh` is **not** the discovery step and is **not** used by `make test-cwt` (the hook runs full batches). It is the shared **runtime dispatcher** for generated per-case targets only.
-
-Flow :
-
-1. *reinit* → `u_make_generate_test_cases()` writes make rules and `test-cases.sh`.
-2. `make test-cwt-bootstrap` → `cwt/make/call_wrap.make.sh` → `case.run.sh test-cwt-bootstrap`.
-3. `case.run.sh` loads the registry and calls `u_test_run_case_by_target()`, which runs only `cwt/test/cwt/bootstrap.test.sh`.
-
-Optional second argument selects the env subdir for env-scoped batches : `case.run.sh browser-lighthouse-destination preprod`.
-
-Custom runners : a batch may provide `{batch_dir}.case.sh` for manifest or env_subdir modes that need orchestration beyond a plain `*.test.sh` file.
-
-### Test results archiving
-
-When `CWT_TEST_RESULTS` is not `0` (default: enabled), batch and per-case runs can archive output under `${CWT_TEST_RESULTS_ROOT:-data/test-results}` (YAML summaries + full console output). See `u_test_results_*()` in `cwt/test/test.inc.sh` and `cwt/test/cwt/test_results.test.sh`.
-
-### Writing standalone extension test batches
-
-To add a shunit2 batch with its own make entry (in addition to or instead of a `test cwt` hook) :
-
-1. Create the action script, e.g. `scripts/cwt/extend/test/my_feature.sh`.
-2. Create the sibling case directory, e.g. `scripts/cwt/extend/test/my_feature/` with `*.test.sh` files.
-3. Run `make reinit` — targets like `make test-my-feature-some-case` appear automatically.
-
-Convention : shared helpers for a batch go in `{batch_dir}.inc.sh`; core case helpers live in `cwt/test/cwt.inc.sh`.
-
-### Downstream sync notes (2026)
-
-| Change | Files |
-|--------|-------|
-| Single entry `make test-cwt` via `test cwt` hook | `cwt/test/cwt.sh`, `cwt/test/cwt.hook.sh` |
-| Removed legacy `make self-test` / `self_test` action | `cwt/make/default.mk`, `cwt/make/make.inc.sh`, deleted `cwt/test/self_test.sh` |
-| Extension low-level hooks renamed | `*/test/cwt.hook.sh` (was `self_test.hook.sh`) |
-| Per-case make target generation at *reinit* | `cwt/make/make.inc.sh`, `cwt/make/call_wrap.make.sh` |
-| Test discovery, registry, results archiving | `cwt/test/test.inc.sh` |
-| Per-case runtime dispatcher | `cwt/test/case.run.sh` |
-
-**Layout** : core cases stay in `cwt/test/cwt/`. `cwt/test/cwt.hook.sh` is the core contribution to the `test cwt` hook chain.
-
-**Not yet in upstream** (may exist only in project forks — merge manually when upgrading `cwt/`) :
-
-- Scoped `fs_perms_set` / `fs_ownership_set` (limit permission resets to `./cwt`, `./scripts/cwt`, `./data`, `./.git` instead of entire project root)
-- `cwt/instance/reinit.sh` reading fallback values from `env.yml` when `.env` is missing
-- `cwt/instance/switch_stack_version.sh`
-- Extension-level improvements (db credential helpers, docker-compose `stack/stats.sh`, remote wrappers, etc.)
-
-After replacing the `cwt/` folder in a project, run `make reinit` so `generated.mk` and `scripts/cwt/local/cache/test-cases.sh` pick up per-case targets.
+| Guide | Topic |
+|-------|--------|
+| [docs/cwt/layers.md](docs/cwt/layers.md) | Implementation layers 1–5 + launch stack |
+| [docs/cwt/globals.md](docs/cwt/globals.md) | Readonly vs mutable; `env.yml` |
+| [docs/cwt/bootstrap.md](docs/cwt/bootstrap.md) | Phases; eager/lazy includes |
+| [docs/cwt/hooks.md](docs/cwt/hooks.md) | Hooks + variant combos |
+| [docs/cwt/actions-and-make.md](docs/cwt/actions-and-make.md) | Discovery; generated.mk |
+| [docs/cwt/observability.md](docs/cwt/observability.md) | `lt`/`lc`/…; log/thread paths |
+| [docs/cwt/testing.md](docs/cwt/testing.md) | `make test-cwt` |
+| [docs/cwt/secrets.md](docs/cwt/secrets.md) | Registry / gitignore stance |
+| [docs/cwt/extensions.md](docs/cwt/extensions.md) | Enable, override, families |
+| [docs/cwt/builder.md](docs/cwt/builder.md) | Builder (ex-preset) |
+| [docs/cwt/nested-cwt.md](docs/cwt/nested-cwt.md) | Nested virgin-env exec |
+| [docs/cwt/changelog-wrap.md](docs/cwt/changelog-wrap.md) | Durable sidecar SoT |
 
 ## Roadmap
 
-- Low-level tests (`make test-cwt`) must be kept up to date (including per-case targets after `make reinit`)
-- Fix MacOS-specific errors
-- Generally, look for ways to offload more tasks to third-party projects
-- Remove bashisms / make POSIX-compliant for extending compatibility
+- Keep `make test-cwt` (and per-case targets) current
+- Finish shared changelog wrap body and migrate writers ([docs/cwt/changelog-wrap.md](docs/cwt/changelog-wrap.md))
+- Fix macOS-specific errors
+- Offload more tasks to third-party projects where sensible
+- Reduce bashisms / improve POSIX compatibility where practical
 
 ## License
 

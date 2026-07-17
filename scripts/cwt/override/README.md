@@ -13,8 +13,10 @@ scripts/cwt/override/git/init.hook.sh
 The matching is done by by replacing the leading `cwt/` in filepaths with `scripts/cwt/override/`. It works for extensions too. Here's an example using an include instead of a hook implementation for a change :
 
 ```txt
-cwt/extensions/docker-compose/docker-compose.inc.sh
--> scripts/cwt/override/extensions/docker-compose/docker-compose.inc.sh
+cwt/extensions/compose/compose.inc.sh
+-> scripts/cwt/override/extensions/compose/compose.inc.sh
 ```
 
 For convenience, `cwt/extensions/.cwt_extensions_ignore` can be overridden using `scripts/cwt/override/.cwt_extensions_ignore` (instead of `scripts/cwt/override/extensions/.cwt_extensions_ignore`).
+
+See also [docs/cwt/extensions.md](../../../docs/cwt/extensions.md).

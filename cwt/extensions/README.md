@@ -1,5 +1,8 @@
 # CWT extensions
 
+Narrative guide (enable/disable, override, families): [docs/cwt/extensions.md](../../docs/cwt/extensions.md).
+Root overview + catalog table: [README.md](../../README.md).
+
 Every folder in this path is an extension, but not their subfolders.
 
 In order to disable extensions without having to delete or move their folder,
