@@ -114,32 +114,45 @@ make setup prod remote myproject-2024 lamp
 
 ```txt
 /path/to/my-project/          ← $PROJECT_DOCROOT
-  ├── app/ or site/ …         ← [optional] application trees (per CWT_APPS / env.yml)
+  ├── app,site,api/ …         ← [optional] application trees (per CWT_APPS / env.yml)
   ├── cwt/                    ← CWT core (update = replace folder)
   │   ├── bootstrap.sh        ← bootstrap entry
   │   ├── bootstrap/          ← numbered *.bootstrap-inc.sh phases
-  │   ├── changelog/          ← changelog wrap (sidecar SoT)
   │   ├── env/                ← core global.vars.sh + helpers
   │   ├── extensions/         ← bundled extensions (opt-in via ignore file)
   │   ├── git/                ← git hooks integration + utilities
   │   ├── host/               ← host provision, registry, vitals
   │   ├── instance/           ← lifecycle + logged runners + chain/pipe
-  │   ├── log/ · loop/ · thread/
+  │   ├── log,changelog,loop,thread/ ← core CWT wrappers
   │   ├── make/               ← default.mk + call_wrap
   │   ├── test/               ← shunit2 low-level suite
   │   ├── utilities/          ← internal libraries
   │   └── vendor/             ← shunit2, bash-yaml
   ├── data/                   ← runtime / generated (mostly gitignored)
-  │   └── cwt/                ← global.vars.sh, generated.mk, cache/, registry/
+  │   ├── cronjobs/           ← [git-ignored] default place for cron jobs outputs
+  │   ├── cwt/                ← [git-ignored] Generated files specific to this local instance
+  │   │   ├── cache/
+  │   │   ├── registry/
+  │   │   ├── generated.mk
+  │   │   └── global.vars.sh
+  │   ├── logs/               ← [git-ignored] default place for logs (see also log-rotate)
+  │   ├── media/              ← [git-ignored] default place for media
+  │   ├── test-results/       ← [optional] frozen (versionned) test results
+  │   └── threads/            ← [git-ignored] default place for storing threads info
   ├── docs/cwt/               ← deep-dive guides
   ├── scripts/cwt/
   │   ├── extend/             ← project-specific extension
   │   └── override/           ← replace any sourced CWT path
   ├── .gitignore
   ├── Makefile
+  ├── .env-local.yml          ← [optional, git-ignored] secret ENV vars (hardcoded)
+  ├── .env-local.foobar.yml   ← [optional, git-ignored] conditional secret ENV vars (hardcoded)
   ├── SPECIMEN.env.yml        ← copy to env.yml
   └── env.yml                 ← [optional] your instance YAML
 ```
+
+The canonical path for writing files related to time-recurrent or long processes is :
+`data/<data_name>/YYYY/MM/DD/HH.MM.SS.MS.<file_name>.md`
 
 Generated (do not hand-edit): `.env`, `data/cwt/global.vars.sh`, `data/cwt/generated.mk`, `data/cwt/cache/*`.
 
