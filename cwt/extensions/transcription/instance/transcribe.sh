@@ -12,8 +12,13 @@
 #
 # @example
 #   make transcribe
-#   make transcribe -i data/media/2026/07 -l fr
-#   cwt/extensions/transcription/transcribe/transcribe.sh -i data/media/2026/07
+#   # Or :
+#   cwt/extensions/transcription/instance/transcribe.sh
+#
+#   # From custom dir, forcing output language in french :
+#   make transcribe -- -i data/media/2026/07 -l fr
+#   # Or :
+#   cwt/extensions/transcription/instance/transcribe.sh -i data/media/2026/07 -l fr
 #
 
 . cwt/bootstrap.sh
