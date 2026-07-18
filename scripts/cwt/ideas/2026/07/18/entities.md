@@ -17,6 +17,9 @@ TODO cwt/extensions/entity/is/relation.sh (for fieldable relationships)
 TODO cwt/extensions/entity/is/root.sh (synonyms : primordial, prime, original)
 TODO cwt/extensions/entity/is/sibling.sh (synonyms : neighbor, sister, brother)
 TODO cwt/extensions/entity/is/leaf.sh
+TODO cwt/extensions/entity/has/label.sh (synonyms : title, name)
+TODO cwt/extensions/entity/has/type.sh (synonyms : category)
+TODO cwt/extensions/entity/has/bundle.sh (synonyms : subtype)
 TODO cwt/extensions/entity/has/plan.sh
 TODO cwt/extensions/entity/has/log.sh
 TODO cwt/extensions/entity/has/changelog.sh
@@ -38,7 +41,7 @@ TODO cwt/extensions/entity/has/origin.sh
 TODO cwt/extensions/entity/has/author.sh
 TODO cwt/extensions/entity/has/license.sh
 TODO cwt/extensions/entity/has/version.sh
-TODO cwt/extensions/entity/has/state.sh (synonyms : status - health or vitals could be a 'status' field type)
+TODO cwt/extensions/entity/has/state.sh (synonyms : status, health, vitals ?)
 TODO cwt/extensions/entity/implements/hook.sh
 TODO cwt/extensions/entity/uses/global.sh
 
