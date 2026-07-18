@@ -5,7 +5,7 @@
 #
 # @example
 #   # Manually hardcoded shortcut :
-#   # @see CWT_MAKE_TASKS_SHORTER in cwt/env/global.vars.sh
+#   # @see CWT_SYNONYMS in cwt/env/global.vars.sh
 #   make ls e:1:transcribe-ogg e:2:transcribe-ocr
 #   # Equivalent to :
 #   make logged-sequence e:1:transcribe-ogg e:2:transcribe-ocr

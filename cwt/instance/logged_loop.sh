@@ -7,7 +7,7 @@
 #
 # @example
 #   # Manually hardcoded shortcut :
-#   # @see CWT_MAKE_TASKS_SHORTER in cwt/env/global.vars.sh
+#   # @see CWT_SYNONYMS in cwt/env/global.vars.sh
 #   make ll e:blueprint-generate
 #   # Equivalent to :
 #   make logged-loop e:blueprint-generate

@@ -28,7 +28,7 @@ while [ $# -gt 0 ]; do
 
   case "$arg" in
     # Quoting is done in the make call wrapper :
-    # @see cwt/make/call_wrap.make.sh
+    # @see cwt/make/make.wrap.sh
     # But make cannot handle the '=' sign (by design).
     # TODO [evol] find better workaround.
     # TODO [evol] also escape '-' and '--' ?

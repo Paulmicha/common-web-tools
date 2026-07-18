@@ -43,16 +43,16 @@ global HOST_OS "$(u_host_os)"
 # @see Makefile
 global CWT_MAKE_INC "[append]='$(u_cwt_extensions_get_makefiles)'"
 
-global CWT_MAKE_TASKS_SHORTER "[append]='cwt-cache-clear/cc'"
-global CWT_MAKE_TASKS_SHORTER "[append]='host-dependency/dep'"
-global CWT_MAKE_TASKS_SHORTER "[append]='logged-thread/lt'"
-global CWT_MAKE_TASKS_SHORTER "[append]='logged-batch/lb'"
-global CWT_MAKE_TASKS_SHORTER "[append]='logged-chain/lc'"
-global CWT_MAKE_TASKS_SHORTER "[append]='logged-sequence/ls'"
-global CWT_MAKE_TASKS_SHORTER "[append]='logged-loop/ll'"
-global CWT_MAKE_TASKS_SHORTER "[append]='logged-pipe/lp'"
-global CWT_MAKE_TASKS_SHORTER "[append]='lookup-path/pl'"
-global CWT_MAKE_TASKS_SHORTER "[append]='registry/reg'"
+global CWT_SYNONYMS "[append]='cwt-cache-clear/cc'"
+global CWT_SYNONYMS "[append]='host-dependency/dep'"
+global CWT_SYNONYMS "[append]='logged-thread/lt'"
+global CWT_SYNONYMS "[append]='logged-batch/lb'"
+global CWT_SYNONYMS "[append]='logged-chain/lc'"
+global CWT_SYNONYMS "[append]='logged-sequence/ls'"
+global CWT_SYNONYMS "[append]='logged-loop/ll'"
+global CWT_SYNONYMS "[append]='logged-pipe/lp'"
+global CWT_SYNONYMS "[append]='lookup-path/pl'"
+global CWT_SYNONYMS "[append]='registry/reg'"
 
 # Per-case test registry written by u_make_generate_test_cases() during reinit.
 # @see u_make_generate_test_cases() in cwt/make/make.inc.sh

@@ -1,15 +1,15 @@
 # Actions and Make
 
-An **action** is a script `cwt/<subject>/<action>.sh` (or under an extension / `scripts/cwt/extend/`). `make init` / `reinit` discovers them and generates `data/cwt/generated.mk` shortcuts (`subject-action`, with shorter aliases from `CWT_MAKE_TASKS_SHORTER`).
+An **action** is a script `cwt/<subject>/<action>.sh` (or under an extension / `scripts/cwt/extend/`). `make init` / `reinit` discovers them and generates `data/cwt/generated.mk` shortcuts (`subject-action`, with shorter aliases from `CWT_SYNONYMS`).
 
 ```mermaid
 flowchart TD
   disk["subject/action.sh"] --> init["make init / reinit"]
   init --> prim["u_cwt_extend primitives"]
   prim --> mk["data/cwt/generated.mk"]
-  shorter["CWT_MAKE_TASKS_SHORTER"] --> mk
+  shorter["CWT_SYNONYMS"] --> mk
   mk --> makeCall["make subject-action / lt / …"]
-  makeCall --> wrap["call_wrap.make.sh"]
+  makeCall --> wrap["make.wrap.sh"]
   wrap --> script["action script"]
   script --> bs[". cwt/bootstrap.sh"]
 ```
@@ -37,7 +37,7 @@ Always run from `$PROJECT_DOCROOT`. Prefer `make <entry>`; the equivalent path i
 
 `.DEFAULT_GOAL` in the root [`Makefile`](../../Makefile) is `init`. The Makefile also `-include`s `.env`, `data/cwt/generated.mk`, optional `CWT_MAKE_INC`, and `scripts/cwt/extend/custom.mk`.
 
-The `instance` subject is omitted from many make names (`make start` ≡ `instance start`). Shortening uses `CWT_MAKE_TASKS_SHORTER` (bash `${task//search/replace}` in `u_make_task_name()`).
+The `instance` subject is omitted from many make names (`make start` ≡ `instance start`). Shortening uses `CWT_SYNONYMS` (bash `${task//search/replace}` in `u_make_task_name()`).
 
 Canonical short aliases:
 
@@ -54,7 +54,7 @@ Canonical short aliases:
 
 Historical: `make globals-lp` remains a **hardcoded** target — not the `lp` → `logged-pipe` alias.
 
-After changing `CWT_MAKE_TASKS_SHORTER` or adding actions: `make reinit`.
+After changing `CWT_SYNONYMS` or adding actions: `make reinit`.
 
 ## Core subjects (examples)
 

@@ -31,4 +31,4 @@ global DWT_CRON_FREQ "[default]='0 * * * *'"
 
 # [optional] Shorter generated make tasks names.
 # @see u_make_task_name() in cwt/instance/instance.inc.sh
-global CWT_MAKE_TASKS_SHORTER "[append]='drupalwt/dwt'"
+global CWT_SYNONYMS "[append]='drupalwt/dwt'"

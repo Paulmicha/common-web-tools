@@ -221,7 +221,7 @@ global HOST_TYPE "[default]=local …"
 global HOST_OS "$(u_host_os)"
 global CWT_APPS "[default]='site' …"
 global CWT_MAKE_INC "[append]='$(u_cwt_extensions_get_makefiles)'"
-global CWT_MAKE_TASKS_SHORTER "[append]='registry/reg lookup-path/pl logged-thread/lt logged-batch/lb logged-chain/lc logged-sequence/ls logged-loop/ll logged-pipe/lp transcribe-transcribe/transcribe'"
+global CWT_SYNONYMS "[append]='registry/reg lookup-path/pl logged-thread/lt logged-batch/lb logged-chain/lc logged-sequence/ls logged-loop/ll logged-pipe/lp transcribe-transcribe/transcribe'"
 ```
 
 More: [docs/cwt/globals.md](docs/cwt/globals.md). Secrets stance: [docs/cwt/secrets.md](docs/cwt/secrets.md).
@@ -272,7 +272,7 @@ make lp e:stage-a e:stage-b
 make ll e:long-running
 ```
 
-After changing `CWT_MAKE_TASKS_SHORTER`: `make reinit`.
+After changing `CWT_SYNONYMS`: `make reinit`.
 
 ### Automatic includes (summary)
 

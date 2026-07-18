@@ -5,7 +5,7 @@
 #
 # @example
 #   # Manually hardcoded shortcut :
-#   # @see CWT_MAKE_TASKS_SHORTER in cwt/env/global.vars.sh
+#   # @see CWT_SYNONYMS in cwt/env/global.vars.sh
 #   make lb e:blueprint-generate e:transcribe-all
 #   # Equivalent to :
 #   make logged-batch e:blueprint-generate e:transcribe-all

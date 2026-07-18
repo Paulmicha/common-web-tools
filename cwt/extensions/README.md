@@ -45,7 +45,7 @@ Same pattern for `memory` (`storage-*`, `store-*`).
 | `cognition` | `observe-*` / `recognize-*` stubs |
 | `transcription` | Abstract `make transcribe` + `transcribe-all`; subject-free `u_hook_most_specific -a 'transcribe' …`; generic defaults `transcribe.hook.sh`, `ogg.hook.sh`, `wav.hook.sh`, `transcribe.py` (tested on debian-13 only for now) |
 
-Both are listed in **core** `.cwt_extensions_ignore`. This home’s override omit them → they register after reinit. Path: `cwt/extensions/transcription/transcribe/`. Make shortcut: `transcribe-transcribe` → `transcribe` via `CWT_MAKE_TASKS_SHORTER`. No CoT / principle / plan agent stubs in core (see `changelog/2026/07/16-cwt-core-strip-agent-extensions.md`).
+Both are listed in **core** `.cwt_extensions_ignore`. This home’s override omit them → they register after reinit. Path: `cwt/extensions/transcription/transcribe/`. Make shortcut: `transcribe-transcribe` → `transcribe` via `CWT_SYNONYMS`. No CoT / principle / plan agent stubs in core (see `changelog/2026/07/16-cwt-core-strip-agent-extensions.md`).
 
 ### gpt / ollama (optional, core-ignored by default)
 
