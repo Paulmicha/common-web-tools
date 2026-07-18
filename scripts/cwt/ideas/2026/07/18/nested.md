@@ -1,4 +1,4 @@
-# CWT subject : nested
+# CWT subject : nested (synonym ~ recursivity)
 
 - nested-cwt : deals with child CWT project instances (any host-related things must automatically climb up the chain to avoid duplicating crontabs, logs, etc)
 - nested-git : deals with child git clones / work trees
