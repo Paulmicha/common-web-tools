@@ -54,8 +54,8 @@ TODO cwt/extensions/entity/uses/global.sh
 
 TODO recap all *.able.yml known to date :
 
-- "$wrapper.able" (cwt log, host process, cwt thread, logged-thread, etc)
-- "$nested.able" (nested-git, nested-cwt, nested-host (vm ?), nested-cmd ?, nested-process ?, nested-thread ?, nested-protocol ? nested-crypt ? etc)
+- "$wrap.able" (cwt log, host process, cwt thread, logged-thread = lt, etc)
+- "$nest.able" (nested-git, nested-cwt, nested-host (vm ?), nested-cmd ?, nested-process ?, nested-thread ?, nested-protocol ? nested-crypt ? etc)
 - "$action.able" (cwt entry points by subject - ex: rotate, recognize, protocol, cwt/extensions/entity/has/cognition.sh, etc)
 - "$sidecar.able" (changelog, accesslog ?, timestamp (ms precision, last 5min...), datestamp (daily, monthly, yearly))
 

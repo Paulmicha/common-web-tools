@@ -120,11 +120,18 @@ for scope in './cwt' './scripts/cwt'; do
     fi
   done
 
-  # CWT make shortcut scripts (*.make.sh). escape.sh lives only under ./cwt.
+  # CWT make shortcut scripts (*.make.sh), wrappers (*.wrap.sh), and helpers.
+  # escape.sh / list_entry_points.sh live only under ./cwt.
   file_list=''
   u_fs_file_list "$scope" '*.make.sh' 32
+
+  wrap_list=''
+  u_fs_file_list "$scope" '*.wrap.sh' 32
+
+  file_list+=" $wrap_list"
+
   if [[ "$scope" == './cwt' ]]; then
-    file_list+=' escape.sh'
+    file_list+=' escape.sh make/list_entry_points.sh'
   fi
 
   for f in $file_list; do
