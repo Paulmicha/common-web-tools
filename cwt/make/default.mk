@@ -4,7 +4,7 @@
 #
 # Uses a "call wrap" script as an entry point to any other CWT script.
 #
-# @see cwt/make/make.wrap.sh
+# @see cwt/make/call_wrap.make.sh
 #
 # It forwards escaped arguments to maintain the possibility to use values (in
 # single quotes) with space, $, ", etc.
@@ -42,23 +42,23 @@
 .PHONY: init init-debug setup hook hook-debug globals-lp debug
 
 init:
-	@ cwt/make/make.wrap.sh cwt/instance/init.sh $(MAKECMDGOALS)
+	@ cwt/make/call_wrap.make.sh cwt/instance/init.sh $(MAKECMDGOALS)
 
 init-debug:
-	@ cwt/make/make.wrap.sh cwt/instance/init.sh $@ -d -r $(filter-out $@,$(MAKECMDGOALS))
+	@ cwt/make/call_wrap.make.sh cwt/instance/init.sh $@ -d -r $(filter-out $@,$(MAKECMDGOALS))
 
 setup:
-	@ cwt/make/make.wrap.sh cwt/instance/setup.sh $(MAKECMDGOALS)
+	@ cwt/make/call_wrap.make.sh cwt/instance/setup.sh $(MAKECMDGOALS)
 
 hook:
-	@ cwt/make/make.wrap.sh cwt/instance/hook.make.sh $(MAKECMDGOALS)
+	@ cwt/make/call_wrap.make.sh cwt/instance/hook.make.sh $(MAKECMDGOALS)
 
 hook-debug:
-	@ cwt/make/make.wrap.sh cwt/instance/hook.make.sh $@ -d -t $(filter-out $@,$(MAKECMDGOALS))
+	@ cwt/make/call_wrap.make.sh cwt/instance/hook.make.sh $@ -d -t $(filter-out $@,$(MAKECMDGOALS))
 
 globals-lp:
-	@ cwt/make/make.wrap.sh cwt/env/global_lookup_paths.make.sh $(MAKECMDGOALS)
+	@ cwt/make/call_wrap.make.sh cwt/env/global_lookup_paths.make.sh $(MAKECMDGOALS)
 
 debug:
 	@ echo "debug MAKECMDGOALS (escaped) = $(MAKECMDGOALS)";
-	@ cwt/make/make.wrap.sh cwt/make/echo.make.sh $(MAKECMDGOALS)
+	@ cwt/make/call_wrap.make.sh cwt/make/echo.make.sh $(MAKECMDGOALS)

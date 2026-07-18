@@ -254,7 +254,7 @@ EOF
 
     echo ".PHONY: $make_entry_point
 $make_entry_point:
-	@ cwt/make/make.wrap.sh $real_script \$(MAKECMDGOALS)
+	@ cwt/make/call_wrap.make.sh $real_script \$(MAKECMDGOALS)
 " >> data/cwt/generated.mk
 
   done
@@ -367,7 +367,7 @@ u_make_list_hardcoded() {
 # TODO [evol] find better workaround than the '∓' swap.
 #
 # @see cwt/escape.sh
-# @see cwt/make/make.wrap.sh
+# @see cwt/make/call_wrap.make.sh
 #
 u_make_unescape() {
   local p_arg="$1"
@@ -447,7 +447,7 @@ u_make_generate_test_cases() {
 
       echo ".PHONY: $case_target
 $case_target:
-	@ cwt/make/make.wrap.sh cwt/test/case.run.sh \$(MAKECMDGOALS)
+	@ cwt/make/call_wrap.make.sh cwt/test/case.run.sh \$(MAKECMDGOALS)
 " >> data/cwt/generated.mk
     done
   done

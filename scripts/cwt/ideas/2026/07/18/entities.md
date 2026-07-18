@@ -41,7 +41,9 @@ TODO cwt/extensions/entity/has/origin.sh
 TODO cwt/extensions/entity/has/author.sh
 TODO cwt/extensions/entity/has/license.sh
 TODO cwt/extensions/entity/has/version.sh
-TODO cwt/extensions/entity/has/state.sh (synonyms : status, health, vitals ?)
+TODO cwt/extensions/entity/has/state.sh (synonym : status ? Close to : health, vitals)
+TODO cwt/extensions/entity/has/created.sh (synonyms : written, creation (<date,datestamp,timestamp>))
+TODO cwt/extensions/entity/has/changed.sh (synonyms : touched, modification (<date,datestamp,timestamp>))
 TODO cwt/extensions/entity/implements/hook.sh
 TODO cwt/extensions/entity/uses/global.sh
 
@@ -58,6 +60,8 @@ TODO recap all *.able.yml known to date :
 - "$nest.able" (nested-git, nested-cwt, nested-host (vm ?), nested-cmd ?, nested-process ?, nested-thread ?, nested-protocol ? nested-crypt ? etc)
 - "$action.able" (cwt entry points by subject - ex: rotate, recognize, protocol, cwt/extensions/entity/has/cognition.sh, etc)
 - "$sidecar.able" (changelog, accesslog ?, timestamp (ms precision, last 5min...), datestamp (daily, monthly, yearly))
+- "$implement.able" (cwt/extensions/entity/implements/hook.sh ?)
+- "$use.able" (TODO cwt/extensions/entity/uses/global.sh ?)
 
 ## Entities
 

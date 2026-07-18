@@ -9,7 +9,7 @@ flowchart TD
   prim --> mk["data/cwt/generated.mk"]
   shorter["CWT_SYNONYMS"] --> mk
   mk --> makeCall["make subject-action / lt / …"]
-  makeCall --> wrap["make.wrap.sh"]
+  makeCall --> wrap["call_wrap.make.sh"]
   wrap --> script["action script"]
   script --> bs[". cwt/bootstrap.sh"]
 ```
