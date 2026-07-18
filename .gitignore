@@ -42,6 +42,19 @@
 !/data/loops/README.md
 /data/cronjobs/*
 !/data/cronjobs/README.md
+/data/plans/*
+!/data/plans/accepted
+/data/plans/accepted/*
+!/data/plans/accepted/README.md
+!/data/plans/iterate
+/data/plans/iterate/*
+!/data/plans/iterate/README.md
+!/data/plans/rejected
+/data/plans/rejected/*
+!/data/plans/rejected/README.md
+!/data/plans/review
+/data/plans/review/*
+!/data/plans/review/README.md
 
 # Misc.
 docker-runtime
