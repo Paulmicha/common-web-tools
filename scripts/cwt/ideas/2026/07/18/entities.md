@@ -1,21 +1,44 @@
-# CWT core extension : Entities
+# CWT core concept : Entities
 
 ## General idea
 
 TODO *.yml minimal structure
-TODO cwt/extensions/entity/is/able.sh
+TODO cwt/extensions/entity/is/able.sh (entity contracts : cognition.able, etc)
+TODO cwt/extensions/entity/is/event.sh (source : manual, agent, cronjob, interaction, timestamp...)
+TODO cwt/extensions/entity/is/public.sh
+TODO cwt/extensions/entity/is/private.sh
+TODO cwt/extensions/entity/is/relation.sh (for fieldable relationships)
+TODO cwt/extensions/entity/has/plan.sh
+TODO cwt/extensions/entity/has/log.sh
+TODO cwt/extensions/entity/has/changelog.sh
+TODO cwt/extensions/entity/has/idea.sh
+TODO cwt/extensions/entity/has/sidecar.sh
+TODO cwt/extensions/entity/has/wrapper.sh
+TODO cwt/extensions/entity/has/nested.sh (synonym : children, child)
+TODO cwt/extensions/entity/has/sibling.sh (synonym : neighbor, sister, brother)
+TODO cwt/extensions/entity/has/parent.sh (synonym : genitor, mother, father)
+TODO cwt/extensions/entity/has/ancestor.sh
+TODO cwt/extensions/entity/has/relation.sh (of type foobar, matching emitters / recievers etc)
+TODO cwt/extensions/entity/has/permission.sh
+TODO cwt/extensions/entity/has/restriction.sh
+TODO cwt/extensions/entity/has/field.sh
+TODO cwt/extensions/entity/has/origin.sh
+TODO cwt/extensions/entity/has/author.sh
+TODO cwt/extensions/entity/has/license.sh
 
 ## Dependencies
 
-- TODO by subject
+- CWT
+- Core extension : entity
 
 ## Capabilities
 
 TODO recap all *.able.yml known to date :
 
-- "$wrappers.able" (log, thread, logged-thread, etc)
-- "$nested.able" (nested-git, nested-cwt, nested-host (vm ?), nested-cmd ? etc)
-- "$action.able" (cwt entry points by subject - ex: recognize, entity "$crud" actions, etc)
+- "$wrapper.able" (cwt log, host process, cwt thread, logged-thread, etc)
+- "$nested.able" (nested-git, nested-cwt, nested-host (vm ?), nested-cmd ?, nested-process ?, nested-thread ?, nested-protocol ? nested-crypt ? etc)
+- "$action.able" (cwt entry points by subject - ex: rotate, recognize, protocol, cwt/extensions/entity/has/cognition.sh, etc)
+- "$sidecar.able" (changelog, accesslog ?, timestamp (ms precision, last 5min...), datestamp (daily, monthly, yearly))
 
 ## Entities
 
