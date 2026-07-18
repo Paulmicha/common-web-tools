@@ -53,6 +53,7 @@ global CWT_SYNONYMS "[append]='logged-loop/ll'"
 global CWT_SYNONYMS "[append]='logged-pipe/lp'"
 global CWT_SYNONYMS "[append]='lookup-path/pl'"
 global CWT_SYNONYMS "[append]='registry/reg'"
+# global CWT_SYNONYMS "[append]='wrapper/bridge'"
 
 # Per-case test registry written by u_make_generate_test_cases() during reinit.
 # @see u_make_generate_test_cases() in cwt/make/make.inc.sh
