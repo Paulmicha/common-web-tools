@@ -28,5 +28,6 @@ remote_db
 remote_traefik
 rules
 software
+taxonomy
 transcription
 views
