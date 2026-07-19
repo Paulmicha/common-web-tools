@@ -1,4 +1,4 @@
-# CWT subject : agent
+# CWT core concept : Agents
 
 # Dependencies
 
