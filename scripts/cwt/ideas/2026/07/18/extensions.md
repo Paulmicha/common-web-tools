@@ -15,7 +15,7 @@ Must have the exact same specificity as if it was implemented in :
 ## CWT data types
 
 - globals (readonly or mutable, may be secret + TODO encrypted ?)
-- sidecars in data/* dirs (ex: logs)
+- cache or sidecars (ex: logs) or media or test artifacts in data/* dirs
 - other yml (ex: remote instances or any entity)
 - encrypted (git) versionned files (cf. `data/crypted`)
 
