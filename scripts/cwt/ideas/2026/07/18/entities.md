@@ -1,4 +1,4 @@
-# CWT core concept : Entities
+# CWT core concept : Entities (synonym : node ?)
 
 ## General idea (the shape of contracts for defining entities)
 
